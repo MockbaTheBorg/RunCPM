@@ -3,6 +3,8 @@
 RunCPM is a windows 32 bits application which allows you to execute old CP/M 8 bits programs on Windows.
 If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you.
 
+RunCPM builds on Visual Studio 2013 or later.
+
 ## Getting Started
 
 Just drop the RunCPM executable on a folder and create subfolders on that one called "A", "B", "C" ... these will be you "disk drives".
