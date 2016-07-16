@@ -136,11 +136,8 @@ uint8 _OpenFile(uint16 fcbaddr)
 			b = l - reqext * 16384;
 			for (i = 0; i < 16; i++)
 				F->al[i] = (b > i * 1024) ? i + 1 : 0;
-			F->ex = 0x00;
 			F->s1 = 0x00;
-			F->s2 = 0x00;
 			F->rc = 0x80;
-			F->cr = 0x00;
 			result = 0x00;
 		}
 	} else {
