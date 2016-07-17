@@ -476,6 +476,8 @@ void _Bios(void)
 	case 0x21:				// 11 - Set sector number
 		break;
 	case 0x24:				// 12 - Set DMA address
+		HL = BC;
+		dmaAddr = BC;
 		break;
 	case 0x27:				// 13 - Read selected sector
 		SET_HIGH_REGISTER(AF, 0x00);
