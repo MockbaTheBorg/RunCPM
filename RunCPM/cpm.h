@@ -373,6 +373,23 @@ _logBdosIn(uint8 ch)
 	case 40:
 		fputs("Write Random with Zero Fill\r\n", file);
 		break;
+#ifdef ARDUINO
+	case 220:
+		fputs("PinMode\r\n", file);
+		break;
+	case 221:
+		fputs("DigitalRead\r\n", file);
+		break;
+	case 222:
+		fputs("DigitalWrite\r\n", file);
+		break;
+	case 223:
+		fputs("AnalogRead\r\n", file);
+		break;
+	case 224:
+		fputs("AnalogWrite\r\n", file);
+		break;
+#endif
 	default:
 		fputs("Unknown\r\n", file);
 		break;
@@ -424,6 +441,13 @@ _logBdosOut(uint8 ch)
 	case 35:
 	case 36:
 	case 40:
+#ifdef ARDUINO
+	case 220:
+	case 221:
+	case 222:
+	case 223:
+	case 224:
+#endif
 		_logMemory(DE, 36);
 	default:
 		break;
@@ -847,6 +871,38 @@ void _Bdos(void)
 		/********** Function 38: Not supported **********/
 		/********** Function 39: Not supported **********/
 		/********** (todo) Function 40: Write random with zero fill **********/
+#ifdef ARDUINO
+		/*
+		C = 220 (DCh) : PinMode
+		*/
+	case 220:
+		pinMode(HIGH_REGISTER(DE), LOW_REGISTER(DE));
+		break;
+		/*
+		C = 221 (DDh) : DigitalRead
+		*/
+	case 221:
+		SET_HIGH_REGISTER(AF, digitalRead(HIGH_REGISTER(DE)));
+		break;
+		/*
+		C = 222 (DEh) : DigitalWrite
+		*/
+	case 222:
+		digitalWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
+		break;
+		/*
+		C = 223 (DFh) : AnalogRead
+		*/
+	case 223:
+		AF = analogRead(HIGH_REGISTER(DE));
+		break;
+		/*
+		C = 224 (E0h) : AnalogWrite
+		*/
+	case 224:
+		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
+		break;
+#endif
 		/*
 		Unimplemented calls get listed
 		*/
