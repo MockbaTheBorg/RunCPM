@@ -65,7 +65,7 @@ typedef struct {
 	uint8 ex, s1, s2, rc;
 	uint8 al[16];
 	uint8 cr, r0, r1, r2;
-} FCB;
+} CPM_FCB;
 
 typedef struct {
 	uint8 uu;
@@ -73,7 +73,7 @@ typedef struct {
 	uint8 tp[3];
 	uint8 xl, bc, xh, rc;
 	uint8 al[16];
-} DIR;
+} CPM_DIR;
 
 FILE* _fopen_r(uint8 *filename) {
 	return(fopen((const char*)filename, "rb"));
@@ -125,7 +125,7 @@ int _rename(uint8 *name1, uint8 *name2) {
 
 void _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	*(filename++) = _RamRead(0x0004) + 'A';
 	*(filename++) = '\\';
@@ -149,7 +149,7 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	int32 i = 0;
 
 	while (*filename != 0 && *filename != '.') {

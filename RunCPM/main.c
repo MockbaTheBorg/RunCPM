@@ -71,8 +71,8 @@
 /*
 		disk.h - Defines all the disk access abstraction functions
 		Defines:
-		FCB - Structure defining a FCB
-		DIR - Structure defining a directory entry
+		CPM_FCB - Structure defining a FCB
+		CPM_DIR - Structure defining a directory entry
 		_error - Prints disk access errors (FCB errors)
 		_FCBtoDIR - Creates a mock DIR antry onto the current dmaAddr
 		_GetFile - Gets file name from the FCB

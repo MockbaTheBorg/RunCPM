@@ -34,7 +34,7 @@ Creates a fake directory entry as we don't have a real disk drive
 */
 void _FCBtoDIR(uint16 fcbaddr)
 {
-	DIR* d = (DIR*)&RAM[dmaAddr];
+	CPM_DIR* d = (CPM_DIR*)&RAM[dmaAddr];
 
 	_RamFill(dmaAddr, 128, 0xE5);
 	_RamCopy(fcbaddr, 32, dmaAddr);
@@ -61,7 +61,7 @@ int _SelectDisk()
 
 long _FileSize(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
@@ -98,7 +98,7 @@ long _FileSize(uint16 fcbaddr)
 
 uint8 _OpenFile(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;
@@ -153,7 +153,7 @@ uint8 _CloseFile(uint16 fcbaddr)
 
 uint8 _MakeFile(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;
@@ -194,7 +194,7 @@ uint8 _MakeFile(uint16 fcbaddr)
 
 uint8 _DeleteFile(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (F->dr)
@@ -221,7 +221,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 
 uint8 _RenameFile(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	uint8 newname[13];
@@ -251,7 +251,7 @@ uint8 _RenameFile(uint16 fcbaddr)
 
 uint8 _SearchFirst(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (F->dr)
@@ -267,7 +267,7 @@ uint8 _SearchFirst(uint16 fcbaddr)
 
 uint8 _SearchNext(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (F->dr)
@@ -282,7 +282,7 @@ uint8 _SearchNext(uint16 fcbaddr)
 
 uint8 _ReadSeq(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;
@@ -353,7 +353,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 
 uint8 _WriteSeq(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;
@@ -418,7 +418,7 @@ uint8 _WriteSeq(uint16 fcbaddr)
 
 uint8 _ReadRand(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;
@@ -484,7 +484,7 @@ uint8 _ReadRand(uint16 fcbaddr)
 
 uint8 _WriteRand(uint16 fcbaddr)
 {
-	FCB* F = (FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 #ifdef ARDUINO
 	SdFile sd;

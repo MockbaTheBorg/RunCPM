@@ -529,7 +529,7 @@ void _Bios(void)
 
 void _Bdos(void)
 {
-	FCB* F;
+	CPM_FCB* F;
 	int32	i, c, count;
 	uint8	ch = LOW_REGISTER(BC);
 
@@ -841,7 +841,7 @@ void _Bdos(void)
 		C = 35 (23h) : Compute file size
 		*/
 	case 35:
-		F = (FCB*)&RAM[DE];
+		F = (CPM_FCB*)&RAM[DE];
 		count = _FileSize(DE) >> 7;
 
 		F->r0 = count & 0xff;
@@ -852,7 +852,7 @@ void _Bdos(void)
 		C = 36 (24h) : Set random record
 		*/
 	case 36:
-		F = (FCB*)&RAM[DE];
+		F = (CPM_FCB*)&RAM[DE];
 		count = F->cr & 0x7f;
 		count += (F->ex & 0x1f) << 7;
 		count += F->s1 << 12;

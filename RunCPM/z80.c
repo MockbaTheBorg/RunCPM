@@ -1091,6 +1091,7 @@ static const char *MnemonicsXCB[256] =
 	"SET 7,B", "SET 7,C", "SET 7,D", "SET 7,E", "SET 7,H", "SET 7,L", "SET 7,(I%@h)", "SET 7,A"
 };
 #endif
+
 /* Memory management    */
 static uint8 GET_BYTE(register uint32 Addr) {
     return _RamRead(Addr & ADDRMASK);
@@ -1302,12 +1303,14 @@ void Z80run(void) {
 
     /* main instruction fetch/decode loop */
     while (!Status) {	/* loop until Status != 0 */
+
 #ifdef DEBUG
 		if (PC == Break)
 			Debug = 1;
 		if (Debug)
 			Z80debug();
 #endif
+
 		PCX = PC;
 
         switch(RAM_PP(PC)) {
