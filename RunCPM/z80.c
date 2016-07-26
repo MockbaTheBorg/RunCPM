@@ -2565,7 +2565,7 @@ void Z80run(void) {
                 break;
 
             case 0xd3:      /* OUT (nn),A */
-                out(RAM_PP(PC), HIGH_REGISTER(AF));
+                cpu_out(RAM_PP(PC), HIGH_REGISTER(AF));
                 break;
 
             case 0xd4:      /* CALL NC,nnnn */
@@ -2611,7 +2611,7 @@ void Z80run(void) {
                 break;
 
             case 0xdb:      /* IN A,(nn) */
-                SET_HIGH_REGISTER(AF, in(RAM_PP(PC)));
+                SET_HIGH_REGISTER(AF, cpu_in(RAM_PP(PC)));
                 break;
 
             case 0xdc:      /* CALL C,nnnn */
@@ -3286,13 +3286,13 @@ void Z80run(void) {
                 switch (RAM_PP(PC)) {
 
                     case 0x40:      /* IN B,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_HIGH_REGISTER(BC, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x41:      /* OUT (C),B */
-                        out(LOW_REGISTER(BC), HIGH_REGISTER(BC));
+                        cpu_out(LOW_REGISTER(BC), HIGH_REGISTER(BC));
                         break;
 
                     case 0x42:      /* SBC HL,BC */
@@ -3356,13 +3356,13 @@ void Z80run(void) {
                         break;
 
                     case 0x48:      /* IN C,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_LOW_REGISTER(BC, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x49:      /* OUT (C),C */
-                        out(LOW_REGISTER(BC), LOW_REGISTER(BC));
+                        cpu_out(LOW_REGISTER(BC), LOW_REGISTER(BC));
                         break;
 
                     case 0x4a:      /* ADC HL,BC */
@@ -3390,13 +3390,13 @@ void Z80run(void) {
                         break;
 
                     case 0x50:      /* IN D,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_HIGH_REGISTER(DE, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x51:      /* OUT (C),D */
-                        out(LOW_REGISTER(BC), HIGH_REGISTER(DE));
+                        cpu_out(LOW_REGISTER(BC), HIGH_REGISTER(DE));
                         break;
 
                     case 0x52:      /* SBC HL,DE */
@@ -3423,13 +3423,13 @@ void Z80run(void) {
                         break;
 
                     case 0x58:      /* IN E,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_LOW_REGISTER(DE, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x59:      /* OUT (C),E */
-                        out(LOW_REGISTER(BC), LOW_REGISTER(DE));
+                        cpu_out(LOW_REGISTER(BC), LOW_REGISTER(DE));
                         break;
 
                     case 0x5a:      /* ADC HL,DE */
@@ -3457,13 +3457,13 @@ void Z80run(void) {
                         break;
 
                     case 0x60:      /* IN H,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_HIGH_REGISTER(HL, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x61:      /* OUT (C),H */
-                        out(LOW_REGISTER(BC), HIGH_REGISTER(HL));
+                        cpu_out(LOW_REGISTER(BC), HIGH_REGISTER(HL));
                         break;
 
                     case 0x62:      /* SBC HL,HL */
@@ -3488,13 +3488,13 @@ void Z80run(void) {
                         break;
 
                     case 0x68:      /* IN L,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_LOW_REGISTER(HL, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x69:      /* OUT (C),L */
-                        out(LOW_REGISTER(BC), LOW_REGISTER(HL));
+                        cpu_out(LOW_REGISTER(BC), LOW_REGISTER(HL));
                         break;
 
                     case 0x6a:      /* ADC HL,HL */
@@ -3519,13 +3519,13 @@ void Z80run(void) {
                         break;
 
                     case 0x70:      /* IN (C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_LOW_REGISTER(temp, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x71:      /* OUT (C),0 */
-                        out(LOW_REGISTER(BC), 0);
+                        cpu_out(LOW_REGISTER(BC), 0);
                         break;
 
                     case 0x72:      /* SBC HL,SP */
@@ -3544,13 +3544,13 @@ void Z80run(void) {
                         break;
 
                     case 0x78:      /* IN A,(C) */
-                        temp = in(LOW_REGISTER(BC));
+                        temp = cpu_in(LOW_REGISTER(BC));
                         SET_HIGH_REGISTER(AF, temp);
                         AF = (AF & ~0xfe) | rotateShiftTable[temp & 0xff];
                         break;
 
                     case 0x79:      /* OUT (C),A */
-                        out(LOW_REGISTER(BC), HIGH_REGISTER(AF));
+                        cpu_out(LOW_REGISTER(BC), HIGH_REGISTER(AF));
                         break;
 
                     case 0x7a:      /* ADC HL,SP */
@@ -3597,7 +3597,7 @@ void Z80run(void) {
         HF and CF Both set if ((HL) + ((C + 1) & 255) > 255)
         PF The parity of (((HL) + ((C + 1) & 255)) & 7) xor B)                      */
                     case 0xa2:      /* INI */
-                        acu = in(LOW_REGISTER(BC));
+                        acu = cpu_in(LOW_REGISTER(BC));
                         PUT_BYTE(HL, acu);
                         ++HL;
                         temp = HIGH_REGISTER(BC);
@@ -3615,7 +3615,7 @@ void Z80run(void) {
     PF The parity of ((((HL) + L) & 7) xor B)                                       */
                     case 0xa3:      /* OUTI */
                         acu = GET_BYTE(HL);
-                        out(LOW_REGISTER(BC), acu);
+                        cpu_out(LOW_REGISTER(BC), acu);
                         ++HL;
                         temp = HIGH_REGISTER(BC);
                         BC -= 0x100;
@@ -3651,7 +3651,7 @@ void Z80run(void) {
         HF and CF Both set if ((HL) + ((C - 1) & 255) > 255)
         PF The parity of (((HL) + ((C - 1) & 255)) & 7) xor B)                      */
                     case 0xaa:      /* IND */
-                        acu = in(LOW_REGISTER(BC));
+                        acu = cpu_in(LOW_REGISTER(BC));
                         PUT_BYTE(HL, acu);
                         --HL;
                         temp = HIGH_REGISTER(BC);
@@ -3661,7 +3661,7 @@ void Z80run(void) {
 
                     case 0xab:      /* OUTD */
                         acu = GET_BYTE(HL);
-                        out(LOW_REGISTER(BC), acu);
+                        cpu_out(LOW_REGISTER(BC), acu);
                         --HL;
                         temp = HIGH_REGISTER(BC);
                         BC -= 0x100;
@@ -3704,7 +3704,7 @@ void Z80run(void) {
                         if (temp == 0)
                             temp = 0x100;
                         do {
-                            acu = in(LOW_REGISTER(BC));
+                            acu = cpu_in(LOW_REGISTER(BC));
                             PUT_BYTE(HL, acu);
                             ++HL;
                         } while (--temp);
@@ -3719,7 +3719,7 @@ void Z80run(void) {
                             temp = 0x100;
                         do {
                             acu = GET_BYTE(HL);
-                            out(LOW_REGISTER(BC), acu);
+                            cpu_out(LOW_REGISTER(BC), acu);
                             ++HL;
                         } while (--temp);
                         temp = HIGH_REGISTER(BC);
@@ -3763,7 +3763,7 @@ void Z80run(void) {
                         if (temp == 0)
                             temp = 0x100;
                         do {
-                            acu = in(LOW_REGISTER(BC));
+                            acu = cpu_in(LOW_REGISTER(BC));
                             PUT_BYTE(HL, acu);
                             --HL;
                         } while (--temp);
@@ -3778,7 +3778,7 @@ void Z80run(void) {
                             temp = 0x100;
                         do {
                             acu = GET_BYTE(HL);
-                            out(LOW_REGISTER(BC), acu);
+                            cpu_out(LOW_REGISTER(BC), acu);
                             --HL;
                         } while (--temp);
                         temp = HIGH_REGISTER(BC);

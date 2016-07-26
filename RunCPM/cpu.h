@@ -22,12 +22,12 @@ int32 Break = -1;
 /*
 	Functions needed by the soft CPU implementation
 */
-void out(const uint32 Port, const uint32 Value)
+void cpu_out(const uint32 Port, const uint32 Value)
 {
 	_Bios();
 }
 
-uint32 in(const uint32 Port)
+uint32 cpu_in(const uint32 Port)
 {
 	_Bdos();
 	return(HIGH_REGISTER(AF));

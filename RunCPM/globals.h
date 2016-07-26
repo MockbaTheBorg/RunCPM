@@ -39,8 +39,8 @@ extern "C"
 	extern void _Bdos(void);
 	extern void _Bios(void);
 
-	extern void out(const uint32 Port, const uint32 Value);
-	extern uint32 in(const uint32 Port);
+	extern void cpu_out(const uint32 Port, const uint32 Value);
+	extern uint32 cpu_in(const uint32 Port);
 
 #ifndef _WIN32
 	extern uint8 _getch(void);
@@ -55,8 +55,6 @@ extern "C"
 }
 #endif
 
-extern void out(const uint32 Port, const uint32 Value);
-extern uint32 in(const uint32 Port);
 extern int32 PCX; /* external view of PC                          */
 extern int32 AF;  /* AF register                                  */
 extern int32 BC;  /* BC register                                  */
