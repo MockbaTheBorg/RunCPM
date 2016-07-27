@@ -129,8 +129,7 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 	uint8 i = 0;
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
-	}
-	else {
+	} else {
 		*(filename++) = _RamRead(0x0004) + 'A';
 	}
 	*(filename++) = '\\';

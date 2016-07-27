@@ -56,7 +56,8 @@ int _SelectDisk(dr)
 	result = SD.chdir((char*)disk); // (todo) Test if it is Directory
 #endif
 #ifdef _WIN32
-	result = (GetFileAttributes((LPCSTR)disk)&&0x10 == 0x10);
+	result = GetFileAttributes((LPCSTR)disk);
+	result = (result == 0x10);
 #endif
 	if (result)
 		loginVector = loginVector | (1 << (disk[0] - 'A'));

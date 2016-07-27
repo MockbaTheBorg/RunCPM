@@ -672,14 +672,12 @@ void _Bdos(void)
 		Returns: A=0x00 or 0xFF
 		*/
 	case 14:
-		if (_RamRead(0x0004) == LOW_REGISTER(DE)) {
-			drive[0] = 'A';	// If changing disk we will reset to A
-		}
-		_RamWrite(0x0004, LOW_REGISTER(DE));
 		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
 			drive[0] = 'A' + LOW_REGISTER(DE);
+			_RamWrite(0x0004, LOW_REGISTER(DE));
 		} else {
 			_error(errSELECT);
+			drive[0] = 'A';
 			_RamWrite(0x0004, drive[0] - 'A');
 		}
 		break;
