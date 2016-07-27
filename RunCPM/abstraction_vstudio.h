@@ -127,7 +127,12 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
-	*(filename++) = _RamRead(0x0004) + 'A';
+	if (F->dr) {
+		*(filename++) = (F->dr - 1) + 'A';
+	}
+	else {
+		*(filename++) = _RamRead(0x0004) + 'A';
+	}
 	*(filename++) = '\\';
 
 	while (i < 8) {

@@ -41,12 +41,16 @@ void _FCBtoDIR(uint16 fcbaddr)
 	d->uu = 0x00;
 }
 
-int _SelectDisk()
+int _SelectDisk(dr)
 {
 	uint8 result;
 	uint8 disk[2] = "A";
 
-	disk[0] += _RamRead(0x0004);
+	if (dr) {
+		disk[0] += (dr - 1);
+	} else {
+		disk[0] += _RamRead(0x0004);
+	}
 #ifdef ARDUINO
 	SD.chdir();
 	result = SD.chdir((char*)disk); // (todo) Test if it is Directory
@@ -71,9 +75,7 @@ long _FileSize(uint16 fcbaddr)
 #endif
 	long l = -1;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_RDONLY);
@@ -111,9 +113,7 @@ uint8 _OpenFile(uint16 fcbaddr)
 	int32 reqext;	// Required extention to open
 	int32 b, i;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
@@ -163,9 +163,7 @@ uint8 _MakeFile(uint16 fcbaddr)
 	FILE* file;
 #endif
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
@@ -197,9 +195,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
@@ -226,9 +222,7 @@ uint8 _RenameFile(uint16 fcbaddr)
 
 	uint8 newname[13];
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr + 16, &newname[0]);
 			_GetFile(fcbaddr, &filename[0]);
@@ -254,9 +248,7 @@ uint8 _SearchFirst(uint16 fcbaddr)
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
 		result = _findfirst();
 	} else {
@@ -270,9 +262,7 @@ uint8 _SearchNext(uint16 fcbaddr)
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		result = _findnext();
 	} else {
 		_error(errSELECT);
@@ -295,9 +285,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
@@ -365,9 +353,7 @@ uint8 _WriteSeq(uint16 fcbaddr)
 
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
@@ -431,9 +417,7 @@ uint8 _ReadRand(uint16 fcbaddr)
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
@@ -496,9 +480,7 @@ uint8 _WriteRand(uint16 fcbaddr)
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
 
-	if (F->dr)
-		_RamWrite(0x0004, F->dr - 1);
-	if (_SelectDisk()) {
+	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO

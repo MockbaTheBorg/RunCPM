@@ -175,33 +175,6 @@ void _PatchCPM(void)
 
 }
 
-void _PatchCMD(int argc, char* argv[])
-{
-	int32 i, j, k;
-
-	/*
-	Loads first two command parameters
-	*/
-	if (argc > 2)
-		_SetFile(0x005C, (uint8*)argv[2]);
-	if (argc > 3)
-		_SetFile(0x006C, (uint8*)argv[3]);
-	/*
-	Loads the command line
-	*/
-	if (argc > 2) {
-		j = dmaAddr + 1;
-		for (i = 2; i < argc; i++) {
-			_RamWrite(j++, 0x20);
-			for (k = 0; argv[i][k] != 0; k++)
-				_RamWrite(j++, toupper(argv[i][k]));
-
-		}
-		_RamWrite(j--, 0);
-		_RamWrite(dmaAddr, j - dmaAddr);
-	}
-}
-
 #ifdef DEBUGLOG
 _logMemory(pos, size)
 {
@@ -703,8 +676,7 @@ void _Bdos(void)
 			drive[0] = 'A';	// If changing disk we will reset to A
 		}
 		_RamWrite(0x0004, LOW_REGISTER(DE));
-		if (_SelectDisk())
-		{
+		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
 			drive[0] = 'A' + LOW_REGISTER(DE);
 		} else {
 			_error(errSELECT);
