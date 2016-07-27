@@ -28,7 +28,7 @@ void _PatchCPM(void)
 	_RamWrite(0x0003, 0x00);
 
 	/* Current drive/user - A:/0 */
-	_RamWrite(0x0004, drive[0] - 'A');
+	_RamWrite(0x0004, 0x00);
 
 	/* BDOS entry point (0x0005) */
 	_RamWrite(0x0005, JP);
@@ -661,11 +661,11 @@ void _Bdos(void)
 		C = 13 (0Dh) : Reset disk system
 		*/
 	case 13:
-		roVector = 0;
+		roVector = 0;	// Make all drives R/W
 		loginVector = 0;
 		user = 0;
 		dmaAddr = 0x0080;
-		_RamWrite(0x0004, drive[0] - 'A');
+		_RamWrite(0x0004, 0x00);	// Reset default drive to A: (0x00)
 		break;
 		/*
 		C = 14 (0Eh) : Select Disk
@@ -673,12 +673,10 @@ void _Bdos(void)
 		*/
 	case 14:
 		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
-			drive[0] = 'A' + LOW_REGISTER(DE);
 			_RamWrite(0x0004, LOW_REGISTER(DE));
 		} else {
 			_error(errSELECT);
-			drive[0] = 'A';
-			_RamWrite(0x0004, drive[0] - 'A');
+			_RamWrite(0x0004, 0x00);
 		}
 		break;
 		/*
@@ -768,7 +766,7 @@ void _Bdos(void)
 		C = 28 (1Ch) : Write protect disk
 		*/
 	case 28:
-		roVector = roVector | (1 << (drive[0] - 'A'));
+		roVector = roVector | (1 << _RamRead(0x0004));
 		break;
 		/*
 		C = 29 (1Dh) : Get R/O vector

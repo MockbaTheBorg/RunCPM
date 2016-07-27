@@ -6,7 +6,7 @@ Disk errors
 #define errWRITEPROT 1
 #define errSELECT 2
 
-#define RW	(roVector&(1<<(drive[0]-'A')))
+#define RW	(roVector&(1<<_RamRead(0x0004)))
 
 static void _error(uint8 error)
 {
@@ -56,7 +56,7 @@ int _SelectDisk(dr)
 	result = SD.chdir((char*)disk); // (todo) Test if it is Directory
 #endif
 #ifdef _WIN32
-	result = GetFileAttributes((LPCSTR)disk);
+	result = (uint8)GetFileAttributes((LPCSTR)disk);
 	result = (result == 0x10);
 #endif
 	if (result)

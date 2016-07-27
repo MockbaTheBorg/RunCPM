@@ -49,7 +49,6 @@ void _RamWrite(uint16 address, uint8 value)
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];
-uint8	drive[2] = {'A', '\\'};
 uint8	user = 0;	// Current CP/M user
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
