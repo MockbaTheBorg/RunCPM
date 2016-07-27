@@ -41,7 +41,7 @@ void _FCBtoDIR(uint16 fcbaddr)
 	d->uu = 0x00;
 }
 
-int _SelectDisk(dr)
+int _SelectDisk(uint8 dr)
 {
 	uint8 result;
 	uint8 disk[2] = "A";
