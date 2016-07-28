@@ -3,7 +3,7 @@
 		Copyright (c) 2016 - Marcelo Dantas
 
 		Extensive debugging/testing by Tom L. Burnett
-		Debugging/testing and new features by Krzystof Klis
+		Debugging/testing and new features by Krzysztof Klis
 */
 
 #include "globals.h"
