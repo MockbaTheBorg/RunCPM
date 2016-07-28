@@ -49,7 +49,6 @@ void _RamWrite(uint16 address, uint8 value)
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];
-uint8	user = 0;	// Current CP/M user
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
@@ -129,7 +128,7 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
-		*(filename++) = _RamRead(0x0004) + 'A';
+		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
 	}
 	*(filename++) = '\\';
 

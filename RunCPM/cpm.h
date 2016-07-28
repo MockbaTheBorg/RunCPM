@@ -664,9 +664,8 @@ void _Bdos(void)
 	case 13:
 		roVector = 0;	// Make all drives R/W
 		loginVector = 0;
-		user = 0;
 		dmaAddr = 0x0080;
-		_RamWrite(0x0004, 0x00);	// Reset default drive to A: (0x00)
+		_RamWrite(0x0004, 0x00);	// Reset default drive to A: and CP/M user to 0 (0x00)
 		break;
 		/*
 		C = 14 (0Eh) : Select Disk
@@ -674,10 +673,10 @@ void _Bdos(void)
 		*/
 	case 14:
 		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
-			_RamWrite(0x0004, LOW_REGISTER(DE));
+			_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (LOW_REGISTER(DE) & 0x0f));
 		} else {
 			_error(errSELECT);
-			_RamWrite(0x0004, 0x00);
+			_RamWrite(0x0004, _RamRead(0x0004) & 0xf0);	// Set current drive to A:, keep user
 		}
 		break;
 		/*
@@ -747,7 +746,7 @@ void _Bdos(void)
 		C = 25 (19h) : Return current disk
 		*/
 	case 25:
-		SET_HIGH_REGISTER(AF, _RamRead(0x0004));
+		SET_HIGH_REGISTER(AF, _RamRead(0x0004) & 0x0f);
 		break;
 		/*
 		C = 26 (1Ah) : Set DMA address
@@ -767,7 +766,7 @@ void _Bdos(void)
 		C = 28 (1Ch) : Write protect current disk
 		*/
 	case 28:
-		roVector = roVector | (1 << _RamRead(0x0004));
+		roVector = roVector | (1 << (_RamRead(0x0004) & 0x0f));
 		break;
 		/*
 		C = 29 (1Dh) : Get R/O vector
@@ -789,9 +788,9 @@ void _Bdos(void)
 		*/
 	case 32:
 		if (LOW_REGISTER(DE) == 0xFF) {
-			SET_HIGH_REGISTER(AF, user);
+			SET_HIGH_REGISTER(AF, _RamRead(0x0004) >> 4);
 		} else {
-			user = LOW_REGISTER(DE);
+			_RamWrite(0x0004, (_RamRead(0x0004) & 0x0f) | (LOW_REGISTER(DE) << 4));
 		}
 		break;
 		/*
