@@ -53,6 +53,8 @@ uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
 
+uint8	user = 0;	// Current CP/M user
+
 WIN32_FIND_DATA FindFileData;
 HANDLE hFind;
 

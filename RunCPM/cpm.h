@@ -788,8 +788,9 @@ void _Bdos(void)
 		*/
 	case 32:
 		if (LOW_REGISTER(DE) == 0xFF) {
-			SET_HIGH_REGISTER(AF, _RamRead(0x0004) >> 4);
+			SET_HIGH_REGISTER(AF, user);
 		} else {
+			user = LOW_REGISTER(DE);
 			_RamWrite(0x0004, (_RamRead(0x0004) & 0x0f) | (LOW_REGISTER(DE) << 4));
 		}
 		break;
