@@ -863,7 +863,7 @@ void _Bdos(void)
 		C = 223 (DFh) : AnalogRead
 		*/
 	case 223:
-		AF = analogRead(HIGH_REGISTER(DE));
+		HL = analogRead(HIGH_REGISTER(DE));
 		break;
 		/*
 		C = 224 (E0h) : AnalogWrite
