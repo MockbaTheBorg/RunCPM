@@ -438,54 +438,54 @@ void _Bios(void)
 
 	switch (ch) {
 	case 0x00:
-		Status = 1;			// 0 - Ends RunCPM
+		Status = 1;			// 0 - BOOT - Ends RunCPM
 		break;
 	case 0x03:
-		Status = 2;			// 1 - Back to CCP
+		Status = 2;			// 1 - WBOOT - Back to CCP
 		break;
-	case 0x06:				// 2 - Console status
+	case 0x06:				// 2 - CONST - Console status
 		SET_HIGH_REGISTER(AF, _chready());
 		break;
-	case 0x09:				// 3 - Console input
+	case 0x09:				// 3 - CONIN - Console input
 		SET_HIGH_REGISTER(AF, _getch());
 #ifdef DEBUG
 		if (HIGH_REGISTER(AF) == 4)
 			Debug = 1;
 #endif
 		break;
-	case 0x0C:				// 4 - Console output
+	case 0x0C:				// 4 - CONOUT - Console output
 		_putcon(LOW_REGISTER(BC));
 		break;
-	case 0x0F:				// 5 - List output
+	case 0x0F:				// 5 - LIST - List output
 		break;
-	case 0x12:				// 6 - Punch output
+	case 0x12:				// 6 - PUNCH/AUXOUT - Punch output
 		break;
-	case 0x15:				// 7 - Reader input
+	case 0x15:				// 7 - READER - Reader input (0x1a = device not implemented)
 		SET_HIGH_REGISTER(AF, 0x1a);
 		break;
-	case 0x18:				// 8 - Home disk head
+	case 0x18:				// 8 - HOME - Home disk head
 		break;
-	case 0x1B:				// 9 - Select disk drive
+	case 0x1B:				// 9 - SELDSK - Select disk drive
 		HL = 0x0000;
 		break;
-	case 0x1E:				// 10 - Set track number
+	case 0x1E:				// 10 - SETTRK - Set track number
 		break;
-	case 0x21:				// 11 - Set sector number
+	case 0x21:				// 11 - SETSEC - Set sector number
 		break;
-	case 0x24:				// 12 - Set DMA address
+	case 0x24:				// 12 - SETDMA - Set DMA address
 		HL = BC;
 		dmaAddr = BC;
 		break;
-	case 0x27:				// 13 - Read selected sector
+	case 0x27:				// 13 - READ - Read selected sector
 		SET_HIGH_REGISTER(AF, 0x00);
 		break;
-	case 0x2A:				// 14 - Write selected sector
+	case 0x2A:				// 14 - WRITE - Write selected sector
 		SET_HIGH_REGISTER(AF, 0x00);
 		break;
-	case 0x2D:				// 15 - Get list device status
+	case 0x2D:				// 15 - LISTST - Get list device status
 		SET_HIGH_REGISTER(AF, 0x0ff);
 		break;
-	case 0x30:				// 16 - Sector translate
+	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
 		break;
 	default:				// Unimplemented calls get listed
@@ -653,6 +653,7 @@ void _Bdos(void)
 		Returns: B=H=system type, A=L=version number
 		*/
 	case 12:
+		// The undocumented behavior below may be used by applications to verify that they are running on CP/M 2.2
 		HL = 0x22;
 		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));	// Undocumented behavior (doesn't follow DRI User Guide)
 		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));	// Undocumented behavior (doesn't follow DRI User Guide)
@@ -763,7 +764,7 @@ void _Bdos(void)
 		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));
 		break;
 		/*
-		C = 28 (1Ch) : Write protect disk
+		C = 28 (1Ch) : Write protect current disk
 		*/
 	case 28:
 		roVector = roVector | (1 << _RamRead(0x0004));
