@@ -837,9 +837,15 @@ void _Bdos(void)
 	case 37:
 		SET_HIGH_REGISTER(AF, 00);
 		break;
-		/********** Function 38: Not supported **********/
-		/********** Function 39: Not supported **********/
+		/********** Function 38: Not supported by CP/M 2.2 **********/
+		/********** Function 39: Not supported by CP/M 2.2 **********/
 		/********** (todo) Function 40: Write random with zero fill **********/
+		/*
+		C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
+		*/
+	case 40:
+		SET_HIGH_REGISTER(AF, _WriteRand(DE));
+		break;
 #ifdef ARDUINO
 		/*
 		C = 220 (DCh) : PinMode
