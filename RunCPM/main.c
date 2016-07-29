@@ -46,23 +46,24 @@ int main(int argc, char* argv[])
 
 	_console_init();
 	_clrscr();
-	_puts("CP/M 2.2 Emulator v2.0 by Marcelo Dantas.\n");
-	_puts("-----------------------------------------\n");
+	_puts("CP/M 2.2 Emulator v2.0 by Marcelo Dantas.\r\n");
+	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
+	_puts("-----------------------------------------\r\n");
 
 	_RamFill(0, 0x10000, 0);	// Clears the memory
 
 	while (TRUE) {
 		file = _fopen_r((uint8*)CCPname);
 		if (file == NULL) {
-			_puts("\nCan't open CCP!\n");
+			_puts("\r\nCan't open CCP!\r\n");
 			break;
 		} else {
 			//**********  Boot code  **********//
-			_puts("\n64k CP/M Vers 2.2\n");
+			_puts("\r\n64k CP/M Vers 2.2\r\n");
 			_RamLoad(file, CCPaddr);	// Loads the CCP binary file into memory
 			_fclose(file);
 
-			if(!Status)
+			if(Status != 2)
 				_PatchCPM();	// Patches the CP/M entry points and other things in
 
 			Z80reset();			// Resets the Z80 CPU

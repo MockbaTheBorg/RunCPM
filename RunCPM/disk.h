@@ -10,7 +10,7 @@ Disk errors
 
 static void _error(uint8 error)
 {
-	_puts("\nBdos Error on ");
+	_puts("\r\nBdos Error on ");
 	_putcon('A' + _RamRead(0x0004));
 	_puts(": ");
 	switch (error) {
@@ -21,11 +21,11 @@ static void _error(uint8 error)
 		_puts("SELECT");
 		break;
 	default:
-		_puts("\nCP/M ERR");
+		_puts("\r\nCP/M ERR");
 		break;
 	}
 	_getch();
-	_puts("\n");
+	_puts("\r\n");
 	Status = 2;
 }
 

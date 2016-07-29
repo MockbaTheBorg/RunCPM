@@ -489,10 +489,10 @@ void _Bios(void)
 		HL = BC;			// HL=BC=No translation (1:1)
 		break;
 	default:				// Unimplemented calls get listed
-		_puts("\nUnimplemented BIOS call.\n");
+		_puts("\r\nUnimplemented BIOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);
-		_puts("\n");
+		_puts("\r\n");
 	}
 #ifdef DEBUGLOG
 	_logBiosOut(LOW_REGISTER(PCX));
@@ -882,10 +882,10 @@ void _Bdos(void)
 		Unimplemented calls get listed
 		*/
 	default:
-		_puts("\nUnimplemented BDOS call.\n");
+		_puts("\r\nUnimplemented BDOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);
-		_puts("\n");
+		_puts("\r\n");
 	}
 #ifdef DEBUGLOG
 	_logBdosOut(LOW_REGISTER(BC));
