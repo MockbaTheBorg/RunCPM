@@ -1,5 +1,9 @@
 /* see main.c for definition */
 
+#ifdef __linux__
+#include <sys/stat.h>
+#endif
+
 /*
 Disk errors
 */
@@ -54,10 +58,14 @@ int _SelectDisk(uint8 dr)
 #ifdef ARDUINO
 	SD.chdir();
 	result = SD.chdir((char*)disk); // (todo) Test if it is Directory
-#endif
+#else
 #ifdef _WIN32
 	result = (uint8)GetFileAttributes((LPCSTR)disk);
 	result = (result == 0x10);
+#else
+	struct stat st;
+	result = ((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
+#endif
 #endif
 	if (result)
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
@@ -70,8 +78,7 @@ long _FileSize(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 	long l = -1;
@@ -80,16 +87,14 @@ long _FileSize(uint16 fcbaddr)
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_RDONLY);
-#endif
-#ifdef _WIN32
+#else
 		file = _fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			l = sd.fileSize();
 			sd.close();
-#endif
-#ifdef _WIN32
+#else
 			_fseek(file, 0, SEEK_END);
 			l = _ftell(file);
 			_fclose(file);
@@ -106,8 +111,7 @@ uint8 _OpenFile(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 	long l;
@@ -118,16 +122,14 @@ uint8 _OpenFile(uint16 fcbaddr)
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
-#endif
-#ifdef _WIN32
+#else
 		file = _fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			l = sd.fileSize();
 			sd.close();
-#endif
-#ifdef _WIN32
+#else
 			_fseek(file, 0, SEEK_END);
 			l = _ftell(file);
 			_fclose(file);
@@ -159,8 +161,7 @@ uint8 _MakeFile(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 
@@ -169,16 +170,14 @@ uint8 _MakeFile(uint16 fcbaddr)
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 			file = sd.open((char*)filename, O_CREAT | O_WRITE);
-#endif
-#ifdef _WIN32
+#else
 			file = _fopen_w(&filename[0]);
 #endif
 			if (file != NULL) {
 				result = 0x00;
 #ifdef ARDUINO
 				sd.close();
-#endif
-#ifdef _WIN32
+#else
 				_fclose(file);
 #endif
 			}
@@ -201,8 +200,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 			if (SD.remove((char*)filename)) {
-#endif
-#ifdef _WIN32
+#else
 			if (!_remove(&filename[0])) {
 #endif
 				result = 0x00;
@@ -229,8 +227,7 @@ uint8 _RenameFile(uint16 fcbaddr)
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 			if (SD.rename((char*)filename, (char*)newname)) {
-#endif
-#ifdef _WIN32
+#else
 			if (!_rename(&filename[0], &newname[0])) {
 #endif
 				result = 0x00;
@@ -278,8 +275,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 	uint8 bytesread;
@@ -290,22 +286,19 @@ uint8 _ReadSeq(uint16 fcbaddr)
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
-#endif
-#ifdef _WIN32
+#else
 		file = _fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			if (sd.seekSet(fpos)) {
-#endif
-#ifdef _WIN32
+#else
 			if (!_fseek(file, fpos, 0)) {
 #endif
 				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 #ifdef ARDUINO
 				bytesread = sd.read(&RAM[dmaAddr], 128);
-#endif
-#ifdef _WIN32
+#else
 				bytesread = (uint8)_fread(&RAM[dmaAddr], 1, 128, file);
 #endif
 				if (bytesread) {
@@ -327,8 +320,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 			}
 #ifdef ARDUINO
 			sd.close();
-#endif
-#ifdef _WIN32
+#else
 			_fclose(file);
 #endif
 		} else {
@@ -347,8 +339,7 @@ uint8 _WriteSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 
@@ -359,16 +350,14 @@ uint8 _WriteSeq(uint16 fcbaddr)
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 			file = sd.open((char*)filename, O_RDWR);
-#endif
-#ifdef _WIN32
+#else
 			file = _fopen_rw(&filename[0]);
 #endif
 			if (file != NULL) {
 #ifdef ARDUINO
 				if (sd.seekSet(fpos)) {
 					if (sd.write(&RAM[dmaAddr], 128)) {
-#endif
-#ifdef _WIN32
+#else
 				if (!_fseek(file, fpos, 0)) {
 					if (_fwrite(&RAM[dmaAddr], 1, 128, file)) {
 #endif
@@ -387,8 +376,7 @@ uint8 _WriteSeq(uint16 fcbaddr)
 				}
 #ifdef ARDUINO
 				sd.close();
-#endif
-#ifdef _WIN32
+#else
 				_fclose(file);
 #endif
 			} else {
@@ -410,8 +398,7 @@ uint8 _ReadRand(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 	uint8 bytesread;
@@ -422,22 +409,19 @@ uint8 _ReadRand(uint16 fcbaddr)
 		_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
-#endif
-#ifdef _WIN32
+#else
 		file = _fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			if (sd.seekSet(fpos)) {
-#endif
-#ifdef _WIN32
+#else
 			if (!_fseek(file, fpos, 0)) {
 #endif
 				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 #ifdef ARDUINO
 				bytesread = sd.read(&RAM[dmaAddr], 128);
-#endif
-#ifdef _WIN32
+#else
 				bytesread = (uint8)_fread(&RAM[dmaAddr], 1, 128, file);
 #endif
 				if (bytesread) {
@@ -454,8 +438,7 @@ uint8 _ReadRand(uint16 fcbaddr)
 			}
 #ifdef ARDUINO
 			sd.close();
-#endif
-#ifdef _WIN32
+#else
 			_fclose(file);
 #endif
 		} else {
@@ -474,8 +457,7 @@ uint8 _WriteRand(uint16 fcbaddr)
 #ifdef ARDUINO
 	SdFile sd;
 	int32 file;
-#endif
-#ifdef _WIN32
+#else
 	FILE* file;
 #endif
 	int32 record = F->r0 | (F->r1 << 8);
@@ -486,16 +468,14 @@ uint8 _WriteRand(uint16 fcbaddr)
 			_GetFile(fcbaddr, &filename[0]);
 #ifdef ARDUINO
 			file = sd.open((char*)filename, O_RDWR);
-#endif
-#ifdef _WIN32
+#else
 			file = _fopen_rw(&filename[0]);
 #endif
 			if (file != NULL) {
 #ifdef ARDUINO
 				if (sd.seekSet(fpos)) {
 					if (sd.write(&RAM[dmaAddr], 128)) {
-#endif
-#ifdef _WIN32
+#else
 				if (!_fseek(file, fpos, 0)) {
 					if (_fwrite(&RAM[dmaAddr], 1, 128, file)) {
 #endif
@@ -510,8 +490,7 @@ uint8 _WriteRand(uint16 fcbaddr)
 				}
 #ifdef ARDUINO
 				sd.close();
-#endif
-#ifdef _WIN32
+#else
 				_fclose(file);
 #endif
 			} else {

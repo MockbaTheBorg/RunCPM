@@ -59,8 +59,7 @@ bool _RamVerify(char* filename, uint16 address)
 	}
 	return(result);
 }
-#endif
-#ifdef _WIN32
+#else
 void _RamLoad(FILE* file, uint16 address)
 {
 	long l;

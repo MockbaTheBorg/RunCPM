@@ -13,7 +13,7 @@
 		This should be the only file modified for portability. Any other file
 		shoud be kept the same.
 */
-#include "abstraction_vstudio.h"
+#include "abstraction_posix.h"
 
 /*
 		cpu.h - Implements the emulated CPU
