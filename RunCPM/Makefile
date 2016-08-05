@@ -7,7 +7,8 @@
 # make run        | compiles (if needed) and runs your program
 
 # Compiler command
-CC = gcc #-DDEBUG=1 -DDEBUGLOG=1
+CC = gcc
+#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
 
 # Linker command
 LD = gcc

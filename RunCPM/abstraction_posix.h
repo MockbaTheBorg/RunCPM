@@ -276,21 +276,21 @@ uint8 _findfirst(void) {
 
 static struct termios _old_term, _new_term;
 
-void _signal_handler(int signal)
-{
-	ungetc(3, stdin);
-}
-
 void _console_init(void)
 {
 	tcgetattr(0, &_old_term);
-	_new_term = _old_term;
-	_new_term.c_lflag &= ~ICANON;
-	_new_term.c_lflag &= ~ECHO;
-	_new_term.c_iflag &= INLCR;
-	tcsetattr(0, TCSANOW, &_new_term);
 
-	signal(SIGINT, _signal_handler);
+	_new_term = _old_term;
+
+	_new_term.c_lflag &= ~ICANON; /* Input available immediately (no EOL needed) */
+	_new_term.c_lflag &= ~ECHO; /* Do not echo input characters */
+	_new_term.c_iflag &= INLCR; /* Translate NL to CR on input */
+
+//	_new_term.c_cc[VQUIT] = 0; /* Pass Ctrl-\ to stdout */
+	_new_term.c_cc[VINTR] = 0; /* Pass Ctrl-c to stdout */
+	_new_term.c_cc[VSUSP] = 0; /* Passe Ctrl-z to stdout */
+
+	tcsetattr(0, TCSANOW, &_new_term); /* Immediate terminal output */
 }
 
 void _console_reset(void)
