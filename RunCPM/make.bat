@@ -9,4 +9,4 @@ set UTILS=C:\MinGW\msys\1.0\bin
 
 set PATH=%TOOLCHAIN%;%UTILS%;%PATH%
 
-make.exe %*
+make.exe -f Makefile.mingw %*

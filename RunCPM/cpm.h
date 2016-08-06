@@ -6,7 +6,7 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
-#define CCPname "cpm22.bin"
+#define CCPname "CPM22.BIN"
 uint16 CCPaddr = 0xE400;
 uint8 CCPmode = 1;
 
@@ -176,7 +176,7 @@ void _PatchCPM(void)
 }
 
 #ifdef DEBUGLOG
-_logMemory(pos, size)
+void _logMemory(pos, size)
 {
 	FILE* file = _fopen_a("RunCPM.log");
 	uint16 h = pos;
@@ -203,7 +203,7 @@ _logMemory(pos, size)
 	_fclose(file);
 }
 
-_logBiosIn(uint8 ch)
+void _logBiosIn(uint8 ch)
 {
 	FILE* file = _fopen_a("RunCPM.log");
 	fprintf(file, "Bios call: %d (0x%02x)\r\n", ch, ch);
@@ -211,14 +211,14 @@ _logBiosIn(uint8 ch)
 	_fclose(file);
 }
 
-_logBiosOut(uint8 ch)
+void _logBiosOut(uint8 ch)
 {
 	FILE* file = _fopen_a("RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
 	_fclose(file);
 }
 
-_logBdosIn(uint8 ch)
+void _logBdosIn(uint8 ch)
 {
 	FILE* file = _fopen_a("RunCPM.log");
 	fprintf(file, "Bdos call: %d (0x%02x) - ", ch, ch);
@@ -392,7 +392,7 @@ _logBdosIn(uint8 ch)
 	}
 }
 
-_logBdosOut(uint8 ch)
+void _logBdosOut(uint8 ch)
 {
 	FILE* file = _fopen_a("RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
