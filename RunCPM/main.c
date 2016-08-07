@@ -13,7 +13,11 @@
 		This should be the only file modified for portability. Any other file
 		shoud be kept the same.
 */
+#ifdef _WIN32
+#include "abstraction_vstudio.h"
+#else
 #include "abstraction_posix.h"
+#endif
 
 /*
 		cpu.h - Implements the emulated CPU
