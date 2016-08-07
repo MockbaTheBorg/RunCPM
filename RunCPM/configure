@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+#if [ "$(uname | cut -c 1-5)" == "MINGW" ]; then
+if [ "$(tr [:lower:] [:upper:] <<< $(uname) | cut -c 1-5)" == "MINGW" ]; then
+	echo "Windows detected - copying Makefile.mingw -> Makefile"
+	cp Makefile.mingw Makefile
+else
+	echo "Posix detected - copying Makefile.posix -> Makefile"
+	cp Makefile.posix Makefile
+fi
+echo "Run \"make\" to build RunCPM"

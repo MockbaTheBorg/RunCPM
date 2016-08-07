@@ -5,6 +5,11 @@ If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then Ru
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm.
 
+## Building
+
+Just run "./configure" and then "make". Your system will be automatically detected by the build scripts.
+For Posix systems (Linux, FreeBSD, Mac OS X) the ncurses library is required.
+
 ## Getting Started
 
 Just drop the RunCPM executable on a folder and create subfolders on that one called "A", "B", "C" ... these will be you "disk drives".
