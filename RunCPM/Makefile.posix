@@ -1,4 +1,4 @@
-# Generic MinGW makefile (C source only)
+# Generic Posix makefile (C source only)
 # Modify variables/macros to fit your program
 
 # make / make all | will compile your program.
@@ -30,7 +30,7 @@ OBJS = main.o z80.o
 SRCS = main.c z80.c
 
 # Define your compile target here.
-PROG = runcpm
+PROG = RunCPM
 
 # Link the program
 $(PROG): $(OBJS)
