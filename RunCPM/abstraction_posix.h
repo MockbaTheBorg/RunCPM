@@ -198,7 +198,7 @@ void dirToFCB(uint8* from, uint8* to)
 		to++;  i++;
 	}
 	if (*from == '.') {
-		*from++;
+		from++;
 	}
 	i = 0;
 	while (*from != 0) {
