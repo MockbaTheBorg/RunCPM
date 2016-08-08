@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 #if [ "$(uname | cut -c 1-5)" == "MINGW" ]; then
-if [ "$(tr [:lower:] [:upper:] <<< $(uname) | cut -c 1-5)" == "MINGW" ]; then
+SYS="$(tr [:lower:] [:upper:] <<< $(uname) | cut -c 1-5)"
+if [[ "$SYS" == "MINGW" || "$SYS" == "MSYS_" ]]; then
 	echo "Windows detected - copying Makefile.mingw -> Makefile"
 	cp Makefile.mingw Makefile
 else
