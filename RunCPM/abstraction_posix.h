@@ -194,7 +194,7 @@ void dirToFCB(uint8* from, uint8* to)
 		*to = toupper(*from);
 		to++; from++; i++;
 	}
-	while (i < 8) {
+	while (i < 10) {
 		*to = ' ';
 		to++;  i++;
 	}
