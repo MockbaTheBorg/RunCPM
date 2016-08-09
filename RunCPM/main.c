@@ -67,8 +67,7 @@ int main(int argc, char* argv[])
 			_RamLoad(file, CCPaddr);	// Loads the CCP binary file into memory
 			_fclose(file);
 
-			if(Status != 2)
-				_PatchCPM();	// Patches the CP/M entry points and other things in
+			_PatchCPM();	// Patches the CP/M entry points and other things in
 
 			Z80reset();			// Resets the Z80 CPU
 			SET_LOW_REGISTER(BC, _RamRead(0x0004));

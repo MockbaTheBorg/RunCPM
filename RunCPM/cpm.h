@@ -28,7 +28,8 @@ void _PatchCPM(void)
 	_RamWrite(0x0003, 0x00);
 
 	/* Current drive/user - A:/0 */
-	_RamWrite(0x0004, 0x00);
+	if (Status!=2)
+		_RamWrite(0x0004, 0x00);
 
 	/* BDOS entry point (0x0005) */
 	_RamWrite(0x0005, JP);
