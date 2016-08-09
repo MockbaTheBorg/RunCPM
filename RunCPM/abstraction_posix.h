@@ -53,6 +53,7 @@ void _RamWrite(uint16 address, uint8 value)
 uint8	pattern[14];
 uint8	fcbname[14];
 uint8	filename[15];
+uint8	newname[13];
 uint8	drive[2] = {'A', '/'};
 uint8	user = 0;	// Current CP/M user
 uint16	dmaAddr = 0x0080;
