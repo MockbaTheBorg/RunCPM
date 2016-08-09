@@ -219,8 +219,6 @@ uint8 _RenameFile(uint16 fcbaddr)
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
-	uint8 newname[13];
-
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr + 16, &newname[0]);

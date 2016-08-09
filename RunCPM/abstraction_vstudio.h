@@ -49,6 +49,7 @@ void _RamWrite(uint16 address, uint8 value)
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];
+uint8	newname[13];
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
