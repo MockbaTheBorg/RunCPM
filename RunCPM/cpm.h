@@ -158,20 +158,20 @@ void _PatchCPM(void)
 
 	//**********  Patch CP/M (fake) Disk Paramater Block after the BDOS call entry  **********
 
-	_RamWrite(BDOSaddr++, 0x20);		/* spt */
+	_RamWrite(BDOSaddr++, 0x20);		/* spt - Sectors Per Track */
 	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, 0x04);		/* bsh */
-	_RamWrite(BDOSaddr++, 0x0f);		/* blm */
-	_RamWrite(BDOSaddr++, 0x00);		/* exm */
-	_RamWrite(BDOSaddr++, 0xff);        /* dsm */
+	_RamWrite(BDOSaddr++, 0x04);		/* bsh - Data allocation "Block Shift Factor" */
+	_RamWrite(BDOSaddr++, 0x0f);		/* blm - Data allocation Block Mask */
+	_RamWrite(BDOSaddr++, 0x00);		/* exm - Extent Mask */
+	_RamWrite(BDOSaddr++, 0xff);        /* dsm - Total storage capacity of the disk drive */
 	_RamWrite(BDOSaddr++, 0x01);
-	_RamWrite(BDOSaddr++, 0xfe);		/* drm */
+	_RamWrite(BDOSaddr++, 0xfe);		/* drm - Number of the last directory entry */
 	_RamWrite(BDOSaddr++, 0x00);
 	_RamWrite(BDOSaddr++, 0xF0);		/* al0 */
 	_RamWrite(BDOSaddr++, 0x00);		/* al1 */
-	_RamWrite(BDOSaddr++, 0x3f);		/* cks */
+	_RamWrite(BDOSaddr++, 0x3f);		/* cks - Check area Size */
 	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, 0x02);		/* off */
+	_RamWrite(BDOSaddr++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
 	_RamWrite(BDOSaddr++, 0x00);
 
 }
@@ -204,18 +204,97 @@ void _logMemory(uint16 pos, uint8 size)
 	_fclose(file);
 }
 
+char *_logFlags(uint8 ch)
+{
+	char f[] = "........";
+	if (ch & 0b10000000)
+		f[0] = "S";
+	if (ch & 0b01000000)
+		f[1] = "Z";
+	if (ch & 0b00100000)
+		f[2] = "5";
+	if (ch & 0b00010000)
+		f[3] = "H";
+	if (ch & 0b00001000)
+		f[4] = "3";
+	if (ch & 0b00000100)
+		f[5] = "P";
+	if (ch & 0b00000010)
+		f[6] = "N";
+	if (ch & 0b00000001)
+		f[7] = "C";
+	f[8] = 0;
+	return(f);
+}
+
 void _logBiosIn(uint8 ch)
 {
 	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "Bios call: %d (0x%02x)\r\n", ch, ch);
-	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
+	fprintf(file, "Bios call: %d (0x%02x) - ", ch, ch);
+	switch (ch) {
+	case 0:
+		fputs("Cold Boot\r\n", file);
+		break;
+	case 3:
+		fputs("Warm Boot\r\n", file);
+		break;
+	case 6:
+		fputs("Console Status\r\n", file);
+		break;
+	case 9:
+		fputs("Console Input\r\n", file);
+		break;
+	case 12:
+		fputs("Console Output\r\n", file);
+		break;
+	case 15:
+		fputs("List Output\r\n", file);
+		break;
+	case 18:
+		fputs("Punch Output\r\n", file);
+		break;
+	case 21:
+		fputs("Reader Input\r\n", file);
+		break;
+	case 24:
+		fputs("Home Disk\r\n", file);
+		break;
+	case 27:
+		fputs("Select Disk\r\n", file);
+		break;
+	case 30:
+		fputs("Select Track\r\n", file);
+		break;
+	case 33:
+		fputs("Select Sector\r\n", file);
+		break;
+	case 36:
+		fputs("Set DMA Address\r\n", file);
+		break;
+	case 39:
+		fputs("Read Selected Sector\r\n", file);
+		break;
+	case 42:
+		fputs("Write Selected Sector\r\n", file);
+		break;
+	case 45:
+		fputs("List Status\r\n", file);
+		break;
+	case 48:
+		fputs("Sector Translation\r\n", file);
+		break;
+	default:
+		fputs("Unknown\r\n", file);
+		break;
+	}
+	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
 	_fclose(file);
 }
 
 void _logBiosOut(uint8 ch)
 {
 	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
+	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
 	_fclose(file);
 }
 
@@ -368,7 +447,7 @@ void _logBdosIn(uint8 ch)
 		fputs("Unknown\r\n", file);
 		break;
 	}
-	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
+	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
 	_fclose(file);
 
 	switch (ch){
@@ -397,7 +476,7 @@ void _logBdosIn(uint8 ch)
 void _logBdosOut(uint8 ch)
 {
 	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
+	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
 	_fclose(file);
 
 	switch (ch){
