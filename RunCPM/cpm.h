@@ -176,9 +176,9 @@ void _PatchCPM(void)
 }
 
 #ifdef DEBUGLOG
-void _logMemory(pos, size)
+void _logMemory(uint16 pos, uint8 size)
 {
-	FILE* file = _fopen_a("RunCPM.log");
+	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
 	uint16 h = pos;
 	uint16 c = pos;
 	uint8 l, i;
@@ -205,7 +205,7 @@ void _logMemory(pos, size)
 
 void _logBiosIn(uint8 ch)
 {
-	FILE* file = _fopen_a("RunCPM.log");
+	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "Bios call: %d (0x%02x)\r\n", ch, ch);
 	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
 	_fclose(file);
@@ -213,14 +213,14 @@ void _logBiosIn(uint8 ch)
 
 void _logBiosOut(uint8 ch)
 {
-	FILE* file = _fopen_a("RunCPM.log");
+	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
 	_fclose(file);
 }
 
 void _logBdosIn(uint8 ch)
 {
-	FILE* file = _fopen_a("RunCPM.log");
+	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "Bdos call: %d (0x%02x) - ", ch, ch);
 	switch (ch){
 	case 0:
@@ -371,6 +371,7 @@ void _logBdosIn(uint8 ch)
 	_fclose(file);
 
 	switch (ch){
+	case 9:
 	case 15:
 	case 16:
 	case 17:
@@ -394,11 +395,12 @@ void _logBdosIn(uint8 ch)
 
 void _logBdosOut(uint8 ch)
 {
-	FILE* file = _fopen_a("RunCPM.log");
+	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%04x SP=%04x PC=%04x IOByte=%02x\r\n", BC, DE, HL, AF, SP, PCX, _RamRead(4));
 	_fclose(file);
 
 	switch (ch){
+	case 10:
 	case 15:
 	case 16:
 	case 17:
