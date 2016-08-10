@@ -290,7 +290,9 @@ void _console_init(void)
 //	_new_term.c_cc[VQUIT] = 0; /* Pass Ctrl-\ to stdout */
 	_new_term.c_cc[VINTR] = 0; /* Pass Ctrl-c to stdout */
 	_new_term.c_cc[VSUSP] = 0; /* Pass Ctrl-z to stdout */
+#ifdef __APPLE__
 	_new_term.c_cc[VDSUSP] = 0; /* Pass Ctrl-y to stdout */
+#endif
 
 	tcsetattr(0, TCSANOW, &_new_term); /* Immediate terminal output */
 }

@@ -1,6 +1,6 @@
 # RunCPM
 
-RunCPM is a windows 32 bits application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD and Arduino DUE.
+RunCPM is a 32 bits application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD and Arduino DUE.
 If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm.
