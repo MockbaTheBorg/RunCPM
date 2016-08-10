@@ -6,6 +6,8 @@
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
 
+#define VERSION	"2.0"
+
 #ifndef TRUE
 #define FALSE 0
 #define TRUE 1
@@ -73,4 +75,24 @@ extern int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
 extern int32 Status; /* CPU Status : 0-Running 1-Stop request     */
 extern int32 Debug; /* Debug Status : 0-Normal 1-Debugging        */
 extern int32 Break; /* Breakpoint                                 */
+
+/* CP/M memory definitions */
+
+#define BDOSjmppage	0xec	// Default CP/M location
+#define BIOSjmppage	0xfa	// Default CP/M location
+#define BDOSpage	0xfb
+#define BIOSpage	0xfc
+//#define BDOSjmppage	0xfc
+//#define BIOSjmppage	0xfd
+//#define BDOSpage	0xfe
+//#define BIOSpage	0xff
+
+#define ROMSTART (BDOSpage<<8)
+#define ROMSIZE 0x10000-ROMSTART
+#define RAMSIZE ROMSTART
+
+uint8 ROM[ROMSIZE];	// ROM must go into code
+uint8 RAM[RAMSIZE];	// RAM must go into memory
+
+
 

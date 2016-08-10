@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Other Source Files">
+      <UniqueIdentifier>{4ef3d718-ae91-432d-b3d8-78f963d8c8a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -44,5 +47,16 @@
     <ClInclude Include="abstraction_vstudio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="abstraction_arduino.h">
+      <Filter>Other Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="abstraction_posix.h">
+      <Filter>Other Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RunCPM.ino">
+      <Filter>Other Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

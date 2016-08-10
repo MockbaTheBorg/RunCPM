@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
 	_console_init();
 	_clrscr();
-	_puts("CP/M 2.2 Emulator v2.0 by Marcelo Dantas.\r\n");
+	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas.\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("-----------------------------------------\r\n");
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 			break;
 		} else {
 			//**********  Boot code  **********//
-			_puts("\r\n64k CP/M Vers 2.2\r\n");
+			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
 			_RamLoad(file, CCPaddr);	// Loads the CCP binary file into memory
 			_fclose(file);
 

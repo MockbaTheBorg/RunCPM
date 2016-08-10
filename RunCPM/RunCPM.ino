@@ -37,7 +37,7 @@ void setup(void)
 		{
 			while (true)
 			{
-				_puts("\n64k CP/M Vers 2.2\r\n");
+				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
 				SD.chdir();
 				if (_RamLoad(CCPname, CCPaddr))
 				{

@@ -25,7 +25,7 @@ void _PatchCPM(void)
 	_RamWrite(0x0002, BIOSjmppage);
 
 	/* IOBYTE - Points to Console */
-	_RamWrite(0x0003, 0x00);
+	_RamWrite(0x0003, 0x3D);
 
 	/* Current drive/user - A:/0 */
 	if (Status!=2)

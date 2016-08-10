@@ -1,22 +1,6 @@
 /* Memory abstraction functions */
 /*===============================================================================*/
 
-//#define BDOSjmppage	0xec
-//#define BIOSjmppage	0xfa
-//#define BDOSpage	0xfb
-//#define BIOSpage	0xfc
-#define BDOSjmppage	0xfc
-#define BIOSjmppage	0xfd
-#define BDOSpage	0xfe
-#define BIOSpage	0xff
-
-#define ROMSTART (BDOSpage<<8)
-#define ROMSIZE 0x10000-ROMSTART
-#define RAMSIZE ROMSTART
-
-uint8 ROM[ROMSIZE];	// ROM must go into code
-uint8 RAM[RAMSIZE];	// RAM must go into memory
-
 uint8 _RamRead(uint16 address)
 {
 	if (address < ROMSTART) {

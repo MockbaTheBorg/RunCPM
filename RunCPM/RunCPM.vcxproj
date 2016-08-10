@@ -81,6 +81,8 @@
     <ClCompile Include="z80.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="abstraction_arduino.h" />
+    <ClInclude Include="abstraction_posix.h" />
     <ClInclude Include="abstraction_vstudio.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="cpm.h" />
@@ -88,6 +90,9 @@
     <ClInclude Include="disk.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="ram.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RunCPM.ino" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
