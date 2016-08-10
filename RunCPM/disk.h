@@ -190,55 +190,6 @@ uint8 _MakeFile(uint16 fcbaddr)
 	return(result);
 }
 
-uint8 _DeleteFile(uint16 fcbaddr)
-{
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	uint8 result = 0xff;
-
-	if (_SelectDisk(F->dr)) {
-		if (!RW) {
-			_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-			if (SD.remove((char*)filename)) {
-#else
-			if (!_remove(&filename[0])) {
-#endif
-				result = 0x00;
-			}
-		} else {
-			_error(errWRITEPROT);
-		}
-	} else {
-		_error(errSELECT);
-	}
-	return(result);
-}
-
-uint8 _RenameFile(uint16 fcbaddr)
-{
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	uint8 result = 0xff;
-
-	if (_SelectDisk(F->dr)) {
-		if (!RW) {
-			_GetFile(fcbaddr + 16, &newname[0]);
-			_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-			if (SD.rename((char*)filename, (char*)newname)) {
-#else
-			if (!_rename(&filename[0], &newname[0])) {
-#endif
-				result = 0x00;
-			}
-		} else {
-			_error(errWRITEPROT);
-		}
-	} else {
-		_error(errSELECT);
-	}
-	return(result);
-}
-
 uint8 _SearchFirst(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
@@ -260,6 +211,63 @@ uint8 _SearchNext(uint16 fcbaddr)
 
 	if (_SelectDisk(F->dr)) {
 		result = _findnext();
+	} else {
+		_error(errSELECT);
+	}
+	return(result);
+}
+
+uint8 _DeleteFile(uint16 fcbaddr)
+{
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 result = 0xff;
+	uint8 deleted = 0xff;
+
+	if (_SelectDisk(F->dr)) {
+		if (!RW) {
+			result = _SearchFirst(fcbaddr);
+			if (result != 0xff)
+			{
+				do {
+					_GetFile(dmaAddr, &filename[0]);
+#ifdef ARDUINO
+					if (SD.remove((char*)filename)) {
+#else
+					if (!_remove(&filename[0])) {
+#endif
+						deleted = 0x00;
+					}
+					result = _SearchNext(fcbaddr);
+				} while (result != 0xff);
+			}
+		} else {
+			_error(errWRITEPROT);
+		}
+	} else {
+		_error(errSELECT);
+	}
+	return(deleted);
+}
+
+uint8 _RenameFile(uint16 fcbaddr)
+{
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 result = 0xff;
+
+	if (_SelectDisk(F->dr)) {
+		if (!RW) {
+			_GetFile(fcbaddr + 16, &newname[0]);
+			_GetFile(fcbaddr, &filename[0]);
+#ifdef ARDUINO
+			if (SD.rename((char*)filename, (char*)newname)) {
+#else
+			if (!_rename(&filename[0], &newname[0])) {
+#endif
+				result = 0x00;
+			}
+		} else {
+			_error(errWRITEPROT);
+		}
 	} else {
 		_error(errSELECT);
 	}

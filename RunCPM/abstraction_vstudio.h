@@ -204,6 +204,8 @@ uint8 _findfirst(void) {
 			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // (todo) Create fake DIR entry
 			_RamWrite(dmaAddr, 0x00);
 			result = 0x00;
+		} else {
+			FindClose(hFind);
 		}
 	}
 	return(result);
@@ -233,6 +235,8 @@ uint8 _findnext(void)
 			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// (todo) Create fake DIR entry
 			_RamWrite(dmaAddr, 0x00);
 			result = 0x00;
+		} else {
+			FindClose(hFind);
 		}
 	}
 	return(result);
