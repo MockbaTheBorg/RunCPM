@@ -6,6 +6,8 @@
 		Debugging/testing and new features by Krzysztof Klis
 */
 
+#ifndef ARDUINO
+
 #include "globals.h"
 
 /*
@@ -83,3 +85,5 @@ int main(int argc, char* argv[])
 
 	return(0);
 }
+
+#endif
