@@ -91,8 +91,8 @@ extern int32 Break; /* Breakpoint                                 */
 #define ROMSIZE 0x10000-ROMSTART
 #define RAMSIZE ROMSTART
 
-uint8 ROM[ROMSIZE];	// ROM must go into code
-uint8 RAM[RAMSIZE];	// RAM must go into memory
+static uint8 ROM[ROMSIZE];	// ROM must go into code
+static uint8 RAM[RAMSIZE];	// RAM must go into memory
 
 
 
