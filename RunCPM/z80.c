@@ -1256,7 +1256,7 @@ void Z80debug(void)
 		_puts(")");
 		_puts("\r\n");
 		_puts("Command|? : ");
-		ch = _getch();
+		ch = _getche();
 		if (ch == 'c') {
 			_puts("\r\n");
 			Debug = 0;
@@ -1281,11 +1281,13 @@ void Z80debug(void)
 			_puts(" Addr: ");
 			scanf("%04x", &bpoint);
 			Break = bpoint;
-			_puts("Breakpoint set.\r\n");
+			_puts("Breakpoint set to ");
+			_puthex16(Break);
+			_puts("\r\n");
 		}
 		if (ch == 'C') {
 			Break = -1;
-			_puts("Breakpoint cleared\r\n");
+			_puts(" Breakpoint cleared\r\n");
 		}
 		if (ch == '?') {
 			_puts("\r\n");
@@ -1316,7 +1318,9 @@ void Z80run(void) {
 
 #ifdef DEBUG
 		if (PC == Break) {
-			_puts(":BREAK:");
+			_puts(":BREAK at ");
+			_puthex16(PC);
+			_puts(":");
 			Debug = 1;
 		}
 		if (Debug)

@@ -45,7 +45,7 @@ extern "C"
 	extern uint32 cpu_in(const uint32 Port);
 
 #ifndef _WIN32
-	extern uint8 _getch(void);
+	extern uint8 _getche(void);
 #endif
 	extern void _putcon(uint8 ch);
 	extern void _puts(const char* str);
@@ -90,9 +90,3 @@ extern int32 Break; /* Breakpoint                                 */
 #define ROMSTART (BDOSpage<<8)
 #define ROMSIZE 0x10000-ROMSTART
 #define RAMSIZE ROMSTART
-
-static uint8 ROM[ROMSIZE];	// ROM must go into code
-static uint8 RAM[RAMSIZE];	// RAM must go into memory
-
-
-

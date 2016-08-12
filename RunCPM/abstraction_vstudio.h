@@ -8,6 +8,8 @@
 
 /* Memory abstraction functions */
 /*===============================================================================*/
+static uint8 ROM[ROMSIZE];	// ROM must go into code (for Arduino and other hardware)
+static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
 
 uint8 _RamRead(uint16 address)
 {
