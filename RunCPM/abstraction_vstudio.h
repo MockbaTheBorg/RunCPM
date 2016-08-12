@@ -1,9 +1,9 @@
 /* see main.c for definition */
 
 #ifdef _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#include "windows.h"
-#include "stdio.h"
+	#define _CRT_SECURE_NO_WARNINGS
+	#include "windows.h"
+	#include "stdio.h"
 #endif
 
 /* Memory abstraction functions */

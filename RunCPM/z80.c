@@ -1,7 +1,11 @@
 /* Z80 Custom soft core */
 #include "globals.h"
 #ifdef _WIN32
+	#define _CRT_SECURE_NO_WARNINGS
 	#include <conio.h>
+#endif
+#ifdef DEBUG
+	#include <stdio.h>
 #endif
 
 /* simulator stop codes */
@@ -1205,6 +1209,7 @@ void Z80debug(void)
 	uint16 pos;
 	static const char Flags[9] = "SZ5H3PNC";
 	uint8 J, I;
+	unsigned int bpoint;
 
 	while (1)
 	{
@@ -1250,43 +1255,48 @@ void Z80debug(void)
 		_puthex8(_RamRead(pos));
 		_puts(")");
 		_puts("\r\n");
-		_puts("Command|?:");
+		_puts("Command|? : ");
 		ch = _getch();
 		if (ch == 'c') {
+			_puts("\r\n");
 			Debug = 0;
 			break;
 		}
-		if (ch == 13)
+		if (ch == 't')
 			break;
+		if (ch == 'm') {
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			memdump(bpoint);
+		}
 		if (ch == 'b')
 			memdump(BC);
 		if (ch == 'd')
 			memdump(DE);
 		if (ch == 'h')
 			memdump(HL);
-		if (ch == 'D')
+		if (ch == 'a')
 			memdump(dmaAddr);
 		if (ch == 'B') {
-			Break = 0x0005;
-			_puts("Breakpoint set at BDOS (0x0005)\r\n");
-		}
-		if (ch == 'I') {
-			Break = 0x0000;
-			_puts("Breakpoint set at BIOS (0x0000)\r\n");
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			Break = bpoint;
+			_puts("Breakpoint set.\r\n");
 		}
 		if (ch == 'C') {
 			Break = -1;
 			_puts("Breakpoint cleared\r\n");
 		}
 		if (ch == '?') {
-			_puts("enter - next instruction\r\n");
+			_puts("\r\n");
+			_puts("t - traces to the next instruction\r\n");
 			_puts("c - Continue execution\r\n");
-			_puts("b - Dumps memory at (BC)\r\n");
-			_puts("d - Dumps memory at (DE)\r\n");
-			_puts("h - Dumps memory at (HL)\r\n");
-			_puts("D - Dumps memory at dmaAddr\r\n");
-			_puts("B - Sets breakpoint at BDOS\r\n");
-			_puts("I - Sets breakpoint at BIOS\r\n");
+			_puts("m - Dumps memory\r\n");
+			_puts("b - Dumps memory pointed by (BC)\r\n");
+			_puts("d - Dumps memory pointed by (DE)\r\n");
+			_puts("h - Dumps memory pointed by (HL)\r\n");
+			_puts("a - Dumps memory pointed by dmaAddr\r\n");
+			_puts("B - Sets breakpoint at address\r\n");
 			_puts("C - Clears breakpoint\r\n");
 		}
 	}
@@ -1305,8 +1315,10 @@ void Z80run(void) {
     while (!Status) {	/* loop until Status != 0 */
 
 #ifdef DEBUG
-		if (PC == Break)
+		if (PC == Break) {
+			_puts(":BREAK:");
 			Debug = 1;
+		}
 		if (Debug)
 			Z80debug();
 #endif
