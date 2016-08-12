@@ -1208,19 +1208,20 @@ uint8 Disasm(pos)
 	char jr;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 1;
+	uint8 C;
 
 	switch (ch)
 	{
 	case 0xCB: pos++; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
 	case 0xED: pos++; txt = MnemonicsED[_RamRead(pos++)]; count++; break;
-	case 0xDD: pos++; //C = 'X';
+	case 0xDD: pos++; C = 'X';
 		if (_RamRead(pos) != 0xCB) {
 			txt = MnemonicsXX[_RamRead(pos++)]; count++;
 		} else {
 			pos++; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
 		}
 		break;
-	case 0xFD: pos++; //C = 'Y';
+	case 0xFD: pos++; C = 'Y';
 		if (_RamRead(pos) != 0xCB) {
 			txt = MnemonicsXX[_RamRead(pos++)]; count++;
 		} else {
@@ -1234,7 +1235,12 @@ uint8 Disasm(pos)
 		case '*':
 			txt += 2;
 			count++;
-			_puthex8(_RamRead(pos));
+			_puthex8(_RamRead(pos++));
+			break;
+		case '^':
+			txt += 2;
+			count++;
+			_puthex8(_RamRead(pos++));
 			break;
 		case '#':
 			txt += 2;
@@ -1245,17 +1251,18 @@ uint8 Disasm(pos)
 		case '@':
 			txt += 2;
 			count++;
-			jr = _RamRead(pos);
-			_puthex16(pos + 1 + jr);
+			jr = _RamRead(pos++);
+			_puthex16(pos + jr);
+			break;
+		case '%':
+			_putch(C);
+			txt++;
 			break;
 		default:
 			_putch(*txt);
 			txt++;
 		}
 	}
-	_puts("  (");
-	_puthex8(count);
-	_puts(" bytes)");
 	_puts("\r\n");
 
 	return(count);
@@ -1273,14 +1280,14 @@ void Z80debug(void)
 	{
 		pos = PC;
 		_puts("\r\n");
-		_puts("BC:"); _puthex16(BC);
+		_puts("BC:");  _puthex16(BC);
 		_puts(" DE:"); _puthex16(DE);
 		_puts(" HL:"); _puthex16(HL);
 		_puts(" AF:"); _puthex16(AF);
 		_puts(" : [");
 		for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
 		_puts("]\r\n");
-		_puts("IX:"); _puthex16(IX);
+		_puts("IX:");  _puthex16(IX);
 		_puts(" IY:"); _puthex16(IY);
 		_puts(" SP:"); _puthex16(SP);
 		_puts(" PC:"); _puthex16(PC);
@@ -1296,36 +1303,14 @@ void Z80debug(void)
 			Debug = 0;
 			break;
 		}
-		if (ch == 'm') {
-			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			memdump(bpoint);
-		}
-		if (ch == 'b')
-			memdump(BC);
-		if (ch == 'd')
-			memdump(DE);
-		if (ch == 'h')
-			memdump(HL);
-		if (ch == 'a')
-			memdump(dmaAddr);
+		if (ch == 'b') memdump(BC);
+		if (ch == 'd') memdump(DE);
+		if (ch == 'h') memdump(HL);
+		if (ch == 'a') memdump(dmaAddr);
 		if (ch == 'l') {
 			_puts("\r\n");
 			I = 16;
 			l = pos;
-			while (I > 0) {
-				_puthex16(l);
-				_puts(" : ");
-				l += Disasm(l);
-				I--;
-			}
-		}
-		if (ch == 'L') {
-			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			_puts("\r\n");
-			I = 16;
-			l = bpoint;
 			while (I > 0) {
 				_puthex16(l);
 				_puts(" : ");
@@ -1345,19 +1330,39 @@ void Z80debug(void)
 			Break = -1;
 			_puts(" Breakpoint cleared\r\n");
 		}
+		if (ch == 'L') {
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			_puts("\r\n");
+			I = 16;
+			l = bpoint;
+			while (I > 0) {
+				_puthex16(l);
+				_puts(" : ");
+				l += Disasm(l);
+				I--;
+			}
+		}
+		if (ch == 'M') {
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			memdump(bpoint);
+		}
 		if (ch == '?') {
 			_puts("\r\n");
-			_puts("t - traces to the next instruction\r\n");
-			_puts("c - Continue execution\r\n");
-			_puts("m - Dumps memory\r\n");
-			_puts("b - Dumps memory pointed by (BC)\r\n");
-			_puts("d - Dumps memory pointed by (DE)\r\n");
-			_puts("h - Dumps memory pointed by (HL)\r\n");
-			_puts("a - Dumps memory pointed by dmaAddr\r\n");
-			_puts("l - Disassembles from current PC\r\n");
-			_puts("L - Disassembles address\r\n");
-			_puts("B - Sets breakpoint at address\r\n");
-			_puts("C - Clears breakpoint\r\n");
+			_puts("Lowercase commands:\r\n");
+			_puts("  t - traces to the next instruction\r\n");
+			_puts("  c - Continue execution\r\n");
+			_puts("  b - Dumps memory pointed by (BC)\r\n");
+			_puts("  d - Dumps memory pointed by (DE)\r\n");
+			_puts("  h - Dumps memory pointed by (HL)\r\n");
+			_puts("  a - Dumps memory pointed by dmaAddr\r\n");
+			_puts("  l - Disassembles from current PC\r\n");
+			_puts("Uppercase commands:\r\n");
+			_puts("  B - Sets breakpoint at address\r\n");
+			_puts("  C - Clears breakpoint\r\n");
+			_puts("  L - Disassembles at address\r\n");
+			_puts("  M - Dumps memory at address\r\n");
 		}
 	}
 }

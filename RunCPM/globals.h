@@ -1,6 +1,6 @@
 /* Some definitions needed globally */
 #ifdef __MINGW32__
-#include <ctype.h>
+	#include <ctype.h>
 #endif
 
 //#define DEBUG

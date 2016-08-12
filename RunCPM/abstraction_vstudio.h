@@ -2,8 +2,9 @@
 
 #ifdef _WIN32
 	#define _CRT_SECURE_NO_WARNINGS
-	#include "windows.h"
-	#include "stdio.h"
+	#include <windows.h>
+	#include <stdio.h>
+	#include <conio.h>
 #endif
 
 /* Memory abstraction functions */
@@ -227,8 +228,6 @@ uint8 _findnext(void)
 
 /* Console abstraction functions */
 /*===============================================================================*/
-
-#include <conio.h>
 
 BOOL _signal_handler(DWORD signal)
 {
