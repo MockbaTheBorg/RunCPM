@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	}
 
 	_console_reset();
-
+	_puts("\r\n");
 	return(0);
 }
 
