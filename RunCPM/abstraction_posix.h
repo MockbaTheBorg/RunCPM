@@ -266,14 +266,9 @@ void _console_init(void)
 
 	_new_term.c_lflag &= ~ICANON; /* Input available immediately (no EOL needed) */
 	_new_term.c_lflag &= ~ECHO; /* Do not echo input characters */
-	_new_term.c_iflag &= INLCR; /* Translate NL to CR on input */
+	_new_term.c_lflag &= ~ISIG; /* ^C and ^Z do not generate signals */
 
-//	_new_term.c_cc[VQUIT] = 0; /* Pass Ctrl-\ to stdout */
-	_new_term.c_cc[VINTR] = 0; /* Pass Ctrl-c to stdout */
-	_new_term.c_cc[VSUSP] = 0; /* Pass Ctrl-z to stdout */
-#ifdef __APPLE__
-	_new_term.c_cc[VDSUSP] = 0; /* Pass Ctrl-y to stdout */
-#endif
+	_new_term.c_iflag &= INLCR; /* Translate NL to CR on input */
 
 	tcsetattr(0, TCSANOW, &_new_term); /* Immediate terminal output */
 }
