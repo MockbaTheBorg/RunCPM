@@ -1202,11 +1202,69 @@ void memdump(uint16 pos)
 	}
 }
 
+uint8 Disasm(pos)
+{
+	const char* txt;
+	char jr;
+	uint8 ch = _RamRead(pos);
+	uint8 count = 1;
+
+	switch (ch)
+	{
+	case 0xCB: pos++; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
+	case 0xED: pos++; txt = MnemonicsED[_RamRead(pos++)]; count++; break;
+	case 0xDD: pos++; //C = 'X';
+		if (_RamRead(pos) != 0xCB) {
+			txt = MnemonicsXX[_RamRead(pos++)]; count++;
+		} else {
+			pos++; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
+		}
+		break;
+	case 0xFD: pos++; //C = 'Y';
+		if (_RamRead(pos) != 0xCB) {
+			txt = MnemonicsXX[_RamRead(pos++)]; count++;
+		} else {
+			pos++; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
+		}
+		break;
+	default:   txt = Mnemonics[_RamRead(pos++)];
+	}
+	while (*txt != 0) {
+		switch (*txt) {
+		case '*':
+			txt += 2;
+			count++;
+			_puthex8(_RamRead(pos));
+			break;
+		case '#':
+			txt += 2;
+			count += 2;
+			_puthex8(_RamRead(pos+1));
+			_puthex8(_RamRead(pos));
+			break;
+		case '@':
+			txt += 2;
+			count++;
+			jr = _RamRead(pos);
+			_puthex16(pos + 1 + jr);
+			break;
+		default:
+			_putch(*txt);
+			txt++;
+		}
+	}
+	_puts("  (");
+	_puthex8(count);
+	_puts(" bytes)");
+	_puts("\r\n");
+
+	return(count);
+}
+
 void Z80debug(void)
 {
 	uint8 ch = 0;
-	const char* txt;
-	uint16 pos;
+	uint16 pos, l;
 	static const char Flags[9] = "SZ5H3PNC";
 	uint8 J, I;
 	unsigned int bpoint;
@@ -1219,51 +1277,25 @@ void Z80debug(void)
 		_puts(" DE:"); _puthex16(DE);
 		_puts(" HL:"); _puthex16(HL);
 		_puts(" AF:"); _puthex16(AF);
-		_puts(" : ");
+		_puts(" : [");
 		for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
-		_puts("\r\n");
+		_puts("]\r\n");
 		_puts("IX:"); _puthex16(IX);
 		_puts(" IY:"); _puthex16(IY);
 		_puts(" SP:"); _puthex16(SP);
 		_puts(" PC:"); _puthex16(PC);
 		_puts(" : ");
 
-		ch = _RamRead(pos);
-		switch (ch)
-		{
-		case 0xCB: pos++; txt = MnemonicsCB[_RamRead(pos++)]; break;
-		case 0xED: pos++; txt = MnemonicsED[_RamRead(pos++)]; break;
-		case 0xDD: pos++; //C = 'X';
-			if (_RamRead(pos) != 0xCB) txt = MnemonicsXX[_RamRead(pos++)];
-			else
-			{
-				pos++; txt = MnemonicsXCB[_RamRead(pos++)];
-			}
-			break;
-		case 0xFD: pos++; //C = 'Y';
-			if (_RamRead(pos) != 0xCB) txt = MnemonicsXX[_RamRead(pos++)];
-			else
-			{
-				pos++; txt = MnemonicsXCB[_RamRead(pos++)];
-			}
-			break;
-		default:   txt = Mnemonics[_RamRead(pos++)];
-		}
-		_puts(txt);
-		_puts(" (");
-		_puthex8(_RamRead(pos+1));
-		_puthex8(_RamRead(pos));
-		_puts(")");
-		_puts("\r\n");
+		Disasm(pos);
 		_puts("Command|? : ");
 		ch = _getche();
+		if (ch == 't')
+			break;
 		if (ch == 'c') {
 			_puts("\r\n");
 			Debug = 0;
 			break;
 		}
-		if (ch == 't')
-			break;
 		if (ch == 'm') {
 			_puts(" Addr: ");
 			scanf("%04x", &bpoint);
@@ -1277,6 +1309,30 @@ void Z80debug(void)
 			memdump(HL);
 		if (ch == 'a')
 			memdump(dmaAddr);
+		if (ch == 'l') {
+			_puts("\r\n");
+			I = 16;
+			l = pos;
+			while (I > 0) {
+				_puthex16(l);
+				_puts(" : ");
+				l += Disasm(l);
+				I--;
+			}
+		}
+		if (ch == 'L') {
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			_puts("\r\n");
+			I = 16;
+			l = bpoint;
+			while (I > 0) {
+				_puthex16(l);
+				_puts(" : ");
+				l += Disasm(l);
+				I--;
+			}
+		}
 		if (ch == 'B') {
 			_puts(" Addr: ");
 			scanf("%04x", &bpoint);
@@ -1298,6 +1354,8 @@ void Z80debug(void)
 			_puts("d - Dumps memory pointed by (DE)\r\n");
 			_puts("h - Dumps memory pointed by (HL)\r\n");
 			_puts("a - Dumps memory pointed by dmaAddr\r\n");
+			_puts("l - Disassembles from current PC\r\n");
+			_puts("L - Disassembles address\r\n");
 			_puts("B - Sets breakpoint at address\r\n");
 			_puts("C - Clears breakpoint\r\n");
 		}
@@ -1319,7 +1377,7 @@ void Z80run(void) {
 #ifdef DEBUG
 		if (PC == Break) {
 			_puts(":BREAK at ");
-			_puthex16(PC);
+			_puthex16(Break);
 			_puts(":");
 			Debug = 1;
 		}
