@@ -5,7 +5,6 @@
 		Extensive debugging/testing by Tom L. Burnett
 		Debugging/testing and new features by Krzysztof Klis
 */
-
 #ifndef ARDUINO
 
 #include "globals.h"
@@ -15,10 +14,14 @@
 		This should be the only file modified for portability. Any other file
 		shoud be kept the same.
 */
+#ifdef __DJGPP
+	#include "abstract.h"
+#else
 #ifdef _WIN32
 	#include "abstraction_vstudio.h"
 #else
 	#include "abstraction_posix.h"
+#endif
 #endif
 
 /*
