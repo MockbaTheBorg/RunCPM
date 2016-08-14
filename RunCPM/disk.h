@@ -4,6 +4,10 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef __DJGPP__
+#include <dirent.h>
+#endif
+
 /*
 Disk errors
 */
@@ -49,6 +53,9 @@ int _SelectDisk(uint8 dr)
 {
 	uint8 result;
 	uint8 disk[2] = "A";
+#ifdef __DJGPP__
+	DIR *d;
+#endif
 
 	if (dr) {
 		disk[0] += (dr - 1);
@@ -63,8 +70,17 @@ int _SelectDisk(uint8 dr)
 	result = (uint8)GetFileAttributes((LPCSTR)disk);
 	result = (result == 0x10);
 #else
+#ifdef __DJGPP__
+	if ((d = opendir((char*)disk)) != NULL) {
+		result = 1;
+		closedir(d);
+	} else {
+		result = 0;
+	}
+#else
 	struct stat st;
 	result = ((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
+#endif
 #endif
 #endif
 	if (result)
