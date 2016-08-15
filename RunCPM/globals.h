@@ -78,14 +78,19 @@ extern int32 Break; /* Breakpoint                                 */
 
 /* CP/M memory definitions */
 
-#define BDOSjmppage	0xec	// Default CP/M location
-#define BIOSjmppage	0xfa	// Default CP/M location
-#define BDOSpage	0xfb
-#define BIOSpage	0xfc
-//#define BDOSjmppage	0xfc
-//#define BIOSjmppage	0xfd
-//#define BDOSpage	0xfe
-//#define BIOSpage	0xff
+#define EXTRA	// Allocates extra memory
+
+#ifdef EXTRA
+	#define BDOSjmppage	0xfc
+	#define BIOSjmppage	0xfd
+	#define BDOSpage	0xfe
+	#define BIOSpage	0xff
+#else
+	#define BDOSjmppage	0xec	// Default CP/M location
+	#define BIOSjmppage	0xfa	// Default CP/M location
+	#define BDOSpage	0xfb
+	#define BIOSpage	0xfc
+#endif
 
 #define ROMSTART (BDOSpage<<8)
 #define ROMSIZE 0x10000-ROMSTART
