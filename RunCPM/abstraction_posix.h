@@ -255,8 +255,9 @@ uint8 _findfirst(void) {
 /*===============================================================================*/
 
 #include <ncurses.h>
-#include <signal.h>
+#include <poll.h>
 #include <termios.h>
+#include <unistd.h>
 
 static struct termios _old_term, _new_term;
 
@@ -269,10 +270,11 @@ void _console_init(void)
 	_new_term.c_lflag &= ~ICANON; /* Input available immediately (no EOL needed) */
 	_new_term.c_lflag &= ~ECHO; /* Do not echo input characters */
 	_new_term.c_lflag &= ~ISIG; /* ^C and ^Z do not generate signals */
-
 	_new_term.c_iflag &= INLCR; /* Translate NL to CR on input */
 
-	tcsetattr(0, TCSANOW, &_new_term); /* Immediate terminal output */
+	tcsetattr(0, TCSANOW, &_new_term); /* Apply changes immediately */
+
+	setvbuf(stdout, (char *)NULL, _IONBF, 0); /* Disable stdout buffering */
 }
 
 void _console_reset(void)
@@ -282,14 +284,12 @@ void _console_reset(void)
 
 int _kbhit(void)
 {
-	int ch = getch();
+	struct pollfd pfds[1];
 
-	if (ch != ERR) {
-		ungetch(ch);
-		return 1;
-	} else {
-		return 0;
-	}
+	pfds[0].fd = STDIN_FILENO;
+	pfds[0].events = POLLIN;
+
+	return poll(pfds, 1, 0);
 }
 
 uint8 _getch(void)
