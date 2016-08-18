@@ -1306,6 +1306,9 @@ void Z80debug(void)
 		if (ch == 'b') memdump(BC);
 		if (ch == 'd') memdump(DE);
 		if (ch == 'h') memdump(HL);
+		if (ch == 's') memdump(SP & 0xFF00);
+		if (ch == 'x') memdump(IX & 0xFF00);
+		if (ch == 'y') memdump(IY & 0xFF00);
 		if (ch == 'a') memdump(dmaAddr);
 		if (ch == 'l') {
 			_puts("\r\n");
@@ -1356,6 +1359,9 @@ void Z80debug(void)
 			_puts("  b - Dumps memory pointed by (BC)\r\n");
 			_puts("  d - Dumps memory pointed by (DE)\r\n");
 			_puts("  h - Dumps memory pointed by (HL)\r\n");
+			_puts("  s - Dumps the page (SP) points to\r\n");
+			_puts("  x - Dumps the page (IX) points to\r\n");
+			_puts("  y - Dumps the page (IY) points to\r\n");
 			_puts("  a - Dumps memory pointed by dmaAddr\r\n");
 			_puts("  l - Disassembles from current PC\r\n");
 			_puts("Uppercase commands:\r\n");

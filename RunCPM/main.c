@@ -15,7 +15,7 @@
 		shoud be kept the same.
 */
 #ifdef __DJGPP
-	#include "abstract.h"
+	#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
 #else
 #ifdef _WIN32
 	#include "abstraction_vstudio.h"
