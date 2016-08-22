@@ -6,9 +6,8 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
-#define CCPname "CPM22.BIN"
-uint16 CCPaddr = 0xE400;
-uint8 CCPmode = 1;
+#define CCPname		"CPM22.BIN"
+#define CCPaddr		0xE400	// ORG of CPM22.Z80
 
 void _PatchCPM(void)
 {
@@ -748,6 +747,7 @@ void _Bdos(void)
 		loginVector = 0;
 		dmaAddr = 0x0080;
 		_RamWrite(0x0004, 0x00);	// Reset default drive to A: and CP/M user to 0 (0x00)
+		_CheckSUB();		// Checks if there's a $$$.SUB on the boot disk
 		break;
 		/*
 		C = 14 (0Eh) : Select Disk

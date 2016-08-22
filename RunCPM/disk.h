@@ -14,6 +14,8 @@ Disk errors
 #define errWRITEPROT 1
 #define errSELECT 2
 
+#define BatchFCB	0xEBAC
+
 #define RW	(roVector & (1 << (_RamRead(0x0004) & 0x0f)))
 
 static void _error(uint8 error)
@@ -156,7 +158,7 @@ uint8 _OpenFile(uint16 fcbaddr)
 			for (i = 0; i < 16; i++)
 				F->al[i] = (b > i * 1024) ? i + 1 : 0;
 			F->s1 = 0x00;
-			F->rc = 0x80;
+			F->rc = l/128;
 			result = 0x00;
 		}
 	} else {
@@ -527,4 +529,9 @@ uint8 _WriteRand(uint16 fcbaddr)
 	return(result);
 }
 
+void _CheckSUB(void)
+{
+	if (_SearchFirst(BatchFCB) == 0x00)
+		SET_HIGH_REGISTER(AF, 0x01);
+}
 
