@@ -182,6 +182,11 @@ uint8 _findnext(void)
 	return(result);
 }
 
+uint8 _Truncate(char* fn, uint8 rc)
+{
+
+}
+
 /* Console abstraction functions */
 /*===============================================================================*/
 void _console_init(void)

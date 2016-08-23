@@ -226,6 +226,22 @@ uint8 _findnext(void)
 	return(result);
 }
 
+uint8 _Truncate(char* fn, uint8 rc)
+{
+	uint8 result = 0x00;
+	LARGE_INTEGER fp;
+	fp.QuadPart = rc * 128;
+	HANDLE fh = CreateFileW(L"A\\$$$.SUB", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (fh == INVALID_HANDLE_VALUE) {
+		result = 0xff;
+	} else {
+		if (SetFilePointerEx(fh, fp, NULL, FILE_BEGIN) == 0 || SetEndOfFile(fh) == 0)
+			result = 0xff;
+	}
+	CloseHandle(fh);
+	return(result);
+}
+
 /* Console abstraction functions */
 /*===============================================================================*/
 

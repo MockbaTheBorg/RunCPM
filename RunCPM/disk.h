@@ -174,23 +174,9 @@ uint8 _CloseFile(uint16 fcbaddr)
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
+			_GetFile(fcbaddr, &filename[0]);
 			if (fcbaddr == BatchFCB) {
-#ifdef ARDUINO
-				// Do something here, no idea what yet
-#else
-				// This should be converted to a function called _Truncate on the abstract
-				// and made accordingly to the other platforms
-				LARGE_INTEGER fp;
-				fp.QuadPart = F->rc * 128;
-				HANDLE fh = CreateFileW(L"A\\$$$.SUB", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-				if (fh == INVALID_HANDLE_VALUE) {
-					result = 0xff;
-				} else {
-					if (SetFilePointerEx(fh, fp, NULL, FILE_BEGIN) == 0 || SetEndOfFile(fh) == 0)
-						result = 0xff;
-				}
-				CloseHandle(fh);
-#endif
+				_Truncate(filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 			}
 			result = 0x00;
 		} else {
