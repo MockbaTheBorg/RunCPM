@@ -169,7 +169,43 @@ uint8 _OpenFile(uint16 fcbaddr)
 
 uint8 _CloseFile(uint16 fcbaddr)
 {
-	return(0x00);
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 result = 0xff;
+#ifdef ARDUINO
+	SdFile sd;
+	int32 file;
+#else
+	FILE* file;
+#endif
+
+	if (_SelectDisk(F->dr)) {
+		if (!RW) {
+			if (fcbaddr == BatchFCB) {
+#ifdef ARDUINO
+				// Do something here, no idea what yet
+#else
+				// This should be converted to a function called _Truncate on the abstract
+				// and made accordingly to the other platforms
+				LARGE_INTEGER fp;
+				fp.QuadPart = F->rc * 128;
+				HANDLE fh = CreateFileW(L"A\\$$$.SUB", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+				if (fh == INVALID_HANDLE_VALUE) {
+					result = GetLastError(fh);
+				} else {
+					if (SetFilePointerEx(fh, fp, NULL, FILE_BEGIN) == 0 || SetEndOfFile(fh) == 0)
+						result = 0xff;
+				}
+				CloseHandle(fh);
+#endif
+			}
+			result = 0x00;
+		} else {
+			_error(errWRITEPROT);
+		}
+	} else {
+		_error(errSELECT);
+	}
+	return(result);
 }
 
 uint8 _MakeFile(uint16 fcbaddr)
