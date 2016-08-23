@@ -8,6 +8,15 @@
 
 #define VERSION	"2.1"
 
+/* Definition of the CCP information */
+#define CCPname		"CCP-DR.BIN"
+//#define CCPname		"CCP-ZCPR.BIN"
+#define CCPaddr		0xE400	// CCP-DR.BIN and CCP-ZCPR.BIN
+
+/* Definition of the BATCH FCB for each CCP */
+#define BatchFCB	0xEBAC	// CCP-DR.BIN
+//#define BatchFCB	0xE47A	// CCP-ZCPR.BIN
+
 #ifndef TRUE
 #define FALSE 0
 #define TRUE 1

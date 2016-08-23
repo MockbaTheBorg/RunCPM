@@ -14,8 +14,6 @@ Disk errors
 #define errWRITEPROT 1
 #define errSELECT 2
 
-#define BatchFCB	0xEBAC
-
 #define RW	(roVector & (1 << (_RamRead(0x0004) & 0x0f)))
 
 static void _error(uint8 error)

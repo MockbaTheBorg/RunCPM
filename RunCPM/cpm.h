@@ -6,9 +6,6 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
-#define CCPname		"CCP-DR.BIN"
-#define CCPaddr		0xE400	// ORG of CPM22.Z80
-
 void _PatchCPM(void)
 {
 	uint16 BDOSjmpaddr = (BDOSjmppage << 8) + 6;
