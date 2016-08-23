@@ -1,6 +1,10 @@
 /* see main.c for definition */
+#include <conio.h>
+#include <ctype.h>
 #include <dir.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /* Memory abstraction functions */
 /*===============================================================================*/
@@ -184,7 +188,11 @@ uint8 _findnext(void)
 
 uint8 _Truncate(char* fn, uint8 rc)
 {
-
+	uint8 result = 0x00;
+	if (truncate(fn, rc * 128)) {
+		result = 0xff;
+	}
+	return(result);
 }
 
 /* Console abstraction functions */

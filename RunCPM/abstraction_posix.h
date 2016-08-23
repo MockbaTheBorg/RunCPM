@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 typedef enum {true, false} bool;
 
@@ -253,7 +254,11 @@ uint8 _findfirst(void) {
 
 uint8 _Truncate(char* fn, uint8 rc)
 {
-
+	uint8 result = 0x00;
+	if (truncate(fn, rc * 128)) {
+		result = 0xff;
+	}
+	return(result);
 }
 
 /* Console abstraction functions */

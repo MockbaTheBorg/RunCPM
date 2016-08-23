@@ -1,6 +1,6 @@
 # RunCPM
 
-RunCPM is a 32 bits application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD and Arduino DUE.
+RunCPM is a 32 bits application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE.
 If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you.
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
@@ -18,8 +18,15 @@ Arduino digital and analog read/write support was added by Krzysztof Klis via BD
 
 ## Building
 
-Just run "./configure" and then "make". Your system will be automatically detected by the build scripts.
-For Posix systems (Linux, FreeBSD, Mac OS X) the ncurses library is required.
+Run "make -f Makfile.yyy", where "yyy" is:
+
+* *dos* - when building with DJGPP under MS-DOS,
+* *mingw* - when building with MinGW (or TDM-GCC) under Windows,
+* *posix* - when building under Linux, FreeBSD, Mac OS X, etc.
+
+For Linux and FreeBSD the ncurses-dev package is required. In Mac OS X install it using "brew install ncurses".
+
+Windows version also builds with Visual Studio.
 
 ## Getting Started
 
