@@ -158,7 +158,7 @@ uint8 _OpenFile(uint16 fcbaddr)
 			for (i = 0; i < 16; i++)
 				F->al[i] = (b > i * 1024) ? i + 1 : 0;
 			F->s1 = 0x00;
-			F->rc = l/128;
+			F->rc = (uint8)(l/128);
 			result = 0x00;
 		}
 	} else {
@@ -171,12 +171,6 @@ uint8 _CloseFile(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
@@ -190,7 +184,7 @@ uint8 _CloseFile(uint16 fcbaddr)
 				fp.QuadPart = F->rc * 128;
 				HANDLE fh = CreateFileW(L"A\\$$$.SUB", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 				if (fh == INVALID_HANDLE_VALUE) {
-					result = GetLastError(fh);
+					result = 0xff;
 				} else {
 					if (SetFilePointerEx(fh, fp, NULL, FILE_BEGIN) == 0 || SetEndOfFile(fh) == 0)
 						result = 0xff;
