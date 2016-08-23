@@ -548,6 +548,6 @@ uint8 _WriteRand(uint16 fcbaddr)
 void _CheckSUB(void)
 {
 	if (_SearchFirst(BatchFCB) == 0x00)
-		SET_HIGH_REGISTER(AF, 0x01);
+		SET_HIGH_REGISTER(AF, 0xFF);
 }
 
