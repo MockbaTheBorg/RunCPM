@@ -36,5 +36,5 @@ There's no need to create clumsy disk images. Just put your CP/M programs and fi
 
 RunCPM needs a binary copy of the CP/M CCP to be on the same folder as RunCPM.exe. The one provided is CCP-DR.bin, copyright 1979 from Digital Research. Other CCPs may work as well, your mileage may vary. ZCPR2, for example, is also included.
 
-The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCP-DR.BIN and also the EXIT.COM, which ends RunCPM execution.
+The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCP-DR.BIN and also the EXIT.COM, which ends RunCPM execution. To use its contents just extract the .ZIP archive into an "A" subfolder under RunCPM.
 This disk also contains Z80ASM, which is a very powerful Z80 assembly that generates .COM files directly.
