@@ -248,7 +248,14 @@ uint8 _findnext(void) {
 
 uint8 _Truncate(char* fn, uint8 rc)
 {
+	SdFile file;
+	uint8 result = 0xff;
 
+	if (file.open(fn, O_RDWR) && file.truncate(rc * 128)) {
+		result = 0x00;
+	}
+
+	return(result);
 }
 
 /* Console abstraction functions */
