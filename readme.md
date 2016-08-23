@@ -20,13 +20,13 @@ Arduino digital and analog read/write support was added by Krzysztof Klis via BD
 
 Run "make -f Makfile.yyy", where "yyy" is:
 
-* *dos* when building with DJGPP under MS-DOS,
-* *mingw* when building with MinGW (or TDM-GCC) under Windows,
-* *posix* when building under Linux, FreeBSD, Mac OS X, etc.
+* *dos* - when building with DJGPP under MS-DOS,
+* *mingw* - when building with MinGW (or TDM-GCC) under Windows,
+* *posix* - when building under Linux, FreeBSD, Mac OS X, etc.
 
 For Linux and FreeBSD the ncurses-dev package is required. In Mac OS X install it using "brew install ncurses".
 
-Windows version builds with Visual Studio.
+Windows version also builds with Visual Studio.
 
 ## Getting Started
 
