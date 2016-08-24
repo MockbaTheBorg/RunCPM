@@ -165,21 +165,25 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(void)
+{
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
 
 	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
 	if (hFind != INVALID_HANDLE_VALUE) {
-		while (hFind != INVALID_HANDLE_VALUE&&more) {	// Skips folders and long file names
+		while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
 			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				more = FindNextFile(hFind, &FindFileData);
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				more = FindNextFile(hFind, &FindFileData);
-				continue;
+				if (FindFileData.cFileName[0] != '.')
+				{
+					more = FindNextFile(hFind, &FindFileData);
+					continue;
+				}
 			}
 			found++;
 			break;
@@ -209,8 +213,11 @@ uint8 _findnext(void)
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				more = FindNextFile(hFind, &FindFileData);
-				continue;
+				if (FindFileData.cFileName[0] != '.')
+				{
+					more = FindNextFile(hFind, &FindFileData);
+					continue;
+				}
 			}
 			found++;
 			break;
