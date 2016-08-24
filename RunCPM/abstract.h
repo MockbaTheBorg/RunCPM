@@ -166,7 +166,7 @@ uint8 _findfirst(void) {
 	found = findfirst(filename, &fnd, 0);
 	if (found == 0) {
 		_SetFile(dmaAddr, fnd.ff_name);
-		_RamWrite(dmaAddr, 0x00);
+		_RamWrite(dmaAddr, filename[0] - '@'); 	// Sets the drive of the requested file correctly on the FCB
 		result = 0x00;
 	}
 	return(result);
@@ -180,7 +180,7 @@ uint8 _findnext(void)
 	more = findnext(&fnd);
 	if (more == 0) {
 		_SetFile(dmaAddr, fnd.ff_name);
-		_RamWrite(dmaAddr, 0x00);
+		_RamWrite(dmaAddr, filename[0] - '@'); 	// Sets the drive of the requested file correctly on the FCB
 		result = 0x00;
 	}
 	return(result);

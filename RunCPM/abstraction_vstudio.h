@@ -179,7 +179,7 @@ uint8 _findfirst(void)
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				if (FindFileData.cFileName[0] != '.')
+				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
 				{
 					more = FindNextFile(hFind, &FindFileData);
 					continue;
@@ -190,7 +190,7 @@ uint8 _findfirst(void)
 		}
 		if (found) {
 			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, 0x00);
+			_RamWrite(dmaAddr, filename[0] - '@');	// Sets the drive of the requested file correctly on the FCB
 			result = 0x00;
 		} else {
 			FindClose(hFind);
@@ -213,7 +213,7 @@ uint8 _findnext(void)
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				if (FindFileData.cFileName[0] != '.')
+				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
 				{
 					more = FindNextFile(hFind, &FindFileData);
 					continue;
@@ -224,7 +224,7 @@ uint8 _findnext(void)
 		}
 		if (found) {
 			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, 0x00);
+			_RamWrite(dmaAddr, filename[0] - '@');	// Sets the drive of the requested file correctly on the FCB
 			result = 0x00;
 		} else {
 			FindClose(hFind);
