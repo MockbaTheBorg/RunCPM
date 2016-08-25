@@ -219,7 +219,7 @@ uint8 _findnext(void)
 		dirToFCB((uint8*)file, fcbname);
 		if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
 			_SetFile(dmaAddr, (uint8*)file);
-			_RamWrite(dmaAddr, filename[0] - '@'); 	// Sets the drive of the requested file correctly on the FCB
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 			break;
 		}

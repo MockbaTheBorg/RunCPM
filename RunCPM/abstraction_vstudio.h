@@ -180,8 +180,8 @@ uint8 _findfirst(void)
 			break;
 		}
 		if (found) {
-			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, filename[0] - '@');	// Sets the drive of the requested file correctly on the FCB
+			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 		} else {
 			FindClose(hFind);
@@ -214,8 +214,8 @@ uint8 _findnext(void)
 			break;
 		}
 		if (found) {
-			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, filename[0] - '@');	// Sets the drive of the requested file correctly on the FCB
+			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 		} else {
 			FindClose(hFind);

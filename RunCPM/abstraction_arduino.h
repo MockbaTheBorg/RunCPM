@@ -217,7 +217,7 @@ uint8 _findfirst(void) {
 	dirToFCB(filename, pattern);
 	if (findFirst(pattern, fcbname)) {
 		_SetFCBFile(dmaAddr, fcbname);
-		_RamWrite(dmaAddr, filename[0] - '@'); 	// Sets the drive of the requested file correctly on the FCB
+		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}
 
@@ -230,7 +230,7 @@ uint8 _findnext(void) {
 	dirToFCB(filename, pattern);
 	if (findNext(pattern, fcbname)) {
 		_SetFCBFile(dmaAddr, fcbname);
-		_RamWrite(dmaAddr, filename[0] - '@'); 	// Sets the drive of the requested file correctly on the FCB
+		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}
 
