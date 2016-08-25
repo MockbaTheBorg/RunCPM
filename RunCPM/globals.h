@@ -8,14 +8,20 @@
 
 #define VERSION	"2.1"
 
-/* Definition of the CCP information */
-#define CCPname		"CCP-DR.BIN"
-//#define CCPname		"CCP-ZCPR.BIN"
-#define CCPaddr		0xE400	// CCP-DR.BIN and CCP-ZCPR.BIN
+// Define which CCP to use (select only one)
+#define DR
+//#define ZCPR
 
-/* Definition of the BATCH FCB for each CCP */
-#define BatchFCB	0xEBAC	// CCP-DR.BIN
-//#define BatchFCB	0xE47A	// CCP-ZCPR.BIN
+/* Definition of the CCP information */
+#ifdef DR
+	#define CCPname		"CCP-DR.BIN"
+	#define CCPaddr		0xE400	// CCP-DR.BIN
+	#define BatchFCB	0xEBAC	// CCP-DR.BIN
+#else
+	#define CCPname		"CCP-ZCPR.BIN"
+	#define CCPaddr		0xE400	// CCP-ZCPR.BIN
+	#define BatchFCB	0xE47A	// CCP-ZCPR.BIN
+#endif
 
 #ifndef TRUE
 #define FALSE 0

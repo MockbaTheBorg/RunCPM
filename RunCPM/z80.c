@@ -1094,6 +1094,15 @@ static const char *MnemonicsXCB[256] =
 	"SET 6,B", "SET 6,C", "SET 6,D", "SET 6,E", "SET 6,H", "SET 6,L", "SET 6,(I%@h)", "SET 6,A",
 	"SET 7,B", "SET 7,C", "SET 7,D", "SET 7,E", "SET 7,H", "SET 7,L", "SET 7,(I%@h)", "SET 7,A"
 };
+
+static const char *CPMCalls[41] =
+{
+	"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
+	"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
+	"Close File", "Search First", "Search Next", "Delete File", "Read Sequential", "Write Sequential", "Make File", "Rename File",
+	"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params",
+	"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A", "Write Random 0 fill"
+};
 #endif
 
 /* Memory management    */
@@ -1263,7 +1272,6 @@ uint8 Disasm(pos)
 			txt++;
 		}
 	}
-	_puts("\r\n");
 
 	return(count);
 }
@@ -1294,6 +1302,20 @@ void Z80debug(void)
 		_puts(" : ");
 
 		Disasm(pos);
+
+		if (PC == 0x0005)
+		{
+			if (LOW_REGISTER(BC) > 40)
+			{
+				_puts(" (Unknown)");
+			} else {
+				_puts(" (");
+				_puts(CPMCalls[LOW_REGISTER(BC)]);
+				_puts(")");
+			}
+		}
+
+		_puts("\r\n");
 		_puts("Command|? : ");
 		ch = _getche();
 		if (ch == 't')
