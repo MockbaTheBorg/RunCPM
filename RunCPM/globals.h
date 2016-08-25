@@ -20,7 +20,7 @@
 #else
 	#define CCPname		"CCP-ZCPR.BIN"
 	#define CCPaddr		0xE400	// CCP-ZCPR.BIN
-	#define BatchFCB	0xE47A	// CCP-ZCPR.BIN
+	#define BatchFCB	0xE45E	// CCP-ZCPR.BIN
 #endif
 
 #ifndef TRUE
