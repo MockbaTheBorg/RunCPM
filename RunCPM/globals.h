@@ -107,6 +107,4 @@ extern int32 Break; /* Breakpoint                                 */
 	#define BIOSpage	0xfc
 #endif
 
-#define ROMSTART (BDOSpage<<8)
-#define ROMSIZE 0x10000-ROMSTART
-#define RAMSIZE ROMSTART
+#define RAMSIZE 65536

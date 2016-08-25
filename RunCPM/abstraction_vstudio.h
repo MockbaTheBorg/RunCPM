@@ -9,25 +9,16 @@
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-static uint8 ROM[ROMSIZE];	// ROM must go into code (for Arduino and other hardware)
 static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
 
 uint8 _RamRead(uint16 address)
 {
-	if (address < ROMSTART) {
-		return(RAM[address]);
-	} else {
-		return(ROM[address - ROMSTART]);
-	}
+	return(RAM[address]);
 }
 
 void _RamWrite(uint16 address, uint8 value)
 {
-	if (address < ROMSTART) {
-		RAM[address] = value;
-	} else {
-		ROM[address-ROMSTART] = value;
-	}
+	RAM[address] = value;
 }
 
 /* Filesystem (disk) abstraction fuctions */
