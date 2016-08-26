@@ -30,6 +30,7 @@ uint8	newname[13];
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
+int		dirPos;
 
 uint8	user = 0;	// Current CP/M user
 
@@ -53,59 +54,30 @@ typedef struct {
 void _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	unsigned char i = 0, j = 0;
+	uint8 i = 0;
 
 	while (i < 8) {
 		if (F->fn[i] > 32) {
-			*(filename + j++) = F->fn[i];
+			*(filename++) = F->fn[i];
 		}
 		i++;
 	}
-	*(filename + j++) = '.';
+	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
 		if (F->tp[i] > 32) {
-			*(filename + j++) = F->tp[i];
+			*(filename++) = F->tp[i];
 		}
 		i++;
 	}
-	*(filename + j) = 0x00;
+	*filename = 0x00;
 }
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	int i = 0;
+	uint8 i = 0;
 
-	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = toupper(*filename);
-		*filename++;
-		i++;
-	}
-	while (i < 8) {
-		F->fn[i] = ' ';
-		i++;
-	}
-	if (*filename == '.') {
-		*filename++;
-	}
-	i = 0;
-	while (*filename != 0) {
-		F->tp[i] = toupper(*filename);
-		*filename++;
-		i++;
-	}
-	while (i < 3) {
-		F->tp[i] = ' ';
-		i++;
-	}
-}
-
-void _SetFCBFile(uint16 fcbaddr, uint8* filename)
-{
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-
-	int i = 0;
 	while (i < 8) {
 		F->fn[i] = toupper(*filename);
 		*filename++;
@@ -165,85 +137,50 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-bool findFirst(uint8* pattern, uint8* fcbname)
-{
-	bool result = 0;
-	uint8 dirname[13];
-	bool isfile;
-
-	SD.vwd()->rewind();
-	while (dir.openNext(SD.vwd(), O_READ)) {
-		dir.getName((char*)dirname, 13);
-		isfile = dir.isFile();
-		dir.close();
-		if (!isfile)
-			continue;
-		dirToFCB(dirname, fcbname);
-		if (match(fcbname, pattern)) {
-			result = 1;
-			break;
-		}
-	}
-	return(result);
-}
-
 bool findNext(uint8* pattern, uint8* fcbname)
 {
 	bool result = 0;
 	uint8 dirname[13];
-	uint8 temp[12];
-	uint8* oldname = &temp[0];
 	bool isfile;
+	int i;
 
 	SD.vwd()->rewind();
+	for (i = 0; i < dirPos; i++) {
+		dir.openNext(SD.vwd(), O_READ);
+		dir.close();
+	}
 	while (dir.openNext(SD.vwd(), O_READ)) {
 		dir.getName((char*)dirname, 13);
 		isfile = dir.isFile();
 		dir.close();
+		dirPos++;
 		if (!isfile)
 			continue;
-		dirToFCB(dirname, oldname);
-		if (match(oldname, fcbname))
-			break;
-	}
-	while (dir.openNext(SD.vwd(), O_READ)) {
-		dir.getName((char*)dirname, 13);
-		dir.close();
-		//		if (!dir.isFile())
-		//			continue;
 		dirToFCB(dirname, fcbname);
 		if (match(fcbname, pattern)) {
 			result = 1;
 			break;
 		}
 	}
-	return(result);
-}
-
-uint8 _findfirst(void) {
-	uint8 result = 0xff;
-
-	dirToFCB(filename, pattern);
-	if (findFirst(pattern, fcbname)) {
-		_SetFCBFile(dmaAddr, fcbname);
-		_RamWrite(dmaAddr, 0x00);
-		result = 0x00;
-	}
-
 	return(result);
 }
 
 uint8 _findnext(void) {
 	uint8 result = 0xff;
 
-	dirToFCB(filename, pattern);
 	if (findNext(pattern, fcbname)) {
-		_SetFCBFile(dmaAddr, fcbname);
+		_SetFile(dmaAddr, fcbname);
 		_RamWrite(dmaAddr, 0x00);
 		result = 0x00;
 	}
 
 	return(result);
+}
+
+uint8 _findfirst(void) {
+	dirPos = 0;
+	dirToFCB(filename, pattern);
+	return(_findnext());
 }
 
 uint8 _Truncate(char* fn, uint8 rc)

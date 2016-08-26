@@ -39,12 +39,13 @@ uint8	fcbname[14];
 uint8	filename[15];
 uint8	newname[13];
 uint8	drive[2] = {'A', '/'};
-uint8	user = 0;	// Current CP/M user
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
 glob_t	pglob;
 int		pglob_pos;
+
+uint8	user = 0;	// Current CP/M user
 
 typedef struct {
 	uint8 dr;
@@ -115,6 +116,7 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
+
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
