@@ -61,6 +61,7 @@ extern "C"
 
 #ifndef _WIN32
 	extern uint8 _getche(void);
+	extern void _putch(uint8 ch);
 #endif
 	extern void _putcon(uint8 ch);
 	extern void _puts(const char* str);
