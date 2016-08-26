@@ -6,12 +6,11 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
-#define CCPname		"CPM22.BIN"
-#define CCPaddr		0xE400	// ORG of CPM22.Z80
+uint8	LastSel;		// Last disk selected
 
 void _PatchCPM(void)
 {
-	uint16 BDOSjmpaddr = (BDOSjmppage << 8) + 6;
+	uint16 BDOSjmpaddr = BDOSjmppage << 8;
 	uint16 BIOSjmpaddr = BIOSjmppage << 8;
 	uint16 BDOSaddr = BDOSpage << 8;
 	uint16 BIOSaddr = BIOSpage << 8;
@@ -35,8 +34,19 @@ void _PatchCPM(void)
 	_RamWrite(0x0006, 0x06);
 	_RamWrite(0x0007, BDOSjmppage);
 
+	//**********  Patch CP/M Version into the memory so the CCP can see it (not used right now)
+
+	// DR CCP looks or this at ORG + 0800h, but matches it with 00 00 00 00 00 00
+	_RamWrite(BDOSjmpaddr++, 0x00);
+	_RamWrite(BDOSjmpaddr++, 0x16);	// 22 - CP/M 2.2
+	_RamWrite(BDOSjmpaddr++, 0x00);
+	_RamWrite(BDOSjmpaddr++, 0x00);
+	_RamWrite(BDOSjmpaddr++, 0x00);
+	_RamWrite(BDOSjmpaddr++, 0x00);
+
 	//**********  Patch CP/M BDOS/BIOS jump tables into the memory
 
+	/* BDOS jump table */
 	_RamWrite(BDOSjmpaddr++, JP);
 	_RamWrite(BDOSjmpaddr++, 0x00);
 	_RamWrite(BDOSjmpaddr++, BDOSpage);
@@ -602,7 +612,7 @@ void _Bdos(void)
 		/*
 		C = 1 : Console input
 		Gets a char from the console
-		Returns: A=L=Char
+		Returns: A=Char
 		*/
 	case 1:
 		SET_HIGH_REGISTER(AF, _getche());
@@ -621,7 +631,7 @@ void _Bdos(void)
 		break;
 		/*
 		C = 3 : Auxiliary (Reader) input
-		Returns: A=L=Char
+		Returns: A=Char
 		*/
 	case 3:
 		SET_HIGH_REGISTER(AF, 0x1a);
@@ -638,10 +648,9 @@ void _Bdos(void)
 		break;
 		/*
 		C = 6 : Direct console IO
-		E = 0xFF : Checks for char available and returns it, or 0x00 if none
-		E = char : Outputs char
-		Gets a char from the console
-		Returns: A=Char or 0x00
+		E = 0xFF : Checks for char available and returns it, or 0x00 if none (read)
+		E = char : Outputs char (write)
+		Returns: A=Char or 0x00 (on read)
 		*/
 	case 6:
 		if (LOW_REGISTER(DE) == 0xff) {
@@ -650,8 +659,6 @@ void _Bdos(void)
 			if (HIGH_REGISTER(AF) == 4)
 				Debug = 1;
 #endif
-		} else if (LOW_REGISTER(DE) == 0xfe) {	// Undocumented behavior (not clear on DRI User Guide)
-			SET_HIGH_REGISTER(AF, _chready());
 		} else {
 			_putcon(LOW_REGISTER(DE));
 		}
@@ -693,7 +700,7 @@ void _Bdos(void)
 		c = _RamRead(i);	// Gets the number of characters to read
 		i++;	// Points to the number read
 		count = 0;
-		while (TRUE)	// Very simplistic line input
+		while (c)	// Very simplistic line input (Lacks ^E ^R ^U support)
 		{
 			ch = _getch();
 #ifdef DEBUG
@@ -720,7 +727,7 @@ void _Bdos(void)
 			if (count == c)
 				break;
 		}
-		_RamWrite(i, count);	// Saves the number read
+		_RamWrite(i, count);	// Saves the number or characters read
 		break;
 		/*
 		C = 11 (0Bh) : Get console status
@@ -737,7 +744,6 @@ void _Bdos(void)
 		// The undocumented behavior below may be used by applications to verify that they are running on CP/M 2.2
 		HL = 0x22;
 		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));	// Undocumented behavior (doesn't follow DRI User Guide)
-		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));	// Undocumented behavior (doesn't follow DRI User Guide)
 		break;
 		/*
 		C = 13 (0Dh) : Reset disk system
@@ -756,9 +762,10 @@ void _Bdos(void)
 	case 14:
 		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
 			_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (LOW_REGISTER(DE) & 0x0f));
+			LastSel = RAM[0x0004];
 		} else {
 			_error(errSELECT);
-			_RamWrite(0x0004, _RamRead(0x0004) & 0xf0);	// Set current drive to A:, keep user
+			_RamWrite(0x0004, LastSel);	// Sets 0x0004 back to the last selected user/drive
 		}
 		break;
 		/*
@@ -817,12 +824,11 @@ void _Bdos(void)
 		SET_HIGH_REGISTER(AF, _RenameFile(DE));
 		break;
 		/*
-		C = 24 (18h) : Return log-in vector
+		C = 24 (18h) : Return log-in vector (active drive map)
 		*/
 	case 24:
 		HL = loginVector;	// (todo) improve this
 		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
-		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));
 		break;
 		/*
 		C = 25 (19h) : Return current disk
@@ -842,7 +848,6 @@ void _Bdos(void)
 	case 27:
 		HL = (BDOSpage << 8) + 18;
 		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
-		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));
 		break;
 		/*
 		C = 28 (1Ch) : Write protect current disk
@@ -856,7 +861,6 @@ void _Bdos(void)
 	case 29:
 		HL = roVector;
 		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
-		SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));
 		break;
 		/********** (todo) Function 30: Set file attributes **********/
 		/*

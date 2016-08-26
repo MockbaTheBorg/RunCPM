@@ -6,7 +6,22 @@
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
 
-#define VERSION	"2.0"
+#define VERSION	"2.1"
+
+// Define which CCP to use (select only one)
+#define DR
+//#define ZCPR
+
+/* Definition of the CCP information */
+#ifdef DR
+	#define CCPname		"CCP-DR.BIN"
+	#define CCPaddr		0xE400	// CCP-DR.BIN
+	#define BatchFCB	0xEBAC	// CCP-DR.BIN
+#else
+	#define CCPname		"CCP-ZCPR.BIN"
+	#define CCPaddr		0xE400	// CCP-ZCPR.BIN
+	#define BatchFCB	0xE45E	// CCP-ZCPR.BIN
+#endif
 
 #ifndef TRUE
 #define FALSE 0
@@ -92,6 +107,4 @@ extern int32 Break; /* Breakpoint                                 */
 	#define BIOSpage	0xfc
 #endif
 
-#define ROMSTART (BDOSpage<<8)
-#define ROMSIZE 0x10000-ROMSTART
-#define RAMSIZE ROMSTART
+#define RAMSIZE 65536
