@@ -37,7 +37,7 @@ $(PROG): $(OBJS)
 
 # All .o files depend on their corresponding .c file
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< 2>&1 | sed -e "s/:/(/" -e "s/:/,/" -e "s/:/):/"
+	$(CC) $(CFLAGS) -c $<
 
 # Compile everything.
 all: clean $(PROG)
