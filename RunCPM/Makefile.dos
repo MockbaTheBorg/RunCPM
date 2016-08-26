@@ -42,6 +42,7 @@ $(PROG): $(OBJS)
 # Compile everything.
 all: clean $(PROG)
 
+.PHONY: clean
 clean:
 	$(RM) $(PROG)
 	$(RM) *.o

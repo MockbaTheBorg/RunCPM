@@ -264,6 +264,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 					_GetFile(dmaAddr, &filename[0]);
 #ifdef ARDUINO
 					if (SD.remove((char*)filename)) {
+						dirPos--;
 #else
 					if (!_remove(&filename[0])) {
 #endif
