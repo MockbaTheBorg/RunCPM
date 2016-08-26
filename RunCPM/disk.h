@@ -21,14 +21,14 @@ Disk errors
 static void _error(uint8 error)
 {
 	_puts("\r\nBdos Error on ");
-	_putcon('A' + _RamRead(0x0004));
-	_puts(": ");
+	_putcon('A' + LOW_REGISTER(DE));
+	_puts(" : ");
 	switch (error) {
 	case errWRITEPROT:
 		_puts("R/O");
 		break;
 	case errSELECT:
-		_puts("SELECT");
+		_puts("Select");
 		break;
 	default:
 		_puts("\r\nCP/M ERR");

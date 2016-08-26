@@ -9,25 +9,16 @@
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-static uint8 ROM[ROMSIZE];	// ROM must go into code (for Arduino and other hardware)
 static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
 
 uint8 _RamRead(uint16 address)
 {
-	if (address < ROMSTART) {
-		return(RAM[address]);
-	} else {
-		return(ROM[address - ROMSTART]);
-	}
+	return(RAM[address]);
 }
 
 void _RamWrite(uint16 address, uint8 value)
 {
-	if (address < ROMSTART) {
-		RAM[address] = value;
-	} else {
-		ROM[address-ROMSTART] = value;
-	}
+	RAM[address] = value;
 }
 
 /* Filesystem (disk) abstraction fuctions */
@@ -165,28 +156,32 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(void)
+{
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
 
 	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
 	if (hFind != INVALID_HANDLE_VALUE) {
-		while (hFind != INVALID_HANDLE_VALUE&&more) {	// Skips folders and long file names
+		while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
 			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				more = FindNextFile(hFind, &FindFileData);
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				more = FindNextFile(hFind, &FindFileData);
-				continue;
+				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
+				{
+					more = FindNextFile(hFind, &FindFileData);
+					continue;
+				}
 			}
 			found++;
 			break;
 		}
 		if (found) {
-			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, 0x00);
+			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 		} else {
 			FindClose(hFind);
@@ -209,15 +204,18 @@ uint8 _findnext(void)
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
-				more = FindNextFile(hFind, &FindFileData);
-				continue;
+				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
+				{
+					more = FindNextFile(hFind, &FindFileData);
+					continue;
+				}
 			}
 			found++;
 			break;
 		}
 		if (found) {
-			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// (todo) Create fake DIR entry
-			_RamWrite(dmaAddr, 0x00);
+			_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 		} else {
 			FindClose(hFind);
