@@ -212,9 +212,9 @@ unsigned char _getche(void)
 	return getche();
 }
 
-void _putch(byte)
+void _putch(uint8 ch)
 {
-	putch(byte);
+	putch(ch);
 }
 
 void _clrscr(void)
