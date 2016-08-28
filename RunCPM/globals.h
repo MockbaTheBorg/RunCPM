@@ -15,12 +15,12 @@
 /* Definition of the CCP information */
 #ifdef DR
 	#define CCPname		"CCP-DR.BIN"
-	#define CCPaddr		0xE400	// CCP-DR.BIN
-	#define BatchFCB	0xEBAC	// CCP-DR.BIN
+	#define CCPaddr		0xE400	// From CCP.ASM
+	#define BatchFCB	0xEBAC	//
 #else
 	#define CCPname		"CCP-ZCPR.BIN"
-	#define CCPaddr		0xE400	// CCP-ZCPR.BIN
-	#define BatchFCB	0xE45E	// CCP-ZCPR.BIN
+	#define CCPaddr		0xE400	// From ZCPR.ASM
+	#define BatchFCB	0xE45E	//
 #endif
 
 #ifndef TRUE
