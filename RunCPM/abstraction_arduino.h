@@ -34,14 +34,6 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
-typedef struct {
-	uint8 uu;
-	uint8 fn[8];
-	uint8 tp[3];
-	uint8 xl, bc, xh, rc;
-	uint8 al[16];
-} CPM_DIR;
-
 void _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
