@@ -37,18 +37,6 @@ static void _error(uint8 error)
 	Status = 2;
 }
 
-/*
-Creates a fake directory entry as we don't have a real disk drive
-*/
-void _FCBtoDIR(uint16 fcbaddr)
-{
-	CPM_DIR* d = (CPM_DIR*)&RAM[dmaAddr];
-
-	_RamFill(dmaAddr, 128, 0xE5);
-	_RamCopy(fcbaddr, 32, dmaAddr);
-	d->uu = 0x00;
-}
-
 int _SelectDisk(uint8 dr)
 {
 	uint8 result;
@@ -249,6 +237,23 @@ uint8 _SearchNext(uint16 fcbaddr)
 	return(result);
 }
 
+int _HasWildcards(uint16 fcbaddr) {
+	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 i;
+
+	for (i = 0; i < 8; i++) {
+		if (F->fn[i] == '*' || F->fn[i] == '?') {
+			return 1;
+		}
+	}
+	for (i = 0; i < 3; i++) {
+		if (F->tp[i] == '*' || F->tp[i] == '?') {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 uint8 _DeleteFile(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
@@ -257,21 +262,32 @@ uint8 _DeleteFile(uint16 fcbaddr)
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			result = _SearchFirst(fcbaddr);
-			if (result != 0xff)
-			{
-				do {
-					_GetFile(dmaAddr, &filename[0]);
+			if (_HasWildcards(fcbaddr)) {
+				result = _SearchFirst(fcbaddr);
+				if (result != 0xff)
+				{
+					do {
+						_GetFile(dmaAddr, &filename[0]);
 #ifdef ARDUINO
-					if (SD.remove((char*)filename)) {
-						dirPos--;
+						if (SD.remove((char*)filename)) {
+							dirPos--;
 #else
-					if (!_remove(&filename[0])) {
+						if (!_remove(&filename[0])) {
 #endif
-						deleted = 0x00;
-					}
-					result = _SearchNext(fcbaddr);
-				} while (result != 0xff);
+							deleted = 0x00;
+						}
+						result = _SearchNext(fcbaddr);
+					} while (result != 0xff);
+				}
+			} else {
+				_GetFile(fcbaddr, &filename[0]);
+#ifdef ARDUINO
+				if (SD.remove((char*)filename)) {
+#else
+				if (!_remove(&filename[0])) {
+#endif
+					deleted = 0x00;
+				}
 			}
 		} else {
 			_error(errWRITEPROT);
