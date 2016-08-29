@@ -735,6 +735,7 @@ void _Bdos(void)
 		*/
 	case 11:
 		SET_HIGH_REGISTER(AF, _chready());
+		SET_LOW_REGISTER(HL, HIGH_REGISTER(AF));	// A = L = status
 		break;
 		/*
 		C = 12 (0Ch) : Get version number
