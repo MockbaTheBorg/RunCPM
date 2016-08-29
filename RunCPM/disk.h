@@ -37,18 +37,6 @@ static void _error(uint8 error)
 	Status = 2;
 }
 
-/*
-Creates a fake directory entry as we don't have a real disk drive
-*/
-void _FCBtoDIR(uint16 fcbaddr)
-{
-	CPM_DIR* d = (CPM_DIR*)&RAM[dmaAddr];
-
-	_RamFill(dmaAddr, 128, 0xE5);
-	_RamCopy(fcbaddr, 32, dmaAddr);
-	d->uu = 0x00;
-}
-
 int _SelectDisk(uint8 dr)
 {
 	uint8 result;
