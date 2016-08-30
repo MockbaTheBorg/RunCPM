@@ -757,7 +757,7 @@ void _Bdos(void)
 		Returns: A=0x00 or 0xFF
 		*/
 	case 14:
-		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
+		if (_SelectDisk(LOW_REGISTER(DE) + 1)) {
 			_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (LOW_REGISTER(DE) & 0x0f));
 			LastSel = _RamRead(0x0004);
 		} else {
@@ -893,10 +893,9 @@ void _Bdos(void)
 		F = (CPM_FCB*)&RAM[DE];
 		count = _FileSize(DE) >> 7;
 
-		if (count = -1) {
+		if (count == -1) {
 			HL = 0xff;
-		}
-		else {
+		} else {
 			F->r0 = count & 0xff;
 			F->r1 = (count >> 8) & 0xff;
 			F->r2 = (count >> 16) & 0xff;
