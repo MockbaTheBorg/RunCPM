@@ -64,10 +64,10 @@ void _RamLoad(FILE* file, uint16 address)
 {
 	long l;
 
-	_fseek(file, 0, SEEK_END);
-	l = _ftell(file);
+	_sys_fseek(file, 0, SEEK_END);
+	l = _sys_ftell(file);
 
-	_fseek(file, 0, SEEK_SET);
-	_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
+	_sys_fseek(file, 0, SEEK_SET);
+	_sys_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
 }
 #endif

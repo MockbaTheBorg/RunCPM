@@ -41,36 +41,14 @@ int _SelectDisk(uint8 dr)
 {
 	uint8 result;
 	uint8 disk[2] = "A";
-#ifdef __DJGPP__
-	DIR *d;
-#endif
 
 	if (dr) {
 		disk[0] += (dr - 1);
 	} else {
 		disk[0] += (_RamRead(0x0004) & 0x0f);
 	}
-#ifdef ARDUINO
-	SD.chdir();
-	result = SD.chdir((char*)disk); // (todo) Test if it is Directory
-#else
-#ifdef _WIN32
-	result = (uint8)GetFileAttributes((LPCSTR)disk);
-	result = (result == 0x10);
-#else
-#ifdef __DJGPP__
-	if ((d = opendir((char*)disk)) != NULL) {
-		result = 1;
-		closedir(d);
-	} else {
-		result = 0;
-	}
-#else
-	struct stat st;
-	result = ((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
-#endif
-#endif
-#endif
+
+	result = _sys_select(disk);
 	if (result)
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
 	return(result);
@@ -79,31 +57,11 @@ int _SelectDisk(uint8 dr)
 long _FileSize(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
 	long l = -1;
 
 	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-		file = sd.open((char*)filename, O_RDONLY);
-#else
-		file = _fopen_r(&filename[0]);
-#endif
-		if (file != NULL) {
-#ifdef ARDUINO
-			l = sd.fileSize();
-			sd.close();
-#else
-			_fseek(file, 0, SEEK_END);
-			l = _ftell(file);
-			_fclose(file);
-#endif
-		}
+		l = _sys_filesize(filename);
 	}
 	return(l);
 }
@@ -112,32 +70,14 @@ uint8 _OpenFile(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
 	long l;
 	int32 reqext;	// Required extention to open
 	int32 b, i;
 
 	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-		file = sd.open((char*)filename, O_READ);
-#else
-		file = _fopen_r(&filename[0]);
-#endif
-		if (file != NULL) {
-#ifdef ARDUINO
-			l = sd.fileSize();
-			sd.close();
-#else
-			_fseek(file, 0, SEEK_END);
-			l = _ftell(file);
-			_fclose(file);
-#endif
+		if(_sys_openfile(&filename[0])) {
+			l = _FileSize(fcbaddr);
 
 			reqext = (F->ex & 0x1f) | (F->s1 << 5);
 			b = l - reqext * 16384;
@@ -178,28 +118,12 @@ uint8 _MakeFile(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-			file = sd.open((char*)filename, O_CREAT | O_WRITE);
-#else
-			file = _fopen_w(&filename[0]);
-#endif
-			if (file != NULL) {
+			if(_sys_makefile(&filename[0])) {
 				result = 0x00;
-#ifdef ARDUINO
-				sd.close();
-#else
-				_fclose(file);
-#endif
 			}
 		} else {
 			_error(errWRITEPROT);
@@ -249,14 +173,8 @@ uint8 _DeleteFile(uint16 fcbaddr)
 			while (result != 0xff)
 			{
 				_GetFile(tmpfcb, &filename[0]);
-#ifdef ARDUINO
-				if (SD.remove((char*)filename)) {
-					dirPos--;
-#else
-				if (!_remove(&filename[0])) {
-#endif
+				if(_sys_deletefile(&filename[0]))
 					deleted = 0x00;
-				}
 				result = _SearchNext(FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {
@@ -277,14 +195,8 @@ uint8 _RenameFile(uint16 fcbaddr)
 		if (!RW) {
 			_GetFile(fcbaddr + 16, &newname[0]);
 			_GetFile(fcbaddr, &filename[0]);
-			newname[0] = filename[0];	// renamed file must end up on the same drive as the original
-#ifdef ARDUINO
-			if (SD.rename((char*)filename, (char*)newname)) {
-#else
-			if (!_rename(&filename[0], &newname[0])) {
-#endif
+			if(_sys_renamefile(&filename[0], &newname[0]))
 				result = 0x00;
-			}
 		} else {
 			_error(errWRITEPROT);
 		}
@@ -302,7 +214,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 	SdFile sd;
 	int32 file;
 #else
-	FILE* file;
+	FILE *file;
 #endif
 	uint8 bytesread;
 
@@ -313,19 +225,19 @@ uint8 _ReadSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
 #else
-		file = _fopen_r(&filename[0]);
+		file = _sys_fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			if (sd.seekSet(fpos)) {
 #else
-			if (!_fseek(file, fpos, 0)) {
+			if (!_sys_fseek(file, fpos, 0)) {
 #endif
-				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
+				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
 #ifdef ARDUINO
 				bytesread = sd.read(&RAM[dmaAddr], 128);
 #else
-				bytesread = (uint8)_fread(&RAM[dmaAddr], 1, 128, file);
+				bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
 #endif
 				if (bytesread) {
 					F->cr++;
@@ -347,7 +259,7 @@ uint8 _ReadSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 			sd.close();
 #else
-			_fclose(file);
+			_sys_fclose(file);
 #endif
 		} else {
 			result = 0x10;
@@ -377,15 +289,15 @@ uint8 _WriteSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 			file = sd.open((char*)filename, O_RDWR);
 #else
-			file = _fopen_rw(&filename[0]);
+			file = _sys_fopen_rw(&filename[0]);
 #endif
 			if (file != NULL) {
 #ifdef ARDUINO
 				if (sd.seekSet(fpos)) {
 					if (sd.write(&RAM[dmaAddr], 128)) {
 #else
-				if (!_fseek(file, fpos, 0)) {
-					if (_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+				if (!_sys_fseek(file, fpos, 0)) {
+					if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
 #endif
 						F->cr++;
 						if (F->cr > 127) {
@@ -403,7 +315,7 @@ uint8 _WriteSeq(uint16 fcbaddr)
 #ifdef ARDUINO
 				sd.close();
 #else
-				_fclose(file);
+				_sys_fclose(file);
 #endif
 			} else {
 				result = 0x10;
@@ -436,19 +348,19 @@ uint8 _ReadRand(uint16 fcbaddr)
 #ifdef ARDUINO
 		file = sd.open((char*)filename, O_READ);
 #else
-		file = _fopen_r(&filename[0]);
+		file = _sys_fopen_r(&filename[0]);
 #endif
 		if (file != NULL) {
 #ifdef ARDUINO
 			if (sd.seekSet(fpos)) {
 #else
-			if (!_fseek(file, fpos, 0)) {
+			if (!_sys_fseek(file, fpos, 0)) {
 #endif
 				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 #ifdef ARDUINO
 				bytesread = sd.read(&RAM[dmaAddr], 128);
 #else
-				bytesread = (uint8)_fread(&RAM[dmaAddr], 1, 128, file);
+				bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
 #endif
 				if (bytesread) {
 					F->cr = record & 0x7F;
@@ -465,7 +377,7 @@ uint8 _ReadRand(uint16 fcbaddr)
 #ifdef ARDUINO
 			sd.close();
 #else
-			_fclose(file);
+			_sys_fclose(file);
 #endif
 		} else {
 			result = 0x10;
@@ -495,15 +407,15 @@ uint8 _WriteRand(uint16 fcbaddr)
 #ifdef ARDUINO
 			file = sd.open((char*)filename, O_RDWR);
 #else
-			file = _fopen_rw(&filename[0]);
+			file = _sys_fopen_rw(&filename[0]);
 #endif
 			if (file != NULL) {
 #ifdef ARDUINO
 				if (sd.seekSet(fpos)) {
 					if (sd.write(&RAM[dmaAddr], 128)) {
 #else
-				if (!_fseek(file, fpos, 0)) {
-					if (_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+				if (!_sys_fseek(file, fpos, 0)) {
+					if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
 #endif
 						F->cr = record & 0x7F;
 						F->ex = (record >> 7) & 0x1f;
@@ -517,7 +429,7 @@ uint8 _WriteRand(uint16 fcbaddr)
 #ifdef ARDUINO
 				sd.close();
 #else
-				_fclose(file);
+				_sys_fclose(file);
 #endif
 			} else {
 				result = 0x10;

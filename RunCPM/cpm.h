@@ -192,7 +192,7 @@ void _PatchCPM(void)
 #ifdef DEBUGLOG
 void _logMemory(uint16 pos, uint8 size)
 {
-	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
+	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
 	uint16 h = pos;
 	uint16 c = pos;
 	uint8 l, i;
@@ -214,7 +214,7 @@ void _logMemory(uint16 pos, uint8 size)
 		}
 		fprintf(file, "\r\n");
 	}
-	_fclose(file);
+	_sys_fclose(file);
 }
 
 char flags[9];
@@ -234,7 +234,7 @@ char *_logFlags(uint8 ch)
 
 void _logBiosIn(uint8 ch)
 {
-	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
+	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "Bios call: %d (0x%02x) - ", ch, ch);
 	switch (ch) {
 	case 0:
@@ -293,19 +293,19 @@ void _logBiosIn(uint8 ch)
 		break;
 	}
 	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_fclose(file);
+	_sys_fclose(file);
 }
 
 void _logBiosOut(uint8 ch)
 {
-	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
+	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_fclose(file);
+	_sys_fclose(file);
 }
 
 void _logBdosIn(uint8 ch)
 {
-	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
+	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "Bdos call: %d (0x%02x) - ", ch, ch);
 	switch (ch){
 	case 0:
@@ -453,7 +453,7 @@ void _logBdosIn(uint8 ch)
 		break;
 	}
 	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_fclose(file);
+	_sys_fclose(file);
 
 	switch (ch){
 	case 9:
@@ -480,9 +480,9 @@ void _logBdosIn(uint8 ch)
 
 void _logBdosOut(uint8 ch)
 {
-	FILE* file = _fopen_a((uint8 *)"RunCPM.log");
+	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
 	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_fclose(file);
+	_sys_fclose(file);
 
 	switch (ch){
 	case 10:
@@ -575,11 +575,14 @@ void _Bios(void)
 	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
 		break;
-	default:				// Unimplemented calls get listed
+	default:
+#ifdef DEBUG	// Show unimplementes calls only when debugging
 		_puts("\r\nUnimplemented BIOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);
 		_puts("\r\n");
+#endif
+		break;
 	}
 #ifdef DEBUGLOG
 	_logBiosOut(ch);
@@ -965,10 +968,13 @@ void _Bdos(void)
 		Unimplemented calls get listed
 		*/
 	default:
+#ifdef DEBUG	// Show unimplementes calls only when debugging
 		_puts("\r\nUnimplemented BDOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);
 		_puts("\r\n");
+#endif
+		break;
 	}
 
 	// CP/M BDOS does this before returning
