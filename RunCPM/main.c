@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	_RamFill(0, 0x10000, 0);	// Clears the memory
 
 	while (TRUE) {
-		file = _fopen_r((uint8*)CCPname);
+		file = _sys_fopen_r((uint8*)CCPname);
 		if (file == NULL) {
 			_puts("\r\nCan't open CCP!\r\n");
 			break;
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 			//**********  Boot code  **********//
 			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
 			_RamLoad(file, CCPaddr);	// Loads the CCP binary file into memory
-			_fclose(file);
+			_sys_fclose(file);
 
 			_PatchCPM();	// Patches the CP/M entry points and other things in
 

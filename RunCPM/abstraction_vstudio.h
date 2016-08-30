@@ -43,57 +43,105 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
-FILE* _fopen_r(uint8 *filename) {
+FILE* _sys_fopen_r(uint8 *filename) {
 	return(fopen((const char*)filename, "rb"));
 }
 
-FILE* _fopen_w(uint8 *filename) {
+FILE* _sys_fopen_w(uint8 *filename) {
 	return(fopen((const char*)filename, "wb"));
 }
 
-FILE* _fopen_rw(uint8 *filename) {
+FILE* _sys_fopen_rw(uint8 *filename) {
 	return(fopen((const char*)filename, "r+b"));
 }
 
-FILE* _fopen_a(uint8 *filename) {
+FILE* _sys_fopen_a(uint8 *filename) {
 	return(fopen((const char*)filename, "a"));
 }
 
-int _fseek(FILE* file, long delta, int origin) {
+int _sys_fseek(FILE *file, long delta, int origin) {
 	return(fseek(file, delta, origin));
 }
 
-long _ftell(FILE* file) {
+long _sys_ftell(FILE *file) {
 	return(ftell(file));
 }
 
-long _fread(void *buffer, long size, long count, FILE* file) {
+long _sys_fread(void *buffer, long size, long count, FILE *file) {
 	return(fread(buffer, size, count, file));
 }
 
-long _fwrite(const void *buffer, long size, long count, FILE* file) {
+long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
 	return(fwrite(buffer, size, count, file));
 }
 
-int _feof(FILE* file) {
+int _sys_feof(FILE *file) {
 	return(feof(file));
 }
 
-int _fclose(FILE* file) {
+int _sys_fclose(FILE *file) {
 	return(fclose(file));
 }
 
-int _remove(uint8 *filename) {
+int _sys_remove(uint8 *filename) {
 	return(remove((const char*)filename));
 }
 
-int _rename(uint8 *name1, uint8 *name2) {
+int _sys_rename(uint8 *name1, uint8 *name2) {
 	return(rename((const char*)name1, (const char*)name2));
+}
+
+int _sys_select(uint8 *disk)
+{
+	return((uint8)GetFileAttributes((LPCSTR)disk) == 0x10);
+}
+
+long _sys_filesize(uint8 *filename)
+{
+	long l = -1;
+	FILE* file = _sys_fopen_r(filename);
+	if (file != NULL) {
+		_sys_fseek(file, 0, SEEK_END);
+		l = _sys_ftell(file);
+		_sys_fclose(file);
+	}
+	return(l);
+}
+
+int _sys_openfile(uint8 *filename)
+{
+	FILE* file = _sys_fopen_r(filename);
+	if (file != NULL)
+		_sys_fclose(file);
+	return(file != NULL);
+}
+
+int _sys_makefile(uint8 *filename)
+{
+	FILE* file = _sys_fopen_a(filename);
+	if (file != NULL)
+		_sys_fclose(file);
+	return(file != NULL);
+}
+
+int _sys_deletefile(uint8 *filename)
+{
+	return(!_sys_remove(filename));
+}
+
+int _sys_renamefile(uint8 *filename, uint8 *newname)
+{
+	return(!_sys_rename(&filename[0], &newname[0]));
+}
+
+int_sys_readseq(uint8 *filename)
+{
+
 }
 
 void _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
@@ -122,7 +170,7 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 void _SetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	int32 i = 0;
+	uint8 i = 0;
 
 	while (*filename != 0 && *filename != '.') {
 		F->fn[i] = toupper(*filename);

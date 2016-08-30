@@ -34,6 +34,55 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
+int _sys_select(uint8 *disk)
+{
+	SD.chdir();
+	return(SD.chdir((char*)disk)); // (todo) Test if it is Directory
+}
+
+long _sys_filesize(uint8 *filename)
+{
+	long l = -1;
+	SdFile sd;
+	int32 file = sd.open((char*)filename, O_RDONLY);
+	if (file != NULL) {
+		l = sd.fileSize();
+		sd.close();
+	}
+	return(l);
+}
+
+int _sys_openfile(uint8 *filename)
+{
+	SdFile sd;
+	int32 file = sd.open((char*)filename, O_READ);
+	if (file != NULL)
+		sd.close();
+	return(file != NULL);
+}
+
+int _sys_makefile(uint8 *filename)
+{
+	SdFile sd;
+	int32 file = sd.open((char*)filename, O_CREAT | O_WRITE);	// (todo) make sure this doesn't overwrite an existing file
+	if (file != NULL)
+		sd.close();
+	return(file != NULL);
+}
+
+int _sys_deletefile(uint8 *filename)
+{
+	int result = SD.remove((char*)filename);
+	if (result)
+		dirPos--;
+	return(result);
+}
+
+int _sys_renamefile(uint8 *filename, uint8 *newname)
+{
+	return(SD.rename((char*)filename, (char*)newname));
+}
+
 void _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
