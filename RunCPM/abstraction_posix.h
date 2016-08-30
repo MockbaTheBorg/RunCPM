@@ -199,7 +199,7 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-uint8 _findnext(void)
+uint8 _findnext(uint8 dir)
 {
 	uint8 result = 0xff;
 	char* file;
@@ -211,8 +211,11 @@ uint8 _findnext(void)
 		file = pglob.gl_pathv[i];
 		dirToFCB((uint8*)file, fcbname);
 		if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
-			_SetFile(dmaAddr, (uint8*)file);
-			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+			if (dir) {
+				_SetFile(dmaAddr, (uint8*)file);
+				_RamWrite(dmaAddr, 0x00);
+			}
+			_SetFile(tmpfcb, (uint8*)file);
 			result = 0x00;
 			break;
 		}
@@ -223,15 +226,15 @@ uint8 _findnext(void)
 	return(result);
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(uint8 dir) {
 	uint8 result = 0xff;
-	char dir[4] = "A/*";
+	char dirent[4] = "A/*";
 
-	dir[0] = filename[0];
-	if (glob(dir, 0, NULL, &pglob) == 0) {
+	dirent[0] = filename[0];
+	if (glob(dirent, 0, NULL, &pglob) == 0) {
 		dirToFCB(filename, pattern);
 		pglob_pos = 0;
-		result = _findnext();
+		result = _findnext(dir);
 	}
 	return(result);
 }
