@@ -148,22 +148,27 @@ bool findNext(uint8* pattern, uint8* fcbname)
 	return(result);
 }
 
-uint8 _findnext(void) {
+uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 
 	if (findNext(pattern, fcbname)) {
-		_SetFile(dmaAddr, fcbname);
-		_RamWrite(dmaAddr, 0x00);
+		if(dir) {
+			_SetFile(dmaAddr, fcbname);
+			_RamWrite(dmaAddr, 0x00);
+		}
+		_SetFile(tmpfcb, fcbname);
 		result = 0x00;
 	}
 
 	return(result);
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(uint8 dir) {
+	uint8 result = 0xff;
 	dirPos = 0;
 	dirToFCB(filename, pattern);
-	return(_findnext());
+
+	return(_findnext(dir));
 }
 
 uint8 _Truncate(char* fn, uint8 rc)
