@@ -782,13 +782,13 @@ void _Bdos(void)
 		C = 17 (11h) : Search for first
 		*/
 	case 17:
-		HL = _SearchFirst(DE, TRUE);		// TRUE = Creates a fake dir entry when finding the file
+		HL = _SearchFirst(DE, TRUE);	// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 18 (12h) : Search for next
 		*/
 	case 18:
-		HL = _SearchNext(dmaAddr, TRUE);	// TRUE = Creates a fake dir entry when finding the file
+		HL = _SearchNext(TRUE);			// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 19 (13h) : Delete file

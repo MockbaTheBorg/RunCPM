@@ -224,9 +224,9 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 dir)
 	return(result);
 }
 
-uint8 _SearchNext(uint16 fcbaddr, uint8 dir)
+uint8 _SearchNext(uint8 dir)
 {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)&RAM[tmpfcb];
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
@@ -257,7 +257,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 #endif
 					deleted = 0x00;
 				}
-				result = _SearchNext(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
+				result = _SearchNext(FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {
 			_error(errWRITEPROT);
