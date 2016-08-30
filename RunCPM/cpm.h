@@ -183,6 +183,10 @@ void _PatchCPM(void)
 	_RamWrite(BDOSaddr++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
 	_RamWrite(BDOSaddr++, 0x00);
 
+#ifdef PatchCCP
+	_RamWrite(PatchCCP, BDOSjmppage);
+#endif
+
 }
 
 #ifdef DEBUGLOG
@@ -213,27 +217,19 @@ void _logMemory(uint16 pos, uint8 size)
 	_fclose(file);
 }
 
+char flags[9];
 char *_logFlags(uint8 ch)
 {
-	char f[] = "........";
-	if (ch & 0b10000000)
-		f[0] = "S";
-	if (ch & 0b01000000)
-		f[1] = "Z";
-	if (ch & 0b00100000)
-		f[2] = "5";
-	if (ch & 0b00010000)
-		f[3] = "H";
-	if (ch & 0b00001000)
-		f[4] = "3";
-	if (ch & 0b00000100)
-		f[5] = "P";
-	if (ch & 0b00000010)
-		f[6] = "N";
-	if (ch & 0b00000001)
-		f[7] = "C";
-	f[8] = 0;
-	return(f);
+	flags[0] = (ch & 0b10000000) ? 'S' : '.';
+	flags[1] = (ch & 0b01000000) ? 'Z' : '.';
+	flags[2] = (ch & 0b00100000) ? '5' : '.';
+	flags[3] = (ch & 0b00010000) ? 'H' : '.';
+	flags[4] = (ch & 0b00001000) ? '3' : '.';
+	flags[5] = (ch & 0b00000100) ? 'P' : '.';
+	flags[6] = (ch & 0b00000010) ? 'N' : '.';
+	flags[7] = (ch & 0b00000001) ? 'C' : '.';
+	flags[8] = 0;
+	return(&flags[0]);
 }
 
 void _logBiosIn(uint8 ch)
@@ -524,7 +520,7 @@ void _Bios(void)
 	uint8 ch = LOW_REGISTER(PCX);
 
 #ifdef DEBUGLOG
-	_logBiosIn(LOW_REGISTER(PCX));
+	_logBiosIn(ch);
 #endif
 
 	switch (ch) {
@@ -586,7 +582,7 @@ void _Bios(void)
 		_puts("\r\n");
 	}
 #ifdef DEBUGLOG
-	_logBiosOut(LOW_REGISTER(PCX));
+	_logBiosOut(ch);
 #endif
 
 }
@@ -598,8 +594,11 @@ void _Bdos(void)
 	uint8	ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
-	_logBdosIn(LOW_REGISTER(BC));
+	_logBdosIn(ch);
 #endif
+
+	HL = 0x00;	// HL is reset by the BDOS
+	SET_LOW_REGISTER(BC, LOW_REGISTER(DE)); // C ends up equal to E
 
 	switch (ch) {
 		/*
@@ -615,9 +614,9 @@ void _Bdos(void)
 		Returns: A=Char
 		*/
 	case 1:
-		SET_HIGH_REGISTER(AF, _getche());
+		HL = _getche();
 #ifdef DEBUG
-		if (HIGH_REGISTER(AF) == 4)
+		if (HL == 4)
 			Debug = 1;
 #endif
 		break;
@@ -634,7 +633,7 @@ void _Bdos(void)
 		Returns: A=Char
 		*/
 	case 3:
-		SET_HIGH_REGISTER(AF, 0x1a);
+		HL = 0x1a;
 		break;
 		/*
 		C = 4 : Auxiliary (Punch) output
@@ -654,9 +653,9 @@ void _Bdos(void)
 		*/
 	case 6:
 		if (LOW_REGISTER(DE) == 0xff) {
-			SET_HIGH_REGISTER(AF, _getchNB());
+			HL = _getchNB();
 #ifdef DEBUG
-			if (HIGH_REGISTER(AF) == 4)
+			if (HL == 4)
 				Debug = 1;
 #endif
 		} else {
@@ -669,7 +668,7 @@ void _Bdos(void)
 		Returns: A = IOBYTE
 		*/
 	case 7:
-		SET_HIGH_REGISTER(AF, _RamRead(0x0003));
+		HL = _RamRead(0x0003);
 		break;
 		/*
 		C = 8 : Set IOBYTE
@@ -734,17 +733,14 @@ void _Bdos(void)
 		Returns: A=0x00 or 0xFF
 		*/
 	case 11:
-		SET_HIGH_REGISTER(AF, _chready());
-		SET_LOW_REGISTER(HL, HIGH_REGISTER(AF));	// A = L = status
+		HL = _chready();
 		break;
 		/*
 		C = 12 (0Ch) : Get version number
 		Returns: B=H=system type, A=L=version number
 		*/
 	case 12:
-		// The undocumented behavior below may be used by applications to verify that they are running on CP/M 2.2
 		HL = 0x22;
-		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));	// Undocumented behavior (doesn't follow DRI User Guide)
 		break;
 		/*
 		C = 13 (0Dh) : Reset disk system
@@ -754,7 +750,7 @@ void _Bdos(void)
 		loginVector = 0;
 		dmaAddr = 0x0080;
 		_RamWrite(0x0004, 0x00);	// Reset default drive to A: and CP/M user to 0 (0x00)
-		_CheckSUB();		// Checks if there's a $$$.SUB on the boot disk
+		HL = _CheckSUB();			// Checks if there's a $$$.SUB on the boot disk
 		break;
 		/*
 		C = 14 (0Eh) : Select Disk
@@ -763,7 +759,7 @@ void _Bdos(void)
 	case 14:
 		if (_SelectDisk(LOW_REGISTER(DE)+1)) {
 			_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (LOW_REGISTER(DE) & 0x0f));
-			LastSel = RAM[0x0004];
+			LastSel = _RamRead(0x0004);
 		} else {
 			_error(errSELECT);
 			_RamWrite(0x0004, LastSel);	// Sets 0x0004 back to the last selected user/drive
@@ -774,68 +770,67 @@ void _Bdos(void)
 		Returns: A=0x00 or 0xFF
 		*/
 	case 15:
-		SET_HIGH_REGISTER(AF, _OpenFile(DE));
+		HL = _OpenFile(DE);
 		break;
 		/*
 		C = 16 (10h) : Close file
 		*/
 	case 16:
-		SET_HIGH_REGISTER(AF, _CloseFile(DE));
+		HL = _CloseFile(DE);
 		break;
 		/*
 		C = 17 (11h) : Search for first
 		*/
 	case 17:
-		SET_HIGH_REGISTER(AF, _SearchFirst(DE));
+		HL = _SearchFirst(DE, TRUE);		// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 18 (12h) : Search for next
 		*/
 	case 18:
-		SET_HIGH_REGISTER(AF, _SearchNext(dmaAddr));
+		HL = _SearchNext(dmaAddr, TRUE);	// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 19 (13h) : Delete file
 		*/
 	case 19:
-		SET_HIGH_REGISTER(AF, _DeleteFile(DE));
+		HL = _DeleteFile(DE);
 		break;
 		/*
 		C = 20 (14h) : Read sequential
 		*/
 	case 20:
-		SET_HIGH_REGISTER(AF, _ReadSeq(DE));
+		HL = _ReadSeq(DE);
 		break;
 		/*
 		C = 21 (15h) : Write sequential
 		*/
 	case 21:
-		SET_HIGH_REGISTER(AF, _WriteSeq(DE));
+		HL = _WriteSeq(DE);
 		break;
 		/*
 		C = 22 (16h) : Make file
 		*/
 	case 22:
-		SET_HIGH_REGISTER(AF, _MakeFile(DE));
+		HL = _MakeFile(DE);
 		break;
 		/*
 		C = 23 (17h) : Rename file
 		*/
 	case 23:
-		SET_HIGH_REGISTER(AF, _RenameFile(DE));
+		HL = _RenameFile(DE);
 		break;
 		/*
 		C = 24 (18h) : Return log-in vector (active drive map)
 		*/
 	case 24:
 		HL = loginVector;	// (todo) improve this
-		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 		break;
 		/*
 		C = 25 (19h) : Return current disk
 		*/
 	case 25:
-		SET_HIGH_REGISTER(AF, _RamRead(0x0004) & 0x0f);
+		HL = _RamRead(0x0004) & 0x0f;
 		break;
 		/*
 		C = 26 (1Ah) : Set DMA address
@@ -848,7 +843,6 @@ void _Bdos(void)
 		*/
 	case 27:
 		HL = (BDOSpage << 8) + 18;
-		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 		break;
 		/*
 		C = 28 (1Ch) : Write protect current disk
@@ -861,7 +855,6 @@ void _Bdos(void)
 		*/
 	case 29:
 		HL = roVector;
-		SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 		break;
 		/********** (todo) Function 30: Set file attributes **********/
 		/*
@@ -875,7 +868,7 @@ void _Bdos(void)
 		*/
 	case 32:
 		if (LOW_REGISTER(DE) == 0xFF) {
-			SET_HIGH_REGISTER(AF, user);
+			HL = user;
 		} else {
 			user = LOW_REGISTER(DE);
 			_RamWrite(0x0004, (_RamRead(0x0004) & 0x0f) | (LOW_REGISTER(DE) << 4));
@@ -885,13 +878,13 @@ void _Bdos(void)
 		C = 33 (21h) : Read random
 		*/
 	case 33:
-		SET_HIGH_REGISTER(AF, _ReadRand(DE));
+		HL = _ReadRand(DE);
 		break;
 		/*
 		C = 34 (22h) : Write random
 		*/
 	case 34:
-		SET_HIGH_REGISTER(AF, _WriteRand(DE));
+		HL = _WriteRand(DE);
 		break;
 		/*
 		C = 35 (23h) : Compute file size
@@ -900,9 +893,14 @@ void _Bdos(void)
 		F = (CPM_FCB*)&RAM[DE];
 		count = _FileSize(DE) >> 7;
 
-		F->r0 = count & 0xff;
-		F->r1 = (count >> 8) & 0xff;
-		F->r2 = (count >> 16) & 0xff;
+		if (count = -1) {
+			HL = 0xff;
+		}
+		else {
+			F->r0 = count & 0xff;
+			F->r1 = (count >> 8) & 0xff;
+			F->r2 = (count >> 16) & 0xff;
+		}
 		break;
 		/*
 		C = 36 (24h) : Set random record
@@ -922,7 +920,6 @@ void _Bdos(void)
 		C = 37 (25h) : Reset drive
 		*/
 	case 37:
-		SET_HIGH_REGISTER(AF, 00);
 		break;
 		/********** Function 38: Not supported by CP/M 2.2 **********/
 		/********** Function 39: Not supported by CP/M 2.2 **********/
@@ -931,7 +928,7 @@ void _Bdos(void)
 		C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
 		*/
 	case 40:
-		SET_HIGH_REGISTER(AF, _WriteRand(DE));
+		HL = _WriteRand(DE);
 		break;
 #ifdef ARDUINO
 		/*
@@ -944,7 +941,7 @@ void _Bdos(void)
 		C = 221 (DDh) : DigitalRead
 		*/
 	case 221:
-		SET_HIGH_REGISTER(AF, digitalRead(HIGH_REGISTER(DE)));
+		HL = digitalRead(HIGH_REGISTER(DE));
 		break;
 		/*
 		C = 222 (DEh) : DigitalWrite
@@ -974,8 +971,13 @@ void _Bdos(void)
 		_puthex8(ch);
 		_puts("\r\n");
 	}
+
+	// CP/M BDOS does this before returning
+	SET_HIGH_REGISTER(BC, HIGH_REGISTER(HL));
+	SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
+
 #ifdef DEBUGLOG
-	_logBdosOut(LOW_REGISTER(BC));
+	_logBdosOut(ch);
 #endif
 
 }

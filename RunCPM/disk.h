@@ -210,48 +210,31 @@ uint8 _MakeFile(uint16 fcbaddr)
 	return(result);
 }
 
-uint8 _SearchFirst(uint16 fcbaddr)
+uint8 _SearchFirst(uint16 fcbaddr, uint8 dir)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
-		result = _findfirst();
+		result = _findfirst(dir);
 	} else {
 		_error(errSELECT);
 	}
 	return(result);
 }
 
-uint8 _SearchNext(uint16 fcbaddr)
+uint8 _SearchNext(uint16 fcbaddr, uint8 dir)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
-		result = _findnext();
+		result = _findnext(dir);
 	} else {
 		_error(errSELECT);
 	}
 	return(result);
-}
-
-int _HasWildcards(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
-	uint8 i;
-
-	for (i = 0; i < 8; i++) {
-		if (F->fn[i] == '*' || F->fn[i] == '?') {
-			return 1;
-		}
-	}
-	for (i = 0; i < 3; i++) {
-		if (F->tp[i] == '*' || F->tp[i] == '?') {
-			return 1;
-		}
-	}
-	return 0;
 }
 
 uint8 _DeleteFile(uint16 fcbaddr)
@@ -262,32 +245,19 @@ uint8 _DeleteFile(uint16 fcbaddr)
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			if (_HasWildcards(fcbaddr)) {
-				result = _SearchFirst(fcbaddr);
-				if (result != 0xff)
-				{
-					do {
-						_GetFile(dmaAddr, &filename[0]);
-#ifdef ARDUINO
-						if (SD.remove((char*)filename)) {
-							dirPos--;
-#else
-						if (!_remove(&filename[0])) {
-#endif
-							deleted = 0x00;
-						}
-						result = _SearchNext(fcbaddr);
-					} while (result != 0xff);
-				}
-			} else {
-				_GetFile(fcbaddr, &filename[0]);
+			result = _SearchFirst(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
+			while (result != 0xff)
+			{
+				_GetFile(tmpfcb, &filename[0]);
 #ifdef ARDUINO
 				if (SD.remove((char*)filename)) {
+					dirPos--;
 #else
 				if (!_remove(&filename[0])) {
 #endif
 					deleted = 0x00;
 				}
+				result = _SearchNext(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {
 			_error(errWRITEPROT);
@@ -560,9 +530,8 @@ uint8 _WriteRand(uint16 fcbaddr)
 	return(result);
 }
 
-void _CheckSUB(void)
+uint8 _CheckSUB(void)
 {
-	if (_SearchFirst(BatchFCB) == 0x00)
-		SET_HIGH_REGISTER(AF, 0xFF);
+	return((_SearchFirst(BatchFCB, FALSE) == 0x00) ? 0xFF : 0x00);
 }
 

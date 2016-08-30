@@ -1328,6 +1328,7 @@ void Z80debug(void)
 		if (ch == 'b') memdump(BC);
 		if (ch == 'd') memdump(DE);
 		if (ch == 'h') memdump(HL);
+		if (ch == 'p') memdump(PC & 0xFF00);
 		if (ch == 's') memdump(SP & 0xFF00);
 		if (ch == 'x') memdump(IX & 0xFF00);
 		if (ch == 'y') memdump(IY & 0xFF00);
@@ -1381,6 +1382,7 @@ void Z80debug(void)
 			_puts("  b - Dumps memory pointed by (BC)\r\n");
 			_puts("  d - Dumps memory pointed by (DE)\r\n");
 			_puts("  h - Dumps memory pointed by (HL)\r\n");
+			_puts("  p - Dumps the page (PC) points to\r\n");
 			_puts("  s - Dumps the page (SP) points to\r\n");
 			_puts("  x - Dumps the page (IX) points to\r\n");
 			_puts("  y - Dumps the page (IY) points to\r\n");
