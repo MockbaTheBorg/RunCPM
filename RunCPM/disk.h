@@ -277,6 +277,7 @@ uint8 _RenameFile(uint16 fcbaddr)
 		if (!RW) {
 			_GetFile(fcbaddr + 16, &newname[0]);
 			_GetFile(fcbaddr, &filename[0]);
+			newname[0] = filename[0];	// renamed file must end up on the same drive as the original
 #ifdef ARDUINO
 			if (SD.rename((char*)filename, (char*)newname)) {
 #else
