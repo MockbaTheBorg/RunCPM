@@ -21,6 +21,17 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
+void _RamLoad(FILE* file, uint16 address)
+{
+	long l;
+
+	_sys_fseek(file, 0, SEEK_END);
+	l = _sys_ftell(file);
+
+	_sys_fseek(file, 0, SEEK_SET);
+	_sys_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
+}
+
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];

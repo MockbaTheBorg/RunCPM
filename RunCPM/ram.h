@@ -16,63 +16,6 @@ void _RamCopy(uint16 source, int size, uint16 destination)
 	}
 }
 
-#ifdef ARDUINO
-bool _RamLoad(char* filename, uint16 address)
-{
-	File file = SD.open(filename, FILE_READ);
-	bool result = true;
-
-	if (file)
-	{
-		while (file.available())
-		{
-			_RamWrite(address++, file.read());
-		}
-		file.close();
-	}
-	else {
-		result = false;
-	}
-	return(result);
-}
-
-bool _RamVerify(char* filename, uint16 address)
-{
-	File file = SD.open(filename, FILE_READ);
-	byte c;
-	bool result = true;
-
-	if (file)
-	{
-		while (file.available())
-		{
-			c = file.read();
-			if (c != _RamRead(address++))
-			{
-				result = false;
-				break;
-			}
-		}
-	}
-	else {
-		result = false;
-	}
-	return(result);
-}
-#else
-
-void _RamLoad(FILE* file, uint16 address)
-{
-	long l;
-
-	_sys_fseek(file, 0, SEEK_END);
-	l = _sys_ftell(file);
-
-	_sys_fseek(file, 0, SEEK_SET);
-	_sys_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
-}
-#endif
-
 void _RamWrite16(uint16 address, uint16 value)
 {
 	// Z80 is a "little indian" (8 bit era joke)
