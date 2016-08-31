@@ -237,51 +237,22 @@ uint8 _WriteSeq(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
-
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-			file = sd.open((char*)filename, O_RDWR);
-#else
-			file = _sys_fopen_rw(&filename[0]);
-#endif
-			if (file != NULL) {
-#ifdef ARDUINO
-				if (sd.seekSet(fpos)) {
-					if (sd.write(&RAM[dmaAddr], 128)) {
-#else
-				if (!_sys_fseek(file, fpos, 0)) {
-					if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
-#endif
-						F->cr++;
-						if (F->cr > 127) {
-							F->cr = 0;
-							F->ex++;
-						}
-						if (F->ex > 127) {
-							// (todo) not sure what to do 
-						}
-						result = 0x00;
-					}
-				} else {
-					result = 0x01;
+			result = _sys_writeseq(&filename[0], fpos);
+			if (!result) {	// Write succeeded, adjust FCB
+				F->cr++;
+				if (F->cr > 127) {
+					F->cr = 0;
+					F->ex++;
 				}
-#ifdef ARDUINO
-				sd.close();
-#else
-				_sys_fclose(file);
-#endif
-			} else {
-				result = 0x10;
+				if (F->ex > 127) {
+					// (todo) not sure what to do 
+					result = 0xff;
+				}
 			}
 		} else {
 			_error(errWRITEPROT);
