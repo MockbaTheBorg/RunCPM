@@ -8,17 +8,6 @@
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
-
-uint8 _RamRead(uint16 address)
-{
-	return(RAM[address]);
-}
-
-void _RamWrite(uint16 address, uint8 value)
-{
-	RAM[address] = value;
-}
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/

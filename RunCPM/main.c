@@ -18,6 +18,7 @@
 		This should be the only file modified for portability. Any other file
 		shoud be kept the same.
 */
+
 #ifdef __DJGPP
 	#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
 #else

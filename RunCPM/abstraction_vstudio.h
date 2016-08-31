@@ -7,20 +7,13 @@
 	#include <conio.h>
 #endif
 
+/* Externals for abstracted functions need to go here */
+extern int _sys_fseek(FILE *file, long delta, int origin);
+extern long _sys_ftell(FILE *file);
+extern long _sys_fread(void *buffer, long size, long count, FILE *file);
+
 /* Memory abstraction functions */
 /*===============================================================================*/
-static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
-
-uint8 _RamRead(uint16 address)
-{
-	return(RAM[address]);
-}
-
-void _RamWrite(uint16 address, uint8 value)
-{
-	RAM[address] = value;
-}
-
 void _RamLoad(FILE* file, uint16 address)
 {
 	long l;
