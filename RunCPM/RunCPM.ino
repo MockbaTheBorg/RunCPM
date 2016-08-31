@@ -41,31 +41,22 @@ void setup(void)
 				SD.chdir();
 				if (_RamLoad(CCPname, CCPaddr))
 				{
-					if (_RamVerify(CCPname, CCPaddr))
-					{
-						_PatchCPM();
-						Z80reset();
-						SET_LOW_REGISTER(BC, _RamRead(0x0004));
-						PC = CCPaddr;
-						Z80run();
-						if (Status == 1)
-							_RamWrite(0x0004, 0);
-					}
-					else {
-						_puts("Error writing the CCP to RAM. CPU halted.\r\n");
-					}
-				}
-				else {
+					_PatchCPM();
+					Z80reset();
+					SET_LOW_REGISTER(BC, _RamRead(0x0004));
+					PC = CCPaddr;
+					Z80run();
+					if (Status == 1)
+						_RamWrite(0x0004, 0);
+				} else {
 					_puts("Unable to load the CCP. CPU halted.\r\n");
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			_puts("Unable to load CP/M CCP. CPU halted.\r\n");
 		}
-	}
-	else {
+	} else {
 		_puts("Unable to initialize SD card. CPU halted.\r\n");
 	}
 }
