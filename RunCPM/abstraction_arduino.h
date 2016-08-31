@@ -12,6 +12,49 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
+bool _RamLoad(char* filename, uint16 address)
+{
+	File file = SD.open(filename, FILE_READ);
+	bool result = true;
+
+	if (file)
+	{
+		while (file.available())
+		{
+			_RamWrite(address++, file.read());
+		}
+		file.close();
+	}
+	else {
+		result = false;
+	}
+	return(result);
+}
+
+bool _RamVerify(char* filename, uint16 address)
+{
+	File file = SD.open(filename, FILE_READ);
+	byte c;
+	bool result = true;
+
+	if (file)
+	{
+		while (file.available())
+		{
+			c = file.read();
+			if (c != _RamRead(address++))
+			{
+				result = false;
+				break;
+			}
+		}
+	}
+	else {
+		result = false;
+	}
+	return(result);
+}
+
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	pattern[12];
