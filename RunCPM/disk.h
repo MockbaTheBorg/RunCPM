@@ -211,59 +211,21 @@ uint8 _ReadSeq(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE *file;
-#endif
-	uint8 bytesread;
-
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
 	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-		file = sd.open((char*)filename, O_READ);
-#else
-		file = _sys_fopen_r(&filename[0]);
-#endif
-		if (file != NULL) {
-#ifdef ARDUINO
-			if (sd.seekSet(fpos)) {
-#else
-			if (!_sys_fseek(file, fpos, 0)) {
-#endif
-				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-#ifdef ARDUINO
-				bytesread = sd.read(&RAM[dmaAddr], 128);
-#else
-				bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
-#endif
-				if (bytesread) {
-					F->cr++;
-					if (F->cr > 127) {
-						F->cr = 0;
-						F->ex++;
-					}
-					if (F->ex > 127) {
-						// (todo) not sure what to do 
-						result = 0xff;
-					}
-					result = 0x00;
-				} else {
-						result = 0x01;
-				}
-			} else {
-				result = 0x01;
+		result = _sys_readseq(&filename[0], fpos);
+		if (!result) {	// Read succeeded, adjust FCB
+			F->cr++;
+			if (F->cr > 127) {
+				F->cr = 0;
+				F->ex++;
 			}
-#ifdef ARDUINO
-			sd.close();
-#else
-			_sys_fclose(file);
-#endif
-		} else {
-			result = 0x10;
+			if (F->ex > 127) {
+				// (todo) not sure what to do 
+				result = 0xff;
+			}
 		}
 	} else {
 		_error(errSELECT);

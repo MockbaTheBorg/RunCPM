@@ -60,6 +60,7 @@ bool _RamVerify(char* filename, uint16 address)
 	return(result);
 }
 #else
+
 void _RamLoad(FILE* file, uint16 address)
 {
 	long l;
@@ -71,3 +72,11 @@ void _RamLoad(FILE* file, uint16 address)
 	_sys_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
 }
 #endif
+
+void _RamWrite16(uint16 address, uint16 value)
+{
+	// Z80 is a "little indian" (8 bit era joke)
+	_RamWrite(address, value & 0xff);
+	_RamWrite(address + 1, (value >> 8) & 0xff);
+}
+

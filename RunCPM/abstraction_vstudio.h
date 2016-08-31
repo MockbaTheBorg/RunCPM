@@ -21,13 +21,6 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
-void _RamWrite16(uint16 address, uint16 value)
-{
-	// Z80 is a "little indian" (8 bit era joke)
-	_RamWrite(address, value & 0xff);
-	_RamWrite(address + 1, (value >> 8) & 0xff);
-}
-
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];
@@ -141,9 +134,31 @@ int _sys_renamefile(uint8 *filename, uint8 *newname)
 	return(!_sys_rename(&filename[0], &newname[0]));
 }
 
-int_sys_readseq(uint8 *filename)
+uint8 _sys_readseq(uint8 *filename, long fpos)
 {
+	uint8 result = 0xff;
+	FILE *file;
+	uint8 bytesread;
 
+	file = _sys_fopen_r(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
+			bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
+			if (bytesread) {
+				result = 0x00;
+			} else {
+					result = 0x01;
+			}
+		} else {
+			result = 0x01;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
 }
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
