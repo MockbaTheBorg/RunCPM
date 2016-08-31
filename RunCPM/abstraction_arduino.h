@@ -100,7 +100,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-			bytesread = sd.read(&RAM[dmaAddr], 128);
+			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -125,7 +125,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	int32 file = sd.open((char*)filename, O_RDWR);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
-			if (sd.write(&RAM[dmaAddr], 128)) {
+			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
 			}
 		} else {
@@ -149,7 +149,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-			bytesread = sd.read(&RAM[dmaAddr], 128);
+			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -174,7 +174,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 	int32 file = sd.open((char*)filename, O_RDWR);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
-			if (sd.write(&RAM[dmaAddr], 128)) {
+			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
 			}
 		} else {
@@ -190,7 +190,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
 
@@ -219,7 +219,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
 	while (i < 8) {
