@@ -105,10 +105,12 @@ int _sys_select(uint8 *disk)
 	return(result);
 }
 
-void _GetFile(uint16 fcbaddr, uint8* filename)
+uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
+	uint8 unique = TRUE;
+
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
@@ -120,6 +122,8 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->fn[i] > 32) {
 			*(filename++) = F->fn[i];
 		}
+		if (F->fn[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*(filename++) = '.';
@@ -128,9 +132,13 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->tp[i] > 32) {
 			*(filename++) = F->tp[i];
 		}
+		if (F->tp[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*filename = 0x00;
+
+	return(unique);
 }
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
@@ -162,35 +170,28 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-uint8 _findfirst(uint8 dir)
-{
+uint8 _findfirst(void) {
 	uint8 result = 0xff;
 	uint8 found;
 
 	found = findfirst(filename, &fnd, 0);
 	if (found == 0) {
-		if (dir) {
-			_SetFile(dmaAddr, fnd.ff_name);
-			_RamWrite(dmaAddr, 0x00);
-		}
-		_SetFile(tmpfcb, fnd.ff_name);
+		_SetFile(dmaAddr, fnd.ff_name);
+		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}
 	return(result);
 }
 
-uint8 _findnext(uint8 dir)
+uint8 _findnext(void)
 {
 	uint8 result = 0xff;
 	uint8 more;
 
 	more = findnext(&fnd);
 	if (more == 0) {
-		if (dir) {
-			_SetFile(dmaAddr, fnd.ff_name);
-			_RamWrite(dmaAddr, 0x00);
-		}
-		_SetFile(tmpfcb, fnd.ff_name);
+		_SetFile(dmaAddr, fnd.ff_name);
+		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}
 	return(result);
