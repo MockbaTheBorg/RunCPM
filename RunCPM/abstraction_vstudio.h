@@ -21,6 +21,13 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
+void _RamWrite16(uint16 address, uint16 value)
+{
+	// Z80 is a "little indian" (8 bit era joke)
+	_RamWrite(address, value & 0xff);
+	_RamWrite(address + 1, (value >> 8) & 0xff);
+}
+
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	filename[15];
@@ -224,7 +231,7 @@ uint8 _findfirst(uint8 dir)
 				_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
 				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			}
-			_SetFile(tmpfcb, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
+			_SetFile(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
 			result = 0x00;
 		} else {
 			FindClose(hFind);
@@ -261,7 +268,7 @@ uint8 _findnext(uint8 dir)
 				_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
 				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			}
-			_SetFile(tmpfcb, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
+			_SetFile(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
 			result = 0x00;
 		} else {
 			FindClose(hFind);

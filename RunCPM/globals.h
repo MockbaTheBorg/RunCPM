@@ -9,11 +9,11 @@
 #define VERSION	"2.1"
 
 // Define which CCP to use (select only one)
-#define DR
-//#define ZCPR
+#define CCP_DR
+//#define CCP_ZCPR
 
-/* Definition of the CCP information */
-#ifdef DR
+/* Definition of the CCP memory information */
+#ifdef CCP_DR
 	#define CCPname		"CCP-DR.BIN"
 	#define CCPaddr		0xE400	// From CCP.ASM
 	#define BatchFCB	0xEBAC	//
@@ -95,20 +95,18 @@ extern int32 Break; /* Breakpoint                                 */
 
 /* CP/M memory definitions */
 
-#define EXTRA	// Allocates extra memory to CP/M programs
+#define RAMSIZE 62 * 1024	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+							// Can be set to less than 60, but this would require rebuilding the CCP
 
-#ifdef EXTRA
-	#define BDOSjmppage	0xfc
-	#define BIOSjmppage	0xfd
-	#define BDOSpage	0xfe
-	#define BIOSpage	0xff
-#else
-	#define BDOSjmppage	0xec	// Default 64K CP/M 2.2 location
-	#define BIOSjmppage	0xfa	// Default 64K CP/M 2.2 location
-	#define BDOSpage	0xfb
-	#define BIOSpage	0xfc
-#endif
+// 
 
-#define	tmpfcb	(BDOSpage<<8)+32		// FCB for DeleteFile (use of FindFirst/FindNext)
+// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
+#define BIOSpage		RAMSIZE - 256
+#define BDOSpage		BIOSpage - 256
+#define BIOSjmppage		BDOSpage - 256
+#define BDOSjmppage		BIOSjmppage - 256
 
-#define RAMSIZE 65536
+#define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
+
+#define SCBaddr BDOSpage + 16	// Address of the System Control Block
+#define tmpFCB  BDOSpage + 64	// Address of the temporary FCB
