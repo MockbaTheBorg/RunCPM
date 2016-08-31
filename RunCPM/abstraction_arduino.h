@@ -87,10 +87,9 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
 	SdFile sd;
-	int32 file;
 	uint8 bytesread;
 
-	file = sd.open((char*)filename, O_READ);
+	int32 file = sd.open((char*)filename, O_READ);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
@@ -99,6 +98,28 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 				result = 0x00;
 			} else {
 					result = 0x01;
+			}
+		} else {
+			result = 0x01;
+		}
+		sd.close();
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writeseq(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+	SdFile sd;
+
+	int32 file = sd.open((char*)filename, O_RDWR);
+	if (file != NULL) {
+		if (sd.seekSet(fpos)) {
+			if (sd.write(&RAM[dmaAddr], 128)) {
+				result = 0x00;
 			}
 		} else {
 			result = 0x01;

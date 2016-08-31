@@ -137,10 +137,9 @@ int _sys_renamefile(uint8 *filename, uint8 *newname)
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
-	FILE *file;
 	uint8 bytesread;
 
-	file = _sys_fopen_r(&filename[0]);
+	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
@@ -148,7 +147,28 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 			if (bytesread) {
 				result = 0x00;
 			} else {
-					result = 0x01;
+				result = 0x01;
+			}
+		} else {
+			result = 0x01;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writeseq(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+
+	FILE* file = _sys_fopen_rw(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+				result = 0x00;
 			}
 		} else {
 			result = 0x01;
