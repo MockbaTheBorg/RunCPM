@@ -1,5 +1,15 @@
 /* see main.c for definition */
 
+uint8 _RamRead(uint16 address)
+{
+	return(RAM[address]);
+}
+
+void _RamWrite(uint16 address, uint8 value)
+{
+	RAM[address] = value;
+}
+
 void _RamFill(uint16 address, int size, uint8 value)
 {
 	while (size--)

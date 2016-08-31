@@ -100,7 +100,7 @@ extern int32 Break; /* Breakpoint                                 */
 #define RAMSIZE 62 * 1024	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
 							// Can be set to less than 60, but this would require rebuilding the CCP
 
-// 
+static uint8 RAM[RAMSIZE];	// RAM must go into memory (SRAM or DRAM)
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage		RAMSIZE - 256
