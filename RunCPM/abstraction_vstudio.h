@@ -181,6 +181,53 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	return(result);
 }
 
+uint8 _sys_readrand(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+	uint8 bytesread;
+
+	FILE* file = _sys_fopen_r(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
+			bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
+			if (bytesread) {
+				result = 0x00;
+			} else {
+				result = 0x01;
+			}
+		} else {
+			result = 0x06;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writerand(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+
+	FILE* file = _sys_fopen_rw(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+				result = 0x00;
+			}
+		} else {
+			result = 0x06;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];

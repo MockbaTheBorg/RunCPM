@@ -267,54 +267,17 @@ uint8 _ReadRand(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
-	uint8 bytesread;
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
 
 	if (_SelectDisk(F->dr)) {
 		_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-		file = sd.open((char*)filename, O_READ);
-#else
-		file = _sys_fopen_r(&filename[0]);
-#endif
-		if (file != NULL) {
-#ifdef ARDUINO
-			if (sd.seekSet(fpos)) {
-#else
-			if (!_sys_fseek(file, fpos, 0)) {
-#endif
-				_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-#ifdef ARDUINO
-				bytesread = sd.read(&RAM[dmaAddr], 128);
-#else
-				bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
-#endif
-				if (bytesread) {
-					F->cr = record & 0x7F;
-					F->ex = (record >> 7) & 0x1f;
-					F->s1 = (record >> 12) & 0xff;
-					F->s2 = (record >> 20) & 0xff;
-					result = 0x00;
-				} else {
-					result = 0x01;
-				}
-			} else {
-				result = 0x06;
-			}
-#ifdef ARDUINO
-			sd.close();
-#else
-			_sys_fclose(file);
-#endif
-		} else {
-			result = 0x10;
+		result = _sys_readrand(&filename[0], fpos);
+		if (!result) {	// Read succeeded, adjust FCB
+			F->cr = record & 0x7F;
+			F->ex = (record >> 7) & 0x1f;
+			F->s1 = (record >> 12) & 0xff;
+			F->s2 = (record >> 20) & 0xff;
 		}
 	} else {
 		_error(errSELECT);
@@ -326,47 +289,18 @@ uint8 _WriteRand(uint16 fcbaddr)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
-#ifdef ARDUINO
-	SdFile sd;
-	int32 file;
-#else
-	FILE* file;
-#endif
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
-#ifdef ARDUINO
-			file = sd.open((char*)filename, O_RDWR);
-#else
-			file = _sys_fopen_rw(&filename[0]);
-#endif
-			if (file != NULL) {
-#ifdef ARDUINO
-				if (sd.seekSet(fpos)) {
-					if (sd.write(&RAM[dmaAddr], 128)) {
-#else
-				if (!_sys_fseek(file, fpos, 0)) {
-					if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
-#endif
-						F->cr = record & 0x7F;
-						F->ex = (record >> 7) & 0x1f;
-						F->s1 = (record >> 12) & 0xff;
-						F->s2 = (record >> 20) & 0xff;
-						result = 0x00;
-					}
-				} else {
-					result = 0x06;
-				}
-#ifdef ARDUINO
-				sd.close();
-#else
-				_sys_fclose(file);
-#endif
-			} else {
-				result = 0x10;
+			result = _sys_writerand(&filename[0], fpos);
+			if (!result) {	// Write succeeded, adjust FCB
+				F->cr = record & 0x7F;
+				F->ex = (record >> 7) & 0x1f;
+				F->s1 = (record >> 12) & 0xff;
+				F->s2 = (record >> 20) & 0xff;
 			}
 		} else {
 			_error(errWRITEPROT);

@@ -132,6 +132,55 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	return(result);
 }
 
+uint8 _sys_readrand(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+	uint8 bytesread;
+	SdFile sd;
+
+	int32 file = sd.open((char*)filename, O_READ);
+	if (file != NULL) {
+		if (sd.seekSet(fpos)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
+			bytesread = sd.read(&RAM[dmaAddr], 128);
+			if (bytesread) {
+				result = 0x00;
+			} else {
+				result = 0x01;
+			}
+		} else {
+			result = 0x06;
+		}
+		sd.close();
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writerand(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+	SdFile sd;
+
+	int32 file = sd.open((char*)filename, O_RDWR);
+	if (file != NULL) {
+		if (sd.seekSet(fpos)) {
+			if (sd.write(&RAM[dmaAddr], 128)) {
+				result = 0x00;
+			}
+		} else {
+			result = 0x06;
+		}
+		sd.close();
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
