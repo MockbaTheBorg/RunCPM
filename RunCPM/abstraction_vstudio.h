@@ -22,7 +22,7 @@ void _RamLoad(FILE* file, uint16 address)
 	l = _sys_ftell(file);
 
 	_sys_fseek(file, 0, SEEK_SET);
-	_sys_fread(&RAM[address], 1, l, file); // (todo) This can overwrite past RAM space
+	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
 }
 
 /* Filesystem (disk) abstraction fuctions */
@@ -147,7 +147,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-			bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
+			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -171,7 +171,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	FILE* file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
 				result = 0x00;
 			}
 		} else {
@@ -194,7 +194,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-			bytesread = (uint8)_sys_fread(&RAM[dmaAddr], 1, 128, file);
+			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -218,7 +218,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 	FILE* file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(&RAM[dmaAddr], 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
 				result = 0x00;
 			}
 		} else {
@@ -234,7 +234,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
 
@@ -270,7 +270,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
 	while (*filename != 0 && *filename != '.') {

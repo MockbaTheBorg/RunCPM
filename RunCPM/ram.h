@@ -1,5 +1,12 @@
 /* see main.c for definition */
 
+static uint8 RAM[RAMSIZE];			// Definition of the emulated RAM
+
+uint8* _RamSysAddr(uint16 address)
+{
+	return(&RAM[address]);
+}
+
 uint8 _RamRead(uint16 address)
 {
 	return(RAM[address]);

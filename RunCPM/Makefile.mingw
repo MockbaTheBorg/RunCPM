@@ -20,7 +20,7 @@ CFLAGS = -Wall -O0
 LDFLAGS = -mconsole
 
 # Command used to delete files
-RM = del
+RM = rm -f
 
 # List your object files here
 OBJS = main.o z80.o
