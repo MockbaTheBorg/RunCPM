@@ -63,8 +63,6 @@ int main(int argc, char* argv[])
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("-----------------------------------------\r\n");
 
-	_RamFill(0, 0x10000, 0);	// Clears the memory
-
 	while (TRUE) {
 		file = _sys_fopen_r((uint8*)CCPname);
 		if (file == NULL) {
