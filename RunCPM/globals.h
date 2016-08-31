@@ -53,6 +53,8 @@ extern "C"
 
 	extern uint8 _RamRead(uint16 address);
 	extern void _RamWrite(uint16 address, uint8 value);
+	extern void _RamWrite16(uint16 address, uint16 value);
+	extern void _RamFill(uint16 address, int size, uint8 value);
 
 	extern void _Bdos(void);
 	extern void _Bios(void);

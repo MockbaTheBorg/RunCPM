@@ -12,13 +12,6 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
-void _RamWrite16(uint16 address, uint16 value)
-{
-	// Z80 is a "little indian" (8 bit era joke)
-	_RamWrite(address, value & 0xff);
-	_RamWrite(address + 1, (value >> 8) & 0xff);
-}
-
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	pattern[12];
@@ -88,6 +81,34 @@ int _sys_deletefile(uint8 *filename)
 int _sys_renamefile(uint8 *filename, uint8 *newname)
 {
 	return(SD.rename((char*)filename, (char*)newname));
+}
+
+uint8 _sys_readseq(uint8 *filename, long fpos)
+{
+	uint8 result = 0xff;
+	SdFile sd;
+	int32 file;
+	uint8 bytesread;
+
+	file = sd.open((char*)filename, O_READ);
+	if (file != NULL) {
+		if (sd.seekSet(fpos)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
+			bytesread = sd.read(&RAM[dmaAddr], 128);
+			if (bytesread) {
+				result = 0x00;
+			} else {
+					result = 0x01;
+			}
+		} else {
+			result = 0x01;
+		}
+		sd.close();
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
 }
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
