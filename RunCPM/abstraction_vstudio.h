@@ -146,10 +146,12 @@ int_sys_readseq(uint8 *filename)
 
 }
 
-void _GetFile(uint16 fcbaddr, uint8* filename)
+uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
+	uint8 unique = TRUE;
+
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
@@ -161,6 +163,8 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->fn[i] > 32) {
 			*(filename++) = F->fn[i];
 		}
+		if (F->fn[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*(filename++) = '.';
@@ -169,9 +173,13 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->tp[i] > 32) {
 			*(filename++) = F->tp[i];
 		}
+		if (F->tp[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*filename = 0x00;
+
+	return(unique);
 }
 
 void _SetFile(uint16 fcbaddr, uint8* filename)

@@ -684,7 +684,7 @@ void _Bdos(void)
 		C = 18 (12h) : Search for next
 		*/
 	case 18:
-		HL = _SearchNext(TRUE);			// TRUE = Creates a fake dir entry when finding the file
+		HL = _SearchNext(DE, TRUE);		// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 19 (13h) : Delete file

@@ -107,10 +107,11 @@ int _sys_select(uint8 *disk)
 	return((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
 }
 
-void _GetFile(uint16 fcbaddr, uint8* filename)
+uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
+	uint8 unique = TRUE;
 
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
@@ -123,6 +124,8 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->fn[i] > 32) {
 			*(filename++) = F->fn[i];
 		}
+		if (F->fn[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*(filename++) = '.';
@@ -131,9 +134,13 @@ void _GetFile(uint16 fcbaddr, uint8* filename)
 		if (F->tp[i] > 32) {
 			*(filename++) = F->tp[i];
 		}
+		if (F->tp[i] == '?')
+			unique = FALSE;
 		i++;
 	}
 	*filename = 0x00;
+
+	return(unique);
 }
 
 void _SetFile(uint16 fcbaddr, uint8* filename)
@@ -212,7 +219,7 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-uint8 _findnext(uint8 dir)
+uint8 _findnext(void)
 {
 	uint8 result = 0xff;
 	char* file;
@@ -224,11 +231,8 @@ uint8 _findnext(uint8 dir)
 		file = pglob.gl_pathv[i];
 		dirToFCB((uint8*)file, fcbname);
 		if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
-			if (dir) {
-				_SetFile(dmaAddr, (uint8*)file);
-				_RamWrite(dmaAddr, 0x00);
-			}
-			_SetFile(tmpfcb, (uint8*)file);
+			_SetFile(dmaAddr, (uint8*)file);
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 			result = 0x00;
 			break;
 		}
@@ -239,15 +243,15 @@ uint8 _findnext(uint8 dir)
 	return(result);
 }
 
-uint8 _findfirst(uint8 dir) {
+uint8 _findfirst(void) {
 	uint8 result = 0xff;
-	char dirent[4] = "A/*";
+	char dir[4] = "A/*";
 
-	dirent[0] = filename[0];
-	if (glob(dirent, 0, NULL, &pglob) == 0) {
+	dir[0] = filename[0];
+	if (glob(dir, 0, NULL, &pglob) == 0) {
 		dirToFCB(filename, pattern);
 		pglob_pos = 0;
-		result = _findnext(dir);
+		result = _findnext();
 	}
 	return(result);
 }

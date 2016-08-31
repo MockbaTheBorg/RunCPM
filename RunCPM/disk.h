@@ -148,7 +148,7 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 dir)
 	return(result);
 }
 
-uint8 _SearchNext(uint8 dir)
+uint8 _SearchNext(uint16 fcbaddr, uint8 dir)
 {
 	CPM_FCB* F = (CPM_FCB*)&RAM[tmpFCB];
 	uint8 result = 0xff;
@@ -175,7 +175,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 				_GetFile(tmpFCB, &filename[0]);
 				if(_sys_deletefile(&filename[0]))
 					deleted = 0x00;
-				result = _SearchNext(FALSE);	// FALSE = Does not create a fake dir entry when finding the file
+				result = _SearchNext(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {
 			_error(errWRITEPROT);
@@ -193,6 +193,7 @@ uint8 _RenameFile(uint16 fcbaddr)
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
+			_RamWrite(fcbaddr + 16, _RamRead(fcbaddr));	// Prevents rename from moving files among folders
 			_GetFile(fcbaddr + 16, &newname[0]);
 			_GetFile(fcbaddr, &filename[0]);
 			if(_sys_renamefile(&filename[0], &newname[0]))
