@@ -23,6 +23,13 @@ void _RamWrite(uint16 address, uint8 value)
 	RAM[address] = value;
 }
 
+void _RamWrite16(uint16 address, uint16 value)
+{
+	// Z80 is a "little indian" (8 bit era joke)
+	_RamWrite(address, value & 0xff);
+	_RamWrite(address + 1, (value >> 8) & 0xff);
+}
+
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 uint8	pattern[14];

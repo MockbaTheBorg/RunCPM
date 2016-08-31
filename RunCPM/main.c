@@ -4,6 +4,10 @@
 
 		Extensive debugging/testing by Tom L. Burnett
 		Debugging/testing and new features by Krzysztof Klis
+		DOS and Posix ports added by Krzysztof Klis
+
+		Best operating system ever by Gary Kildall, 40 years ago
+		I was 9 at that time and had no idea what a computer was
 */
 #ifndef ARDUINO
 

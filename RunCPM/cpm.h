@@ -10,17 +10,13 @@ uint8	LastSel;		// Last disk selected
 
 void _PatchCPM(void)
 {
-	uint16 BDOSjmpaddr = BDOSjmppage << 8;
-	uint16 BIOSjmpaddr = BIOSjmppage << 8;
-	uint16 BDOSaddr = BDOSpage << 8;
-	uint16 BIOSaddr = BIOSpage << 8;
+	uint16 i;
 
 	//**********  Patch CP/M page zero into the memory  **********
 
 	/* BIOS entry point */
 	_RamWrite(0x0000, JP);		/* JP BIOS+3 (warm boot) */
-	_RamWrite(0x0001, 0x03);
-	_RamWrite(0x0002, BIOSjmppage);
+	_RamWrite16(0x0001, BIOSjmppage + 3);
 
 	/* IOBYTE - Points to Console */
 	_RamWrite(0x0003, 0x3D);
@@ -31,160 +27,57 @@ void _PatchCPM(void)
 
 	/* BDOS entry point (0x0005) */
 	_RamWrite(0x0005, JP);
-	_RamWrite(0x0006, 0x06);
-	_RamWrite(0x0007, BDOSjmppage);
+	_RamWrite16(0x0006, BDOSjmppage + 0x06);
 
-	//**********  Patch CP/M Version into the memory so the CCP can see it (not used right now)
+	//**********  Patch CP/M Version into the memory so the CCP can see it
+	_RamWrite16(BDOSjmppage, 0x1600);
+	_RamWrite16(BDOSjmppage + 2, 0x0000);
+	_RamWrite16(BDOSjmppage + 4, 0x0000);
 
-	// DR CCP looks or this at ORG + 0800h, but matches it with 00 00 00 00 00 00
-	_RamWrite(BDOSjmpaddr++, 0x00);
-	_RamWrite(BDOSjmpaddr++, 0x16);	// 22 - CP/M 2.2
-	_RamWrite(BDOSjmpaddr++, 0x00);
-	_RamWrite(BDOSjmpaddr++, 0x00);
-	_RamWrite(BDOSjmpaddr++, 0x00);
-	_RamWrite(BDOSjmpaddr++, 0x00);
+	// Patches in the BDOS jump destination
+	_RamWrite(BDOSjmppage + 6, JP);
+	_RamWrite16(BDOSjmppage + 7, BDOSpage);
 
-	//**********  Patch CP/M BDOS/BIOS jump tables into the memory
+	// Patches in the BDOS page content
+	_RamWrite(BDOSpage, INa);
+	_RamWrite(BDOSpage+1, 0x00);
+	_RamWrite(BDOSpage+2, RET);
 
-	/* BDOS jump table */
-	_RamWrite(BDOSjmpaddr++, JP);
-	_RamWrite(BDOSjmpaddr++, 0x00);
-	_RamWrite(BDOSjmpaddr++, BDOSpage);
+	// Patches in the BIOS jump destinations
+	for (i = 0; i < 0x33; i = i + 3)
+	{
+		_RamWrite(BIOSjmppage + i, JP);
+		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
+	}
 
-	/* BIOS jump table */
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x00);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x03);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x06);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x09);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x0c);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x0f);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x12);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x15);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x18);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x1b);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x1e);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x21);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x24);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x27);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x2a);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x2d);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
-	_RamWrite(BIOSjmpaddr++, JP);
-	_RamWrite(BIOSjmpaddr++, 0x30);
-	_RamWrite(BIOSjmpaddr++, BIOSpage);
+	// Patches in the BIOS page content
+	for (i = 0; i < 0x33; i = i + 3)
+	{
+		_RamWrite(BIOSpage + i, OUTa);
+		_RamWrite(BIOSpage + i + 1, i & 0xff);
+		_RamWrite(BIOSpage + i + 2, RET);
+	}
 
-
-	//**********  Patch CP/M BDOS/BIOS call tables into the memory  **********
-
-	/* BDOS call table */
-	_RamWrite(BDOSaddr++, INa);		/* IN A, N */
-	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, RET);		/* RET */
-
-	/* BIOS call table */
-	_RamWrite(BIOSaddr++, OUTa);		/* 0 - Cold boot */
-	_RamWrite(BIOSaddr++, 0x00);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 3 - Warm boot */
-	_RamWrite(BIOSaddr++, 0x01);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 6 - Console status  */
-	_RamWrite(BIOSaddr++, 0x02);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 9 - Console input */
-	_RamWrite(BIOSaddr++, 0x03);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* C - Console output */
-	_RamWrite(BIOSaddr++, 0x04);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* F - List output */
-	_RamWrite(BIOSaddr++, 0x05);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 12 - Punch output */
-	_RamWrite(BIOSaddr++, 0x06);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 15 - Reader input */
-	_RamWrite(BIOSaddr++, 0x07);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 18 - Home disk */
-	_RamWrite(BIOSaddr++, 0x08);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 1B - Select disk */
-	_RamWrite(BIOSaddr++, 0x09);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 1E - Select track */
-	_RamWrite(BIOSaddr++, 0x0a);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 21 - Select sector */
-	_RamWrite(BIOSaddr++, 0x0b);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 24 - Set DMA address */
-	_RamWrite(BIOSaddr++, 0x0c);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 27 - Read selected sector */
-	_RamWrite(BIOSaddr++, 0x0d);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 2A - Write selected sector */
-	_RamWrite(BIOSaddr++, 0x0e);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 2D - List status */
-	_RamWrite(BIOSaddr++, 0x0f);
-	_RamWrite(BIOSaddr++, RET);
-	_RamWrite(BIOSaddr++, OUTa);		/* 30 - Sector translation */
-	_RamWrite(BIOSaddr++, 0x10);
-	_RamWrite(BIOSaddr++, RET);
-
-	//**********  Patch CP/M (fake) Disk Paramater Block after the BDOS call entry  **********
-
-	_RamWrite(BDOSaddr++, 0x20);		/* spt - Sectors Per Track */
-	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, 0x04);		/* bsh - Data allocation "Block Shift Factor" */
-	_RamWrite(BDOSaddr++, 0x0f);		/* blm - Data allocation Block Mask */
-	_RamWrite(BDOSaddr++, 0x00);		/* exm - Extent Mask */
-	_RamWrite(BDOSaddr++, 0xff);        /* dsm - Total storage capacity of the disk drive */
-	_RamWrite(BDOSaddr++, 0x01);
-	_RamWrite(BDOSaddr++, 0xfe);		/* drm - Number of the last directory entry */
-	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, 0xF0);		/* al0 */
-	_RamWrite(BDOSaddr++, 0x00);		/* al1 */
-	_RamWrite(BDOSaddr++, 0x3f);		/* cks - Check area Size */
-	_RamWrite(BDOSaddr++, 0x00);
-	_RamWrite(BDOSaddr++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
-	_RamWrite(BDOSaddr++, 0x00);
+	//**********  Patch CP/M (fake) Disk Paramater Table after the BDOS call entry  **********
+	i = DPBaddr;
+	_RamWrite(i++, 0x20);		/* spt - Sectors Per Track */
+	_RamWrite(i++, 0x00);
+	_RamWrite(i++, 0x04);		/* bsh - Data allocation "Block Shift Factor" */
+	_RamWrite(i++, 0x0f);		/* blm - Data allocation Block Mask */
+	_RamWrite(i++, 0x00);		/* exm - Extent Mask */
+	_RamWrite(i++, 0xff);        /* dsm - Total storage capacity of the disk drive */
+	_RamWrite(i++, 0x01);
+	_RamWrite(i++, 0xfe);		/* drm - Number of the last directory entry */
+	_RamWrite(i++, 0x00);
+	_RamWrite(i++, 0xF0);		/* al0 */
+	_RamWrite(i++, 0x00);		/* al1 */
+	_RamWrite(i++, 0x3f);		/* cks - Check area Size */
+	_RamWrite(i++, 0x00);
+	_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
+	_RamWrite(i++, 0x00);
 
 #ifdef PatchCCP
-	_RamWrite(PatchCCP, BDOSjmppage);
+	_RamWrite(PatchCCP, (BDOSjmppage) >> 8);
 #endif
 
 }
@@ -845,7 +738,7 @@ void _Bdos(void)
 		C = 27 (1Bh) : Get ADDR(Alloc)
 		*/
 	case 27:
-		HL = (BDOSpage << 8) + 18;
+		HL = SCBaddr;
 		break;
 		/*
 		C = 28 (1Ch) : Write protect current disk
@@ -864,7 +757,7 @@ void _Bdos(void)
 		C = 31 (1Fh) : Get ADDR(Disk Parms)
 		*/
 	case 31:
-		HL = (BDOSpage << 8) + 3;
+		HL = DPBaddr;
 		break;
 		/*
 		C = 32 (20h) : Get/Set user code
