@@ -155,28 +155,35 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(uint8 dir)
+{
 	uint8 result = 0xff;
 	uint8 found;
 
 	found = findfirst(filename, &fnd, 0);
 	if (found == 0) {
-		_SetFile(dmaAddr, fnd.ff_name);
-		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+		if (dir) {
+			_SetFile(dmaAddr, fnd.ff_name);
+			_RamWrite(dmaAddr, 0x00);
+		}
+		_SetFile(tmpfcb, fnd.ff_name);
 		result = 0x00;
 	}
 	return(result);
 }
 
-uint8 _findnext(void)
+uint8 _findnext(uint8 dir)
 {
 	uint8 result = 0xff;
 	uint8 more;
 
 	more = findnext(&fnd);
 	if (more == 0) {
-		_SetFile(dmaAddr, fnd.ff_name);
-		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+		if (dir) {
+			_SetFile(dmaAddr, fnd.ff_name);
+			_RamWrite(dmaAddr, 0x00);
+		}
+		_SetFile(tmpfcb, fnd.ff_name);
 		result = 0x00;
 	}
 	return(result);
