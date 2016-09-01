@@ -90,7 +90,7 @@ void _logRegs(void)
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
 	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J]=I & 0x80 ? Flags[J] : '.';
-	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\r\n", BC, DE, HL, HIGH_REGISTER(AF), Flags, IX, IY, SP, PC); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n", BC, DE, HL, HIGH_REGISTER(AF), Flags, IX, IY, SP, PC); _sys_logbuffer(LogBuffer);
 }
 
 void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines, so 1 CP/M block = 8, not 128
@@ -111,22 +111,31 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 			LogBuffer[m + head + 48] = c > 31 && c < 127 ? c : '.';
 		}
 		pos += 16;
-		LogBuffer[pos++] = 0x0d;
 		LogBuffer[pos++] = 0x0a;
 		LogBuffer[pos++] = 0x00;
 		_sys_logbuffer(LogBuffer);
 	}
 }
 
+void _logChar(char *txt, uint8 c)
+{
+	uint8 asc[2];
+
+	asc[0] = c > 31 && c < 127 ? c : '.';
+	asc[1] = 0;
+	sprintf((char *)LogBuffer, "        %s = %02xh:%3d (%s)", txt, c, c, asc);
+	_sys_logbuffer(LogBuffer);
+}
+
 void _logBiosIn(uint8 ch)
 {
-	sprintf((char *)LogBuffer, "Bios call: %3d IN:\r\n", ch); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
 void _logBiosOut(uint8 ch)
 {
-	sprintf((char *)LogBuffer, "              OUT:\r\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
@@ -135,9 +144,27 @@ void _logBdosIn(uint8 ch)
 	uint16 address = 0;
 	uint8 size = 0;
 
-	sprintf((char *)LogBuffer, "Bdos call: %3d IN:\r\n", ch); _sys_logbuffer(LogBuffer);
+static const char *CPMCalls[41] =
+{
+	"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
+	"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
+	"Close File", "Search First", "Search Next", "Delete File", "Read Sequential", "Write Sequential", "Make File", "Rename File",
+	"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params",
+	"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A", "Write Random 0 fill"
+};
+
+	if (ch < 41) {
+		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN:\n", ch, CPMCalls[ch]); _sys_logbuffer(LogBuffer);
+	} else {
+		sprintf((char *)LogBuffer, "\nBdos call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+	}
 	_logRegs();
 	switch (ch) {
+	case 2:
+	case 4:
+	case 5:
+	case 6:
+		_logChar("E", LOW_REGISTER(DE)); break;
 	case 9:
 	case 10:
 		address = DE; size = 8; break;
@@ -158,7 +185,7 @@ void _logBdosIn(uint8 ch)
 	case 34:
 	case 40:
 		address = DE; size = 3; _logMem(address, size);
-		sprintf((char *)LogBuffer, "\r\n");  _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
 		address = dmaAddr; size = 8; break;
 	default:
 		break;
@@ -172,9 +199,13 @@ void _logBdosOut(uint8 ch)
 	uint16 address = 0;
 	uint8 size = 0;
 
-	sprintf((char *)LogBuffer, "              OUT:\r\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 	switch (ch) {
+	case 1:
+	case 3:
+	case 6:
+		_logChar("A", HIGH_REGISTER(AF)); break;
 	case 10:
 		address = DE; size = 8; break;
 	case 20:
@@ -183,7 +214,7 @@ void _logBdosOut(uint8 ch)
 	case 34:
 	case 40:
 		address = DE; size = 3; _logMem(address, size);
-		sprintf((char *)LogBuffer, "\r\n");  _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
 		address = dmaAddr; size = 8; break;
 	case 26:
 		address = dmaAddr; size = 8; break;
