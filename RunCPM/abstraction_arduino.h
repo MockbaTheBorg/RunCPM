@@ -90,6 +90,18 @@ int _sys_renamefile(uint8 *filename, uint8 *newname)
 	return(SD.rename((char*)filename, (char*)newname));
 }
 
+void _sys_logbuffer(uint8 *buffer)
+{
+	_puts((char *)buffer);
+//	SdFile sd;
+//	uint8 s = 0;
+//	while (*(buffer+s))	// Computes buffer size
+//		s++;
+//	int32 file = sd.open(LogName, O_WRITE | O_APPEND);
+//	sd.write(buffer, s);
+//	sd.close();
+}
+
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;

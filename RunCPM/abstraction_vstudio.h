@@ -138,6 +138,16 @@ int _sys_renamefile(uint8 *filename, uint8 *newname)
 	return(!_sys_rename(&filename[0], &newname[0]));
 }
 
+void _sys_logbuffer(uint8 *buffer)
+{
+	uint8 s = 0;
+	while (*(buffer+s))	// Computes buffer size
+		s++;
+	FILE *file = _sys_fopen_a(LogName);
+	_sys_fwrite(buffer, 1, s, file);
+	_sys_fclose(file);
+}
+
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;

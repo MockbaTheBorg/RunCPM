@@ -58,6 +58,8 @@ int main(int argc, char* argv[])
 {
 	FILE* file;
 
+	_sys_deletefile(LogName);
+
 	_console_init();
 	_clrscr();
 	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");

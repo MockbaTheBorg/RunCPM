@@ -5,8 +5,12 @@
 
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
+//#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
+#ifdef DEBUGLOG
+	#define LogName "RunCPM.log"
+#endif
 
-#define VERSION	"2.1"
+#define VERSION	"2.2"
 
 // Define which CCP to use (select only one)
 #define CCP_DR
@@ -97,9 +101,10 @@ extern int32 Debug; /* Debug Status : 0-Normal 1-Debugging        */
 extern int32 Break; /* Breakpoint                                 */
 
 /* CP/M memory definitions */
+#define SIZEK 64	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+					// Can be set to less than 60, but this would require rebuilding the CCP
 
-#define RAMSIZE 62 * 1024	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
-							// Can be set to less than 60, but this would require rebuilding the CCP
+#define RAMSIZE SIZEK * 1024
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage		RAMSIZE - 256

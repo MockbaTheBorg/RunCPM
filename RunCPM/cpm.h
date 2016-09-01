@@ -83,336 +83,129 @@ void _PatchCPM(void)
 }
 
 #ifdef DEBUGLOG
-void _logMemory(uint16 pos, uint8 size)
-{
-	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
-	uint16 h = pos;
-	uint16 c = pos;
-	uint8 l, i;
-	uint8 ch;
-	uint8 nl = (size / 16) + 1;
+uint8 LogBuffer[128];
 
-//	fprintf(file, "\r\n\t\t");
-	for (l = 0; l < nl; l++)
-	{
-		fprintf(file, "\t\t%04x : ", h);
-		for (i = 0; i < 16; i++)
-		{
-			fprintf(file, "%02x ", _RamRead(h++));
-		}
-		for (i = 0; i < 16; i++)
-		{
-			ch = _RamRead(c++);
-			fprintf(file, "%c",ch>31 && ch<127 ? ch : '.');
-		}
-		fprintf(file, "\r\n");
-	}
-	_sys_fclose(file);
+void _logRegs(void)
+{
+	uint8 J, I;
+	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J]=I & 0x80 ? Flags[J] : '.';
+	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\r\n", BC, DE, HL, HIGH_REGISTER(AF), Flags, IX, IY, SP, PC); _sys_logbuffer(LogBuffer);
 }
 
-char flags[9];
-char *_logFlags(uint8 ch)
+void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines, so 1 CP/M block = 8, not 128
 {
-	flags[0] = (ch & 0b10000000) ? 'S' : '.';
-	flags[1] = (ch & 0b01000000) ? 'Z' : '.';
-	flags[2] = (ch & 0b00100000) ? '5' : '.';
-	flags[3] = (ch & 0b00010000) ? 'H' : '.';
-	flags[4] = (ch & 0b00001000) ? '3' : '.';
-	flags[5] = (ch & 0b00000100) ? 'P' : '.';
-	flags[6] = (ch & 0b00000010) ? 'N' : '.';
-	flags[7] = (ch & 0b00000001) ? 'C' : '.';
-	flags[8] = 0;
-	return(&flags[0]);
+	uint8 i, m, c, pos;
+	uint8 head = 8;
+	uint8 hexa[] = "0123456789ABCDEF";
+	for (i = 0; i < amount; i++) {
+		pos = 0;
+		for (m = 0; m < head; m++)
+			LogBuffer[pos++] = ' ';
+		for (m = 0; m < 16; m++)
+		{
+			c = _RamRead(address++);
+			LogBuffer[pos++] = hexa[c >> 4];
+			LogBuffer[pos++] = hexa[c & 0x0f];
+			LogBuffer[pos++] = ' ';
+			LogBuffer[m + head + 48] = c > 31 && c < 127 ? c : '.';
+		}
+		pos += 16;
+		LogBuffer[pos++] = 0x0d;
+		LogBuffer[pos++] = 0x0a;
+		LogBuffer[pos++] = 0x00;
+		_sys_logbuffer(LogBuffer);
+	}
 }
 
 void _logBiosIn(uint8 ch)
 {
-	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "Bios call: %d (0x%02x) - ", ch, ch);
-	switch (ch) {
-	case 0:
-		fputs("Cold Boot\r\n", file);
-		break;
-	case 3:
-		fputs("Warm Boot\r\n", file);
-		break;
-	case 6:
-		fputs("Console Status\r\n", file);
-		break;
-	case 9:
-		fputs("Console Input\r\n", file);
-		break;
-	case 12:
-		fputs("Console Output\r\n", file);
-		break;
-	case 15:
-		fputs("List Output\r\n", file);
-		break;
-	case 18:
-		fputs("Punch Output\r\n", file);
-		break;
-	case 21:
-		fputs("Reader Input\r\n", file);
-		break;
-	case 24:
-		fputs("Home Disk\r\n", file);
-		break;
-	case 27:
-		fputs("Select Disk\r\n", file);
-		break;
-	case 30:
-		fputs("Select Track\r\n", file);
-		break;
-	case 33:
-		fputs("Select Sector\r\n", file);
-		break;
-	case 36:
-		fputs("Set DMA Address\r\n", file);
-		break;
-	case 39:
-		fputs("Read Selected Sector\r\n", file);
-		break;
-	case 42:
-		fputs("Write Selected Sector\r\n", file);
-		break;
-	case 45:
-		fputs("List Status\r\n", file);
-		break;
-	case 48:
-		fputs("Sector Translation\r\n", file);
-		break;
-	default:
-		fputs("Unknown\r\n", file);
-		break;
-	}
-	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_sys_fclose(file);
+	sprintf((char *)LogBuffer, "Bios call: %3d IN:\r\n", ch); _sys_logbuffer(LogBuffer);
+	_logRegs();
 }
 
 void _logBiosOut(uint8 ch)
 {
-	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_sys_fclose(file);
+	sprintf((char *)LogBuffer, "              OUT:\r\n"); _sys_logbuffer(LogBuffer);
+	_logRegs();
 }
 
 void _logBdosIn(uint8 ch)
 {
-	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "Bdos call: %d (0x%02x) - ", ch, ch);
-	switch (ch){
-	case 0:
-		fputs("System Reset\r\n", file);
-		break;
-	case 1:
-		fputs("Console Input\r\n", file);
-		break;
-	case 2:
-		fputs("Console Output\r\n", file);
-		break;
-	case 3:
-		fputs("Reader Input\r\n", file);
-		break;
-	case 4:
-		fputs("Punch Output\r\n", file);
-		break;
-	case 5:
-		fputs("List Output\r\n", file);
-		break;
-	case 6:
-		fputs("Direct Console I/O\r\n", file);
-		break;
-	case 7:
-		fputs("Get I/O Byte\r\n", file);
-		break;
-	case 8:
-		fputs("Set I/O Byte\r\n", file);
-		break;
-	case 9:
-		fputs("Print String\r\n", file);
-		break;
-	case 10:
-		fputs("Read Console Buffer\r\n", file);
-		break;
-	case 11:
-		fputs("Get Console Status\r\n", file);
-		break;
-	case 12:
-		fputs("Return Version Number\r\n", file);
-		break;
-	case 13:
-		fputs("Reset Disk System\r\n", file);
-		break;
-	case 14:
-		fputs("Select Disk\r\n", file);
-		break;
-	case 15:
-		fputs("Open File\r\n", file);
-		break;
-	case 16:
-		fputs("Close File\r\n", file);
-		break;
-	case 17:
-		fputs("Search for First\r\n", file);
-		break;
-	case 18:
-		fputs("Search for Next\r\n", file);
-		break;
-	case 19:
-		fputs("Delete File\r\n", file);
-		break;
-	case 20:
-		fputs("Read Sequential\r\n", file);
-		break;
-	case 21:
-		fputs("Write Sequential\r\n", file);
-		break;
-	case 22:
-		fputs("Make File\r\n", file);
-		break;
-	case 23:
-		fputs("Rename File\r\n", file);
-		break;
-	case 24:
-		fputs("Return Log-in Vector\r\n", file);
-		break;
-	case 25:
-		fputs("Return Current Disk\r\n", file);
-		break;
-	case 26:
-		fputs("Set DMA Address\r\n", file);
-		break;
-	case 27:
-		fputs("Get Addr(Alloc)\r\n", file);
-		break;
-	case 28:
-		fputs("Write Protect Disk\r\n", file);
-		break;
-	case 29:
-		fputs("Get Read/Only Vector\r\n", file);
-		break;
-	case 30:
-		fputs("Set File Attributes\r\n", file);
-		break;
-	case 31:
-		fputs("Get ADDR(Disk Parms)\r\n", file);
-		break;
-	case 32:
-		fputs("Set/Get User Code\r\n", file);
-		break;
-	case 33:
-		fputs("Read Random\r\n", file);
-		break;
-	case 34:
-		fputs("Write Random\r\n", file);
-		break;
-	case 35:
-		fputs("Compute File Size\r\n", file);
-		break;
-	case 36:
-		fputs("Set Random Record\r\n", file);
-		break;
-	case 37:
-		fputs("Reset Drive\r\n", file);
-		break;
-	case 38:
-		fputs("Access Drive (not supported)\r\n", file);
-		break;
-	case 39:
-		fputs("Free Drive (not supported)\r\n", file);
-		break;
-	case 40:
-		fputs("Write Random with Zero Fill\r\n", file);
-		break;
-#ifdef ARDUINO
-	case 220:
-		fputs("PinMode\r\n", file);
-		break;
-	case 221:
-		fputs("DigitalRead\r\n", file);
-		break;
-	case 222:
-		fputs("DigitalWrite\r\n", file);
-		break;
-	case 223:
-		fputs("AnalogRead\r\n", file);
-		break;
-	case 224:
-		fputs("AnalogWrite\r\n", file);
-		break;
-#endif
-	default:
-		fputs("Unknown\r\n", file);
-		break;
-	}
-	fprintf(file, "\tIn : BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_sys_fclose(file);
+	uint16 address = 0;
+	uint8 size = 0;
 
-	switch (ch){
+	sprintf((char *)LogBuffer, "Bdos call: %3d IN:\r\n", ch); _sys_logbuffer(LogBuffer);
+	_logRegs();
+	switch (ch) {
 	case 9:
+	case 10:
+		address = DE; size = 8; break;
 	case 15:
 	case 16:
 	case 17:
 	case 18:
 	case 19:
-	case 20:
-	case 21:
 	case 22:
 	case 23:
 	case 30:
-	case 33:
-	case 34:
 	case 35:
 	case 36:
+		address = DE; size = 3; break;
+	case 20:
+	case 21:
+	case 33:
+	case 34:
 	case 40:
-		_logMemory(DE, 36);
+		address = DE; size = 3; _logMem(address, size);
+		sprintf((char *)LogBuffer, "\r\n");  _sys_logbuffer(LogBuffer);
+		address = dmaAddr; size = 8; break;
 	default:
 		break;
 	}
+	if(size)
+		_logMem(address, size);
 }
 
 void _logBdosOut(uint8 ch)
 {
-	FILE* file = _sys_fopen_a((uint8 *)"RunCPM.log");
-	fprintf(file, "\tOut: BC=%04x DE=%04x HL=%04x AF=%02x|%s| SP=%04x PC=%04x IOB=%02x DDR=%02x\r\n", BC, DE, HL, HIGH_REGISTER(AF), _logFlags(LOW_REGISTER(AF)), SP, PCX, _RamRead(3), _RamRead(4));
-	_sys_fclose(file);
+	uint16 address = 0;
+	uint8 size = 0;
 
-	switch (ch){
+	sprintf((char *)LogBuffer, "              OUT:\r\n"); _sys_logbuffer(LogBuffer);
+	_logRegs();
+	switch (ch) {
 	case 10:
-	case 15:
-	case 16:
-	case 17:
-	case 18:
-	case 19:
+		address = DE; size = 8; break;
 	case 20:
 	case 21:
-	case 22:
-	case 23:
-	case 30:
 	case 33:
 	case 34:
+	case 40:
+		address = DE; size = 3; _logMem(address, size);
+		sprintf((char *)LogBuffer, "\r\n");  _sys_logbuffer(LogBuffer);
+		address = dmaAddr; size = 8; break;
+	case 26:
+		address = dmaAddr; size = 8; break;
 	case 35:
 	case 36:
-	case 40:
-#ifdef ARDUINO
-	case 220:
-	case 221:
-	case 222:
-	case 223:
-	case 224:
-#endif
-		_logMemory(DE, 36);
+		address = DE; size = 3; break;
 	default:
 		break;
 	}
+	if(size)
+		_logMem(address, size);
 }
-#endif // DEBUGLOG
+#endif
 
 void _Bios(void)
 {
 	uint8 ch = LOW_REGISTER(PCX);
 
 #ifdef DEBUGLOG
+	#ifdef LOGONLY
+	if(ch == LOGONLY)
+	#endif
 	_logBiosIn(ch);
 #endif
 
@@ -478,6 +271,9 @@ void _Bios(void)
 		break;
 	}
 #ifdef DEBUGLOG
+	#ifdef LOGONLY
+	if(ch == LOGONLY)
+	#endif
 	_logBiosOut(ch);
 #endif
 
@@ -486,10 +282,13 @@ void _Bios(void)
 void _Bdos(void)
 {
 	CPM_FCB* F;
-	int32	i, c, count;
+	int32	i, c, chr, count;
 	uint8	ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
+	#ifdef LOGONLY
+	if(ch == LOGONLY)
+	#endif
 	_logBdosIn(ch);
 #endif
 
@@ -597,28 +396,28 @@ void _Bdos(void)
 		count = 0;
 		while (c)	// Very simplistic line input (Lacks ^E ^R ^U support)
 		{
-			ch = _getch();
+			chr = _getch();
 #ifdef DEBUG
-			if (ch == 4)
+			if (chr == 4)
 				Debug = 1;
 #endif
-			if (ch == 3 && count == 0) {
+			if (chr == 3 && count == 0) {
 				Status = 2;
 				break;
 			}
-			if (ch == 0x0D || ch == 0x0A)
+			if (chr == 0x0D || chr == 0x0A)
 				break;
-			if ((ch == 0x08 || ch == 0x7F) && count > 0) {
+			if ((chr == 0x08 || chr == 0x7F) && count > 0) {
 				_putcon('\b');
 				_putcon(' ');
 				_putcon('\b');
 				count--;
 				continue;
 			}
-			if (ch < 0x20 || ch > 0x7E)
+			if (chr < 0x20 || chr > 0x7E)
 				continue;
-			_putcon(ch);
-			count++; _RamWrite(i + count, ch);
+			_putcon(chr);
+			count++; _RamWrite(i + count, chr);
 			if (count == c)
 				break;
 		}
@@ -875,6 +674,9 @@ void _Bdos(void)
 	SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 
 #ifdef DEBUGLOG
+	#ifdef LOGONLY
+	if(ch == LOGONLY)
+	#endif
 	_logBdosOut(ch);
 #endif
 
