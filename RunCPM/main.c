@@ -58,7 +58,9 @@ int main(int argc, char* argv[])
 {
 	FILE* file;
 
+#ifdef LogName
 	_sys_deletefile(LogName);
+#endif
 
 	_console_init();
 	_clrscr();
