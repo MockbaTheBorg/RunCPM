@@ -26,6 +26,8 @@ void setup(void)
 	Serial.begin(9600);
 	while (!Serial);    // Wait until serial is connected
 
+	_sys_deletefile((uint8 *)LogName);
+
 	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
 	_puts("Arduino read/write support by Krzysztof Klis\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
