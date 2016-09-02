@@ -3,8 +3,7 @@
 #include <SPI.h>
 #include <SdFat.h>
 
-SdFat SD;
-SdFile dir;
+SdFat sd;
 
 #define LED 13
 #define DELAY 500
@@ -35,14 +34,13 @@ void setup(void)
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("--------------------------------------------\r\n");
 
-	if (SD.begin(SDcs, SPI_HALF_SPEED))
+	if (sd.begin(SDcs, SPI_HALF_SPEED))
 	{
-		if (SD.exists(CCPname))
+		if (sd.exists(CCPname))
 		{
 			while (true)
 			{
 				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
-				SD.chdir();
 				if (_RamLoad(CCPname, CCPaddr))
 				{
 					_PatchCPM();

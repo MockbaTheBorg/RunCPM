@@ -102,7 +102,7 @@ uint8 _CloseFile(uint16 fcbaddr)
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
 			if (fcbaddr == BatchFCB) {
-				_Truncate((char *)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
+				_Truncate(filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 			}
 			result = 0x00;
 		} else {
