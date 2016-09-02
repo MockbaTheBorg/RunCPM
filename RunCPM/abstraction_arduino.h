@@ -2,19 +2,15 @@
 /*===============================================================================*/
 bool _RamLoad(char* filename, uint16 address)
 {
-	File file = SD.open(filename, FILE_READ);
-	bool result = true;
+	SdFile f;
+	bool result = false;
 
-	if (file)
+	if (f.open(filename, FILE_READ))
 	{
-		while (file.available())
-		{
-			_RamWrite(address++, file.read());
-		}
-		file.close();
-	}
-	else {
-		result = false;
+		while (f.available())
+			_RamWrite(address++, f.read());
+		f.close();
+		result = true;
 	}
 	return(result);
 }
@@ -43,8 +39,8 @@ typedef struct {
 
 int _sys_select(uint8 *disk)
 {
-	SD.chdir();
-	return(SD.chdir((char*)disk)); // (todo) Test if it is Directory
+	sd.chdir();
+	return(sd.chdir((char*)disk)); // (todo) Test if it is Directory
 }
 
 long _sys_filesize(uint8 *filename)
@@ -79,7 +75,7 @@ int _sys_makefile(uint8 *filename)
 
 int _sys_deletefile(uint8 *filename)
 {
-	int result = SD.remove((char*)filename);
+	int result = sd.remove((char*)filename);
 	if (result)
 		dirPos--;
 	return(result);
@@ -87,7 +83,7 @@ int _sys_deletefile(uint8 *filename)
 
 int _sys_renamefile(uint8 *filename, uint8 *newname)
 {
-	return(SD.rename((char*)filename, (char*)newname));
+	return(sd.rename((char*)filename, (char*)newname));
 }
 
 #ifdef DEBUGLOG
@@ -298,16 +294,17 @@ bool match(uint8* fcbname, uint8* pattern)
 bool findNext(uint8* pattern, uint8* fcbname)
 {
 	bool result = 0;
+	SdFile dir;
 	uint8 dirname[13];
 	bool isfile;
 	int i;
 
-	SD.vwd()->rewind();
+	sd.vwd()->rewind();
 	for (i = 0; i < dirPos; i++) {
-		dir.openNext(SD.vwd(), O_READ);
+		dir.openNext(sd.vwd(), O_READ);
 		dir.close();
 	}
-	while (dir.openNext(SD.vwd(), O_READ)) {
+	while (dir.openNext(sd.vwd(), O_READ)) {
 		dir.getName((char*)dirname, 13);
 		isfile = dir.isFile();
 		dir.close();
@@ -346,12 +343,12 @@ uint8 _findfirst(uint8 dir) {
 	return(_findnext(dir));
 }
 
-uint8 _Truncate(char* fn, uint8 rc)
+uint8 _Truncate(uint8 *fn, uint8 rc)
 {
 	SdFile file;
 	uint8 result = 0xff;
 
-	if (file.open(fn, O_RDWR)) {
+	if (file.open((char *)fn, O_RDWR)) {
 		if (file.truncate(rc * 128)) {
 			result = 0x00;
 		}
