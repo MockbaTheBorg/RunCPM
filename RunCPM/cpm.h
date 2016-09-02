@@ -453,6 +453,7 @@ void _Bdos(void)
 				break;
 		}
 		_RamWrite(i, count);	// Saves the number or characters read
+		_putcon('\r');	// Gives a visual feedback that read ended
 		break;
 		/*
 		C = 11 (0Bh) : Get console status
