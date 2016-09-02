@@ -175,7 +175,7 @@ uint8 _DeleteFile(uint16 fcbaddr)
 				_GetFile(tmpFCB, &filename[0]);
 				if(_sys_deletefile(&filename[0]))
 					deleted = 0x00;
-				result = _SearchNext(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
+				result = _SearchFirst(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {
 			_error(errWRITEPROT);
