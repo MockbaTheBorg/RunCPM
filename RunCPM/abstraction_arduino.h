@@ -39,8 +39,15 @@ typedef struct {
 
 int _sys_select(uint8 *disk)
 {
-	sd.chdir();
-	return(sd.chdir((char*)disk)); // (todo) Test if it is Directory
+	uint8 result = FALSE;
+	SdFile f;
+
+	if (f.open((char *)disk, O_READ)) {
+		if (f.isDir())
+			result = TRUE;
+		f.close();
+	}
+	return(result);
 }
 
 long _sys_filesize(uint8 *filename)
@@ -74,10 +81,7 @@ int _sys_makefile(uint8 *filename)
 
 int _sys_deletefile(uint8 *filename)
 {
-	int result = sd.remove((char*)filename);
-	if (result)
-		dirPos--;
-	return(result);
+	return(sd.remove((char *)filename));
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname)
@@ -195,9 +199,16 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
+
+	if (F->dr) {
+		*(filename++) = (F->dr - 1) + 'A';
+	} else {
+		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
+	}
+	*(filename++) = '/';
 
 	while (i < 8) {
 		if (F->fn[i] > 32) {
@@ -227,22 +238,22 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
-	while (i < 8) {
+	while (*filename) {
 		F->fn[i] = toupper(*filename);
-		*filename++;
-		i++;
-	}
-	i = 0;
-	while (i < 3) {
-		F->tp[i] = toupper(*filename);
-		*filename++;
-		i++;
+		filename++; i++;
 	}
 }
 
-void dirToFCB(uint8* from, uint8* to)
+void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
 {
 	int i = 0;
+
+	from++;
+	if (*from == '/') {	// Skips the drive and / if needed
+		from++;
+	} else {
+		from--;
+	}
 
 	while (*from != 0 && *from != '.')
 	{
@@ -286,39 +297,46 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-bool findNext(uint8* pattern, uint8* fcbname)
+bool findNext(uint8* pattern)
 {
-	bool result = 0;
-	SdFile dir;
+	SdFile f;
+	uint8 path[2];
 	uint8 dirname[13];
-	bool isfile;
+	bool isfile, result = FALSE;
 	int i;
 
-	sd.vwd()->rewind();
-	for (i = 0; i < dirPos; i++) {
-		dir.openNext(sd.vwd(), O_READ);
-		dir.close();
+	path[0] = filename[0]; path[1] = 0;
+
+	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
+									// (todo) Get rid of these chdir() someday
+	if (dirPos == 0) {
+		sd.vwd()->rewind();
+	} else {
+		sd.vwd()->seekSet(dirPos);
 	}
-	while (dir.openNext(sd.vwd(), O_READ)) {
-		dir.getName((char*)dirname, 13);
-		isfile = dir.isFile();
-		dir.close();
-		dirPos++;
+
+	while (f.openNext(sd.vwd(), O_READ)) {
+		dirPos = sd.vwd()->curPosition();
+		f.getName((char*)dirname, 13);
+		isfile = f.isFile();
+		f.close();
 		if (!isfile)
 			continue;
-		dirToFCB(dirname, fcbname);
+		nameToFCB(dirname, fcbname);
 		if (match(fcbname, pattern)) {
-			result = 1;
+			result = TRUE;
 			break;
 		}
 	}
+	sd.chdir("/", true);			// (todo) Get rid of these chdir() someday
+
 	return(result);
 }
 
 uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 
-	if (findNext(pattern, fcbname)) {
+	if (findNext(pattern)) {
 		if(dir) {
 			_SetFile(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
@@ -331,23 +349,21 @@ uint8 _findnext(uint8 dir) {
 }
 
 uint8 _findfirst(uint8 dir) {
-	uint8 result = 0xff;
 	dirPos = 0;
-	dirToFCB(filename, pattern);
-
+	nameToFCB(filename, pattern);
 	return(_findnext(dir));
 }
 
-uint8 _Truncate(uint8 *fn, uint8 rc)
+uint8 _Truncate(uint8 *filename, uint8 rc)
 {
-	SdFile file;
 	uint8 result = 0xff;
+	SdFile f;
 
-	if (file.open((char *)fn, O_RDWR)) {
-		if (file.truncate(rc * 128)) {
+	if (f.open((char*)filename, O_RDWR)) {
+		if (f.truncate(rc * 128)) {
 			result = 0x00;
 		}
-		file.close();
+		f.close();
 	}
 
 	return(result);

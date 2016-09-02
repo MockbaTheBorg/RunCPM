@@ -41,7 +41,6 @@ void setup(void)
 			while (true)
 			{
 				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
-				sd.chdir("/", TRUE);	// (todo) This won't be needed with filename based drives
 				if (_RamLoad(CCPname, CCPaddr))
 				{
 					_PatchCPM();
