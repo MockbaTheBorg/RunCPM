@@ -48,7 +48,7 @@ long _sys_filesize(uint8 *filename)
 	long l = -1;
 	SdFile sd;
 	int32 file = sd.open((char*)filename, O_RDONLY);
-	if (file != NULL) {
+	if (file > 0) {
 		l = sd.fileSize();
 		sd.close();
 	}
@@ -59,18 +59,18 @@ int _sys_openfile(uint8 *filename)
 {
 	SdFile sd;
 	int32 file = sd.open((char*)filename, O_READ);
-	if (file != NULL)
+	if (file > 0)
 		sd.close();
-	return(file != NULL);
+	return(file > 0);
 }
 
 int _sys_makefile(uint8 *filename)
 {
 	SdFile sd;
 	int32 file = sd.open((char*)filename, O_CREAT | O_WRITE);	// (todo) make sure this doesn't overwrite an existing file
-	if (file != NULL)
+	if (file > 0)
 		sd.close();
-	return(file != NULL);
+	return(file > 0);
 }
 
 int _sys_deletefile(uint8 *filename)
@@ -100,19 +100,27 @@ void _sys_logbuffer(uint8 *buffer)
 }
 #endif
 
-void _sys_extendfile(char *fn, long fpos)
+bool _sys_extendfile(char *fn, long fpos)
 {
+	uint8 result = true;
 	SdFile sd;
 	long i;
 
 	if (sd.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > sd.fileSize()) {
 			for (i = 0; i < sd.fileSize() - fpos; i++) {
-				sd.write((uint8_t)0);
+				if (sd.write((uint8_t)0) < 0) {
+					result = false;
+					break;
+				}
 			}
 		}
 		sd.close();
+	} else {
+		return false;
 	}
+
+	return(result);
 }
 
 uint8 _sys_readseq(uint8 *filename, long fpos)
@@ -120,10 +128,12 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 	uint8 result = 0xff;
 	SdFile sd;
 	uint8 bytesread;
+	int32 file = 0;
 
-	_sys_extendfile((char*)filename, fpos);
-	int32 file = sd.open((char*)filename, O_READ);
-	if (file != NULL) {
+	if (_sys_extendfile((char*)filename, fpos)) {
+		file = sd.open((char*)filename, O_READ);
+	}
+	if (file > 0) {
 		if (sd.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
 			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
@@ -147,10 +157,12 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
 	SdFile sd;
+	int32 file = 0;
 
-	_sys_extendfile((char*)filename, fpos);
-	int32 file = sd.open((char*)filename, O_RDWR);
-	if (file != NULL) {
+	if (_sys_extendfile((char*)filename, fpos)) {
+		file = sd.open((char*)filename, O_RDWR);
+	}
+	if (file > 0) {
 		if (sd.seekSet(fpos)) {
 			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
@@ -171,10 +183,12 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	uint8 result = 0xff;
 	uint8 bytesread;
 	SdFile sd;
+	int32 file = 0;
 
-	_sys_extendfile((char*)filename, fpos);
-	int32 file = sd.open((char*)filename, O_READ);
-	if (file != NULL) {
+	if (_sys_extendfile((char*)filename, fpos)) {
+		file = sd.open((char*)filename, O_READ);
+	}
+	if (file > 0) {
 		if (sd.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
@@ -198,10 +212,12 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
 	SdFile sd;
+	int32 file = 0;
 
-	_sys_extendfile((char*)filename, fpos);
-	int32 file = sd.open((char*)filename, O_RDWR);
-	if (file != NULL) {
+	if (_sys_extendfile((char*)filename, fpos)) {
+		file = sd.open((char*)filename, O_RDWR);
+	}
+	if (file > 0) {
 		if (sd.seekSet(fpos)) {
 			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
