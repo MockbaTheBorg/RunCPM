@@ -117,7 +117,7 @@ bool _sys_extendfile(char *fn, long fpos)
 		}
 		sd.close();
 	} else {
-		return false;
+		result = false;
 	}
 
 	return(result);
