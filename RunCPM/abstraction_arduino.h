@@ -1,20 +1,17 @@
+char *dbuffer[128];
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char* filename, uint16 address)
 {
-	File file = SD.open(filename, FILE_READ);
-	bool result = true;
+	SdFile f;
+	bool result = false;
 
-	if (file)
+	if (f.open(filename, FILE_READ))
 	{
-		while (file.available())
-		{
-			_RamWrite(address++, file.read());
-		}
-		file.close();
-	}
-	else {
-		result = false;
+		while (f.available())
+			_RamWrite(address++, f.read());
+		f.close();
+		result = true;
 	}
 	return(result);
 }
@@ -43,51 +40,61 @@ typedef struct {
 
 int _sys_select(uint8 *disk)
 {
-	SD.chdir();
-	return(SD.chdir((char*)disk)); // (todo) Test if it is Directory
+	uint8 result = FALSE;
+	SdFile f;
+
+	if (f.open((char *)disk, O_READ)) {
+		if (f.isDir())
+			result = TRUE;
+		f.close();
+	}
+	return(result);
 }
 
 long _sys_filesize(uint8 *filename)
 {
 	long l = -1;
-	SdFile sd;
-	int32 file = sd.open((char*)filename, O_RDONLY);
-	if (file != NULL) {
-		l = sd.fileSize();
-		sd.close();
+	SdFile f;
+	if (f.open((char*)filename, O_RDONLY)) {
+		l = f.fileSize();
+		f.close();
 	}
 	return(l);
 }
 
 int _sys_openfile(uint8 *filename)
 {
-	SdFile sd;
-	int32 file = sd.open((char*)filename, O_READ);
+	SdFile f;
+	uint8 file = f.open((char*)filename, O_READ);
 	if (file != NULL)
-		sd.close();
+		f.close();
 	return(file != NULL);
 }
 
 int _sys_makefile(uint8 *filename)
 {
-	SdFile sd;
-	int32 file = sd.open((char*)filename, O_CREAT | O_WRITE);	// (todo) make sure this doesn't overwrite an existing file
+	SdFile f;
+	int32 file = f.open((char*)filename, O_CREAT | O_WRITE);
 	if (file != NULL)
-		sd.close();
+		f.close();
 	return(file != NULL);
 }
 
 int _sys_deletefile(uint8 *filename)
 {
-	int result = SD.remove((char*)filename);
-	if (result)
-		dirPos--;
+	SdFile f;
+	int result = FALSE;
+	if (f.open((char*)filename, O_READ)) {
+		if (f.remove())
+			result = true;
+	}
 	return(result);
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname)
 {
-	return(SD.rename((char*)filename, (char*)newname));
+	SdFat sd;
+	return(sd.rename((char*)filename, (char*)newname));
 }
 
 #ifdef DEBUGLOG
@@ -107,14 +114,13 @@ void _sys_logbuffer(uint8 *buffer)
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
-	SdFile sd;
+	SdFile f;
 	uint8 bytesread;
 
-	int32 file = sd.open((char*)filename, O_READ);
-	if (file != NULL) {
-		if (sd.seekSet(fpos)) {
+	if (f.open((char*)filename, O_READ)) {
+		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
+			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -123,7 +129,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 		} else {
 			result = 0x01;
 		}
-		sd.close();
+		f.close();
 	} else {
 		result = 0x10;
 	}
@@ -134,18 +140,17 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 uint8 _sys_writeseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
-	SdFile sd;
+	SdFile f;
 
-	int32 file = sd.open((char*)filename, O_RDWR);
-	if (file != NULL) {
-		if (sd.seekSet(fpos)) {
-			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
+	if (f.open((char*)filename, O_RDWR)) {
+		if (f.seekSet(fpos)) {
+			if (f.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
 			}
 		} else {
 			result = 0x01;
 		}
-		sd.close();
+		f.close();
 	} else {
 		result = 0x10;
 	}
@@ -156,14 +161,13 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 uint8 _sys_readrand(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
+	SdFile f;
 	uint8 bytesread;
-	SdFile sd;
 
-	int32 file = sd.open((char*)filename, O_READ);
-	if (file != NULL) {
-		if (sd.seekSet(fpos)) {
+	if (f.open((char*)filename, O_READ)) {
+		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-			bytesread = sd.read(_RamSysAddr(dmaAddr), 128);
+			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
 			if (bytesread) {
 				result = 0x00;
 			} else {
@@ -172,7 +176,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 		} else {
 			result = 0x06;
 		}
-		sd.close();
+		f.close();
 	} else {
 		result = 0x10;
 	}
@@ -183,18 +187,17 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 uint8 _sys_writerand(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
-	SdFile sd;
+	SdFile f;
 
-	int32 file = sd.open((char*)filename, O_RDWR);
-	if (file != NULL) {
-		if (sd.seekSet(fpos)) {
-			if (sd.write(_RamSysAddr(dmaAddr), 128)) {
+	if (f.open((char*)filename, O_RDWR)) {
+		if (f.seekSet(fpos)) {
+			if (f.write(_RamSysAddr(dmaAddr), 128)) {
 				result = 0x00;
 			}
 		} else {
 			result = 0x06;
 		}
-		sd.close();
+		f.close();
 	} else {
 		result = 0x10;
 	}
@@ -204,9 +207,16 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 
 uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
+
+	if (F->dr) {
+		*(filename++) = (F->dr - 1) + 'A';
+	} else {
+		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
+	}
+	*(filename++) = '/';
 
 	while (i < 8) {
 		if (F->fn[i] > 32) {
@@ -236,22 +246,22 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
-	while (i < 8) {
+	while (*filename) {
 		F->fn[i] = toupper(*filename);
-		*filename++;
-		i++;
-	}
-	i = 0;
-	while (i < 3) {
-		F->tp[i] = toupper(*filename);
-		*filename++;
-		i++;
+		filename++; i++;
 	}
 }
 
-void dirToFCB(uint8* from, uint8* to)
+void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
 {
 	int i = 0;
+
+	from++;
+	if (*from == '/') {	// Skips the drive and / if needed
+		from++;
+	} else {
+		from--;
+	}
 
 	while (*from != 0 && *from != '.')
 	{
@@ -295,38 +305,45 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-bool findNext(uint8* pattern, uint8* fcbname)
+bool findNext(uint8* pattern)
 {
-	bool result = 0;
+	SdFile f;
+	uint8 path[2];
 	uint8 dirname[13];
-	bool isfile;
+	bool isfile, result = FALSE;
 	int i;
 
-	SD.vwd()->rewind();
-	for (i = 0; i < dirPos; i++) {
-		dir.openNext(SD.vwd(), O_READ);
-		dir.close();
+	path[0] = filename[0]; path[1] = 0;
+
+	sd.chdir((char *)path, true);
+	if (dirPos == 0) {
+		sd.vwd()->rewind();
+	} else {
+		sd.vwd()->seekSet(dirPos);
 	}
-	while (dir.openNext(SD.vwd(), O_READ)) {
-		dir.getName((char*)dirname, 13);
-		isfile = dir.isFile();
-		dir.close();
-		dirPos++;
+
+	while (f.openNext(sd.vwd(), O_READ)) {
+		dirPos = sd.vwd()->curPosition();
+		f.getName((char*)dirname, 13);
+		isfile = f.isFile();
+		f.close();
 		if (!isfile)
 			continue;
-		dirToFCB(dirname, fcbname);
+		nameToFCB(dirname, fcbname);
 		if (match(fcbname, pattern)) {
-			result = 1;
+			result = TRUE;
 			break;
 		}
 	}
+	sd.chdir("/", true);
+
 	return(result);
 }
 
 uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 
-	if (findNext(pattern, fcbname)) {
+	if (findNext(pattern)) {
 		if(dir) {
 			_SetFile(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
@@ -339,23 +356,21 @@ uint8 _findnext(uint8 dir) {
 }
 
 uint8 _findfirst(uint8 dir) {
-	uint8 result = 0xff;
 	dirPos = 0;
-	dirToFCB(filename, pattern);
-
+	nameToFCB(filename, pattern);
 	return(_findnext(dir));
 }
 
-uint8 _Truncate(char* fn, uint8 rc)
+uint8 _Truncate(uint8 *filename, uint8 rc)
 {
-	SdFile file;
 	uint8 result = 0xff;
+	SdFile f;
 
-	if (file.open(fn, O_RDWR)) {
-		if (file.truncate(rc * 128)) {
+	if (f.open((char*)filename, O_RDWR)) {
+		if (f.truncate(rc * 128)) {
 			result = 0x00;
 		}
-		file.close();
+		f.close();
 	}
 
 	return(result);
