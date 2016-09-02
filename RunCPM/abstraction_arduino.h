@@ -90,6 +90,7 @@ int _sys_renamefile(uint8 *filename, uint8 *newname)
 	return(SD.rename((char*)filename, (char*)newname));
 }
 
+#ifdef DEBUGLOG
 void _sys_logbuffer(uint8 *buffer)
 {
 	_puts((char *)buffer);
@@ -101,6 +102,7 @@ void _sys_logbuffer(uint8 *buffer)
 //	sd.write(buffer, s);
 //	sd.close();
 }
+#endif
 
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
