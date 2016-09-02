@@ -123,7 +123,7 @@ void _logChar(char *txt, uint8 c)
 
 	asc[0] = c > 31 && c < 127 ? c : '.';
 	asc[1] = 0;
-	sprintf((char *)LogBuffer, "        %s = %02xh:%3d (%s)", txt, c, c, asc);
+	sprintf((char *)LogBuffer, "        %s = %02xh:%3d (%s)\n", txt, c, c, asc);
 	_sys_logbuffer(LogBuffer);
 }
 

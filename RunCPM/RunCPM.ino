@@ -26,7 +26,7 @@ void setup(void)
 	Serial.begin(9600);
 	while (!Serial);    // Wait until serial is connected
 
-#ifdef LogName
+#ifdef DEBUGLOG
 	_sys_deletefile((uint8 *)LogName);
 #endif
 

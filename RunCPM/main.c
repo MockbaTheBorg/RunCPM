@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 {
 	FILE* file;
 
-#ifdef LogName
+#ifdef DEBUGLOG
 	_sys_deletefile(LogName);
 #endif
 
