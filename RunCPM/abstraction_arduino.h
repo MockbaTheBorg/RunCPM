@@ -100,12 +100,28 @@ void _sys_logbuffer(uint8 *buffer)
 }
 #endif
 
+void _sys_extendfile(char *fn, long fpos)
+{
+	SdFile sd;
+	long i;
+
+	if (sd.open(fn, O_WRITE | O_APPEND)) {
+		if (fpos > sd.fileSize()) {
+			for (i = 0; i < sd.fileSize() - fpos; i++) {
+				sd.write((uint8_t)0);
+			}
+		}
+		sd.close();
+	}
+}
+
 uint8 _sys_readseq(uint8 *filename, long fpos)
 {
 	uint8 result = 0xff;
 	SdFile sd;
 	uint8 bytesread;
 
+	_sys_extendfile((char*)filename, fpos);
 	int32 file = sd.open((char*)filename, O_READ);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
@@ -132,6 +148,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	uint8 result = 0xff;
 	SdFile sd;
 
+	_sys_extendfile((char*)filename, fpos);
 	int32 file = sd.open((char*)filename, O_RDWR);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
@@ -155,6 +172,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	uint8 bytesread;
 	SdFile sd;
 
+	_sys_extendfile((char*)filename, fpos);
 	int32 file = sd.open((char*)filename, O_READ);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
@@ -181,6 +199,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 	uint8 result = 0xff;
 	SdFile sd;
 
+	_sys_extendfile((char*)filename, fpos);
 	int32 file = sd.open((char*)filename, O_RDWR);
 	if (file != NULL) {
 		if (sd.seekSet(fpos)) {
