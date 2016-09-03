@@ -40,15 +40,11 @@ int _SelectDisk(uint8 dr) {
 	uint8 result;
 	uint8 disk[2] = "A";
 
-	if (dr) {
-		disk[0] += (dr - 1);
-	} else {
-		disk[0] += (_RamRead(0x0004) & 0x0f);
-	}
-
+	disk[0] += dr ? (dr - 1) : (_RamRead(0x0004) & 0x0f);
 	result = _sys_select(disk);
 	if (result)
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
+
 	return(result);
 }
 
@@ -96,7 +92,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_GetFile(fcbaddr, &filename[0]);
-			if (fcbaddr == BatchFCB) {
+			if (fcbaddr == BatchFCB) {		// For now we are truncating only $$$.SUB
 				_Truncate(filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 			}
 			result = 0x00;

@@ -83,15 +83,20 @@ int _sys_renamefile(uint8 *filename, uint8 *newname) {
 
 #ifdef DEBUGLOG
 void _sys_logbuffer(uint8 *buffer) {
+#ifdef CONSOLELOG
 	_puts((char *)buffer);
-	//	SdFile sd;
-	//	uint8 s = 0;
-	//	while (*(buffer+s))	// Computes buffer size
-	//		s++;
-	//	int32 file = sd.open(LogName, O_WRITE | O_APPEND);
-	//	sd.write(buffer, s);
-	//	sd.close();
+#else
+	SdFile f;
+	uint8 s = 0;
+	while (*(buffer+s))	// Computes buffer size
+		s++;
+	if(f.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
+		f.write(buffer, s);
+		f.flush();
+		f.close();
+	}
 }
+#endif
 #endif
 
 bool _sys_extendfile(char *fn, long fpos)
@@ -121,7 +126,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 	uint8 bytesread;
-	int32 file = 0;
+	uint8 file = 0;
 
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_READ);
@@ -130,11 +135,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
 			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
-			if (bytesread) {
-				result = 0x00;
-			} else {
-				result = 0x01;
-			}
+			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x01;
 		}
@@ -149,7 +150,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
-	int32 file = 0;
+	uint8 file = 0;
 
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_RDWR);
@@ -174,7 +175,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 	uint8 bytesread;
-	int32 file = 0;
+	uint8 file = 0;
 
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_READ);
@@ -183,11 +184,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
-			if (bytesread) {
-				result = 0x00;
-			} else {
-				result = 0x01;
-			}
+			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x06;
 		}
@@ -202,7 +199,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 uint8 _sys_writerand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
-	int32 file = 0;
+	uint8 file = 0;
 
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_RDWR);
@@ -287,9 +284,8 @@ void nameToFCB(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB
 		*to = ' ';
 		to++;  i++;
 	}
-	if (*from == '.') {
+	if (*from == '.') 
 		from++;
-	}
 	i = 0;
 	while (*from != 0) {
 		*to = toupper(*from);
@@ -329,11 +325,8 @@ bool findNext(uint8 *pattern) {
 
 	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
 									// (todo) Get rid of these chdir() someday
-	if (dirPos == 0) {
-		sd.vwd()->rewind();
-	} else {
+	if (dirPos)
 		sd.vwd()->seekSet(dirPos);
-	}
 
 	while (f.openNext(sd.vwd(), O_READ)) {
 		dirPos = sd.vwd()->curPosition();
@@ -396,9 +389,7 @@ int _kbhit(void) {
 }
 
 uint8 _getch(void) {
-	while (!Serial.available()) {
-		;
-	}
+	while (!Serial.available());
 	return(Serial.read());
 }
 

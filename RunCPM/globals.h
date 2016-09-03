@@ -5,6 +5,7 @@
 
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
+//#define CONSOLELOG	// Writes debug information to console instead
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
 
