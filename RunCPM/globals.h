@@ -3,15 +3,17 @@
 #include <ctype.h>
 #endif
 
+/* Definitions for file/console based debugging */
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
-//#define CONSOLELOG	// Writes debug information to console instead
+//#define CONSOLELOG	// Writes debug information to console instead of file
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
 
+/* RunCPM version for the greeting header */
 #define VERSION	"2.3"
 
-// Define which CCP to use (select only one)
+/* Definition of which CCP to use, DR or ZCPR (define only one) */
 #define CCP_DR
 //#define CCP_ZCPR
 
@@ -27,6 +29,7 @@
 #define BatchFCB	0xE45E	//
 #endif
 
+/* Some environment and type definitions */
 #ifndef TRUE
 #define FALSE 0
 #define TRUE 1
@@ -47,6 +50,7 @@ typedef unsigned int    uint32;
 #define SET_LOW_REGISTER(x, v)  x = (((x) & 0xff00) | ((v) & 0xff))
 #define SET_HIGH_REGISTER(x, v) x = (((x) & 0xff) | (((v) & 0xff) << 8))
 
+/* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus
 extern "C"
 {
@@ -74,12 +78,11 @@ extern "C"
 	extern void _puts(const char *str);
 	extern void _puthex8(uint8 c);
 	extern void _puthex16(uint16 w);
-
-	extern uint16	dmaAddr;
 #ifdef __cplusplus
 }
 #endif
 
+/* Externs to allow access to the CPU registers and flags */
 extern int32 PCX; /* external view of PC                          */
 extern int32 AF;  /* AF register                                  */
 extern int32 BC;  /* BC register                                  */
@@ -115,3 +118,12 @@ extern int32 Break; /* Breakpoint                                 */
 
 #define SCBaddr BDOSpage + 16	// Address of the System Control Block
 #define tmpFCB  BDOSpage + 64	// Address of the temporary FCB
+
+/* Definition of global variables */
+static uint8	filename[15];		// Current filename in host filesystem format
+static uint8	newname[15];		// New filename in host filesystem format
+static uint8	fcbname[13];		// Current filename in CP/M format
+static uint8	pattern[13];		// File matching pattern in CP/M format
+static uint16	dmaAddr = 0x0080;
+static uint16	roVector = 0;
+static uint16	loginVector = 0;

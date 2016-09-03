@@ -11,14 +11,6 @@
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-uint8	filename[15];
-uint8	newname[13];
-uint16	dmaAddr = 0x0080;
-uint16	roVector = 0;
-uint16	loginVector = 0;
-
-uint8	user = 0;	// Current CP/M user
-
 struct ffblk fnd;
 
 typedef struct {
@@ -86,7 +78,7 @@ int _sys_select(uint8 *disk) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -121,7 +113,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8 *filename) {
+void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	int32 i = 0;
 
@@ -155,7 +147,7 @@ uint8 _findfirst(void) {
 
 	found = findfirst(filename, &fnd, 0);
 	if (found == 0) {
-		_SetFile(dmaAddr, fnd.ff_name);
+		_HostnameToFCB(dmaAddr, fnd.ff_name);
 		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}
@@ -168,7 +160,7 @@ uint8 _findnext(void) {
 
 	more = findnext(&fnd);
 	if (more == 0) {
-		_SetFile(dmaAddr, fnd.ff_name);
+		_HostnameToFCB(dmaAddr, fnd.ff_name);
 		_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		result = 0x00;
 	}

@@ -15,16 +15,7 @@ bool _RamLoad(char *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-uint8	pattern[12];
-uint8	fcbname[12];
-uint8	filename[15];
-uint8	newname[13];
-uint16	dmaAddr = 0x0080;
-uint16	roVector = 0;
-uint16	loginVector = 0;
 int		dirPos;
-
-uint8	user = 0;	// Current CP/M user
 
 typedef struct {
 	uint8 dr;
@@ -220,7 +211,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -253,7 +244,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8 *filename) {
+void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 *dest = &F->fn[0];
 
@@ -261,7 +252,7 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 		*dest++ = toupper(*filename++);
 }
 
-void nameToFCB(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
+void _HostnameToFCBname(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
 {
 	int i = 0;
 
@@ -331,7 +322,7 @@ bool findNext(uint8 *pattern) {
 		f.close();
 		if (!isfile)
 			continue;
-		nameToFCB(dirname, fcbname);
+		_HostnameToFCBname(dirname, fcbname);
 		if (match(fcbname, pattern)) {
 			result = TRUE;
 			break;
@@ -347,10 +338,10 @@ uint8 _findnext(uint8 dir) {
 
 	if (findNext(pattern)) {
 		if (dir) {
-			_SetFile(dmaAddr, fcbname);
+			_HostnameToFCB(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
 		}
-		_SetFile(tmpFCB, fcbname);
+		_HostnameToFCB(tmpFCB, fcbname);
 		result = 0x00;
 	}
 
@@ -359,7 +350,7 @@ uint8 _findnext(uint8 dir) {
 
 uint8 _findfirst(uint8 dir) {
 	dirPos = 0;	// Set directory search to start from the first position
-	nameToFCB(filename, pattern);
+	_HostnameToFCBname(filename, pattern);
 	return(_findnext(dir));
 }
 
