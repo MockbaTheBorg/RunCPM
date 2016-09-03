@@ -281,36 +281,10 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 
 void _SetFile(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
+	uint8 *dest = &F->fn[0];
 
-	filename++;
-	if (*filename == '/') {	// Skips the drive and / if needed
-		filename++;
-	} else {
-		filename--;
-	}
-
-	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 8) {
-		F->fn[i] = ' ';
-		i++;
-	}
-	if (*filename == '.')
-		filename++;
-	i = 0;
-	while (*filename != 0) {
-		F->tp[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 3) {
-		F->tp[i] = ' ';
-		i++;
-	}
+	while (*filename)
+		*dest++ = toupper(*filename++);
 }
 
 void nameToFCB(uint8 *from, uint8 *to) {
