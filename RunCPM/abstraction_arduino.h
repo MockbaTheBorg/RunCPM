@@ -1,6 +1,6 @@
 /* Memory abstraction functions */
 /*===============================================================================*/
-bool _RamLoad(char* filename, uint16 address) {
+bool _RamLoad(char *filename, uint16 address) {
 	SdFile f;
 	bool result = false;
 
@@ -184,7 +184,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
+uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -219,8 +219,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+void _SetFile(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
 	while (*filename) {
@@ -229,7 +229,7 @@ void _SetFile(uint16 fcbaddr, uint8* filename) {
 	}
 }
 
-void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
+void nameToFCB(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
 {
 	int i = 0;
 
@@ -263,7 +263,7 @@ void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB
 	*to = 0;
 }
 
-bool match(uint8* fcbname, uint8* pattern) {
+bool match(uint8 *fcbname, uint8 *pattern) {
 	bool result = 1;
 	uint8 i;
 
@@ -279,7 +279,7 @@ bool match(uint8* fcbname, uint8* pattern) {
 	return(result);
 }
 
-bool findNext(uint8* pattern) {
+bool findNext(uint8 *pattern) {
 	SdFile f;
 	uint8 path[2];
 	uint8 dirname[13];

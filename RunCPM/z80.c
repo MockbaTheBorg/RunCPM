@@ -1207,7 +1207,7 @@ void memdump(uint16 pos) {
 }
 
 uint8 Disasm(pos) {
-	const char* txt;
+	const char *txt;
 	char jr;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 1;

@@ -70,7 +70,7 @@ extern "C"
 	extern void _putch(uint8 ch);
 #endif
 	extern void _putcon(uint8 ch);
-	extern void _puts(const char* str);
+	extern void _puts(const char *str);
 	extern void _puthex8(uint8 c);
 	extern void _puthex16(uint16 w);
 

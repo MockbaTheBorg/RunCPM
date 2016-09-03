@@ -1,6 +1,6 @@
 /* see main.c for definition */
 
-int32 PCX;  /* external view of PC                          */
+int32 PCX; /* external view of PC                          */
 int32 AF;  /* AF register                                  */
 int32 BC;  /* BC register                                  */
 int32 DE;  /* DE register                                  */
