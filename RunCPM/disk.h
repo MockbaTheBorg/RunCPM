@@ -53,7 +53,7 @@ long _FileSize(uint16 fcbaddr) {
 	long l = -1;
 
 	if (_SelectDisk(F->dr)) {
-		_GetFile(fcbaddr, &filename[0]);
+		_FCBtoHostname(fcbaddr, &filename[0]);
 		l = _sys_filesize(filename);
 	}
 	return(l);
@@ -67,7 +67,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 	int32 b, i;
 
 	if (_SelectDisk(F->dr)) {
-		_GetFile(fcbaddr, &filename[0]);
+		_FCBtoHostname(fcbaddr, &filename[0]);
 		if (_sys_openfile(&filename[0])) {
 			l = _FileSize(fcbaddr);
 
@@ -91,7 +91,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			_GetFile(fcbaddr, &filename[0]);
+			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (fcbaddr == BatchFCB) {		// For now we are truncating only $$$.SUB
 				_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 			}
@@ -111,7 +111,7 @@ uint8 _MakeFile(uint16 fcbaddr) {
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			_GetFile(fcbaddr, &filename[0]);
+			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (_sys_makefile(&filename[0])) {
 				result = 0x00;
 			}
@@ -129,7 +129,7 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 dir) {
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
-		_GetFile(fcbaddr, &filename[0]);
+		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _findfirst(dir);
 	} else {
 		_error(errSELECT);
@@ -158,7 +158,7 @@ uint8 _DeleteFile(uint16 fcbaddr) {
 		if (!RW) {
 			result = _SearchFirst(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			while (result != 0xff) {
-				_GetFile(tmpFCB, &filename[0]);
+				_FCBtoHostname(tmpFCB, &filename[0]);
 				if (_sys_deletefile(&filename[0]))
 					deleted = 0x00;
 				result = _SearchFirst(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
@@ -179,8 +179,8 @@ uint8 _RenameFile(uint16 fcbaddr) {
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_RamWrite(fcbaddr + 16, _RamRead(fcbaddr));	// Prevents rename from moving files among folders
-			_GetFile(fcbaddr + 16, &newname[0]);
-			_GetFile(fcbaddr, &filename[0]);
+			_FCBtoHostname(fcbaddr + 16, &newname[0]);
+			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (_sys_renamefile(&filename[0], &newname[0]))
 				result = 0x00;
 		} else {
@@ -198,7 +198,7 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
 	if (_SelectDisk(F->dr)) {
-		_GetFile(fcbaddr, &filename[0]);
+		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _sys_readseq(&filename[0], fpos);
 		if (!result) {	// Read succeeded, adjust FCB
 			F->cr++;
@@ -224,7 +224,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			_GetFile(fcbaddr, &filename[0]);
+			_FCBtoHostname(fcbaddr, &filename[0]);
 			result = _sys_writeseq(&filename[0], fpos);
 			if (!result) {	// Write succeeded, adjust FCB
 				F->cr++;
@@ -253,7 +253,7 @@ uint8 _ReadRand(uint16 fcbaddr) {
 	long fpos = record * 128;
 
 	if (_SelectDisk(F->dr)) {
-		_GetFile(fcbaddr, &filename[0]);
+		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _sys_readrand(&filename[0], fpos);
 		if (!result) {	// Read succeeded, adjust FCB
 			F->cr = record & 0x7F;
@@ -275,7 +275,7 @@ uint8 _WriteRand(uint16 fcbaddr) {
 
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
-			_GetFile(fcbaddr, &filename[0]);
+			_FCBtoHostname(fcbaddr, &filename[0]);
 			result = _sys_writerand(&filename[0], fpos);
 			if (!result) {	// Write succeeded, adjust FCB
 				F->cr = record & 0x7F;

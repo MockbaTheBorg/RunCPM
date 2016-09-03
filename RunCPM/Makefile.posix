@@ -14,8 +14,8 @@ CC = gcc
 LD = gcc
 
 # Flags to pass to the compiler - add "-g" to include debug information
-CFLAGS = -Wall -O0 -fPIC
-#CFLAGS = -Wall -O0 -fPIC -g
+CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable
+#CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
 
 # Flags to pass to the linker
 LDFLAGS = -lncurses

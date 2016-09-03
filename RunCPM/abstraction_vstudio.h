@@ -30,14 +30,6 @@ void _RamLoad(uint8 *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-uint8	filename[15];
-uint8	newname[13];
-uint16	dmaAddr = 0x0080;
-uint16	roVector = 0;
-uint16	loginVector = 0;
-
-uint8	user = 0;	// Current CP/M user
-
 WIN32_FIND_DATA FindFileData;
 HANDLE hFind;
 
@@ -239,7 +231,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -272,7 +264,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8 *filename) {
+void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
@@ -305,32 +297,30 @@ uint8 _findfirst(uint8 dir) {
 	uint8 more = 1;
 
 	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
-			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
+		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			more = FindNextFile(hFind, &FindFileData);
+			continue;
+		}
+		if (FindFileData.cAlternateFileName[0] != 0) {
+			if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
+			{
 				more = FindNextFile(hFind, &FindFileData);
 				continue;
 			}
-			if (FindFileData.cAlternateFileName[0] != 0) {
-				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
-				{
-					more = FindNextFile(hFind, &FindFileData);
-					continue;
-				}
-			}
-			found++;
-			break;
 		}
-		if (found) {
-			if (dir) {
-				_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
-				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
-			}
-			_SetFile(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
-			result = 0x00;
-		} else {
-			FindClose(hFind);
+		found++;
+		break;
+	}
+	if (found) {
+		if (dir) {
+			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
+		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
+		result = 0x00;
+	} else {
+		FindClose(hFind);
 	}
 	return(result);
 }
@@ -341,32 +331,30 @@ uint8 _findnext(uint8 dir) {
 	uint8 more = 1;
 
 	more = FindNextFile(hFind, &FindFileData);
-	if (more) {
-		while (more) {	// Skips folders and long file names
-			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	while (more) {	// Skips folders and long file names
+		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			more = FindNextFile(hFind, &FindFileData);
+			continue;
+		}
+		if (FindFileData.cAlternateFileName[0] != 0) {
+			if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
+			{
 				more = FindNextFile(hFind, &FindFileData);
 				continue;
 			}
-			if (FindFileData.cAlternateFileName[0] != 0) {
-				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
-				{
-					more = FindNextFile(hFind, &FindFileData);
-					continue;
-				}
-			}
-			found++;
-			break;
 		}
-		if (found) {
-			if (dir) {
-				_SetFile(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
-				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
-			}
-			_SetFile(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
-			result = 0x00;
-		} else {
-			FindClose(hFind);
+		found++;
+		break;
+	}
+	if (found) {
+		if (dir) {
+			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
+			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
+		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
+		result = 0x00;
+	} else {
+		FindClose(hFind);
 	}
 	return(result);
 }

@@ -34,15 +34,7 @@ void _RamLoad(uint8 *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-uint8	pattern[14];
-uint8	fcbname[14];
-uint8	filename[15];
-uint8	newname[13];
 uint8	drive[2] = { 'A', '/' };
-uint8	user = 0;	// Current CP/M user
-uint16	dmaAddr = 0x0080;
-uint16	roVector = 0;
-uint16	loginVector = 0;
 glob_t	pglob;
 int	dirPos;
 
@@ -246,7 +238,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -279,7 +271,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8 *filename) {
+void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 *dest = &F->fn[0];
 
@@ -287,7 +279,7 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 		*dest++ = toupper(*filename++);
 }
 
-void nameToFCB(uint8 *from, uint8 *to) {
+void _HostnameToFCBname(uint8 *from, uint8 *to) {
 	int i = 0;
 
 	from++;
@@ -347,7 +339,7 @@ uint8 findNext()
 		for (i = dirPos; i < pglob.gl_pathc; i++) {
 			dirPos++;
 			file = pglob.gl_pathv[i];
-			nameToFCB((uint8*)file, fcbname);
+			_HostnameToFCBname((uint8*)file, fcbname);
 			if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
 				result = TRUE;
 				break;
@@ -364,10 +356,10 @@ uint8 _findnext(uint8 isdir) {
 
 	if (findNext()) {	// Finds a file matching the pattern, starting from dirPos
 		if (isdir) {
-			_SetFile(dmaAddr, fcbname);
+			_HostnameToFCB(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
 		}
-		_SetFile(tmpFCB, fcbname);	// DIR will print the name from tmpFCB
+		_HostnameToFCB(tmpFCB, fcbname);	// DIR will print the name from tmpFCB
 		result = 0x00;
 	}
 
@@ -376,7 +368,7 @@ uint8 _findnext(uint8 isdir) {
 
 uint8 _findfirst(uint8 isdir) {
 	dirPos = 0;	// Set directory search to start from the first position
-	nameToFCB(filename, pattern);
+	_HostnameToFCBname(filename, pattern);
 	return(_findnext(isdir));
 }
 
