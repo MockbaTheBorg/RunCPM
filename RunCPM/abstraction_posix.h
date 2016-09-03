@@ -44,7 +44,7 @@ uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
 uint16	loginVector = 0;
 glob_t	pglob;
-int		pglob_pos;
+int	dirPos;
 
 typedef struct {
 	uint8 dr;
@@ -248,12 +248,9 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 
 uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 *temp;
 	uint8 i = 0;
 	uint8 unique = TRUE;
 	
-	temp = filename;
-
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
@@ -319,6 +316,13 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 void nameToFCB(uint8 *from, uint8 *to) {
 	int i = 0;
 
+	from++;
+	if (*from == '/') {	// Skips the drive and / if needed
+		from++;
+	} else {
+		from--;
+	}
+
 	while (*from != 0 && *from != '.') {
 		*to = toupper(*from);
 		to++; from++; i++;
@@ -344,7 +348,6 @@ void nameToFCB(uint8 *from, uint8 *to) {
 bool match(uint8 *fcbname, uint8 *pattern) {
 	bool result = 1;
 	uint8 i;
-
 	for (i = 0; i < 14; i++) {
 		if (*pattern == '?' || *pattern == *fcbname) {
 			pattern++; fcbname++;
@@ -357,43 +360,50 @@ bool match(uint8 *fcbname, uint8 *pattern) {
 	return(result);
 }
 
-uint8 _findnext(uint8 dir) {
-	uint8 result = 0xff;
-	char *file;
+uint8 findNext()
+{
+	bool result = FALSE;
+	char dir[4] = "?/*";
+	char* file;
 	int i;
 	struct stat st;
 
-	for (i = pglob_pos; i < pglob.gl_pathc; i++) {
-		pglob_pos++;
-		file = pglob.gl_pathv[i];
-		nameToFCB((uint8*)file, fcbname);
-		if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
-			if(dir) {
-				_SetFile(dmaAddr, (uint8*)file);
-				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+	dir[0] = filename[0];
+	if (!glob(dir, 0, NULL, &pglob)) {
+		for (i = dirPos; i < pglob.gl_pathc; i++) {
+			dirPos++;
+			file = pglob.gl_pathv[i];
+			nameToFCB((uint8*)file, fcbname);
+			if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
+				result = TRUE;
+				break;
 			}
-			_SetFile(tmpFCB, fcbname);
-			result = 0x00;
-			break;
 		}
-	}
-	if (result != 0x00) {
 		globfree(&pglob);
 	}
+
 	return(result);
 }
 
-uint8 _findfirst(uint8 dir) {
+uint8 _findnext(uint8 isdir) {
 	uint8 result = 0xff;
-	char path[4] = "A/*";
 
-	path[0] = filename[0];
-	if (glob(path, 0, NULL, &pglob) == 0) {
-		nameToFCB(filename, pattern);
-		pglob_pos = 0;
-		result = _findnext(dir);
+	if (findNext()) {	// Finds a file matching the pattern, starting from dirPos
+		if (isdir) {
+			_SetFile(dmaAddr, fcbname);
+			_RamWrite(dmaAddr, 0x00);
+		}
+		_SetFile(tmpFCB, fcbname);	// DIR will print the name from tmpFCB
+		result = 0x00;
 	}
+
 	return(result);
+}
+
+uint8 _findfirst(uint8 isdir) {
+	dirPos = 0;	// Set directory search to start from the first position
+	nameToFCB(filename, pattern);
+	return(_findnext(isdir));
 }
 
 uint8 _Truncate(char *fn, uint8 rc) {
