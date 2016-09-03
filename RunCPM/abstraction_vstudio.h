@@ -1,10 +1,10 @@
 /* see main.c for definition */
 
 #ifdef _WIN32
-	#define _CRT_SECURE_NO_WARNINGS
-	#include <windows.h>
-	#include <stdio.h>
-	#include <conio.h>
+#define _CRT_SECURE_NO_WARNINGS
+#include <windows.h>
+#include <stdio.h>
+#include <conio.h>
 #endif
 
 /* Externals for abstracted functions need to go here */
@@ -14,8 +14,7 @@ extern long _sys_fread(void *buffer, long size, long count, FILE *file);
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-void _RamLoad(FILE* file, uint16 address)
-{
+void _RamLoad(FILE* file, uint16 address) {
 	long l;
 
 	_sys_fseek(file, 0, SEEK_END);
@@ -95,13 +94,11 @@ int _sys_rename(uint8 *name1, uint8 *name2) {
 	return(rename((const char*)name1, (const char*)name2));
 }
 
-int _sys_select(uint8 *disk)
-{
+int _sys_select(uint8 *disk) {
 	return((uint8)GetFileAttributes((LPCSTR)disk) == 0x10);
 }
 
-long _sys_filesize(uint8 *filename)
-{
+long _sys_filesize(uint8 *filename) {
 	long l = -1;
 	FILE* file = _sys_fopen_r(filename);
 	if (file != NULL) {
@@ -112,37 +109,32 @@ long _sys_filesize(uint8 *filename)
 	return(l);
 }
 
-int _sys_openfile(uint8 *filename)
-{
+int _sys_openfile(uint8 *filename) {
 	FILE* file = _sys_fopen_r(filename);
 	if (file != NULL)
 		_sys_fclose(file);
 	return(file != NULL);
 }
 
-int _sys_makefile(uint8 *filename)
-{
+int _sys_makefile(uint8 *filename) {
 	FILE* file = _sys_fopen_a(filename);
 	if (file != NULL)
 		_sys_fclose(file);
 	return(file != NULL);
 }
 
-int _sys_deletefile(uint8 *filename)
-{
+int _sys_deletefile(uint8 *filename) {
 	return(!_sys_remove(filename));
 }
 
-int _sys_renamefile(uint8 *filename, uint8 *newname)
-{
+int _sys_renamefile(uint8 *filename, uint8 *newname) {
 	return(!_sys_rename(&filename[0], &newname[0]));
 }
 
 #ifdef DEBUGLOG
-void _sys_logbuffer(uint8 *buffer)
-{
+void _sys_logbuffer(uint8 *buffer) {
 	uint8 s = 0;
-	while (*(buffer+s))	// Computes buffer size
+	while (*(buffer + s))	// Computes buffer size
 		s++;
 	FILE *file = _sys_fopen_a(LogName);
 	_sys_fwrite(buffer, 1, s, file);
@@ -150,8 +142,7 @@ void _sys_logbuffer(uint8 *buffer)
 }
 #endif
 
-uint8 _sys_readseq(uint8 *filename, long fpos)
-{
+uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	uint8 bytesread;
 
@@ -176,8 +167,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_writeseq(uint8 *filename, long fpos)
-{
+uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 
 	FILE* file = _sys_fopen_rw(&filename[0]);
@@ -197,8 +187,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_readrand(uint8 *filename, long fpos)
-{
+uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	uint8 bytesread;
 
@@ -223,8 +212,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_writerand(uint8 *filename, long fpos)
-{
+uint8 _sys_writerand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 
 	FILE* file = _sys_fopen_rw(&filename[0]);
@@ -244,8 +232,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename)
-{
+uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -280,8 +267,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename)
-{
+void _SetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
@@ -309,8 +295,7 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-uint8 _findfirst(uint8 dir)
-{
+uint8 _findfirst(uint8 dir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
@@ -346,8 +331,7 @@ uint8 _findfirst(uint8 dir)
 	return(result);
 }
 
-uint8 _findnext(uint8 dir)
-{
+uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
@@ -383,8 +367,7 @@ uint8 _findnext(uint8 dir)
 	return(result);
 }
 
-uint8 _Truncate(char* fn, uint8 rc)
-{
+uint8 _Truncate(char* fn, uint8 rc) {
 	uint8 result = 0x00;
 	LARGE_INTEGER fp;
 	fp.QuadPart = rc * 128;
@@ -404,10 +387,8 @@ uint8 _Truncate(char* fn, uint8 rc)
 /* Console abstraction functions */
 /*===============================================================================*/
 
-BOOL _signal_handler(DWORD signal)
-{
-	if (signal == CTRL_C_EVENT)
-	{
+BOOL _signal_handler(DWORD signal) {
+	if (signal == CTRL_C_EVENT) {
 		_ungetch(3);
 		return(TRUE);
 	} else {
@@ -415,8 +396,7 @@ BOOL _signal_handler(DWORD signal)
 	}
 }
 
-void _console_init(void)
-{
+void _console_init(void) {
 	HANDLE hConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
 	DWORD dwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
 
@@ -424,8 +404,7 @@ void _console_init(void)
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
 }
 
-void _console_reset(void)
-{
+void _console_reset(void) {
 
 }
 
@@ -457,8 +436,7 @@ void _putch(byte)
 }
 */
 
-void _clrscr(void)
-{
+void _clrscr(void) {
 	system("cls");
 }
 

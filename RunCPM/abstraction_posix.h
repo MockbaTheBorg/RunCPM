@@ -7,7 +7,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-typedef enum {true, false} bool;
+typedef enum {
+	true, false
+} bool;
 
 /* Memory abstraction functions */
 /*===============================================================================*/
@@ -18,7 +20,7 @@ uint8	pattern[14];
 uint8	fcbname[14];
 uint8	filename[15];
 uint8	newname[13];
-uint8	drive[2] = {'A', '/'};
+uint8	drive[2] = { 'A', '/' };
 uint8	user = 0;	// Current CP/M user
 uint16	dmaAddr = 0x0080;
 uint16	roVector = 0;
@@ -83,14 +85,12 @@ int _sys_rename(uint8 *name1, uint8 *name2) {
 	return(rename((const char*)name1, (const char*)name2));
 }
 
-int _sys_select(uint8 *disk)
-{
+int _sys_select(uint8 *disk) {
 	struct stat st;
 	return((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename)
-{
+uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -125,8 +125,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename)
-{
+void _SetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	int32 i = 0;
 
@@ -155,12 +154,10 @@ void _SetFile(uint16 fcbaddr, uint8* filename)
 	}
 }
 
-void dirToFCB(uint8* from, uint8* to)
-{
+void dirToFCB(uint8* from, uint8* to) {
 	int i = 0;
 
-	while (*from != 0 && *from != '.')
-	{
+	while (*from != 0 && *from != '.') {
 		*to = toupper(*from);
 		to++; from++; i++;
 	}
@@ -183,13 +180,11 @@ void dirToFCB(uint8* from, uint8* to)
 	*to = 0;
 }
 
-bool match(uint8* fcbname, uint8* pattern)
-{
+bool match(uint8* fcbname, uint8* pattern) {
 	bool result = 1;
 	uint8 i;
 
-	for (i = 0; i < 14; i++)
-	{
+	for (i = 0; i < 14; i++) {
 		if (*pattern == '?' || *pattern == *fcbname) {
 			pattern++; fcbname++;
 			continue;
@@ -201,8 +196,7 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-uint8 _findnext(void)
-{
+uint8 _findnext(void) {
 	uint8 result = 0xff;
 	char* file;
 	int i;
@@ -238,8 +232,7 @@ uint8 _findfirst(void) {
 	return(result);
 }
 
-uint8 _Truncate(char* fn, uint8 rc)
-{
+uint8 _Truncate(char* fn, uint8 rc) {
 	uint8 result = 0x00;
 	if (truncate(fn, rc * 128)) {
 		result = 0xff;
@@ -257,8 +250,7 @@ uint8 _Truncate(char* fn, uint8 rc)
 
 static struct termios _old_term, _new_term;
 
-void _console_init(void)
-{
+void _console_init(void) {
 	tcgetattr(0, &_old_term);
 
 	_new_term = _old_term;
@@ -273,13 +265,11 @@ void _console_init(void)
 	setvbuf(stdout, (char *)NULL, _IONBF, 0); /* Disable stdout buffering */
 }
 
-void _console_reset(void)
-{
+void _console_reset(void) {
 	tcsetattr(0, TCSANOW, &_old_term);
 }
 
-int _kbhit(void)
-{
+int _kbhit(void) {
 	struct pollfd pfds[1];
 
 	pfds[0].fd = STDIN_FILENO;
@@ -288,18 +278,15 @@ int _kbhit(void)
 	return poll(pfds, 1, 0);
 }
 
-uint8 _getch(void)
-{
+uint8 _getch(void) {
 	return getchar();
 }
 
-void _putch(uint8 ch)
-{
+void _putch(uint8 ch) {
 	putchar(ch);
 }
 
-uint8 _getche(void)
-{
+uint8 _getche(void) {
 	uint8 ch = _getch();
 
 	_putch(ch);
@@ -307,8 +294,7 @@ uint8 _getche(void)
 	return ch;
 }
 
-void _clrscr(void)
-{
+void _clrscr(void) {
 	system("clear");
 }
 

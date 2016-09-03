@@ -74,8 +74,7 @@ int _sys_remove(uint8 *filename) {
 	return(remove((const char*)filename));
 }
 
-int _sys_select(uint8 *disk)
-{
+int _sys_select(uint8 *disk) {
 	uint8 result;
 	DIR *d;
 	if ((d = opendir((char*)disk)) != NULL) {
@@ -87,8 +86,7 @@ int _sys_select(uint8 *disk)
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename)
-{
+uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -123,8 +121,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename)
-{
+void _SetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
 	int32 i = 0;
 
@@ -165,8 +162,7 @@ uint8 _findfirst(void) {
 	return(result);
 }
 
-uint8 _findnext(void)
-{
+uint8 _findnext(void) {
 	uint8 result = 0xff;
 	uint8 more;
 
@@ -179,8 +175,7 @@ uint8 _findnext(void)
 	return(result);
 }
 
-uint8 _Truncate(char* fn, uint8 rc)
-{
+uint8 _Truncate(char* fn, uint8 rc) {
 	uint8 result = 0x00;
 	if (truncate(fn, rc * 128)) {
 		result = 0xff;
@@ -190,37 +185,30 @@ uint8 _Truncate(char* fn, uint8 rc)
 
 /* Console abstraction functions */
 /*===============================================================================*/
-void _console_init(void)
-{
+void _console_init(void) {
 }
 
-void _console_reset(void)
-{
+void _console_reset(void) {
 
 }
 
-int _kbhit(void)
-{
+int _kbhit(void) {
 	return kbhit();
 }
 
-unsigned char _getch(void)
-{
+unsigned char _getch(void) {
 	return getch();
 }
 
-unsigned char _getche(void)
-{
+unsigned char _getche(void) {
 	return getche();
 }
 
-void _putch(uint8 ch)
-{
+void _putch(uint8 ch) {
 	putch(ch);
 }
 
-void _clrscr(void)
-{
+void _clrscr(void) {
 	system("cls");
 }
 

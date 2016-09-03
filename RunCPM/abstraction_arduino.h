@@ -1,12 +1,10 @@
 /* Memory abstraction functions */
 /*===============================================================================*/
-bool _RamLoad(char* filename, uint16 address)
-{
+bool _RamLoad(char* filename, uint16 address) {
 	SdFile f;
 	bool result = false;
 
-	if (f.open(filename, FILE_READ))
-	{
+	if (f.open(filename, FILE_READ)) {
 		while (f.available())
 			_RamWrite(address++, f.read());
 		f.close();
@@ -37,8 +35,7 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
-int _sys_select(uint8 *disk)
-{
+int _sys_select(uint8 *disk) {
 	uint8 result = FALSE;
 	SdFile f;
 
@@ -50,8 +47,7 @@ int _sys_select(uint8 *disk)
 	return(result);
 }
 
-long _sys_filesize(uint8 *filename)
-{
+long _sys_filesize(uint8 *filename) {
 	long l = -1;
 	SdFile f;
 	if (f.open((char*)filename, O_RDONLY)) {
@@ -61,8 +57,7 @@ long _sys_filesize(uint8 *filename)
 	return(l);
 }
 
-int _sys_openfile(uint8 *filename)
-{
+int _sys_openfile(uint8 *filename) {
 	SdFile f;
 	uint8 file = f.open((char*)filename, O_READ);
 	if (file != NULL)
@@ -70,8 +65,7 @@ int _sys_openfile(uint8 *filename)
 	return(file != NULL);
 }
 
-int _sys_makefile(uint8 *filename)
-{
+int _sys_makefile(uint8 *filename) {
 	SdFile f;
 	uint8 file = f.open((char*)filename, O_CREAT | O_WRITE);
 	if (file != NULL)
@@ -79,32 +73,28 @@ int _sys_makefile(uint8 *filename)
 	return(file != NULL);
 }
 
-int _sys_deletefile(uint8 *filename)
-{
+int _sys_deletefile(uint8 *filename) {
 	return(sd.remove((char *)filename));
 }
 
-int _sys_renamefile(uint8 *filename, uint8 *newname)
-{
+int _sys_renamefile(uint8 *filename, uint8 *newname) {
 	return(sd.rename((char*)filename, (char*)newname));
 }
 
 #ifdef DEBUGLOG
-void _sys_logbuffer(uint8 *buffer)
-{
+void _sys_logbuffer(uint8 *buffer) {
 	_puts((char *)buffer);
-//	SdFile sd;
-//	uint8 s = 0;
-//	while (*(buffer+s))	// Computes buffer size
-//		s++;
-//	int32 file = sd.open(LogName, O_WRITE | O_APPEND);
-//	sd.write(buffer, s);
-//	sd.close();
+	//	SdFile sd;
+	//	uint8 s = 0;
+	//	while (*(buffer+s))	// Computes buffer size
+	//		s++;
+	//	int32 file = sd.open(LogName, O_WRITE | O_APPEND);
+	//	sd.write(buffer, s);
+	//	sd.close();
 }
 #endif
 
-uint8 _sys_readseq(uint8 *filename, long fpos)
-{
+uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 	uint8 bytesread;
@@ -116,7 +106,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 			if (bytesread) {
 				result = 0x00;
 			} else {
-					result = 0x01;
+				result = 0x01;
 			}
 		} else {
 			result = 0x01;
@@ -129,8 +119,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_writeseq(uint8 *filename, long fpos)
-{
+uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 
@@ -150,8 +139,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_readrand(uint8 *filename, long fpos)
-{
+uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 	uint8 bytesread;
@@ -176,8 +164,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _sys_writerand(uint8 *filename, long fpos)
-{
+uint8 _sys_writerand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	SdFile f;
 
@@ -197,8 +184,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos)
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename)
-{
+uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -233,8 +219,7 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename)
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename)
-{
+void _SetFile(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
@@ -255,8 +240,7 @@ void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB
 		from--;
 	}
 
-	while (*from != 0 && *from != '.')
-	{
+	while (*from != 0 && *from != '.') {
 		*to = toupper(*from);
 		to++; from++; i++;
 	}
@@ -279,13 +263,11 @@ void nameToFCB(uint8* from, uint8* to) // Converts a string name (AB.TXT) to FCB
 	*to = 0;
 }
 
-bool match(uint8* fcbname, uint8* pattern)
-{
+bool match(uint8* fcbname, uint8* pattern) {
 	bool result = 1;
 	uint8 i;
 
-	for (i = 0; i < 12; i++)
-	{
+	for (i = 0; i < 12; i++) {
 		if (*pattern == '?' || *pattern == *fcbname) {
 			pattern++; fcbname++;
 			continue;
@@ -297,8 +279,7 @@ bool match(uint8* fcbname, uint8* pattern)
 	return(result);
 }
 
-bool findNext(uint8* pattern)
-{
+bool findNext(uint8* pattern) {
 	SdFile f;
 	uint8 path[2];
 	uint8 dirname[13];
@@ -337,7 +318,7 @@ uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 
 	if (findNext(pattern)) {
-		if(dir) {
+		if (dir) {
 			_SetFile(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
 		}
@@ -354,8 +335,7 @@ uint8 _findfirst(uint8 dir) {
 	return(_findnext(dir));
 }
 
-uint8 _Truncate(uint8 *filename, uint8 rc)
-{
+uint8 _Truncate(uint8 *filename, uint8 rc) {
 	uint8 result = 0xff;
 	SdFile f;
 
@@ -372,31 +352,28 @@ uint8 _Truncate(uint8 *filename, uint8 rc)
 /* Console abstraction functions */
 /*===============================================================================*/
 
-int _kbhit(void)
-{
+int _kbhit(void) {
 	return(Serial.available());
 }
 
-uint8 _getch(void)
-{
-	while (!Serial.available()) { ; }
+uint8 _getch(void) {
+	while (!Serial.available()) {
+		;
+	}
 	return(Serial.read());
 }
 
-uint8 _getche(void)
-{
+uint8 _getche(void) {
 	uint8 ch = _getch();
 	Serial.write(ch);
 	return(ch);
 }
 
-void _putch(uint8 ch)
-{
+void _putch(uint8 ch) {
 	Serial.write(ch);
 }
 
-void _clrscr(void)
-{
+void _clrscr(void) {
 	Serial.println("\b[H\b[J");
 }
 
