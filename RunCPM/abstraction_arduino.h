@@ -233,9 +233,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '/';
 
 	while (i < 8) {
-		if (F->fn[i] > 32) {
+		if (F->fn[i] > 32)
 			*(filename++) = F->fn[i];
-		}
 		if (F->fn[i] == '?')
 			unique = FALSE;
 		i++;
@@ -243,9 +242,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
-		if (F->tp[i] > 32) {
+		if (F->tp[i] > 32)
 			*(filename++) = F->tp[i];
-		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
@@ -284,7 +282,7 @@ void nameToFCB(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB
 		*to = ' ';
 		to++;  i++;
 	}
-	if (*from == '.') 
+	if (*from == '.')
 		from++;
 	i = 0;
 	while (*from != 0) {
@@ -367,7 +365,7 @@ uint8 _findfirst(uint8 dir) {
 	return(_findnext(dir));
 }
 
-uint8 _Truncate(uint8 *filename, uint8 rc) {
+uint8 _Truncate(char *filename, uint8 rc) {
 	uint8 result = 0xff;
 	SdFile f;
 

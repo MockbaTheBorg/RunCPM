@@ -57,13 +57,13 @@ int main(int argc, char *argv[]) {
 	_puts("-----------------------------------------\r\n");
 
 	while (TRUE) {
-		if(! _sys_exists(CCPname)) {
+		if(! _sys_exists((uint8*)CCPname)) {
 			_puts("\r\nCan't open CCP!\r\n");
 			break;
 		} else {
 			//**********  Boot code  **********//
 			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
-			_RamLoad(CCPname, CCPaddr);	// Loads the CCP binary file into memory
+			_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
 
 			_PatchCPM();	// Patches the CP/M entry points and other things in
 

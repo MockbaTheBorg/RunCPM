@@ -11,8 +11,26 @@ typedef enum {
 	true, false
 } bool;
 
+/* Externals for abstracted functions need to go here */
+FILE* _sys_fopen_r(uint8 *filename);
+int _sys_fseek(FILE *file, long delta, int origin);
+long _sys_ftell(FILE *file);
+long _sys_fread(void *buffer, long size, long count, FILE *file);
+int _sys_fclose(FILE *file);
+
 /* Memory abstraction functions */
 /*===============================================================================*/
+void _RamLoad(uint8 *filename, uint16 address) {
+	long l;
+	FILE *file = _sys_fopen_r(filename);
+	_sys_fseek(file, 0, SEEK_END);
+	l = _sys_ftell(file);
+
+	_sys_fseek(file, 0, SEEK_SET);
+	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
+
+	_sys_fclose(file);
+}
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
@@ -36,6 +54,10 @@ typedef struct {
 	uint8 al[16];
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
+
+bool _sys_exists(uint8 *filename) {
+	return(TRUE);	// (todo) Make this work
+}
 
 FILE* _sys_fopen_r(uint8 *filename) {
 	return(fopen((const char*)filename, "rb"));
@@ -90,10 +112,147 @@ int _sys_select(uint8 *disk) {
 	return((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
 }
 
+long _sys_filesize(uint8 *filename) {
+	long l = -1;
+	FILE *file = _sys_fopen_r(filename);
+	if (file != NULL) {
+		_sys_fseek(file, 0, SEEK_END);
+		l = _sys_ftell(file);
+		_sys_fclose(file);
+	}
+	return(l);
+}
+
+int _sys_openfile(uint8 *filename) {
+	FILE *file = _sys_fopen_r(filename);
+	if (file != NULL)
+		_sys_fclose(file);
+	return(file != NULL);
+}
+
+int _sys_makefile(uint8 *filename) {
+	FILE *file = _sys_fopen_a(filename);
+	if (file != NULL)
+		_sys_fclose(file);
+	return(file != NULL);
+}
+
+int _sys_deletefile(uint8 *filename) {
+	uint8 result=_sys_remove(filename);
+	printf("Deleting %s = result=%d\n", (char*)filename, result);
+	if(!result)
+		printf("Failed\n");
+	return(!result);
+}
+
+int _sys_renamefile(uint8 *filename, uint8 *newname) {
+	return(!_sys_rename(&filename[0], &newname[0]));
+}
+
+#ifdef DEBUGLOG
+void _sys_logbuffer(uint8 *buffer) {
+#ifdef CONSOLELOG
+	_puts((char *)buffer);
+#else
+	uint8 s = 0;
+	while (*(buffer + s))	// Computes buffer size
+		s++;
+	FILE *file = _sys_fopen_a(LogName);
+	_sys_fwrite(buffer, 1, s, file);
+	_sys_fclose(file);
+}
+#endif
+#endif
+
+uint8 _sys_readseq(uint8 *filename, long fpos) {
+	uint8 result = 0xff;
+	uint8 bytesread;
+
+	FILE *file = _sys_fopen_r(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
+			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
+			result = bytesread ? 0x00 : 0x01;
+		} else {
+			result = 0x01;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writeseq(uint8 *filename, long fpos) {
+	uint8 result = 0xff;
+
+	FILE *file = _sys_fopen_rw(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+				result = 0x00;
+			}
+		} else {
+			result = 0x01;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_readrand(uint8 *filename, long fpos) {
+	uint8 result = 0xff;
+	uint8 bytesread;
+
+	FILE *file = _sys_fopen_r(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
+			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
+			result = bytesread ? 0x00 : 0x01;
+		} else {
+			result = 0x06;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
+uint8 _sys_writerand(uint8 *filename, long fpos) {
+	uint8 result = 0xff;
+
+	FILE *file = _sys_fopen_rw(&filename[0]);
+	if (file != NULL) {
+		if (!_sys_fseek(file, fpos, 0)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+				result = 0x00;
+			}
+		} else {
+			result = 0x06;
+		}
+		_sys_fclose(file);
+	} else {
+		result = 0x10;
+	}
+
+	return(result);
+}
+
 uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	uint8 *temp;
 	uint8 i = 0;
 	uint8 unique = TRUE;
+	
+	temp = filename;
 
 	if (F->dr) {
 		*(filename++) = (F->dr - 1) + 'A';
@@ -103,9 +262,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '/';
 
 	while (i < 8) {
-		if (F->fn[i] > 32) {
+		if (F->fn[i] > 32)
 			*(filename++) = F->fn[i];
-		}
 		if (F->fn[i] == '?')
 			unique = FALSE;
 		i++;
@@ -113,9 +271,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
-		if (F->tp[i] > 32) {
+		if (F->tp[i] > 32)
 			*(filename++) = F->tp[i];
-		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
@@ -126,10 +283,16 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 }
 
 void _SetFile(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
-	int32 i = 0;
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	uint8 i = 0;
 
-	filename += 2;
+	filename++;
+	if (*filename == '/') {	// Skips the drive and / if needed
+		filename++;
+	} else {
+		filename--;
+	}
+
 	while (*filename != 0 && *filename != '.') {
 		F->fn[i] = toupper(*filename);
 		filename++;
@@ -139,9 +302,8 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 		F->fn[i] = ' ';
 		i++;
 	}
-	if (*filename == '.') {
+	if (*filename == '.')
 		filename++;
-	}
 	i = 0;
 	while (*filename != 0) {
 		F->tp[i] = toupper(*filename);
@@ -154,7 +316,7 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 	}
 }
 
-void dirToFCB(uint8 *from, uint8 *to) {
+void nameToFCB(uint8 *from, uint8 *to) {
 	int i = 0;
 
 	while (*from != 0 && *from != '.') {
@@ -165,9 +327,8 @@ void dirToFCB(uint8 *from, uint8 *to) {
 		*to = ' ';
 		to++;  i++;
 	}
-	if (*from == '.') {
+	if (*from == '.')
 		from++;
-	}
 	i = 0;
 	while (*from != 0) {
 		*to = toupper(*from);
@@ -196,7 +357,7 @@ bool match(uint8 *fcbname, uint8 *pattern) {
 	return(result);
 }
 
-uint8 _findnext(void) {
+uint8 _findnext(uint8 dir) {
 	uint8 result = 0xff;
 	char *file;
 	int i;
@@ -205,10 +366,13 @@ uint8 _findnext(void) {
 	for (i = pglob_pos; i < pglob.gl_pathc; i++) {
 		pglob_pos++;
 		file = pglob.gl_pathv[i];
-		dirToFCB((uint8*)file, fcbname);
+		nameToFCB((uint8*)file, fcbname);
 		if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
-			_SetFile(dmaAddr, (uint8*)file);
-			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+			if(dir) {
+				_SetFile(dmaAddr, (uint8*)file);
+				_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
+			}
+			_SetFile(tmpFCB, fcbname);
 			result = 0x00;
 			break;
 		}
@@ -219,15 +383,15 @@ uint8 _findnext(void) {
 	return(result);
 }
 
-uint8 _findfirst(void) {
+uint8 _findfirst(uint8 dir) {
 	uint8 result = 0xff;
-	char dir[4] = "A/*";
+	char path[4] = "A/*";
 
-	dir[0] = filename[0];
-	if (glob(dir, 0, NULL, &pglob) == 0) {
-		dirToFCB(filename, pattern);
+	path[0] = filename[0];
+	if (glob(path, 0, NULL, &pglob) == 0) {
+		nameToFCB(filename, pattern);
 		pglob_pos = 0;
-		result = _findnext();
+		result = _findnext(dir);
 	}
 	return(result);
 }
