@@ -14,7 +14,7 @@ extern long _sys_fread(void *buffer, long size, long count, FILE *file);
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-void _RamLoad(FILE* file, uint16 address) {
+void _RamLoad(FILE *file, uint16 address) {
 	long l;
 
 	_sys_fseek(file, 0, SEEK_END);
@@ -100,7 +100,7 @@ int _sys_select(uint8 *disk) {
 
 long _sys_filesize(uint8 *filename) {
 	long l = -1;
-	FILE* file = _sys_fopen_r(filename);
+	FILE *file = _sys_fopen_r(filename);
 	if (file != NULL) {
 		_sys_fseek(file, 0, SEEK_END);
 		l = _sys_ftell(file);
@@ -110,14 +110,14 @@ long _sys_filesize(uint8 *filename) {
 }
 
 int _sys_openfile(uint8 *filename) {
-	FILE* file = _sys_fopen_r(filename);
+	FILE *file = _sys_fopen_r(filename);
 	if (file != NULL)
 		_sys_fclose(file);
 	return(file != NULL);
 }
 
 int _sys_makefile(uint8 *filename) {
-	FILE* file = _sys_fopen_a(filename);
+	FILE *file = _sys_fopen_a(filename);
 	if (file != NULL)
 		_sys_fclose(file);
 	return(file != NULL);
@@ -170,7 +170,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 
-	FILE* file = _sys_fopen_rw(&filename[0]);
+	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
@@ -191,7 +191,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	uint8 bytesread;
 
-	FILE* file = _sys_fopen_r(&filename[0]);
+	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
@@ -215,7 +215,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 uint8 _sys_writerand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 
-	FILE* file = _sys_fopen_rw(&filename[0]);
+	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
@@ -232,7 +232,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
+uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -267,8 +267,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+void _SetFile(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
 	while (*filename != 0 && *filename != '.') {
@@ -367,7 +367,7 @@ uint8 _findnext(uint8 dir) {
 	return(result);
 }
 
-uint8 _Truncate(char* fn, uint8 rc) {
+uint8 _Truncate(char *fn, uint8 rc) {
 	uint8 result = 0x00;
 	LARGE_INTEGER fp;
 	fp.QuadPart = rc * 128;

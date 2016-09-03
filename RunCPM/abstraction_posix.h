@@ -53,27 +53,27 @@ FILE* _sys_fopen_a(uint8 *filename) {
 	return(fopen((const char*)filename, "a"));
 }
 
-int _sys_fseek(FILE* file, long delta, int origin) {
+int _sys_fseek(FILE *file, long delta, int origin) {
 	return(fseek(file, delta, origin));
 }
 
-long _sys_ftell(FILE* file) {
+long _sys_ftell(FILE *file) {
 	return(ftell(file));
 }
 
-long _sys_fread(void *buffer, long size, long count, FILE* file) {
+long _sys_fread(void *buffer, long size, long count, FILE *file) {
 	return(fread(buffer, size, count, file));
 }
 
-long _sys_fwrite(const void *buffer, long size, long count, FILE* file) {
+long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
 	return(fwrite(buffer, size, count, file));
 }
 
-int _sys_feof(FILE* file) {
+int _sys_feof(FILE *file) {
 	return(feof(file));
 }
 
-int _sys_fclose(FILE* file) {
+int _sys_fclose(FILE *file) {
 	return(fclose(file));
 }
 
@@ -90,8 +90,8 @@ int _sys_select(uint8 *disk) {
 	return((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
 }
 
-uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 i = 0;
 	uint8 unique = TRUE;
 
@@ -125,8 +125,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8* filename) {
 	return(unique);
 }
 
-void _SetFile(uint16 fcbaddr, uint8* filename) {
-	CPM_FCB* F = (CPM_FCB*)&RAM[fcbaddr];
+void _SetFile(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	int32 i = 0;
 
 	filename += 2;
@@ -154,7 +154,7 @@ void _SetFile(uint16 fcbaddr, uint8* filename) {
 	}
 }
 
-void dirToFCB(uint8* from, uint8* to) {
+void dirToFCB(uint8 *from, uint8 *to) {
 	int i = 0;
 
 	while (*from != 0 && *from != '.') {
@@ -180,7 +180,7 @@ void dirToFCB(uint8* from, uint8* to) {
 	*to = 0;
 }
 
-bool match(uint8* fcbname, uint8* pattern) {
+bool match(uint8 *fcbname, uint8 *pattern) {
 	bool result = 1;
 	uint8 i;
 
@@ -198,7 +198,7 @@ bool match(uint8* fcbname, uint8* pattern) {
 
 uint8 _findnext(void) {
 	uint8 result = 0xff;
-	char* file;
+	char *file;
 	int i;
 	struct stat st;
 
@@ -232,7 +232,7 @@ uint8 _findfirst(void) {
 	return(result);
 }
 
-uint8 _Truncate(char* fn, uint8 rc) {
+uint8 _Truncate(char *fn, uint8 rc) {
 	uint8 result = 0x00;
 	if (truncate(fn, rc * 128)) {
 		result = 0xff;

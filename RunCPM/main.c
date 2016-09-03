@@ -54,8 +54,8 @@
 */
 #include "cpm.h"
 
-int main(int argc, char* argv[]) {
-	FILE* file;
+int main(int argc, char *argv[]) {
+	FILE *file;
 
 #ifdef DEBUGLOG
 	_sys_deletefile(LogName);

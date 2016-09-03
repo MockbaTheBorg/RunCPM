@@ -62,7 +62,7 @@ void _PatchCPM(void) {
 	_RamWrite(i++, 0x04);		/* bsh - Data allocation "Block Shift Factor" */
 	_RamWrite(i++, 0x0f);		/* blm - Data allocation Block Mask */
 	_RamWrite(i++, 0x00);		/* exm - Extent Mask */
-	_RamWrite(i++, 0xff);        /* dsm - Total storage capacity of the disk drive */
+	_RamWrite(i++, 0xff);		/* dsm - Total storage capacity of the disk drive */
 	_RamWrite(i++, 0x01);
 	_RamWrite(i++, 0xfe);		/* drm - Number of the last directory entry */
 	_RamWrite(i++, 0x00);
@@ -300,7 +300,7 @@ void _Bios(void) {
 }
 
 void _Bdos(void) {
-	CPM_FCB* F;
+	CPM_FCB *F;
 	int32	i, c, chr, count;
 	uint8	ch = LOW_REGISTER(BC);
 
