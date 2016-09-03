@@ -314,12 +314,12 @@ bool match(uint8 *fcbname, uint8 *pattern) {
 
 bool findNext(uint8 *pattern) {
 	SdFile f;
-	uint8 path[2];
+	uint8 path[2] = "?";
 	uint8 dirname[13];
 	bool isfile, result = FALSE;
 	int i;
 
-	path[0] = filename[0]; path[1] = 0;
+	path[0] = filename[0];
 
 	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
 									// (todo) Get rid of these chdir() someday
@@ -360,7 +360,7 @@ uint8 _findnext(uint8 dir) {
 }
 
 uint8 _findfirst(uint8 dir) {
-	dirPos = 0;
+	dirPos = 0;	// Set directory search to start from the first position
 	nameToFCB(filename, pattern);
 	return(_findnext(dir));
 }
