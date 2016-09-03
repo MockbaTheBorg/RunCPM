@@ -255,12 +255,10 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 
 void _SetFile(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
+	uint8 *dest = &F->fn[0];
 
-	while (*filename) {
-		F->fn[i] = toupper(*filename);
-		filename++; i++;
-	}
+	while (*filename)
+		*dest++ = toupper(*filename++);
 }
 
 void nameToFCB(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
