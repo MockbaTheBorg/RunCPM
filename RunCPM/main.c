@@ -20,12 +20,12 @@
 */
 
 #ifdef __DJGPP
-	#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
+#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
 #else
 #ifdef _WIN32
-	#include "abstraction_vstudio.h"
+#include "abstraction_vstudio.h"
 #else
-	#include "abstraction_posix.h"
+#include "abstraction_posix.h"
 #endif
 #endif
 
@@ -54,8 +54,7 @@
 */
 #include "cpm.h"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	FILE* file;
 
 #ifdef DEBUGLOG

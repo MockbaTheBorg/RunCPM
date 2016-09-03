@@ -1,6 +1,6 @@
 /* Some definitions needed globally */
 #ifdef __MINGW32__
-	#include <ctype.h>
+#include <ctype.h>
 #endif
 
 //#define DEBUG
@@ -16,14 +16,14 @@
 
 /* Definition of the CCP memory information */
 #ifdef CCP_DR
-	#define CCPname		"CCP-DR.BIN"
-	#define CCPaddr		0xE400	// From CCP.ASM
-	#define BatchFCB	0xEBAC	//
-	#define PatchCCP	0xE5FA  // This patches DR's CCP for BDOS real location
+#define CCPname		"CCP-DR.BIN"
+#define CCPaddr		0xE400	// From CCP.ASM
+#define BatchFCB	0xEBAC	//
+#define PatchCCP	0xE5FA  // This patches DR's CCP for BDOS real location
 #else
-	#define CCPname		"CCP-ZCPR.BIN"
-	#define CCPaddr		0xE400	// From ZCPR.ASM
-	#define BatchFCB	0xE45E	//
+#define CCPname		"CCP-ZCPR.BIN"
+#define CCPaddr		0xE400	// From ZCPR.ASM
+#define BatchFCB	0xE45E	//
 #endif
 
 #ifndef TRUE
