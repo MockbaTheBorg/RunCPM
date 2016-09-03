@@ -8,8 +8,7 @@
 
 uint8	LastSel;		// Last disk selected
 
-void _PatchCPM(void)
-{
+void _PatchCPM(void) {
 	uint16 i;
 
 	//**********  Patch CP/M page zero into the memory  **********
@@ -22,7 +21,7 @@ void _PatchCPM(void)
 	_RamWrite(0x0003, 0x3D);
 
 	/* Current drive/user - A:/0 */
-	if (Status!=2)
+	if (Status != 2)
 		_RamWrite(0x0004, 0x00);
 
 	/* BDOS entry point (0x0005) */
@@ -40,19 +39,17 @@ void _PatchCPM(void)
 
 	// Patches in the BDOS page content
 	_RamWrite(BDOSpage, INa);
-	_RamWrite(BDOSpage+1, 0x00);
-	_RamWrite(BDOSpage+2, RET);
+	_RamWrite(BDOSpage + 1, 0x00);
+	_RamWrite(BDOSpage + 2, RET);
 
 	// Patches in the BIOS jump destinations
-	for (i = 0; i < 0x33; i = i + 3)
-	{
+	for (i = 0; i < 0x33; i = i + 3) {
 		_RamWrite(BIOSjmppage + i, JP);
 		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
 	}
 
 	// Patches in the BIOS page content
-	for (i = 0; i < 0x33; i = i + 3)
-	{
+	for (i = 0; i < 0x33; i = i + 3) {
 		_RamWrite(BIOSpage + i, OUTa);
 		_RamWrite(BIOSpage + i + 1, i & 0xff);
 		_RamWrite(BIOSpage + i + 2, RET);
@@ -65,7 +62,7 @@ void _PatchCPM(void)
 	_RamWrite(i++, 0x04);		/* bsh - Data allocation "Block Shift Factor" */
 	_RamWrite(i++, 0x0f);		/* blm - Data allocation Block Mask */
 	_RamWrite(i++, 0x00);		/* exm - Extent Mask */
-	_RamWrite(i++, 0xff);        /* dsm - Total storage capacity of the disk drive */
+	_RamWrite(i++, 0xff);		/* dsm - Total storage capacity of the disk drive */
 	_RamWrite(i++, 0x01);
 	_RamWrite(i++, 0xfe);		/* drm - Number of the last directory entry */
 	_RamWrite(i++, 0x00);
@@ -85,11 +82,10 @@ void _PatchCPM(void)
 #ifdef DEBUGLOG
 uint8 LogBuffer[128];
 
-void _logRegs(void)
-{
+void _logRegs(void) {
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
-	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J]=I & 0x80 ? Flags[J] : '.';
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
 	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n", BC, DE, HL, HIGH_REGISTER(AF), Flags, IX, IY, SP, PC); _sys_logbuffer(LogBuffer);
 }
 
@@ -102,8 +98,7 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 		pos = 0;
 		for (m = 0; m < head; m++)
 			LogBuffer[pos++] = ' ';
-		for (m = 0; m < 16; m++)
-		{
+		for (m = 0; m < 16; m++) {
 			c = _RamRead(address++);
 			LogBuffer[pos++] = hexa[c >> 4];
 			LogBuffer[pos++] = hexa[c & 0x0f];
@@ -117,8 +112,7 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 	}
 }
 
-void _logChar(char *txt, uint8 c)
-{
+void _logChar(char *txt, uint8 c) {
 	uint8 asc[2];
 
 	asc[0] = c > 31 && c < 127 ? c : '.';
@@ -127,31 +121,28 @@ void _logChar(char *txt, uint8 c)
 	_sys_logbuffer(LogBuffer);
 }
 
-void _logBiosIn(uint8 ch)
-{
+void _logBiosIn(uint8 ch) {
 	sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
-void _logBiosOut(uint8 ch)
-{
+void _logBiosOut(uint8 ch) {
 	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
-void _logBdosIn(uint8 ch)
-{
+void _logBdosIn(uint8 ch) {
 	uint16 address = 0;
 	uint8 size = 0;
 
-static const char *CPMCalls[41] =
-{
-	"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
-	"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
-	"Close File", "Search First", "Search Next", "Delete File", "Read Sequential", "Write Sequential", "Make File", "Rename File",
-	"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params",
-	"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A", "Write Random 0 fill"
-};
+	static const char *CPMCalls[41] =
+	{
+		"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
+		"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
+		"Close File", "Search First", "Search Next", "Delete File", "Read Sequential", "Write Sequential", "Make File", "Rename File",
+		"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params",
+		"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A", "Write Random 0 fill"
+	};
 
 	if (ch < 41) {
 		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN:\n", ch, CPMCalls[ch]); _sys_logbuffer(LogBuffer);
@@ -190,12 +181,11 @@ static const char *CPMCalls[41] =
 	default:
 		break;
 	}
-	if(size)
+	if (size)
 		_logMem(address, size);
 }
 
-void _logBdosOut(uint8 ch)
-{
+void _logBdosOut(uint8 ch) {
 	uint16 address = 0;
 	uint8 size = 0;
 
@@ -224,20 +214,19 @@ void _logBdosOut(uint8 ch)
 	default:
 		break;
 	}
-	if(size)
+	if (size)
 		_logMem(address, size);
 }
 #endif
 
-void _Bios(void)
-{
+void _Bios(void) {
 	uint8 ch = LOW_REGISTER(PCX);
 
 #ifdef DEBUGLOG
-	#ifdef LOGONLY
-	if(ch == LOGONLY)
-	#endif
-	_logBiosIn(ch);
+#ifdef LOGONLY
+	if (ch == LOGONLY)
+#endif
+		_logBiosIn(ch);
 #endif
 
 	switch (ch) {
@@ -302,25 +291,24 @@ void _Bios(void)
 		break;
 	}
 #ifdef DEBUGLOG
-	#ifdef LOGONLY
-	if(ch == LOGONLY)
-	#endif
-	_logBiosOut(ch);
+#ifdef LOGONLY
+	if (ch == LOGONLY)
+#endif
+		_logBiosOut(ch);
 #endif
 
 }
 
-void _Bdos(void)
-{
-	CPM_FCB* F;
+void _Bdos(void) {
+	CPM_FCB *F;
 	int32	i, c, chr, count;
 	uint8	ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
-	#ifdef LOGONLY
-	if(ch == LOGONLY)
-	#endif
-	_logBdosIn(ch);
+#ifdef LOGONLY
+	if (ch == LOGONLY)
+#endif
+		_logBdosIn(ch);
 #endif
 
 	HL = 0x00;	// HL is reset by the BDOS
@@ -453,6 +441,7 @@ void _Bdos(void)
 				break;
 		}
 		_RamWrite(i, count);	// Saves the number or characters read
+		_putcon('\r');	// Gives a visual feedback that read ended
 		break;
 		/*
 		C = 11 (0Bh) : Get console status
@@ -705,10 +694,10 @@ void _Bdos(void)
 	SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 
 #ifdef DEBUGLOG
-	#ifdef LOGONLY
-	if(ch == LOGONLY)
-	#endif
-	_logBdosOut(ch);
+#ifdef LOGONLY
+	if (ch == LOGONLY)
+#endif
+		_logBdosOut(ch);
 #endif
 
 }

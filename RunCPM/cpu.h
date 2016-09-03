@@ -1,6 +1,6 @@
 /* see main.c for definition */
 
-int32 PCX;  /* external view of PC                          */
+int32 PCX; /* external view of PC                          */
 int32 AF;  /* AF register                                  */
 int32 BC;  /* BC register                                  */
 int32 DE;  /* DE register                                  */
@@ -22,13 +22,11 @@ int32 Break = -1;
 /*
 	Functions needed by the soft CPU implementation
 */
-void cpu_out(const uint32 Port, const uint32 Value)
-{
+void cpu_out(const uint32 Port, const uint32 Value) {
 	_Bios();
 }
 
-uint32 cpu_in(const uint32 Port)
-{
+uint32 cpu_in(const uint32 Port) {
 	_Bdos();
 	return(HIGH_REGISTER(AF));
 }
