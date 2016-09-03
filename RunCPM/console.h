@@ -15,7 +15,7 @@ void _putcon(uint8 ch)		// Puts a character
 	_putch(ch & 0x7f);
 }
 
-void _puts(const char* str)	// Puts a \0 terminated string
+void _puts(const char *str)	// Puts a \0 terminated string
 {
 	while (*str) {
 		_putcon(*str);

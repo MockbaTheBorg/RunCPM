@@ -16,8 +16,7 @@ SdFat sd;
 #include "disk.h"
 #include "cpm.h"
 
-void setup(void)
-{
+void setup(void) {
 	pinMode(LED, OUTPUT);
 	digitalWrite(LED, LOW);
 	pinMode(SDcs, OUTPUT);
@@ -34,16 +33,11 @@ void setup(void)
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("--------------------------------------------\r\n");
 
-	if (sd.begin(SDcs, SPI_HALF_SPEED))
-	{
-		if (sd.exists(CCPname))
-		{
-			while (true)
-			{
+	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
+		if (sd.exists(CCPname)) {
+			while (true) {
 				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
-				sd.chdir("/", TRUE);	// (todo) This won't be needed with filename based drives
-				if (_RamLoad(CCPname, CCPaddr))
-				{
+				if (_RamLoad(CCPname, CCPaddr)) {
 					_PatchCPM();
 					Z80reset();
 					SET_LOW_REGISTER(BC, _RamRead(0x0004));
@@ -64,8 +58,7 @@ void setup(void)
 	}
 }
 
-void loop(void)
-{
+void loop(void) {
 	digitalWrite(LED, HIGH);
 	delay(DELAY);
 	digitalWrite(LED, LOW);
