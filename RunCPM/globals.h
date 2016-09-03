@@ -9,7 +9,7 @@
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
 
-#define VERSION	"2.2"
+#define VERSION	"2.3"
 
 // Define which CCP to use (select only one)
 #define CCP_DR
