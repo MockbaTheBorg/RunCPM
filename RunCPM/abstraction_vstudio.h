@@ -8,20 +8,24 @@
 #endif
 
 /* Externals for abstracted functions need to go here */
-extern int _sys_fseek(FILE *file, long delta, int origin);
-extern long _sys_ftell(FILE *file);
-extern long _sys_fread(void *buffer, long size, long count, FILE *file);
+FILE* _sys_fopen_r(uint8 *filename);
+int _sys_fseek(FILE *file, long delta, int origin);
+long _sys_ftell(FILE *file);
+long _sys_fread(void *buffer, long size, long count, FILE *file);
+int _sys_fclose(FILE *file);
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-void _RamLoad(FILE *file, uint16 address) {
+void _RamLoad(uint8 *filename, uint16 address) {
 	long l;
-
+	FILE *file = _sys_fopen_r(filename);
 	_sys_fseek(file, 0, SEEK_END);
 	l = _sys_ftell(file);
 
 	_sys_fseek(file, 0, SEEK_SET);
 	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
+
+	_sys_fclose(file);
 }
 
 /* Filesystem (disk) abstraction fuctions */
@@ -45,6 +49,13 @@ typedef struct {
 	uint8 al[16];
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
+
+BOOL _sys_exists(uint8 *filename) {
+	DWORD dwAttrib = GetFileAttributesA(filename);
+
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
 
 FILE* _sys_fopen_r(uint8 *filename) {
 	return(fopen((const char*)filename, "rb"));
@@ -133,6 +144,9 @@ int _sys_renamefile(uint8 *filename, uint8 *newname) {
 
 #ifdef DEBUGLOG
 void _sys_logbuffer(uint8 *buffer) {
+#ifdef CONSOLELOG
+	_puts((char *)buffer);
+#else
 	uint8 s = 0;
 	while (*(buffer + s))	// Computes buffer size
 		s++;
@@ -140,6 +154,7 @@ void _sys_logbuffer(uint8 *buffer) {
 	_sys_fwrite(buffer, 1, s, file);
 	_sys_fclose(file);
 }
+#endif
 #endif
 
 uint8 _sys_readseq(uint8 *filename, long fpos) {
@@ -151,11 +166,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
 			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
-			if (bytesread) {
-				result = 0x00;
-			} else {
-				result = 0x01;
-			}
+			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x01;
 		}
@@ -196,11 +207,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 		if (!_sys_fseek(file, fpos, 0)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
-			if (bytesread) {
-				result = 0x00;
-			} else {
-				result = 0x01;
-			}
+			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x06;
 		}
@@ -245,9 +252,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '\\';
 
 	while (i < 8) {
-		if (F->fn[i] > 32) {
+		if (F->fn[i] > 32)
 			*(filename++) = F->fn[i];
-		}
 		if (F->fn[i] == '?')
 			unique = FALSE;
 		i++;
@@ -255,9 +261,8 @@ uint8 _GetFile(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
-		if (F->tp[i] > 32) {
+		if (F->tp[i] > 32)
 			*(filename++) = F->tp[i];
-		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
@@ -280,9 +285,8 @@ void _SetFile(uint16 fcbaddr, uint8 *filename) {
 		F->fn[i] = ' ';
 		i++;
 	}
-	if (*filename == '.') {
+	if (*filename == '.')
 		filename++;
-	}
 	i = 0;
 	while (*filename != 0) {
 		F->tp[i] = toupper(*filename);
@@ -388,12 +392,12 @@ uint8 _Truncate(char *fn, uint8 rc) {
 /*===============================================================================*/
 
 BOOL _signal_handler(DWORD signal) {
+	BOOL result = FALSE;
 	if (signal == CTRL_C_EVENT) {
 		_ungetch(3);
-		return(TRUE);
-	} else {
-		return(FALSE);
+		result = TRUE;
 	}
+	return(result);
 }
 
 void _console_init(void) {
