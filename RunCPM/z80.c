@@ -1978,6 +1978,11 @@ void Z80run(void) {
 			break;
 
 		case 0x76:      /* HALT */
+#ifdef DEBUG
+			_puts("\r\n::CPU HALTED::");	// A halt is a good indicator of broken code
+			_puts("Press any key...");
+			_getch();
+#endif
 			PC--;
 			goto end_decode;
 			break;
