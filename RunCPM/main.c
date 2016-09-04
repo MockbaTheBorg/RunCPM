@@ -55,6 +55,9 @@ int main(int argc, char *argv[]) {
 	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("-----------------------------------------\r\n");
+	_puts("CCP: " CCPname " Loaded at 0x");
+	_puthex16(CCPaddr);
+	_puts("\r\n");
 
 	while (TRUE) {
 		if(! _sys_exists((uint8*)CCPname)) {
