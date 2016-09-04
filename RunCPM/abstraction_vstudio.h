@@ -44,10 +44,7 @@ typedef struct {
 } CPM_FCB;
 
 BOOL _sys_exists(uint8 *filename) {
-	DWORD dwAttrib = GetFileAttributesA((char*)filename);
-
-	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+	return(GetFileAttributesA((char*)filename) != INVALID_FILE_ATTRIBUTES);
 }
 
 FILE* _sys_fopen_r(uint8 *filename) {
