@@ -91,9 +91,8 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '\\';
 
 	while (i < 8) {
-		if (F->fn[i] > 32) {
+		if (F->fn[i] > 32)
 			*(filename++) = F->fn[i];
-		}
 		if (F->fn[i] == '?')
 			unique = FALSE;
 		i++;
@@ -101,9 +100,8 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
-		if (F->tp[i] > 32) {
+		if (F->tp[i] > 32)
 			*(filename++) = F->tp[i];
-		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
@@ -126,9 +124,8 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 		F->fn[i] = ' ';
 		i++;
 	}
-	if (*filename == '.') {
+	if (*filename == '.')
 		filename++;
-	}
 	i = 0;
 	while (*filename != 0) {
 		F->tp[i] = toupper(*filename);
@@ -169,9 +166,8 @@ uint8 _findnext(void) {
 
 uint8 _Truncate(char *fn, uint8 rc) {
 	uint8 result = 0x00;
-	if (truncate(fn, rc * 128)) {
+	if (truncate(fn, rc * 128))
 		result = 0xff;
-	}
 	return(result);
 }
 

@@ -92,9 +92,8 @@ uint8 _CloseFile(uint16 fcbaddr) {
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
-			if (fcbaddr == BatchFCB) {		// For now we are truncating only $$$.SUB
+			if (fcbaddr == BatchFCB)
 				_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
-			}
 			result = 0x00;
 		} else {
 			_error(errWRITEPROT);
@@ -112,9 +111,8 @@ uint8 _MakeFile(uint16 fcbaddr) {
 	if (_SelectDisk(F->dr)) {
 		if (!RW) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
-			if (_sys_makefile(&filename[0])) {
+			if (_sys_makefile(&filename[0]))
 				result = 0x00;
-			}
 		} else {
 			_error(errWRITEPROT);
 		}

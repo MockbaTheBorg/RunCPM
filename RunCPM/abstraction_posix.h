@@ -183,9 +183,8 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
 				result = 0x00;
-			}
 		} else {
 			result = 0x01;
 		}
@@ -224,9 +223,8 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
 				result = 0x00;
-			}
 		} else {
 			result = 0x06;
 		}
@@ -374,9 +372,8 @@ uint8 _findfirst(uint8 isdir) {
 
 uint8 _Truncate(char *fn, uint8 rc) {
 	uint8 result = 0x00;
-	if (truncate(fn, rc * 128)) {
+	if (truncate(fn, rc * 128))
 		result = 0xff;
-	}
 	return(result);
 }
 
