@@ -405,7 +405,8 @@ uint8 _WriteRand(uint16 fcbaddr) {
 }
 
 uint8 _CheckSUB(void) {
-	return((_SearchFirst(BatchFCB, FALSE) == 0x00) ? 0xFF : 0x00);
+	_HostnameToFCB(tmpFCB, (uint8*)"$$$.SUB");
+	return((_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xFF : 0x00);
 }
 
 #endif
