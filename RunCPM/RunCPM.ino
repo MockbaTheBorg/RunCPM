@@ -15,6 +15,9 @@ SdFat sd;
 #include "ram.h"
 #include "disk.h"
 #include "cpm.h"
+#ifdef CCP_INTERNAL
+#include "ccp.h"
+#endif
 
 void setup(void) {
 	pinMode(LED, OUTPUT);
@@ -40,12 +43,20 @@ void setup(void) {
 		if (sd.exists(CCPname)) {
 			while (true) {
 				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n");
+#ifndef CCP_INTERNAL
 				if (_RamLoad(CCPname, CCPaddr)) {
+#else
+				if (TRUE) {
+#endif
 					_PatchCPM();
 					Z80reset();
 					SET_LOW_REGISTER(BC, _RamRead(0x0004));
+#ifdef CCP_INTERNAL
+					_ccp();
+#else
 					PC = CCPaddr;
 					Z80run();
+#endif
 					if (Status == 1)
 						_RamWrite(0x0004, 0);
 				} else {

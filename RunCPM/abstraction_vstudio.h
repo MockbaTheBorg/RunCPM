@@ -1,3 +1,6 @@
+#ifndef ABSTRACT_H
+#define ABSTRACT_H
+
 /* see main.c for definition */
 
 #ifdef _WIN32
@@ -347,3 +350,4 @@ void _clrscr(void) {
 	system("cls");
 }
 
+#endif

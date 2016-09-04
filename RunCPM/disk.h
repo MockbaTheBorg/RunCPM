@@ -1,3 +1,6 @@
+#ifndef DISK_H
+#define DISK_H
+
 /* see main.c for definition */
 
 #ifdef __linux__
@@ -405,3 +408,4 @@ uint8 _CheckSUB(void) {
 	return((_SearchFirst(BatchFCB, FALSE) == 0x00) ? 0xFF : 0x00);
 }
 
+#endif

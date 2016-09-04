@@ -1,3 +1,6 @@
+#ifndef ABSTRACT_H
+#define ABSTRACT_H
+
 /* see main.c for definition */
 #include <conio.h>
 #include <ctype.h>
@@ -200,3 +203,4 @@ void _clrscr(void) {
 	system("cls");
 }
 
+#endif

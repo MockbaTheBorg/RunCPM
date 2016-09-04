@@ -85,6 +85,7 @@
     <ClInclude Include="abstraction_arduino.h" />
     <ClInclude Include="abstraction_posix.h" />
     <ClInclude Include="abstraction_vstudio.h" />
+    <ClInclude Include="ccp.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="cpm.h" />
     <ClInclude Include="cpu.h" />

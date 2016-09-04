@@ -1,3 +1,6 @@
+#ifndef CPU_H
+#define CPU_H
+
 /* see main.c for definition */
 
 int32 PCX; /* external view of PC                          */
@@ -30,3 +33,5 @@ uint32 cpu_in(const uint32 Port) {
 	_Bdos();
 	return(HIGH_REGISTER(AF));
 }
+
+#endif

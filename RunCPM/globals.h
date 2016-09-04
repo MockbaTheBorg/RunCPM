@@ -1,3 +1,6 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
 /* Some definitions needed globally */
 #ifdef __MINGW32__
 #include <ctype.h>
@@ -15,19 +18,23 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
-/* Definition of which CCP to use, DR or ZCPR (define only one) */
+/* Definition of which CCP to use: INTERNAL, DR or ZCPR (define only one) */
+//#define CCP_INTERNAL	// If this is defined, CCP will be internal
 #define CCP_DR
 //#define CCP_ZCPR
 
 /* Definition of the CCP memory information */
+#define CCPaddr		((SIZEK*1024)-0x0C00)
+#ifdef CCP_INTERNAL
+#define CCPname		"INTERNAL"		// Will use the CCP from ccp.h
+#endif
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
-#define CCPaddr		((SIZEK*1024)-0x0C00)
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
 #define PatchCCP	CCPaddr + 0x1FA	// This patches DR's CCP for BDOS real location
-#else
+#endif
+#ifdef CCP_ZCPR
 #define CCPname		"CCP-ZCPR.BIN"
-#define CCPaddr		((SIZEK*1024)-0x0C00)
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
 
@@ -135,3 +142,5 @@ static uint8	pattern[13];		// File matching pattern in CP/M format
 static uint16	dmaAddr = 0x0080;
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
+
+#endif
