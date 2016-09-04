@@ -130,11 +130,7 @@ int _sys_makefile(uint8 *filename) {
 }
 
 int _sys_deletefile(uint8 *filename) {
-	uint8 result=_sys_remove(filename);
-	printf("Deleting %s = result=%d\n", (char*)filename, result);
-	if(!result)
-		printf("Failed\n");
-	return(!result);
+	return(!_sys_remove(filename));
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
