@@ -8,7 +8,7 @@
 #endif
 
 /* Externals for abstracted functions need to go here */
-FILE* _sys_fopen_r(uint8 *filename);
+FILE *_sys_fopen_r(uint8 *filename);
 int _sys_fseek(FILE *file, long delta, int origin);
 long _sys_ftell(FILE *file);
 long _sys_fread(void *buffer, long size, long count, FILE *file);
@@ -176,9 +176,8 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
 				result = 0x00;
-			}
 		} else {
 			result = 0x01;
 		}
@@ -217,9 +216,8 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_rw(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file)) {
+			if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
 				result = 0x00;
-			}
 		} else {
 			result = 0x06;
 		}
