@@ -230,73 +230,13 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
-	uint8 unique = TRUE;
-
-	if (F->dr) {
-		*(filename++) = (F->dr - 1) + 'A';
-	} else {
-		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
-	}
-	*(filename++) = FOLDERCHAR;
-
-	while (i < 8) {
-		if (F->fn[i] > 32)
-			*(filename++) = F->fn[i];
-		if (F->fn[i] == '?')
-			unique = FALSE;
-		i++;
-	}
-	*(filename++) = '.';
-	i = 0;
-	while (i < 3) {
-		if (F->tp[i] > 32)
-			*(filename++) = F->tp[i];
-		if (F->tp[i] == '?')
-			unique = FALSE;
-		i++;
-	}
-	*filename = 0x00;
-
-	return(unique);
-}
-
-void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
-
-	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 8) {
-		F->fn[i] = ' ';
-		i++;
-	}
-	if (*filename == '.')
-		filename++;
-	i = 0;
-	while (*filename != 0) {
-		F->tp[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 3) {
-		F->tp[i] = ' ';
-		i++;
-	}
-}
-
-uint8 _findfirst(uint8 isdir) {
+uint8 _findnext(uint8 isdir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
 
-	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
-	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
+	more = FindNextFile(hFind, &FindFileData);
+	while (more) {	// Skips folders and long file names
 		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			more = FindNextFile(hFind, &FindFileData);
 			continue;
@@ -324,13 +264,13 @@ uint8 _findfirst(uint8 isdir) {
 	return(result);
 }
 
-uint8 _findnext(uint8 isdir) {
+uint8 _findfirst(uint8 isdir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
 
-	more = FindNextFile(hFind, &FindFileData);
-	while (more) {	// Skips folders and long file names
+	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
+	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
 		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			more = FindNextFile(hFind, &FindFileData);
 			continue;

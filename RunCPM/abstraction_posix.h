@@ -7,10 +7,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-typedef enum {
-	true, false
-} bool;
-
 /* Externals for abstracted functions need to go here */
 FILE* _sys_fopen_r(uint8 *filename);
 int _sys_fseek(FILE *file, long delta, int origin);
@@ -48,7 +44,7 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
-bool _sys_exists(uint8 *filename) {
+uint8 _sys_exists(uint8 *filename) {
 	return(TRUE);	// (todo) Make this work
 }
 
@@ -237,123 +233,9 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
-uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
-	uint8 unique = TRUE;
-	
-	if (F->dr) {
-		*(filename++) = (F->dr - 1) + 'A';
-	} else {
-		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
-	}
-	*(filename++) = FOLDERCHAR;
-
-	while (i < 8) {
-		if (F->fn[i] > 32)
-			*(filename++) = F->fn[i];
-		if (F->fn[i] == '?')
-			unique = FALSE;
-		i++;
-	}
-	*(filename++) = '.';
-	i = 0;
-	while (i < 3) {
-		if (F->tp[i] > 32)
-			*(filename++) = F->tp[i];
-		if (F->tp[i] == '?')
-			unique = FALSE;
-		i++;
-	}
-	*filename = 0x00;
-
-	return(unique);
-}
-
-void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 i = 0;
-
-	filename++;
-	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
-		filename++;
-	} else {
-		filename--;
-	}
-
-	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 8) {
-		F->fn[i] = ' ';
-		i++;
-	}
-	if (*filename == '.')
-		filename++;
-	i = 0;
-	while (*filename != 0) {
-		F->tp[i] = toupper(*filename);
-		filename++;
-		i++;
-	}
-	while (i < 3) {
-		F->tp[i] = ' ';
-		i++;
-	}
-}
-
-void _HostnameToFCBname(uint8 *from, uint8 *to) {
-	int i = 0;
-
-	from++;
-	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
-		from++;
-	} else {
-		from--;
-	}
-
-	while (*from != 0 && *from != '.') {
-		*to = toupper(*from);
-		to++; from++; i++;
-	}
-	while (i < 10) {
-		*to = ' ';
-		to++;  i++;
-	}
-	if (*from == '.')
-		from++;
-	i = 0;
-	while (*from != 0) {
-		*to = toupper(*from);
-		to++; from++; i++;
-	}
-	while (i < 3) {
-		*to = ' ';
-		to++;  i++;
-	}
-	*to = 0;
-}
-
-bool match(uint8 *fcbname, uint8 *pattern) {
-	bool result = 1;
-	uint8 i;
-	for (i = 0; i < 14; i++) {
-		if (*pattern == '?' || *pattern == *fcbname) {
-			pattern++; fcbname++;
-			continue;
-		} else {
-			result = 0;
-			break;
-		}
-	}
-	return(result);
-}
-
 uint8 _findnext(uint8 isdir)
 {
-	bool result = 0xff;
+	uint8 result = 0xff;
 	char dir[4] = { '?', FOLDERCHAR, '*', 0 };
 	char* dirname;
 	int i;

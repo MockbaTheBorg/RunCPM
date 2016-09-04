@@ -70,6 +70,11 @@ extern "C"
 	extern void cpu_out(const uint32 Port, const uint32 Value);
 	extern uint32 cpu_in(const uint32 Port);
 
+	extern uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename);
+	extern void _HostnameToFCB(uint16 fcbaddr, uint8 *filename);
+	extern void _HostnameToFCBname(uint8 *from, uint8 *to);
+	extern uint8 match(uint8 *fcbname, uint8 *pattern);
+
 #ifndef _WIN32
 	extern uint8 _getche(void);
 	extern void _putch(uint8 ch);
