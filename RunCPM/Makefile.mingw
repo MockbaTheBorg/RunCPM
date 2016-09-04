@@ -7,14 +7,15 @@
 # make run        | compiles (if needed) and runs your program
 
 # Compiler command
-CC = gcc.exe
+CC = gcc
+#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
 
 # Linker command
-LD = gcc.exe
+LD = gcc
 
 # Flags to pass to the compiler - add "-g" to include debug information
-CFLAGS = -Wall -O0
-#CFLAGS = -Wall -O0 -g
+CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable
+#CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
 
 # Flags to pass to the linker
 LDFLAGS = -mconsole
@@ -29,11 +30,11 @@ OBJS = main.o z80.o
 SRCS = main.c z80.c
 
 # Define your compile target here.
-PROG = RunCPM.exe
+PROG = RunCPM
 
 # Link the program
 $(PROG): $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) -o $(PROG)
+	$(LD) $(OBJS) -o $(PROG) $(LDFLAGS)
 
 # All .o files depend on their corresponding .c file
 %.o: %.c
