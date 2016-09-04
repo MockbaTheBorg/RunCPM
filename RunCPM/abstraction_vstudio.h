@@ -32,6 +32,7 @@ void _RamLoad(uint8 *filename, uint16 address) {
 /*===============================================================================*/
 WIN32_FIND_DATA FindFileData;
 HANDLE hFind;
+#define FOLDERCHAR '\\'
 
 typedef struct {
 	uint8 dr;
@@ -239,7 +240,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	} else {
 		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
 	}
-	*(filename++) = '\\';
+	*(filename++) = FOLDERCHAR;
 
 	while (i < 8) {
 		if (F->fn[i] > 32)

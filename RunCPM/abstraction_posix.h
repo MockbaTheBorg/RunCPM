@@ -34,9 +34,10 @@ void _RamLoad(uint8 *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-uint8	drive[2] = { 'A', '/' };
 glob_t	pglob;
 int	dirPos;
+#define FOLDERCHAR '/'
+uint8	drive[2] = { 'A', FOLDERCHAR };
 
 typedef struct {
 	uint8 dr;
@@ -246,7 +247,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	} else {
 		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
 	}
-	*(filename++) = '/';
+	*(filename++) = FOLDERCHAR;
 
 	while (i < 8) {
 		if (F->fn[i] > 32)
@@ -271,17 +272,43 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 
 void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 *dest = &F->fn[0];
+	uint8 i = 0;
 
-	while (*filename)
-		*dest++ = toupper(*filename++);
+	filename++;
+	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
+		filename++;
+	} else {
+		filename--;
+	}
+
+	while (*filename != 0 && *filename != '.') {
+		F->fn[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 8) {
+		F->fn[i] = ' ';
+		i++;
+	}
+	if (*filename == '.')
+		filename++;
+	i = 0;
+	while (*filename != 0) {
+		F->tp[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 3) {
+		F->tp[i] = ' ';
+		i++;
+	}
 }
 
 void _HostnameToFCBname(uint8 *from, uint8 *to) {
 	int i = 0;
 
 	from++;
-	if (*from == '/') {	// Skips the drive and / if needed
+	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
 		from++;
 	} else {
 		from--;
@@ -324,11 +351,11 @@ bool match(uint8 *fcbname, uint8 *pattern) {
 	return(result);
 }
 
-uint8 findNext()
+uint8 _findnext(uint8 isdir)
 {
-	bool result = FALSE;
-	char dir[4] = "?/*";
-	char* file;
+	bool result = 0xff;
+	char dir[4] = { '?', FOLDERCHAR, '*', 0 };
+	char* dirname;
 	int i;
 	struct stat st;
 
@@ -336,29 +363,19 @@ uint8 findNext()
 	if (!glob(dir, 0, NULL, &pglob)) {
 		for (i = dirPos; i < pglob.gl_pathc; i++) {
 			dirPos++;
-			file = pglob.gl_pathv[i];
-			_HostnameToFCBname((uint8*)file, fcbname);
-			if (match(fcbname, pattern) && (stat(file, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
-				result = TRUE;
+			dirname = pglob.gl_pathv[i];
+			_HostnameToFCBname((uint8*)dirname, fcbname);
+			if (match(fcbname, pattern) && (stat(dirname, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {
+				if (isdir) {
+					_HostnameToFCB(dmaAddr, (uint8*)dirname);
+					_RamWrite(dmaAddr, 0x00);
+				}
+				_HostnameToFCB(tmpFCB, (uint8*)dirname);
+				result = 0x00;
 				break;
 			}
 		}
 		globfree(&pglob);
-	}
-
-	return(result);
-}
-
-uint8 _findnext(uint8 isdir) {
-	uint8 result = 0xff;
-
-	if (findNext()) {	// Finds a file matching the pattern, starting from dirPos
-		if (isdir) {
-			_HostnameToFCB(dmaAddr, fcbname);
-			_RamWrite(dmaAddr, 0x00);
-		}
-		_HostnameToFCB(tmpFCB, fcbname);	// DIR will print the name from tmpFCB
-		result = 0x00;
 	}
 
 	return(result);
