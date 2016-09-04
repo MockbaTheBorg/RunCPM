@@ -16,6 +16,7 @@ bool _RamLoad(char *filename, uint16 address) {
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 int		dirPos;
+#define FOLDERCHAR '/'
 
 typedef struct {
 	uint8 dr;
@@ -216,7 +217,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	} else {
 		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
 	}
-	*(filename++) = '/';
+	*(filename++) = FOLDERCHAR;
 
 	while (i < 8) {
 		if (F->fn[i] > 32)
@@ -241,10 +242,36 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 
 void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 *dest = &F->fn[0];
+	uint8 i = 0;
 
-	while (*filename)
-		*dest++ = toupper(*filename++);
+	filename++;
+	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
+		filename++;
+	} else {
+		filename--;
+	}
+
+	while (*filename != 0 && *filename != '.') {
+		F->fn[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 8) {
+		F->fn[i] = ' ';
+		i++;
+	}
+	if (*filename == '.')
+		filename++;
+	i = 0;
+	while (*filename != 0) {
+		F->tp[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 3) {
+		F->tp[i] = ' ';
+		i++;
+	}
 }
 
 void _HostnameToFCBname(uint8 *from, uint8 *to) // Converts a string name (AB.TXT) to FCB name (AB      TXT)
@@ -252,7 +279,7 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) // Converts a string name (AB.TX
 	int i = 0;
 
 	from++;
-	if (*from == '/') {	// Skips the drive and / if needed
+	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
 		from++;
 	} else {
 		from--;
@@ -296,11 +323,12 @@ bool match(uint8 *fcbname, uint8 *pattern) {
 	return(result);
 }
 
-bool findNext(uint8 *pattern) {
+uint8 _findnext(uint8 isdir) {
 	SdFile f;
+	uint8 result = 0xff;
 	uint8 path[2] = "?";
 	uint8 dirname[13];
-	bool isfile, result = FALSE;
+	bool isfile;
 	int i;
 
 	path[0] = filename[0];
@@ -319,26 +347,16 @@ bool findNext(uint8 *pattern) {
 			continue;
 		_HostnameToFCBname(dirname, fcbname);
 		if (match(fcbname, pattern)) {
-			result = TRUE;
+			if (isdir) {
+				_HostnameToFCB(dmaAddr, dirname);
+				_RamWrite(dmaAddr, 0x00);
+			}
+			_HostnameToFCB(tmpFCB, dirname);
+			result = 0x00;
 			break;
 		}
 	}
 	sd.chdir("/", true);			// (todo) Get rid of these chdir() someday
-
-	return(result);
-}
-
-uint8 _findnext(uint8 isdir) {
-	uint8 result = 0xff;
-
-	if (findNext(pattern)) {
-		if (isdir) {
-			_HostnameToFCB(dmaAddr, fcbname);
-			_RamWrite(dmaAddr, 0x00);
-		}
-		_HostnameToFCB(tmpFCB, fcbname);
-		result = 0x00;
-	}
 
 	return(result);
 }
