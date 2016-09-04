@@ -48,6 +48,121 @@ int _SelectDisk(uint8 dr) {
 	return(result);
 }
 
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	uint8 i = 0;
+	uint8 unique = TRUE;
+
+	if (F->dr) {
+		*(filename++) = (F->dr - 1) + 'A';
+	} else {
+		*(filename++) = (_RamRead(0x0004) & 0x0f) + 'A';
+	}
+	*(filename++) = FOLDERCHAR;
+
+	while (i < 8) {
+		if (F->fn[i] > 32)
+			*(filename++) = F->fn[i];
+		if (F->fn[i] == '?')
+			unique = FALSE;
+		i++;
+	}
+	*(filename++) = '.';
+	i = 0;
+	while (i < 3) {
+		if (F->tp[i] > 32)
+			*(filename++) = F->tp[i];
+		if (F->tp[i] == '?')
+			unique = FALSE;
+		i++;
+	}
+	*filename = 0x00;
+
+	return(unique);
+}
+
+void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	uint8 i = 0;
+
+	filename++;
+	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
+		filename++;
+	} else {
+		filename--;
+	}
+
+	while (*filename != 0 && *filename != '.') {
+		F->fn[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 8) {
+		F->fn[i] = ' ';
+		i++;
+	}
+	if (*filename == '.')
+		filename++;
+	i = 0;
+	while (*filename != 0) {
+		F->tp[i] = toupper(*filename);
+		filename++;
+		i++;
+	}
+	while (i < 3) {
+		F->tp[i] = ' ';
+		i++;
+	}
+}
+
+void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.TXT) to FCB name (AB      TXT)
+	int i = 0;
+
+	from++;
+	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
+		from++;
+	} else {
+		from--;
+	}
+
+	while (*from != 0 && *from != '.') {
+		*to = toupper(*from);
+		to++; from++; i++;
+	}
+	while (i < 8) {
+		*to = ' ';
+		to++;  i++;
+	}
+	if (*from == '.')
+		from++;
+	i = 0;
+	while (*from != 0) {
+		*to = toupper(*from);
+		to++; from++; i++;
+	}
+	while (i < 3) {
+		*to = ' ';
+		to++;  i++;
+	}
+	*to = 0;
+}
+
+uint8 match(uint8 *fcbname, uint8 *pattern) {
+	uint8 result = 1;
+	uint8 i;
+
+	for (i = 0; i < 12; i++) {
+		if (*pattern == '?' || *pattern == *fcbname) {
+			pattern++; fcbname++;
+			continue;
+		} else {
+			result = 0;
+			break;
+		}
+	}
+	return(result);
+}
+
 long _FileSize(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	long l = -1;
