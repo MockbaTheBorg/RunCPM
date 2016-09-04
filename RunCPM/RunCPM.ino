@@ -32,6 +32,9 @@ void setup(void) {
 	_puts("Arduino read/write support by Krzysztof Klis\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("--------------------------------------------\r\n");
+	_puts("CCP: " CCPname " Loaded at 0x");
+	_puthex16(CCPaddr);
+	_puts("\r\n");
 
 	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
 		if (sd.exists(CCPname)) {

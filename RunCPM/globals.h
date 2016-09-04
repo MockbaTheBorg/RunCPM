@@ -11,7 +11,7 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.4"
+#define VERSION	"2.5"
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
@@ -22,12 +22,12 @@
 /* Definition of the CCP memory information */
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
-#define CCPaddr		0xE400			// From CCP.ASM
+#define CCPaddr		((SIZEK*1024)-0x0C00)
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
 #define PatchCCP	CCPaddr + 0x1FA	// This patches DR's CCP for BDOS real location
 #else
 #define CCPname		"CCP-ZCPR.BIN"
-#define CCPaddr		0xE400			// From ZCPR.ASM
+#define CCPaddr		((SIZEK*1024)-0x0C00)
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
 
