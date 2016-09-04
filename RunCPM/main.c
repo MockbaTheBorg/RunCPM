@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 			break;
 		} else {
 			//**********  Boot code  **********//
-			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
+			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n");
 			_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
 			_PatchCPM();	// Patches the CP/M entry points and other things in
 
