@@ -32,6 +32,7 @@ void _RamLoad(uint8 *filename, uint16 address) {
 /*===============================================================================*/
 WIN32_FIND_DATA FindFileData;
 HANDLE hFind;
+int dirPos;
 #define FOLDERCHAR '\\'
 
 typedef struct {
@@ -232,8 +233,13 @@ uint8 _findnext(uint8 isdir) {
 	uint8 found = 0;
 	uint8 more = 1;
 
-	more = FindNextFile(hFind, &FindFileData);
-	while (more) {	// Skips folders and long file names
+	if (dirPos == 0) {
+		hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
+	} else {
+		more = FindNextFile(hFind, &FindFileData);
+	}
+
+	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
 		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			more = FindNextFile(hFind, &FindFileData);
 			continue;
@@ -245,7 +251,7 @@ uint8 _findnext(uint8 isdir) {
 				continue;
 			}
 		}
-		found++;
+		found++; dirPos++;
 		break;
 	}
 	if (found) {
@@ -263,36 +269,9 @@ uint8 _findnext(uint8 isdir) {
 
 uint8 _findfirst(uint8 isdir) {
 	uint8 result = 0xff;
-	uint8 found = 0;
-	uint8 more = 1;
 
-	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
-	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
-		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			more = FindNextFile(hFind, &FindFileData);
-			continue;
-		}
-		if (FindFileData.cAlternateFileName[0] != 0) {
-			if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
-			{
-				more = FindNextFile(hFind, &FindFileData);
-				continue;
-			}
-		}
-		found++;
-		break;
-	}
-	if (found) {
-		if (isdir) {
-			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
-			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
-		}
-		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
-		result = 0x00;
-	} else {
-		FindClose(hFind);
-	}
-	return(result);
+	dirPos = 0;
+	return(_findnext(isdir));
 }
 
 uint8 _Truncate(char *fn, uint8 rc) {
