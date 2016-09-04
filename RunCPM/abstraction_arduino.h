@@ -1,3 +1,6 @@
+#ifndef ABSTRACT_H
+#define ABSTRACT_H
+
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char *filename, uint16 address) {
@@ -290,3 +293,4 @@ void _clrscr(void) {
 	Serial.println("\b[H\b[J");
 }
 
+#endif

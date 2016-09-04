@@ -1,3 +1,6 @@
+#ifndef CPM_H
+#define CPM_H
+
 /* see main.c for definition */
 
 #define NOP		0x00
@@ -700,3 +703,5 @@ void _Bdos(void) {
 #endif
 
 }
+
+#endif

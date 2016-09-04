@@ -1,3 +1,6 @@
+#ifndef CONSOLE_H
+#define CONSOLE_H
+
 /* see main.c for definition */
 
 uint8 _chready(void)		// Checks if there's a character ready for input
@@ -37,3 +40,5 @@ void _puthex16(uint16 w)	// puts a HHHH hex string
 	_puthex8(w >> 8);
 	_puthex8(w & 0x00ff);
 }
+
+#endif

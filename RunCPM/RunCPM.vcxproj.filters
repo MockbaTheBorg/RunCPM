@@ -56,6 +56,9 @@
     <ClInclude Include="abstract.h">
       <Filter>Other Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ccp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="RunCPM.ino">

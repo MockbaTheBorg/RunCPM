@@ -1,3 +1,6 @@
+#ifndef RAM_H
+#define RAM_H
+
 /* see main.c for definition */
 
 static uint8 RAM[RAMSIZE];			// Definition of the emulated RAM
@@ -32,3 +35,4 @@ void _RamWrite16(uint16 address, uint16 value) {
 	_RamWrite(address + 1, (value >> 8) & 0xff);
 }
 
+#endif
