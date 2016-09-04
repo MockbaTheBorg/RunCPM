@@ -45,7 +45,7 @@ typedef struct {
 } CPM_FCB;
 
 uint8 _sys_exists(uint8 *filename) {
-	return(TRUE);	// (todo) Make this work
+	return(!access((const char*)filename, F_OK));
 }
 
 FILE* _sys_fopen_r(uint8 *filename) {

@@ -44,7 +44,7 @@ typedef struct {
 } CPM_FCB;
 
 BOOL _sys_exists(uint8 *filename) {
-	DWORD dwAttrib = GetFileAttributesA(filename);
+	DWORD dwAttrib = GetFileAttributesA((char*)filename);
 
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
 		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
