@@ -328,11 +328,11 @@ bool findNext(uint8 *pattern) {
 	return(result);
 }
 
-uint8 _findnext(uint8 dir) {
+uint8 _findnext(uint8 isdir) {
 	uint8 result = 0xff;
 
 	if (findNext(pattern)) {
-		if (dir) {
+		if (isdir) {
 			_HostnameToFCB(dmaAddr, fcbname);
 			_RamWrite(dmaAddr, 0x00);
 		}
@@ -343,10 +343,10 @@ uint8 _findnext(uint8 dir) {
 	return(result);
 }
 
-uint8 _findfirst(uint8 dir) {
+uint8 _findfirst(uint8 isdir) {
 	dirPos = 0;	// Set directory search to start from the first position
 	_HostnameToFCBname(filename, pattern);
-	return(_findnext(dir));
+	return(_findnext(isdir));
 }
 
 uint8 _Truncate(char *filename, uint8 rc) {

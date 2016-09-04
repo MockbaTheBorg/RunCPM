@@ -122,25 +122,25 @@ uint8 _MakeFile(uint16 fcbaddr) {
 	return(result);
 }
 
-uint8 _SearchFirst(uint16 fcbaddr, uint8 dir) {
+uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
-		result = _findfirst(dir);
+		result = _findfirst(isdir);
 	} else {
 		_error(errSELECT);
 	}
 	return(result);
 }
 
-uint8 _SearchNext(uint16 fcbaddr, uint8 dir) {
+uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[tmpFCB];
 	uint8 result = 0xff;
 
 	if (_SelectDisk(F->dr)) {
-		result = _findnext(dir);
+		result = _findnext(isdir);
 	} else {
 		_error(errSELECT);
 	}
@@ -204,10 +204,8 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 				F->cr = 0;
 				F->ex++;
 			}
-			if (F->ex > 127) {
-				// (todo) not sure what to do 
-				result = 0xff;
-			}
+			if (F->ex > 127)
+				result = 0xff;	// (todo) not sure what to do 
 		}
 	} else {
 		_error(errSELECT);
@@ -230,10 +228,8 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 					F->cr = 0;
 					F->ex++;
 				}
-				if (F->ex > 127) {
-					// (todo) not sure what to do 
-					result = 0xff;
-				}
+				if (F->ex > 127)
+					result = 0xff;	// (todo) not sure what to do 
 			}
 		} else {
 			_error(errWRITEPROT);

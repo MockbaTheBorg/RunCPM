@@ -289,7 +289,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	}
 }
 
-uint8 _findfirst(uint8 dir) {
+uint8 _findfirst(uint8 isdir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
@@ -311,7 +311,7 @@ uint8 _findfirst(uint8 dir) {
 		break;
 	}
 	if (found) {
-		if (dir) {
+		if (isdir) {
 			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
@@ -323,7 +323,7 @@ uint8 _findfirst(uint8 dir) {
 	return(result);
 }
 
-uint8 _findnext(uint8 dir) {
+uint8 _findnext(uint8 isdir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
 	uint8 more = 1;
@@ -345,8 +345,8 @@ uint8 _findnext(uint8 dir) {
 		break;
 	}
 	if (found) {
-		if (dir) {
-			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]);	// Create fake DIR entry
+		if (isdir) {
+			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
 		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
