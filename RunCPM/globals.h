@@ -22,13 +22,13 @@
 /* Definition of the CCP memory information */
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
-#define CCPaddr		0xE400	// From CCP.ASM
-#define BatchFCB	0xEBAC	//
-#define PatchCCP	0xE5FA  // This patches DR's CCP for BDOS real location
+#define CCPaddr		0xE400			// From CCP.ASM
+#define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
+#define PatchCCP	CCPaddr + 0x1FA	// This patches DR's CCP for BDOS real location
 #else
 #define CCPname		"CCP-ZCPR.BIN"
-#define CCPaddr		0xE400	// From ZCPR.ASM
-#define BatchFCB	0xE45E	//
+#define CCPaddr		0xE400			// From ZCPR.ASM
+#define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
 
 /* Some environment and type definitions */
@@ -112,6 +112,7 @@ extern int32 Break; /* Breakpoint                                 */
 /* CP/M memory definitions */
 #define SIZEK 64	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
 					// Can be set to less than 60, but this would require rebuilding the CCP
+					// For SIZEK<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
 #define RAMSIZE SIZEK * 1024
 
