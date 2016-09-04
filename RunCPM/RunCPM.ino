@@ -36,7 +36,7 @@ void setup(void) {
 	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
 		if (sd.exists(CCPname)) {
 			while (true) {
-				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 64K)\r\n");
+				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n");
 				if (_RamLoad(CCPname, CCPaddr)) {
 					_PatchCPM();
 					Z80reset();

@@ -11,7 +11,9 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.3"
+#define VERSION	"2.4"
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 /* Definition of which CCP to use, DR or ZCPR (define only one) */
 #define CCP_DR

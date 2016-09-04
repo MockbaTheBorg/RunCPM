@@ -52,17 +52,17 @@ long _sys_filesize(uint8 *filename) {
 int _sys_openfile(uint8 *filename) {
 	SdFile f;
 	uint8 file = f.open((char*)filename, O_READ);
-	if (file > 0)
+	if (file)
 		f.close();
-	return(file > 0);
+	return(file);
 }
 
 int _sys_makefile(uint8 *filename) {
 	SdFile f;
 	uint8 file = f.open((char*)filename, O_CREAT | O_WRITE);
-	if (file > 0)
+	if (file)
 		f.close();
-	return(file > 0);
+	return(file);
 }
 
 int _sys_deletefile(uint8 *filename) {
@@ -122,7 +122,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
-	if (file > 0) {
+	if (file) {
 		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
 			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
@@ -145,7 +145,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_RDWR);
-	if (file > 0) {
+	if (file) {
 		if (f.seekSet(fpos)) {
 			if (f.write(_RamSysAddr(dmaAddr), 128))
 				result = 0x00;
@@ -168,7 +168,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
-	if (file > 0) {
+	if (file) {
 		if (f.seekSet(fpos)) {
 			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
 			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
@@ -192,7 +192,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_RDWR);
 	}
-	if (file > 0) {
+	if (file) {
 		if (f.seekSet(fpos)) {
 			if (f.write(_RamSysAddr(dmaAddr), 128))
 				result = 0x00;
