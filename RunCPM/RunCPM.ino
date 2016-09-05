@@ -40,6 +40,15 @@ void setup(void) {
 	_puts("\r\n");
 
 	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
+#ifdef CCP_INTERNAL
+		while(true)
+		{
+			_PatchCPM();
+			_ccp();
+			if (Status == 1)
+				_RamWrite(0x0004, 0);
+		}
+#else
 		if (sd.exists(CCPname)) {
 			while (true) {
 				_puts(CCPHEAD);
@@ -59,6 +68,7 @@ void setup(void) {
 		} else {
 			_puts("Unable to load CP/M CCP. CPU halted.\r\n");
 		}
+#endif
 	} else {
 		_puts("Unable to initialize SD card. CPU halted.\r\n");
 	}

@@ -65,6 +65,12 @@ int main(int argc, char *argv[]) {
 	_puts("\r\n");
 
 	while (TRUE) {
+#ifdef CCP_INTERNAL
+		_PatchCPM();
+		_ccp();
+		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
+			break;
+#else
 		if(! _sys_exists((uint8*)CCPname)) {
 			_puts("\r\nCan't open CCP!\r\n");
 			break;
@@ -82,6 +88,7 @@ int main(int argc, char *argv[]) {
 			if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 				break;
 		}
+#endif
 	}
 
 	_console_reset();
