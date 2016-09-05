@@ -42,21 +42,13 @@ void setup(void) {
 	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
 		if (sd.exists(CCPname)) {
 			while (true) {
-				_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n");
-#ifndef CCP_INTERNAL
+				_puts(CCPHEAD);
 				if (_RamLoad(CCPname, CCPaddr)) {
-#else
-				if (TRUE) {
-#endif
 					_PatchCPM();
 					Z80reset();
 					SET_LOW_REGISTER(BC, _RamRead(0x0004));
-#ifdef CCP_INTERNAL
-					_ccp();
-#else
 					PC = CCPaddr;
 					Z80run();
-#endif
 					if (Status == 1)
 						_RamWrite(0x0004, 0);
 				} else {

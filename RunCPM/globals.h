@@ -27,6 +27,7 @@
 #define CCPaddr		((SIZEK*1024)-0x0C00)
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL"		// Will use the CCP from ccp.h
+#define BatchFCB	CCPaddr
 #endif
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
@@ -37,6 +38,8 @@
 #define CCPname		"CCP-ZCPR.BIN"
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
+#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
+
 
 /* Some environment and type definitions */
 #ifndef TRUE
