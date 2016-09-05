@@ -70,21 +70,15 @@ int main(int argc, char *argv[]) {
 			break;
 		} else {
 			//**********  Boot code  **********//
-			_puts("\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n");
-#ifndef CCP_INTERNAL
+			_puts(CCPHEAD);
 			_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
-#endif
 			_PatchCPM();	// Patches the CP/M entry points and other things in
 
 
 			Z80reset();			// Resets the Z80 CPU
 			SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
-#ifdef CCP_INTERNAL
-			_ccp();
-#else
 			PC = CCPaddr;		// Sets CP/M application jump point
 			Z80run();			// Starts simulation
-#endif
 			if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 				break;
 		}
