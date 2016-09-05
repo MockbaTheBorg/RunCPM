@@ -43,7 +43,12 @@ int _SelectDisk(uint8 dr) {
 	uint8 result;
 	uint8 disk[2] = "A";
 
-	disk[0] += dr ? (dr - 1) : (_RamRead(0x0004) & 0x0f);
+	if (dr) {
+		disk[0] += (dr - 1);
+		_RamWrite(0x0004, dr - 1);
+	} else {
+		disk[0] += _RamRead(0x0004);
+	}
 	result = _sys_select(&disk[0]);
 	if (result)
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
