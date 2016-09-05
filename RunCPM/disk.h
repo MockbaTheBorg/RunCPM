@@ -96,7 +96,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	}
 
 	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = uppercase(*filename);
+		F->fn[i] = toupper(*filename);
 		filename++;
 		i++;
 	}
@@ -108,7 +108,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 		filename++;
 	i = 0;
 	while (*filename != 0) {
-		F->tp[i] = uppercase(*filename);
+		F->tp[i] = toupper(*filename);
 		filename++;
 		i++;
 	}
@@ -129,7 +129,7 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.
 	}
 
 	while (*from != 0 && *from != '.') {
-		*to = uppercase(*filename);
+		*to = toupper(*from);
 		to++; from++; i++;
 	}
 	while (i < 8) {
@@ -140,7 +140,7 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.
 		from++;
 	i = 0;
 	while (*from != 0) {
-		*to = uppercase(*filename);
+		*to = toupper(*from);
 		to++; from++; i++;
 	}
 	while (i < 3) {
