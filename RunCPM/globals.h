@@ -27,7 +27,7 @@
 #define CCPaddr		((SIZEK*1024)-0x0C00)
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL"		// Will use the CCP from ccp.h
-#define BatchFCB	CCPaddr
+#define BatchFCB	tmpFCB + 36
 #endif
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"

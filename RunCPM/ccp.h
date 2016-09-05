@@ -16,7 +16,7 @@
 
 #define CLENGTH			124	// Maximum size of a command line
 
-#define CmdFCB BDOSjmppage + 32	// FCB for use by internal commands
+#define CmdFCB BatchFCB + 36	// FCB for use by internal commands
 #define ParFCB	0x005C			// FCB for use by line parameters
 
 #define NCMDS	6			// Maximum number of internal cmds
