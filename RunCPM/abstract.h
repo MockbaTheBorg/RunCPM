@@ -119,7 +119,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	int32 i = 0;
 
 	while (*filename != 0 && *filename != '.') {
-		F->fn[i] = uppercase(*filename);
+		F->fn[i] = toupper(*filename);
 		filename++;
 		i++;
 	}
@@ -131,7 +131,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 		filename++;
 	i = 0;
 	while (*filename != 0) {
-		F->tp[i] = uppercase(*filename);
+		F->tp[i] = toupper(*filename);
 		filename++;
 		i++;
 	}

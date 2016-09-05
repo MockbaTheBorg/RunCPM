@@ -59,8 +59,6 @@ typedef unsigned int    uint32;
 #define SET_LOW_REGISTER(x, v)  x = (((x) & 0xff00) | ((v) & 0xff))
 #define SET_HIGH_REGISTER(x, v) x = (((x) & 0xff) | (((v) & 0xff) << 8))
 
-#define uppercase(x) (x<'a' || x>'z') ? x : x & 0x5f
-
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus
 extern "C"
