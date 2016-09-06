@@ -32,11 +32,11 @@
 // ram.h - Implements the RAM
 #include "ram.h"
 
-// cpu.h - Implements the emulated CPU
-#include "cpu.h"
-
 // console.h - Defines all the console abstraction functions
 #include "console.h"
+
+// cpu.h - Implements the emulated CPU
+#include "cpu.h"
 
 // disk.h - Defines all the disk access abstraction functions
 #include "disk.h"
@@ -52,7 +52,7 @@
 int main(int argc, char *argv[]) {
 
 #ifdef DEBUGLOG
-	_sys_deletefile(LogName);
+	_sys_deletefile((uint8*)LogName);
 #endif
 
 	_console_init();
