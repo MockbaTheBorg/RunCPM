@@ -63,27 +63,6 @@ where the Z80 uses the overflow flag
 #define SET_PV      (SET_PVS(sum))
 #define SET_PV2(x)  (temp == (x)) << 2
 
-/* CHECK_CPU_8080 must be invoked whenever a Z80 only instruction is executed
-In case a Z80 instruction is executed on an 8080 the following two cases exist:
-1) Trapping is enabled: execution stops
-2) Trapping is not enabled: decoding continues with the next byte
-*/
-#define CHECK_CPU_8080                          \
-    if (chiptype == CHIP_TYPE_8080) {           \
-        if (cpu_unit.flags & UNIT_CPU_OPSTOP) { \
-            reason = STOP_OPCODE;               \
-            goto end_decode;                    \
-        }                                       \
-        else continue;                          \
-    }
-
-/* CHECK_CPU_Z80 must be invoked whenever a non Z80 instruction is executed */
-#define CHECK_CPU_Z80                           \
-    if (cpu_unit.flags & UNIT_CPU_OPSTOP) {     \
-        reason = STOP_OPCODE;                   \
-        goto end_decode;                        \
-    }
-
 #define POP(x)  {                               \
     register uint32 y = RAM_PP(SP);             \
     x = y + (RAM_PP(SP) << 8);                  \
@@ -1233,7 +1212,7 @@ void memdump(uint16 pos) {
 	}
 }
 
-uint8 Disasm(pos) {
+uint8 Disasm(uint16 pos) {
 	const char *txt;
 	char jr;
 	uint8 ch = _RamRead(pos);
