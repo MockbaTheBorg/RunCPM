@@ -9,8 +9,6 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
-uint8	LastSel;		// Last disk selected
-
 void _PatchCPM(void) {
 	uint16 i;
 
@@ -424,6 +422,7 @@ void _Bdos(void) {
 				Debug = 1;
 #endif
 			if (chr == 3 && count == 0) {
+				_puts("^C");
 				Status = 2;
 				break;
 			}
@@ -467,21 +466,19 @@ void _Bdos(void) {
 		roVector = 0;	// Make all drives R/W
 		loginVector = 0;
 		dmaAddr = 0x0080;
-		_RamWrite(0x0004, 0x00);	// Reset default drive to A: and CP/M user to 0 (0x00)
-		HL = _CheckSUB();			// Checks if there's a $$$.SUB on the boot disk
+		cDrive = 0;		// userCode remains unchanged
+		HL = _CheckSUB();	// Checks if there's a $$$.SUB on the boot disk
 		break;
 		/*
 		C = 14 (0Eh) : Select Disk
 		Returns: A=0x00 or 0xFF
 		*/
 	case 14:
-		if (_SelectDisk(LOW_REGISTER(DE) + 1)) {
-			_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (LOW_REGISTER(DE) & 0x0f));
-			LastSel = _RamRead(0x0004);
-		} else {
-			_error(errSELECT);
-			_RamWrite(0x0004, LastSel);	// Sets 0x0004 back to the last selected user/drive
-		}
+		oDrive = cDrive;
+		cDrive = LOW_REGISTER(DE);
+		HL = _SelectDisk(LOW_REGISTER(DE)+1);	// +1 here is to allow SelectDisk to be used directly by disk.h as well
+		if (!HL)
+			oDrive = cDrive;
 		break;
 		/*
 		C = 15 (0Fh) : Open file
@@ -548,7 +545,7 @@ void _Bdos(void) {
 		C = 25 (19h) : Return current disk
 		*/
 	case 25:
-		HL = _RamRead(0x0004) & 0x0f;
+		HL = cDrive;
 		break;
 		/*
 		C = 26 (1Ah) : Set DMA address
@@ -566,7 +563,7 @@ void _Bdos(void) {
 		C = 28 (1Ch) : Write protect current disk
 		*/
 	case 28:
-		roVector = roVector | (1 << (_RamRead(0x0004) & 0x0f));
+		roVector = roVector | (1 << cDrive);
 		break;
 		/*
 		C = 29 (1Dh) : Get R/O vector
@@ -586,9 +583,9 @@ void _Bdos(void) {
 		*/
 	case 32:
 		if (LOW_REGISTER(DE) == 0xFF) {
-			HL = _RamRead(0x0004) >> 4;
+			HL = userCode;
 		} else {
-			_RamWrite(0x0004, (_RamRead(0x0004) & 0x0f) | (LOW_REGISTER(DE) << 4));
+			userCode = LOW_REGISTER(DE);
 		}
 		break;
 		/*
