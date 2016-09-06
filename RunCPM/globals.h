@@ -42,7 +42,7 @@
 
 
 /* Some environment and type definitions */
-//#define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
+#define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
 					// This saves about 2K on the Arduino code and should bring speed imperovements
 
 #ifndef TRUE
@@ -131,6 +131,14 @@ extern int32 Break; /* Breakpoint                                 */
 
 #define RAMSIZE SIZEK * 1024
 
+#ifdef RAM_FAST
+uint8 RAM[RAMSIZE];
+#define _RamSysAddr(a) &RAM[a]
+#define _RamRead(a) RAM[a]
+#define _RamWrite(a, v) RAM[a] = v
+#define _RamWrite16(a, v) RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
+#endif
+
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage		RAMSIZE - 256
 #define BDOSpage		BIOSpage - 256
@@ -153,13 +161,5 @@ static uint8	cDrive = 0;			// Currently selected drive
 static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
-
-#ifdef RAM_FAST
-uint8 RAM[RAMSIZE];
-#define _RamSysAddr(a) &RAM[a]
-#define _RamRead(a) RAM[a]
-#define _RamWrite(a, v) RAM[a] = v
-#define _RamWrite16(a, v) RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
-#endif
 
 #endif

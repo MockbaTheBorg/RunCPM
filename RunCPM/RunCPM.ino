@@ -10,8 +10,8 @@ SdFat sd;
 #define SDcs 4  // Pin for the SD chip select signal
 
 #include "abstraction_arduino.h"
-#include "cpu.h"
 #include "ram.h"
+#include "cpu.h"
 #include "console.h"
 #include "disk.h"
 #include "cpm.h"
