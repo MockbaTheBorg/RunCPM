@@ -42,6 +42,9 @@
 
 
 /* Some environment and type definitions */
+//#define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
+					// This saves about 2K on the Arduino code and should bring speed imperovements
+
 #ifndef TRUE
 #define FALSE 0
 #define TRUE 1
@@ -70,10 +73,12 @@ extern "C"
 	extern void Z80reset(void);
 	extern void Z80run(void);
 
+#ifndef RAM_FAST
 	extern uint8* _RamSysAddr(uint16 address);
 	extern uint8 _RamRead(uint16 address);
 	extern void _RamWrite(uint16 address, uint8 value);
 	extern void _RamWrite16(uint16 address, uint16 value);
+#endif
 	extern void _RamFill(uint16 address, int size, uint8 value);
 
 	extern void _Bdos(void);
@@ -149,6 +154,12 @@ static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
 
-#define	defDrive (RAM[0x0004] & 0x0f)
+#ifdef RAM_FAST
+uint8 RAM[RAMSIZE];
+#define _RamSysAddr(a) &RAM[a]
+#define _RamRead(a) RAM[a]
+#define _RamWrite(a, v) RAM[a] = v
+#define _RamWrite16(a, v) RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
+#endif
 
 #endif

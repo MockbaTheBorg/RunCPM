@@ -11,8 +11,8 @@ SdFat sd;
 
 #include "abstraction_arduino.h"
 #include "cpu.h"
-#include "console.h"
 #include "ram.h"
+#include "console.h"
 #include "disk.h"
 #include "cpm.h"
 #ifdef CCP_INTERNAL
