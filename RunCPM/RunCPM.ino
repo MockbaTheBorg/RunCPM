@@ -46,7 +46,7 @@ void setup(void) {
 			_PatchCPM();
 			_ccp();
 			if (Status == 1)
-				_RamWrite(0x0004, 0);
+				break;
 		}
 #else
 		if (sd.exists(CCPname)) {
@@ -55,11 +55,11 @@ void setup(void) {
 				if (_RamLoad(CCPname, CCPaddr)) {
 					_PatchCPM();
 					Z80reset();
-					SET_LOW_REGISTER(BC, _RamRead(0x0004));
+					SET_LOW_REGISTER(BC, cDrive);
 					PC = CCPaddr;
 					Z80run();
 					if (Status == 1)
-						_RamWrite(0x0004, 0);
+						break;
 				} else {
 					_puts("Unable to load the CCP. CPU halted.\r\n");
 					break;

@@ -142,8 +142,13 @@ static uint8	filename[15];		// Current filename in host filesystem format
 static uint8	newname[15];		// New filename in host filesystem format
 static uint8	fcbname[13];		// Current filename in CP/M format
 static uint8	pattern[13];		// File matching pattern in CP/M format
-static uint16	dmaAddr = 0x0080;
+static uint16	dmaAddr = 0x0080;	// Current dmaAddr
+static uint8	oDrive = 0;			// Old selected drive
+static uint8	cDrive = 0;			// Currently selected drive
+static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
+
+#define	defDrive (RAM[0x0004] & 0x0f)
 
 #endif
