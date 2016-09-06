@@ -12,12 +12,16 @@
 #define F_CLOSE			16
 #define F_DELETE		19
 #define F_READ			20
+#define DRV_GET			25
 #define F_DMAOFF		26
 
 #define CLENGTH			124	// Maximum size of a command line
 
 #define CmdFCB BatchFCB + 36	// FCB for use by internal commands
 #define ParFCB	0x005C			// FCB for use by line parameters
+
+#define defDMA	0x0080		// Default DMA address
+#define defLoad	0x0100		// Default load address
 
 #define NCMDS	6			// Maximum number of internal cmds
 
@@ -43,6 +47,7 @@ static const char *Commands[NCMDS] =
 	"USER"
 };
 
+// Used to call BDOS from inside the CCP
 uint8 _ccp_bdos(uint8 function, uint16 de, uint8 a) {
 	SET_LOW_REGISTER(BC, function);
 	DE = de;
@@ -63,10 +68,12 @@ uint8 _ccp_cnum(void) {
 	return(result);
 }
 
+// Returns true if character is a separator
 uint8 _ccp_separator(uint8 ch) {
 	return(ch == ' ' || ch == '=');
 }
 
+// Converts a filename to FCB format while expanding asterisks
 void _ccp_NameToFCB(uint16 addr, uint8 *name) {
 	uint8 i = 0;
 	uint8 fill;
@@ -121,7 +128,8 @@ void _ccp_NameToFCB(uint16 addr, uint8 *name) {
 	}
 }
 
-void _ccp_ffcb(uint16 address) {	// Fills the FCB with the next available parameter
+// Fills the FCB with the next available parameter
+void _ccp_ffcb(uint16 address) {
 	ppar = &parm[0];
 	plen = 14;					// Set the maximum extraction length for a command (D:NNNNNNNN.EEE)
 	while (!_ccp_separator(*pbuf) && blen && plen) {
@@ -133,6 +141,7 @@ void _ccp_ffcb(uint16 address) {	// Fills the FCB with the next available parame
 	_ccp_NameToFCB(address, parm);
 }
 
+// Cleans up the FCB
 void _ccp_zeroFCB(uint16 address) {
 	uint8 i;
 
@@ -144,6 +153,7 @@ void _ccp_zeroFCB(uint16 address) {
 	}
 }
 
+// DIR command
 void _ccp_dir(void) {
 	uint8 i;
 	uint8 dirHead[6] = "\r\nA: ";
@@ -179,7 +189,7 @@ void _ccp_dir(void) {
 				_ccp_bdos(C_WRITE, _RamRead(tmpFCB + i + 1), 0x00);
 			}
 			fcount++; ccount++;
-			if (ccount > 4)
+			if (ccount > 3)
 				ccount = 0;
 		}
 	} else {
@@ -187,6 +197,7 @@ void _ccp_dir(void) {
 	}
 }
 
+// ERA command
 void _ccp_era(void) {
 	_ccp_zeroFCB(CmdFCB);	// Clears the FCB area (36 bytes)
 	while (*pbuf == ' ' && blen) {		// Skips any leading spaces
@@ -198,6 +209,7 @@ void _ccp_era(void) {
 		_puts("\r\nNo file");
 }
 
+// TYPE command
 void _ccp_type(void) {
 	uint8 i, c;
 	uint16 a;
@@ -227,22 +239,27 @@ void _ccp_type(void) {
 	}
 }
 
+// SAVE command
 void _ccp_save(void) {
 
 }
 
+// REN command
 void _ccp_ren(void) {
 
 }
 
+// USER command
 void _ccp_user(void) {
 
 }
 
+// External (.COM) command
 uint8 _ccp_external(void) {
 	uint8 result = FALSE;
-	uint16 loadAddr = 0x0100;
+	uint16 loadAddr = defLoad;
 
+	_ccp_zeroFCB(CmdFCB);
 	_ccp_NameToFCB(CmdFCB, command);
 	_RamWrite(CmdFCB + 9, 'C');
 	_RamWrite(CmdFCB + 10, 'O');
@@ -254,7 +271,7 @@ uint8 _ccp_external(void) {
 			pbuf++; blen--;
 		}
 		//		_ccp_ffcb(ParFCB);
-		_RamWrite(0x0080, 0x00);
+		_RamWrite(defDMA, 0x00);
 
 		_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
 		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
@@ -275,16 +292,20 @@ uint8 _ccp_external(void) {
 	return(result);
 }
 
+// Main CCP code
 void _ccp(void) {
 
 	_puts(CCPHEAD);
 
+	_ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
+	_ccp_bdos(DRV_SET, curDrive, 0x00);
+
 	while (TRUE) {
 		command[0] = 0;
 		parm[0] = 0; ppar = &parm[0];
-		curDrive = _RamRead(0x0004) & 0x0f;
-		_ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
-		_ccp_bdos(DRV_SET, curDrive, 0x00);
+		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
+		curDrive = _ccp_bdos(DRV_GET, 0x0000, 0x00);
+		RAM[0x0004] = curDrive;
 		parDrive = cmdDrive = curDrive;	// Initially the parameter and command drives are the same as the current drive
 
 		prompt[2] = 'A' + curDrive;
