@@ -15,27 +15,29 @@
 #define DRV_GET			25
 #define F_DMAOFF		26
 
-#define CLENGTH			124	// Maximum size of a command line
+#define CmdFCB	BatchFCB + 36		// FCB for use by internal commands
+#define ParFCB	0x005C				// FCB for use by line parameters
 
-#define CmdFCB BatchFCB + 36	// FCB for use by internal commands
-#define ParFCB	0x005C			// FCB for use by line parameters
+#define inBuf	BDOSjmppage - 256	// Input buffer location
+#define cLen	0x7f				// Maximum size of a command line
 
-#define defDMA	0x0080		// Default DMA address
-#define defLoad	0x0100		// Default load address
 
-#define NCMDS	6			// Maximum number of internal cmds
+#define defDMA	0x0080				// Default DMA address
+#define defLoad	0x0100				// Default load address
+
+#define NCMDS	6					// Maximum number of internal cmds
 
 // CCP global variables
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
 uint8 cmdDrive;	// 0 -> 15 = A -> P .. Drive to read the (external) command from
 uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 prompt[5] = "\r\n >";
-uint8 *pbuf, *pcmd, *ppar;	// Pointers for extracting commands and parameters from command line buffer
-uint8 blen;					// Actual size of the typed command line (size of the buffer)
-uint8 clen;					// Actual size of the command in characters
-uint8 plen;					// Actual size ot the first file parameter in characters
-uint8 command[15] = "";		// Buffer for the external command filename
-uint8 parm[15] = "";		// Buffer for the first file name parameter
+uint8 *pbuf, *pcmd, *ppar;			// Pointers for extracting commands and parameters from command line buffer
+uint8 blen;							// Actual size of the typed command line (size of the buffer)
+uint8 clen;							// Actual size of the command in characters
+uint8 plen;							// Actual size ot the first file parameter in characters
+uint8 command[9] = "";				// Buffer for the external command filename
+uint8 parm[15] = "";				// Buffer for the first file name parameter
 
 static const char *Commands[NCMDS] =
 {
@@ -69,8 +71,8 @@ uint8 _ccp_cnum(void) {
 }
 
 // Returns true if character is a separator
-uint8 _ccp_separator(uint8 ch) {
-	return(ch == ' ' || ch == '=');
+uint8 _ccp_delim(uint8 ch) {
+	return(ch == ' ' || ch == '=' || ch == '.');
 }
 
 // Converts a filename to FCB format while expanding asterisks
@@ -132,7 +134,7 @@ void _ccp_NameToFCB(uint16 addr, uint8 *name) {
 void _ccp_ffcb(uint16 address) {
 	ppar = &parm[0];
 	plen = 14;					// Set the maximum extraction length for a command (D:NNNNNNNN.EEE)
-	while (!_ccp_separator(*pbuf) && blen && plen) {
+	while (!_ccp_delim(*pbuf) && blen && plen) {
 		*ppar = toupper(*pbuf);
 		pbuf++; ppar++; blen--; plen--;
 	}
@@ -161,15 +163,13 @@ void _ccp_dir(void) {
 	uint32 fcount = 0;	// Number of files printed
 	uint32 ccount = 0;	// Number of columns printed
 
-	_ccp_zeroFCB(CmdFCB);	// Clears the FCB area (36 bytes)
-	while (*pbuf == ' ' && blen) {		// Skips any leading spaces
-		pbuf++; blen--;
+	if (!plen) {
+		for (i = 1; i < 12; i++)
+			RAM[ParFCB + i] = '?';
 	}
 
 	dirHead[2] = parDrive + 'A';
-
-	_ccp_ffcb(CmdFCB);
-	if (!_SearchFirst(CmdFCB, TRUE)) {
+	if (!_SearchFirst(ParFCB, TRUE)) {
 		_puts((char*)dirHead);
 		for (i = 0; i < 11; i++) {
 			if (i == 8)
@@ -177,7 +177,7 @@ void _ccp_dir(void) {
 			_ccp_bdos(C_WRITE, _RamRead(tmpFCB + i + 1), 0x00);
 		}
 		fcount++; ccount++;
-		while (!_SearchNext(CmdFCB, TRUE)) {
+		while (!_SearchNext(ParFCB, TRUE)) {
 			if (!ccount) {
 				_puts((char*)dirHead);
 			} else {
@@ -199,13 +199,7 @@ void _ccp_dir(void) {
 
 // ERA command
 void _ccp_era(void) {
-	_ccp_zeroFCB(CmdFCB);	// Clears the FCB area (36 bytes)
-	while (*pbuf == ' ' && blen) {		// Skips any leading spaces
-		pbuf++; blen--;
-	}
-
-	_ccp_ffcb(CmdFCB);
-	if (_ccp_bdos(F_DELETE, CmdFCB, 0x00))
+	if (_ccp_bdos(F_DELETE, ParFCB, 0x00))
 		_puts("\r\nNo file");
 }
 
@@ -214,15 +208,9 @@ void _ccp_type(void) {
 	uint8 i, c;
 	uint16 a;
 
-	_ccp_zeroFCB(CmdFCB);	// Clears the FCB area (36 bytes)
-	while (*pbuf == ' ' && blen) {		// Skips any leading spaces
-		pbuf++; blen--;
-	}
-
 	_puts("\r\n");
-	_ccp_ffcb(CmdFCB);
-	if (!_ccp_bdos(F_OPEN, CmdFCB, 0x00)) {
-		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
+	if (!_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
+		while (!_ccp_bdos(F_READ, ParFCB, 0x00)) {
 			i = 128;
 			a = dmaAddr;
 			while (i) {
@@ -259,20 +247,11 @@ uint8 _ccp_external(void) {
 	uint8 result = FALSE;
 	uint16 loadAddr = defLoad;
 
-	_ccp_zeroFCB(CmdFCB);
-	_ccp_NameToFCB(CmdFCB, command);
 	_RamWrite(CmdFCB + 9, 'C');
 	_RamWrite(CmdFCB + 10, 'O');
 	_RamWrite(CmdFCB + 11, 'M');
 
 	if (!_ccp_bdos(F_OPEN, CmdFCB, 0x00)) {
-		_ccp_zeroFCB(ParFCB);	// Clears the FCB area (36 bytes)
-		while (*pbuf == ' ' && blen) {		// Skips any leading spaces
-			pbuf++; blen--;
-		}
-		//		_ccp_ffcb(ParFCB);
-		_RamWrite(defDMA, 0x00);
-
 		_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
 		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
 			loadAddr += 128;
@@ -294,6 +273,7 @@ uint8 _ccp_external(void) {
 
 // Main CCP code
 void _ccp(void) {
+	uint8 ch;
 
 	_puts(CCPHEAD);
 
@@ -306,16 +286,16 @@ void _ccp(void) {
 		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
 		curDrive = _ccp_bdos(DRV_GET, 0x0000, 0x00);
 		RAM[0x0004] = curDrive;
-		parDrive = cmdDrive = curDrive;	// Initially the parameter and command drives are the same as the current drive
+		parDrive = curDrive;	// Initially the parameter and command drives are the same as the current drive
 
 		prompt[2] = 'A' + curDrive;
 		_puts((char*)prompt);
 
-		_RamWrite(dmaAddr, CLENGTH);
-		_ccp_bdos(C_READSTR, dmaAddr, 0x00);
-		blen = _RamRead(dmaAddr + 1);
+		_RamWrite(inBuf, cLen);
+		_ccp_bdos(C_READSTR, inBuf, 0x00);
+		blen = _RamRead(inBuf + 1);
 		if (blen) {
-			pbuf = _RamSysAddr(dmaAddr + 2);	// Points to the first command character
+			pbuf = _RamSysAddr(inBuf + 2);	// Points to the first command character
 
 			while (*pbuf == ' ' && blen) {		// Skips any leading spaces
 				pbuf++; blen--;
@@ -325,21 +305,93 @@ void _ccp(void) {
 			if (*pbuf == ';')			// Found a comment
 				continue;
 
+			_ccp_zeroFCB(CmdFCB); // Initializes the command FCB
+
+			// Checks for a drive and places it on the Command FCB
+			if (blen > 1 && *(pbuf + 1) == ':') {
+				cmdDrive = toupper(*pbuf++);
+				cmdDrive -= '@';				// Makes the cmdDrive 1-10
+				RAM[CmdFCB] = cmdDrive--;		// Adjusts the cmdDrive to 0-f
+				pbuf++; blen -= 2;
+			}
+
 			// Extracts the command from the buffer (and makes it toupper)
-			pcmd = &command[0];
-			clen = 14;					// Set the maximum extraction length for a command (D:NNNNNNNN.EEE)
-			while (*pbuf != ' ' && blen && clen) {
+			pcmd = &RAM[CmdFCB] + 1;
+			clen = 8;					// Set the maximum extraction length for a command name (8)
+			while (!_ccp_delim(*pbuf) && blen && clen) {
 				*pcmd = toupper(*pbuf);
+				command[8 - clen] = *pcmd;
 				pbuf++; pcmd++; blen--; clen--;
 			}
-			*pcmd = 0;	// Closes the command string
+			command[8 - clen] = 0;
 
-			if (command[1] == ':') {	// If the command has a drive, maybe do a drive select
-				curDrive = command[0] - 'A';
-				if (!command[2]) {		// Command was a drive select itself
-					_ccp_bdos(DRV_SET, curDrive, 0x00);
-					continue;
+			if (RAM[CmdFCB + 1] == ' ') {	// Command was a drive select
+				_ccp_bdos(DRV_SET, cmdDrive, 0x00);
+				continue;
+			}
+
+			RAM[defDMA] = blen;	// Move the command line at this point to 0x0080
+			for (ch = 0; ch < blen; ch++) {
+				RAM[defDMA + ch + 1] = *(pbuf + ch);
+			}
+			RAM[defDMA + ch + 1] = 0;
+
+			while (*pbuf == ' ' && blen) {		// Skips any leading spaces
+				pbuf++; blen--;
+			}
+
+			_ccp_zeroFCB(ParFCB); // Initializes the parameter FCB
+
+			// Loads the next file parameter onto the parameter FCB
+			// Checks for a drive and places it on the parameter FCB
+			if (blen > 1 && *(pbuf + 1) == ':') {
+				parDrive = toupper(*pbuf++);
+				parDrive -= '@';				// Makes the parDrive 1-10
+				RAM[ParFCB] = parDrive--;		// Adjusts the parDrive to 0-f
+				pbuf++; blen -= 2;
+			}
+
+			plen = 0;
+			if (blen) {
+				while (blen && plen < 8) {
+					ch = toupper(*pbuf++);
+					blen--;
+					if (ch == '*') {
+						ch = '?';
+						break;
+					}
+					if (_ccp_delim(ch)) {
+						ch = ' ';
+						break;
+					}
+					plen++;
+					RAM[ParFCB + plen] = ch;
+					ch = ' ';
 				}
+				while (plen++ < 8)
+					RAM[ParFCB + plen] = ch;
+
+				if (*pbuf == '*' || *pbuf == '.') {
+					pbuf++; blen--;
+				}
+				ch = ' ';
+				while (blen && plen < 12) {
+					ch = toupper(*pbuf++);
+					blen--;
+					if (ch == '*') {
+						ch = '?';
+						break;
+					}
+					if (_ccp_delim(ch)) {
+						ch = ' ';
+						break;
+					}
+					RAM[ParFCB + plen] = ch;
+					plen++;
+					ch = ' ';
+				}
+				while (plen < 12)
+					RAM[ParFCB + plen++] = ch;
 			}
 
 			// Checks if the command is valid
