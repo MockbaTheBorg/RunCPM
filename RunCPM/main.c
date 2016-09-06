@@ -29,11 +29,11 @@
 #endif
 #endif
 
-// cpu.h - Implements the emulated CPU
-#include "cpu.h"
-
 // ram.h - Implements the RAM
 #include "ram.h"
+
+// cpu.h - Implements the emulated CPU
+#include "cpu.h"
 
 // console.h - Defines all the console abstraction functions
 #include "console.h"

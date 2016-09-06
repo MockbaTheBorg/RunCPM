@@ -78,7 +78,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
-    <ClCompile Include="z80.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="abstract.h" />
