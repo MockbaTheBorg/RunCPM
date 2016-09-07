@@ -21,11 +21,8 @@
 #define inBuf	BDOSjmppage - 256	// Input buffer location
 #define cLen	0x7f				// Maximum size of a command line
 
-
 #define defDMA	0x0080				// Default DMA address
 #define defLoad	0x0100				// Default load address
-
-#define NCMDS	6					// Maximum number of internal cmds
 
 // CCP global variables
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
@@ -37,16 +34,21 @@ uint8 blen;							// Actual size of the typed command line (size of the buffer)
 uint8 clen;							// Actual size of the command in characters
 uint8 plen;							// Actual size ot the first file parameter in characters
 uint8 command[9] = "";				// Buffer for the external command filename
-uint8 parm[15] = "";				// Buffer for the first file name parameter
 
-static const char *Commands[NCMDS] =
+static const char *Commands[] =
 {
+	// Standard CP/M commands
 	"DIR",
 	"ERA",
 	"TYPE",
 	"SAVE",
 	"REN",
-	"USER"
+	"USER",
+	// Extra CCP commands
+	"DEL",
+	"INFO",
+	"EXIT",
+	NULL
 };
 
 // Used to call BDOS from inside the CCP
@@ -58,13 +60,16 @@ uint8 _ccp_bdos(uint8 function, uint16 de, uint8 a) {
 	return(HIGH_REGISTER(AF));
 }
 
+// Gets the command ID number
 uint8 _ccp_cnum(void) {
 	uint8 i = 0;
 	uint8 result = 255;
 
-	for (i = 0; i < NCMDS; i++) {
-		if (strcmp((char*)command, Commands[i]) == 0) {
-			result = i; break;
+	if (!RAM[CmdFCB]) {	// If a drive is set, then the command is external
+		while (Commands[i]) {
+			if (strcmp((char*)command, Commands[i]) == 0)
+				result = i; break;
+			i++;
 		}
 	}
 	return(result);
@@ -72,79 +77,25 @@ uint8 _ccp_cnum(void) {
 
 // Returns true if character is a separator
 uint8 _ccp_delim(uint8 ch) {
-	return(ch == ' ' || ch == '=' || ch == '.');
+	return(ch == ' ' || ch == '=' || ch == '.' || ch == ';');
 }
 
-// Converts a filename to FCB format while expanding asterisks
-void _ccp_NameToFCB(uint16 addr, uint8 *name) {
-	uint8 i = 0;
-	uint8 fill;
-	uint8 psize;	// Part size
+// Prints the FCB filename
+void _ccp_printfcb(uint16 address, uint8 compact) {
+	uint8 i, ch;
 
-	// drive part
-	if (*name) {
-		name++;
-		if (*name == ':') {
-			parDrive = *(name - 1) - 'A';
-			name++;
-		} else {
-			name--;
-		}
-	}
-	_RamWrite(addr++, parDrive + 1);
-
-	// name part
-	psize = 8;
-	fill = '?';
-	while (psize) {
-		switch (*name) {
-		case 0:
-			_RamWrite(addr++, fill); break;
-		case '*':
-			_RamWrite(addr++, '?'); break;
-		case '.':
-			fill = ' ';
-			_RamWrite(addr++, ' '); break;
-		default:
-			fill = ' ';
-			_RamWrite(addr++, *(name++)); break;
-		}
-		psize--;
-	}
-	while (*name == '*' || *name == '.')
-		name++;
-	// extension part
-	psize = 3;
-	fill = '?';
-	while (psize) {
-		switch (*name) {
-		case 0:
-			_RamWrite(addr++, fill); break;
-		case '*':
-			_RamWrite(addr++, '?'); break;
-		default:
-			fill = ' ';
-			_RamWrite(addr++, *(name++)); break;
-		}
-		psize--;
+	for (i = 1; i < 12; i++) {
+		ch = RAM[address + i];
+		if (ch == ' ' && compact)
+			continue;
+		if (i == 9)
+			_ccp_bdos(C_WRITE, compact ? '.' : ' ', 0x00);
+		_ccp_bdos(C_WRITE, ch, 0x00);
 	}
 }
 
-// Fills the FCB with the next available parameter
-void _ccp_ffcb(uint16 address) {
-	ppar = &parm[0];
-	plen = 14;					// Set the maximum extraction length for a command (D:NNNNNNNN.EEE)
-	while (!_ccp_delim(*pbuf) && blen && plen) {
-		*ppar = toupper(*pbuf);
-		pbuf++; ppar++; blen--; plen--;
-	}
-	*ppar = 0;	// Closes the command string
-
-	_ccp_NameToFCB(address, parm);
-}
-
-// Cleans up the FCB
-void _ccp_zeroFCB(uint16 address) {
+// Initializes the FCB
+void _ccp_initFCB(uint16 address) {
 	uint8 i;
 
 	for (i = 0; i < 36; i++)
@@ -158,7 +109,7 @@ void _ccp_zeroFCB(uint16 address) {
 // DIR command
 void _ccp_dir(void) {
 	uint8 i;
-	uint8 dirHead[6] = "\r\nA: ";
+	uint8 dirHead[6] = "A: ";
 	uint8 dirSep[4] = " : ";
 	uint32 fcount = 0;	// Number of files printed
 	uint32 ccount = 0;	// Number of columns printed
@@ -168,39 +119,32 @@ void _ccp_dir(void) {
 			RAM[ParFCB + i] = '?';
 	}
 
-	dirHead[2] = parDrive + 'A';
+	dirHead[0] = parDrive + 'A';
 	if (!_SearchFirst(ParFCB, TRUE)) {
 		_puts((char*)dirHead);
-		for (i = 0; i < 11; i++) {
-			if (i == 8)
-				_ccp_bdos(C_WRITE, ' ', 0x00);
-			_ccp_bdos(C_WRITE, _RamRead(tmpFCB + i + 1), 0x00);
-		}
+		_ccp_printfcb(tmpFCB, FALSE);
 		fcount++; ccount++;
 		while (!_SearchNext(ParFCB, TRUE)) {
 			if (!ccount) {
+				_puts("\r\n");
 				_puts((char*)dirHead);
 			} else {
 				_puts((char*)dirSep);
 			}
-			for (i = 0; i < 11; i++) {
-				if (i == 8)
-					_ccp_bdos(C_WRITE, ' ', 0x00);
-				_ccp_bdos(C_WRITE, _RamRead(tmpFCB + i + 1), 0x00);
-			}
+			_ccp_printfcb(tmpFCB, FALSE);
 			fcount++; ccount++;
 			if (ccount > 3)
 				ccount = 0;
 		}
 	} else {
-		_puts("\r\nNo file");
+		_puts("No file");
 	}
 }
 
 // ERA command
 void _ccp_era(void) {
 	if (_ccp_bdos(F_DELETE, ParFCB, 0x00))
-		_puts("\r\nNo file");
+		_puts("No file");
 }
 
 // TYPE command
@@ -208,7 +152,6 @@ void _ccp_type(void) {
 	uint8 i, c;
 	uint16 a;
 
-	_puts("\r\n");
 	if (!_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
 		while (!_ccp_bdos(F_READ, ParFCB, 0x00)) {
 			i = 128;
@@ -222,8 +165,8 @@ void _ccp_type(void) {
 			}
 		}
 	} else {
-		_puts((char*)parm);
-		_puts("?");
+		_ccp_printfcb(ParFCB, TRUE);
+		_puts("?\r\n");
 	}
 }
 
@@ -240,6 +183,13 @@ void _ccp_ren(void) {
 // USER command
 void _ccp_user(void) {
 
+}
+
+// INFO command
+void _ccp_info(void) {
+	_puts("RunCPM version " VERSION "\r\n");
+	_puts("BDOS Page set to "); _puthex16(BDOSjmppage); _puts("\r\n");
+	_puts("BIOS Page set to "); _puthex16(BIOSjmppage);
 }
 
 // External (.COM) command
@@ -259,7 +209,6 @@ uint8 _ccp_external(void) {
 		}
 		_ccp_bdos(F_CLOSE, CmdFCB, 0x00);
 
-		_puts("\r\n");
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
 		PC = 0x0100;		// Sets CP/M application jump point
@@ -274,6 +223,7 @@ uint8 _ccp_external(void) {
 // Main CCP code
 void _ccp(void) {
 	uint8 ch;
+	uint8 drvSel;	// Flag if a drive was explicitly selected for the command
 
 	_puts(CCPHEAD);
 
@@ -282,37 +232,39 @@ void _ccp(void) {
 
 	while (TRUE) {
 		command[0] = 0;
-		parm[0] = 0; ppar = &parm[0];
 		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
 		curDrive = _ccp_bdos(DRV_GET, 0x0000, 0x00);
 		RAM[0x0004] = curDrive;
-		parDrive = curDrive;	// Initially the parameter and command drives are the same as the current drive
+		parDrive = curDrive;				// Initially the parameter and command drives are the same as the current drive
 
-		prompt[2] = 'A' + curDrive;
+		prompt[2] = 'A' + curDrive;			// Shows the prompt
 		_puts((char*)prompt);
 
-		_RamWrite(inBuf, cLen);
+		_RamWrite(inBuf, cLen);				// Sets the buffer size to read the command line
 		_ccp_bdos(C_READSTR, inBuf, 0x00);
+
 		blen = _RamRead(inBuf + 1);
 		if (blen) {
 			pbuf = _RamSysAddr(inBuf + 2);	// Points to the first command character
 
-			while (*pbuf == ' ' && blen) {		// Skips any leading spaces
+			while (*pbuf == ' ' && blen) {	// Skips any leading spaces
 				pbuf++; blen--;
 			}
-			if (!blen)					// There were only spaces
+			if (!blen)						// There were only spaces
 				continue;
-			if (*pbuf == ';')			// Found a comment
+			if (*pbuf == ';')				// Found a comment
 				continue;
 
-			_ccp_zeroFCB(CmdFCB); // Initializes the command FCB
+			_ccp_initFCB(CmdFCB); // Initializes the command FCB
 
 			// Checks for a drive and places it on the Command FCB
+			drvSel = FALSE;
 			if (blen > 1 && *(pbuf + 1) == ':') {
 				cmdDrive = toupper(*pbuf++);
 				cmdDrive -= '@';				// Makes the cmdDrive 1-10
 				RAM[CmdFCB] = cmdDrive--;		// Adjusts the cmdDrive to 0-f
 				pbuf++; blen -= 2;
+				drvSel = TRUE;
 			}
 
 			// Extracts the command from the buffer (and makes it toupper)
@@ -340,7 +292,7 @@ void _ccp(void) {
 				pbuf++; blen--;
 			}
 
-			_ccp_zeroFCB(ParFCB); // Initializes the parameter FCB
+			_ccp_initFCB(ParFCB); // Initializes the parameter FCB
 
 			// Loads the next file parameter onto the parameter FCB
 			// Checks for a drive and places it on the parameter FCB
@@ -394,25 +346,36 @@ void _ccp(void) {
 					RAM[ParFCB + plen++] = ch;
 			}
 
-			// Checks if the command is valid
+			// Checks if the command is valid and executes
+			_puts("\r\n");
 			switch (_ccp_cnum()) {
 			case 0:		// DIR
-				_ccp_dir(); break;
+				_ccp_dir();		break;
 			case 1:		// ERA
-				_ccp_era(); break;
+				_ccp_era();		break;
 			case 2:		// TYPE
-				_ccp_type(); break;
+				_ccp_type();	break;
 			case 3:		// SAVE
-				_ccp_save(); break;
+				_ccp_save();	break;
 			case 4:		// REN
-				_ccp_ren(); break;
+				_ccp_ren();		break;
 			case 5:		// USER
-				_ccp_user();  break;
+				_ccp_user();	break;
+				// Extra commands
+			case 6:		// DEL is an alias to ERA
+				_ccp_era();		break;
+			case 7:		// INFO
+				_ccp_info();	break;
+			case 8:		// EXIT
+				Status = 1;		break;
 			case 255:	// It is an external command
-				if (_ccp_external())	// Will fall down to default is doesn't exist
+				if (_ccp_external())	// Will fall down to default if it doesn't exist
 					break;
 			default:
-				_puts("\r\n");
+				if (drvSel) {
+					_putch(drvSel + 'A');
+					_putch(':');
+				}
 				_puts((char*)command);
 				_puts("?\r\n");
 				blen = 0;
