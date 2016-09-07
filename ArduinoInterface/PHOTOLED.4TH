@@ -1,8 +1,8 @@
 \ Arduino CP/M interface
 : pinmode ( val pin -- ) 256 * + 220 bdos drop ;
-: din ( pin -- ) 256 * 221 bdos ;
+: din ( pin -- n ) 256 * 221 bdos ;
 : dout ( val pin -- ) 256 * + 222 bdos drop ;
-: ain ( pin -- ) 256 * 223 fdos drop ;
+: ain ( pin -- n ) 256 * 223 fdos drop ;
 : aout ( val pin -- ) 256 * + 224 bdos drop ;
 
 \ Turn LED on or off
