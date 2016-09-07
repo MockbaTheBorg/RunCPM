@@ -220,6 +220,10 @@ uint8 _CloseFile(uint16 fcbaddr) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (fcbaddr == BatchFCB)
 				_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
+			F->cr = 0;
+			F->r0 = 0;
+			F->r1 = 0;
+			F->r2 = 0;
 			result = 0x00;
 		} else {
 			_error(errWRITEPROT);
