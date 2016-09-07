@@ -1,0 +1,43 @@
+* LED.ASM (standard CP/M asm command):
+
+A> asm led
+A> load led
+
+* LED.BAS (MBASIC v5.21):
+
+A> mbasic led.bas
+
+* LED.C (Hi-Tech C v3.09):
+
+A> c -v led.c
+
+* LED.PAS (Turbo Pascal v3.0):
+
+A> turbo
+   r
+   led.pas
+
+* PHOTO.C (Hi-Tech C v3.09):
+
+A> c -v photo.c
+
+* PHOTO.PAS (Turbo Pascal v3.0):
+
+A> turbo
+   r
+   photo.pas
+
+* PHOTOLED.4TH (DX-Forth v4.10):
+
+A> dx
+   include photoled.4th
+   200 run
+
+---------------
+Important note:
+---------------
+If you experience any problems building any of the examples,
+first make sure the EOL (end of line) in source files s set
+o CRLF and not LF.
+Git likes to change default EOL on checkout in Posix systems
+(Linux, BSD, Mac OS X, etc).
