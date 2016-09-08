@@ -1112,20 +1112,20 @@ static const char *CPMCalls[41] =
 #endif
 
 /* Memory management    */
-static uint8 GET_BYTE(register uint32 Addr) {
+uint8 GET_BYTE(register uint32 Addr) {
 	return _RamRead(Addr & ADDRMASK);
 }
 
-static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
+void PUT_BYTE(register uint32 Addr, register uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 }
 
-static void PUT_WORD(register uint32 Addr, register uint32 Value) {
+void PUT_WORD(register uint32 Addr, register uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 	_RamWrite((Addr + 1) & ADDRMASK, Value >> 8);
 }
 
-static uint16 GET_WORD(register uint32 a) {
+uint16 GET_WORD(register uint32 a) {
 	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
 }
 
