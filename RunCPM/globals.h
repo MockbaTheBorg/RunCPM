@@ -19,7 +19,7 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
-/* Definition of which CCP to use: INTERNAL, DR or ZCPR (define only one) */
+/* Definition of which CCP to use: INTERNAL, DR or ZCPR (must define only one) */
 //#define CCP_INTERNAL	// If this is defined, CCP will be internal
 #define CCP_DR
 //#define CCP_ZCPR

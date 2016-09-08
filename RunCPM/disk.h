@@ -75,7 +75,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 
 	while (i < 8) {
 		if (F->fn[i] > 32)
-			*(filename++) = F->fn[i];
+			*(filename++) = toupper(F->fn[i]);
 		if (F->fn[i] == '?')
 			unique = FALSE;
 		i++;
@@ -84,7 +84,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	i = 0;
 	while (i < 3) {
 		if (F->tp[i] > 32)
-			*(filename++) = F->tp[i];
+			*(filename++) = toupper(F->tp[i]);
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
