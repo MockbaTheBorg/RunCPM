@@ -37,7 +37,7 @@ A> dx
 Important note:
 ---------------
 If you experience any problems building any of the examples,
-first make sure the EOL (end of line) in source files s set
-o CRLF and not LF.
+first make sure the EOL (end of line) in source files is set
+to CRLF and not LF.
 Git likes to change default EOL on checkout in Posix systems
 (Linux, BSD, Mac OS X, etc).
