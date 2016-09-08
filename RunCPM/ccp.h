@@ -1,8 +1,6 @@
 #ifndef CCP_H
 #define CCP_H
 
-#include <string.h>
-
 // CP/M BDOS calls
 #define C_WRITE			2
 #define C_READSTR		10
@@ -60,6 +58,14 @@ uint8 _ccp_bdos(uint8 function, uint16 de, uint8 a) {
 	return(HIGH_REGISTER(AF));
 }
 
+// Compares two strings (Atmel doesn't like strcmp)
+uint8 _ccp_strcmp(char *stra, char *strb) {
+	while (*stra && *strb && (*stra == *strb)) {
+		stra++; strb++;
+	}
+	return(*stra == *strb);
+}
+
 // Gets the command ID number
 uint8 _ccp_cnum(void) {
 	uint8 i = 0;
@@ -67,8 +73,9 @@ uint8 _ccp_cnum(void) {
 
 	if (!RAM[CmdFCB]) {	// If a drive is set, then the command is external
 		while (Commands[i]) {
-			if (strcmp((char*)command, Commands[i]) == 0)
+			if (_ccp_strcmp((char*)command, (char*)Commands[i])) {
 				result = i; break;
+			}
 			i++;
 		}
 	}
