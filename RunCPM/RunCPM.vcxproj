@@ -92,6 +92,7 @@
     <ClInclude Include="cpu.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="globals.h" />
+    <ClInclude Include="posix.h" />
     <ClInclude Include="ram.h" />
   </ItemGroup>
   <ItemGroup>
