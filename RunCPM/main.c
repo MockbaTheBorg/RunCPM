@@ -11,42 +11,40 @@
 */
 #ifndef ARDUINO
 
+/* globals.h must be the first file included - it defines the bare essentials */
 #include "globals.h"
 
+/* Any system specific includes should go here - this will define system functions used by the abstraction */
+
+/* all the RunCPM includes must go after the system specific includes */
+
 /*
-		abstraction.h - Adds all system dependent calls and definitions needed by RunCPM
-		This should be the only file modified for portability. Any other file
-		shoud be kept the same.
+abstraction.h - Adds all system dependent calls and definitions needed by RunCPM
+This should be the only file modified for portability. Any other file
+shoud be kept the same.
 */
 
-#ifdef __DJGPP
-#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
-#else
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
-#include "abstraction_posix.h"
+  #ifdef ARDUINO
+    #include "abstraction_arduino.h"
+  #else
+    #ifdef __DJGPP
+      #include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
+    #else
+      #include "abstraction_posix.h"
+    #endif
+  #endif
 #endif
-#endif
 
-// ram.h - Implements the RAM
-#include "ram.h"
-
-// console.h - Defines all the console abstraction functions
-#include "console.h"
-
-// cpu.h - Implements the emulated CPU
-#include "cpu.h"
-
-// disk.h - Defines all the disk access abstraction functions
-#include "disk.h"
-
-// cpm.h - Defines the CPM structures and calls
-#include "cpm.h"
-
+#include "ram.h"		// ram.h - Implements the RAM
+#include "console.h"	// console.h - Defines all the console abstraction functions
+#include "cpu.h"		// cpu.h - Implements the emulated CPU
+#include "disk.h"		// disk.h - Defines all the disk access abstraction functions
+#include "cpm.h"		// cpm.h - Defines the CPM structures and calls
 #ifdef CCP_INTERNAL
-// ccp.h - Defines a simple internal CCP
-#include "ccp.h"
+#include "ccp.h"		// ccp.h - Defines a simple internal CCP
 #endif
 
 int main(int argc, char *argv[]) {
