@@ -251,6 +251,7 @@ uint8 _findnext(uint8 isdir)
 					_HostnameToFCB(dmaAddr, (uint8*)dirname);
 					_RamWrite(dmaAddr, 0x00);
 				}
+				RAM[tmpFCB] = filename[0];
 				_HostnameToFCB(tmpFCB, (uint8*)dirname);
 				result = 0x00;
 				break;

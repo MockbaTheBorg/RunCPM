@@ -20,10 +20,8 @@ void _putcon(uint8 ch)		// Puts a character
 
 void _puts(const char *str)	// Puts a \0 terminated string
 {
-	while (*str) {
-		_putcon(*str);
-		str++;
-	}
+	while (*str)
+		_putcon(*(str++));
 }
 
 void _puthex8(uint8 c)		// Puts a HH hex string
