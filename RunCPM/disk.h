@@ -19,7 +19,7 @@ Disk errors
 
 #define RW	(roVector & (1 << F->dr))
 
-static void _error(uint8 error) {
+void _error(uint8 error) {
 	_puts("\r\nBdos Error on ");
 	_putcon('A' + cDrive);
 	_puts(" : ");
@@ -37,6 +37,7 @@ static void _error(uint8 error) {
 	_getch();
 	_puts("\r\n");
 	cDrive = oDrive;
+	RAM[0x0004] = (RAM[0x0004] & 0xf0) | oDrive;
 	Status = 2;
 }
 

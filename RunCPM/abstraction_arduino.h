@@ -291,7 +291,7 @@ void _putch(uint8 ch) {
 }
 
 void _clrscr(void) {
-	Serial.println("\b[H\b[J");
+	Serial.println("\e[H\e[J");
 }
 
 #endif
