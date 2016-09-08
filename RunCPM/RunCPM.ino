@@ -55,7 +55,7 @@ void setup(void) {
 				if (_RamLoad(CCPname, CCPaddr)) {
 					_PatchCPM();
 					Z80reset();
-					SET_LOW_REGISTER(BC, cDrive);
+					SET_LOW_REGISTER(BC, _RamRead(0x0004));
 					PC = CCPaddr;
 					Z80run();
 					if (Status == 1)
