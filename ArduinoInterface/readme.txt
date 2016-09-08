@@ -47,11 +47,3 @@ BDOS function 224 (0xE0) - AnalogWrite:
  LD E, value (0-255)
  CALL 5
 
-=====================================================
-
-Compile arduino.asm example with:
-
- ASM ARDUINO
- LOAD ARDUINO
-
-For arduino.pas use Turbo Pascal 3.01a from Borland.
