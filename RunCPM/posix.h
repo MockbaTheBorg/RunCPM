@@ -1,3 +1,6 @@
+#ifndef POSIX_H
+#define POSIX_H
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -230,3 +233,5 @@ uint8 _Truncate(char *fn, uint8 rc) {
 		result = 0xff;
 	return(result);
 }
+
+#endif
