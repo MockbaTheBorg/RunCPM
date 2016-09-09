@@ -36,7 +36,7 @@ BDOS function 223 (0xDF) - AnalogRead:
  LD D, pin_number
  CALL 5
 
-Return result in HL (0 - 1023).
+Returns result in HL (0 - 1023).
 
 =====================================================
 
