@@ -11,11 +11,9 @@
 
 \ Use Light Dependent Resistor to adjust LED voltage
 \ LED = 255 - (LDR / 4)
-: fade ( led ldr -- ) ain 4 / 255 swap - aout ;
+: fade ( led ldr -- ) ain 4 / 255 swap - swap aout ;
 
-\ Run in loop with 100 ms delay until key pressed
-: run ( led ldr -- ) begin dup dup fade 100 ms key? until ;
-
-\ LDR connected to pin A8
 \ LED connected to pin D9 (PWM)
-\ 9 8 run
+\ LDR connected to pin A8
+\ Run in loop with 100 ms delay until key pressed
+: run begin 9 8 fade 100 ms key? until ;
