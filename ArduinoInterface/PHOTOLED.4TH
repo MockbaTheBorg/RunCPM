@@ -9,10 +9,11 @@
 : ledon ( pin -- ) 1 over pinmode 1 swap dout ;
 : ledoff ( pin -- ) 1 over pinmode 0 swap dout ;
 
-\ React with led at pin 52 to treshold from photoresistor at pin A8
-: react ( treshold -- ) 8 ain > if 52 ledon else 52 ledoff then ;
+\ Use Light Dependent Resistor to adjust LED voltage
+\ LED = 255 - (LDR / 4)
+: fade ( led ldr -- ) ain 4 / 255 swap - swap aout ;
 
-\ Run in loop with 500 ms delay until key pressed
-: run ( treshold -- ) begin dup react 500 ms key? until ;
-
-\ 150 run
+\ LED connected to pin D9 (PWM)
+\ LDR connected to pin A8
+\ Run in loop with 100 ms delay until key pressed
+: run begin 9 8 fade 100 ms key? until ;
