@@ -90,8 +90,8 @@ void _sys_logbuffer(uint8 *buffer) {
 		f.flush();
 		f.close();
 	}
-}
 #endif
+}
 #endif
 
 bool _sys_extendfile(char *fn, long fpos)
