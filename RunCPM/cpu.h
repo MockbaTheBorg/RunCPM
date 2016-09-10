@@ -1336,6 +1336,7 @@ void Z80debug(void) {
 				_puthex16(l);
 				_puts(" : ");
 				l += Disasm(l);
+				_puts("\r\n");
 				I--;
 			}
 		}
@@ -1354,13 +1355,13 @@ void Z80debug(void) {
 		if (ch == 'L') {
 			_puts(" Addr: ");
 			scanf("%04x", &bpoint);
-			_puts("\r\n");
 			I = 16;
 			l = bpoint;
 			while (I > 0) {
 				_puthex16(l);
 				_puts(" : ");
 				l += Disasm(l);
+				_puts("\r\n");
 				I--;
 			}
 		}
