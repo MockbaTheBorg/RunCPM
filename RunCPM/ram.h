@@ -26,15 +26,13 @@ void _RamWrite16(uint16 address, uint16 value) {
 #endif
 
 void _RamFill(uint16 address, int size, uint8 value) {
-	while (size--) {
+	while (size--)
 		_RamWrite(address++, value);
-	}
 }
 
 void _RamCopy(uint16 source, int size, uint16 destination) {
-	while (size--) {
+	while (size--)
 		_RamWrite(destination++, _RamRead(source++));
-	}
 }
 
 #endif
