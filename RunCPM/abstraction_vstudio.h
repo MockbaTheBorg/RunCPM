@@ -147,8 +147,8 @@ void _sys_logbuffer(uint8 *buffer) {
 	FILE *file = _sys_fopen_a((uint8*)LogName);
 	_sys_fwrite(buffer, 1, s, file);
 	_sys_fclose(file);
-}
 #endif
+}
 #endif
 
 uint8 _sys_readseq(uint8 *filename, long fpos) {
