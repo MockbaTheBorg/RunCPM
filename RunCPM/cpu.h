@@ -1196,11 +1196,15 @@ void memdump(uint16 pos) {
 	uint8 l, i;
 	uint8 ch = pos & 0xff;
 
-	_puts("\r\n       ");
+	_puts("       ");
 	for (i = 0; i < 16; i++) {
 		_puthex8(ch++ & 0x0f);
 		_puts(" ");
 	}
+	_puts("\r\n");
+	_puts("       ");
+	for (i = 0; i < 16; i++)
+		_puts("---");
 	_puts("\r\n");
 	for (l = 0; l < 16; l++) {
 		_puthex16(h);
@@ -1331,21 +1335,21 @@ void Z80debug(void) {
 			Debug = 0;
 			break;
 		case 'b':
-			memdump(BC); break;
+			_puts("\r\n"); memdump(BC); break;
 		case 'd':
-			memdump(DE); break;
+			_puts("\r\n"); memdump(DE); break;
 		case 'h':
-			memdump(HL); break;
+			_puts("\r\n"); memdump(HL); break;
 		case 'p':
-			memdump(PC & 0xFF00); break;
+			_puts("\r\n"); memdump(PC & 0xFF00); break;
 		case 's':
-			memdump(SP & 0xFF00); break;
+			_puts("\r\n"); memdump(SP & 0xFF00); break;
 		case 'x':
-			memdump(IX & 0xFF00); break;
+			_puts("\r\n"); memdump(IX & 0xFF00); break;
 		case 'y':
-			memdump(IY & 0xFF00); break;
+			_puts("\r\n"); memdump(IY & 0xFF00); break;
 		case 'a':
-			memdump(dmaAddr); break;
+			_puts("\r\n"); memdump(dmaAddr); break;
 		case 'l':
 			_puts("\r\n");
 			I = 16;
