@@ -11,7 +11,7 @@ RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm.
 RunCPM builds on Arduino 1.6.6 or later.
 RunCPM so far runs only on the Arduino DUE, as it requires a fair amount of RAM to run (64K used to be a lot in those days).
 RunCPM needs a SDFat library. I am using the one from https://github.com/greiman/SdFat
-The file SdFatConfig.h of SdFat must be changed so: #define USE_LONG_FILE_NAMES 0 (if it is 1, CPMDuino will fail if the folder contains files with long names)
+The file SdFatConfig.h of SdFat must be changed so: #define USE_LONG_FILE_NAMES 0 (if it is 1, RunCPM will fail if the folder contains files with long names)
 RunCPM also needs a SD (or microSD) card shield to put the CP/M files in.
 
 Arduino digital and analog read/write support was added by Krzysztof Klis via BDOS calls (see cpm.h file for details).
