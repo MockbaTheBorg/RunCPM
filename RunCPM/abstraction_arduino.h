@@ -213,12 +213,19 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 uint8 _findnext(uint8 isdir) {
 	SdFile f;
 	uint8 result = 0xff;
+#ifdef USER_SUPPORT
+	uint8 path[4] = "?/?";
+#else
 	uint8 path[2] = "?";
+#endif
 	uint8 dirname[13];
 	bool isfile;
 	int i;
 
 	path[0] = filename[0];
+#ifdef USER_SUPPORT
+	path[2] = filename[2];
+#endif
 
 	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
 									// (todo) Get rid of these chdir() someday

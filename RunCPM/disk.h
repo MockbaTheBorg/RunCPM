@@ -74,6 +74,11 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	}
 	*(filename++) = FOLDERCHAR;
 
+#ifdef USER_SUPPORT
+	*(filename++) = toupper(tohex(userCode));	
+	*(filename++) = FOLDERCHAR;
+#endif
+
 	while (i < 8) {
 		if (F->fn[i] > 32)
 			*(filename++) = toupper(F->fn[i]);
@@ -101,7 +106,11 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 
 	filename++;
 	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
+#ifdef USER_SUPPORT
+		filename += 3;
+#else
 		filename++;
+#endif
 	} else {
 		filename--;
 	}
@@ -134,7 +143,11 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.
 
 	from++;
 	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
+#ifdef USER_SUPPORT
+		from += 3;
+#else
 		from++;
+#endif
 	} else {
 		from--;
 	}

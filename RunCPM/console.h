@@ -28,9 +28,9 @@ void _puthex8(uint8 c)		// Puts a HH hex string
 {
 	uint8 h;
 	h = c >> 4;
-	_putcon(h < 10 ? h + 48 : h + 87);
+	_putcon(tohex(h));
 	h = c & 0x0f;
-	_putcon(h < 10 ? h + 48 : h + 87);
+	_putcon(tohex(h));
 }
 
 void _puthex16(uint16 w)	// puts a HHHH hex string

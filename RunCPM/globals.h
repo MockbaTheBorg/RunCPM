@@ -41,6 +41,12 @@
 #endif
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
 
+/* Definition for CP/M 2.2 user number support */
+
+//#define USER_SUPPORT	// If this is defined, CP/M user support is added. RunCPM will ignore the contents of the /A, /B folders and instead
+						// look for /A/0 /A/1 and so on, as well for the other drive letters.
+						// User numbers are 0-9, then A-F for users 12-15. On case sensitive file-systems the usercodes A-F folders must be uppercase. 
+						// This preliminary feature should emulate the CP/M user.
 
 /* Some environment and type definitions */
 
@@ -94,8 +100,8 @@ uint8 RAM[RAMSIZE];
 #define tmpFCB  BDOSpage + 64	// Address of the temporary FCB
 
 /* Definition of global variables */
-static uint8	filename[15];		// Current filename in host filesystem format
-static uint8	newname[15];		// New filename in host filesystem format
+static uint8	filename[17];		// Current filename in host filesystem format
+static uint8	newname[17];		// New filename in host filesystem format
 static uint8	fcbname[13];		// Current filename in CP/M format
 static uint8	pattern[13];		// File matching pattern in CP/M format
 static uint16	dmaAddr = 0x0080;	// Current dmaAddr
@@ -104,6 +110,8 @@ static uint8	cDrive = 0;			// Currently selected drive
 static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
+
+#define tohex(x)	x < 10 ? x + 48 : x + 87
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus

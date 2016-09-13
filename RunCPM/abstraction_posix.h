@@ -10,12 +10,19 @@ int	dirPos;
 uint8 _findnext(uint8 isdir)
 {
 	uint8 result = 0xff;
+#ifdef USER_SUPPORT
+	char dir[6] = { '?', FOLDERCHAR, 0, FOLDERCHAR, '*', 0 };
+#else
 	char dir[4] = { '?', FOLDERCHAR, '*', 0 };
+#endif
 	char* dirname;
 	int i;
 	struct stat st;
 
 	dir[0] = filename[0];
+#ifdef USER_SUPPORT
+	dir[2] = filename[2];
+#endif
 	if (!glob(dir, 0, NULL, &pglob)) {
 		for (i = dirPos; i < pglob.gl_pathc; i++) {
 			dirPos++;
