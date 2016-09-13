@@ -31,7 +31,6 @@ void _RamLoad(uint8 *filename, uint16 address) {
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
 #define FOLDERCHAR '/'
-uint8	drive[2] = { 'A', FOLDERCHAR };
 
 typedef struct {
 	uint8 dr;
