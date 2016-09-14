@@ -74,10 +74,6 @@ void _PatchCPM(void) {
 	_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
 	_RamWrite(i++, 0x00);
 
-#ifdef PatchCCP
-	_RamWrite(PatchCCP, (BDOSjmppage) >> 8);
-#endif
-
 }
 
 #ifdef DEBUGLOG

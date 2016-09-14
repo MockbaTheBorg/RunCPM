@@ -33,7 +33,6 @@
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
-#define PatchCCP	CCPaddr + 0x1FA	// This patches DR's CCP for BDOS real location
 #endif
 #ifdef CCP_ZCPR
 #define CCPname		"CCP-ZCPR.BIN"
