@@ -214,9 +214,9 @@ uint8 _findnext(uint8 isdir) {
 	SdFile f;
 	uint8 result = 0xff;
 #ifdef USER_SUPPORT
-	uint8 path[4] = "?/?";
+	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
 #else
-	uint8 path[2] = "?";
+	uint8 path[2] = { '?', 0 };
 #endif
 	uint8 dirname[13];
 	bool isfile;
