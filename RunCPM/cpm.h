@@ -581,7 +581,7 @@ void _Bdos(void) {
 		if (LOW_REGISTER(DE) == 0xFF) {
 			HL = userCode;
 		} else {
-			userCode = LOW_REGISTER(DE);
+			_SetUser(DE);
 		}
 		break;
 		/*

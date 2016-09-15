@@ -410,6 +410,10 @@ uint8 _WriteRand(uint16 fcbaddr) {
 	return(result);
 }
 
+void _SetUser(uint8 user) {
+	userCode = LOW_REGISTER(DE);
+}
+
 uint8 _CheckSUB(void) {
 	_HostnameToFCB(tmpFCB, (uint8*)"$$$.SUB");
 	return((_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xFF : 0x00);
