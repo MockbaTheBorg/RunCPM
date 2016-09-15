@@ -1,10 +1,8 @@
-# Generic MinGW makefile (C source only)
+# Generic DOS makefile (C source only)
 # Modify variables/macros to fit your program
 
 # make / make all | will compile your program.
 # make clean      | deletes all compiled object and executable files.
-# make depend     | rebuilds the dependancy list
-# make run        | compiles (if needed) and runs your program
 
 # Compiler command
 CC = gcc.exe
@@ -46,6 +44,3 @@ all: clean $(PROG)
 clean:
 	$(RM) $(PROG)
 	$(RM) *.o
-
-run: all
-	$(PROG)
