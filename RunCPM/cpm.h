@@ -406,7 +406,7 @@ void _Bdos(void) {
 		DE) = First char
 		*/
 	case 10:
-		i = DE;
+		i = DE & 0xFFFF;
 		c = _RamRead(i);	// Gets the number of characters to read
 		i++;	// Points to the number read
 		count = 0;
