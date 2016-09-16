@@ -83,7 +83,8 @@ void _logRegs(void) {
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
 	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
-	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n", BC, DE, HL, HIGH_REGISTER(AF), Flags, IX, IY, SP, PC); _sys_logbuffer(LogBuffer);
+	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
+		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
 }
 
 void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines, so 1 CP/M block = 8, not 128
@@ -95,6 +96,7 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 		pos = 0;
 		for (m = 0; m < head; m++)
 			LogBuffer[pos++] = ' ';
+		sprintf((char*)LogBuffer, "  %04x: ", address);
 		for (m = 0; m < 16; m++) {
 			c = _RamRead(address++);
 			LogBuffer[pos++] = hexa[c >> 4];
@@ -308,7 +310,7 @@ void _Bdos(void) {
 		_logBdosIn(ch);
 #endif
 
-	HL = 0x00;	// HL is reset by the BDOS
+	HL = 0x0000;	// HL is reset by the BDOS
 	SET_LOW_REGISTER(BC, LOW_REGISTER(DE)); // C ends up equal to E
 
 	switch (ch) {
@@ -406,7 +408,7 @@ void _Bdos(void) {
 		DE) = First char
 		*/
 	case 10:
-		i = DE & 0xFFFF;
+		i = WORD16(DE);
 		c = _RamRead(i);	// Gets the number of characters to read
 		i++;	// Points to the number read
 		count = 0;
@@ -472,7 +474,7 @@ void _Bdos(void) {
 	case 14:
 		oDrive = cDrive;
 		cDrive = LOW_REGISTER(DE);
-		HL = _SelectDisk(LOW_REGISTER(DE)+1);	// +1 here is to allow SelectDisk to be used directly by disk.h as well
+		HL = _SelectDisk(LOW_REGISTER(DE) + 1);	// +1 here is to allow SelectDisk to be used directly by disk.h as well
 		if (!HL)
 			oDrive = cDrive;
 		break;
