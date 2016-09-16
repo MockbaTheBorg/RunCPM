@@ -407,6 +407,36 @@ uint8 _WriteRand(uint16 fcbaddr) {
 	return(result);
 }
 
+uint8 _GetFileSize(uint16 fcbaddr) {
+	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 result = 0xff;
+	int32 count = _FileSize(DE) >> 7;
+
+	if (count != -1) {
+		F->r0 = count & 0xff;
+		F->r1 = (count >> 8) & 0xff;
+		F->r2 = (count >> 16) & 0xff;
+		result = 0x00;
+	}
+	return(result);
+}
+
+uint8 _SetRandom(uint16 fcbaddr) {
+	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	uint8 result = 0x00;
+
+	int32 count = F->cr & 0x7f;
+	count += (F->ex & 0x1f) << 7;
+	count += F->s1 << 12;
+	count += F->s2 << 20;
+
+	F->r0 = count & 0xff;
+	F->r1 = (count >> 8) & 0xff;
+	F->r2 = (count >> 16) & 0xff;
+
+	return(result);
+}
+
 void _SetUser(uint8 user) {
 	userCode = LOW_REGISTER(DE);
 }

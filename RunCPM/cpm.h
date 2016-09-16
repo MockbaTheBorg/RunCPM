@@ -299,7 +299,6 @@ void _Bios(void) {
 }
 
 void _Bdos(void) {
-	CPM_FCB *F;
 	int32	i, c, chr, count;
 	uint8	ch = LOW_REGISTER(BC);
 
@@ -602,30 +601,13 @@ void _Bdos(void) {
 		C = 35 (23h) : Compute file size
 		*/
 	case 35:
-		F = (CPM_FCB*)&RAM[DE];
-		count = _FileSize(DE) >> 7;
-
-		if (count == -1) {
-			HL = 0xff;
-		} else {
-			F->r0 = count & 0xff;
-			F->r1 = (count >> 8) & 0xff;
-			F->r2 = (count >> 16) & 0xff;
-		}
+		HL = _GetFileSize(DE);
 		break;
 		/*
 		C = 36 (24h) : Set random record
 		*/
 	case 36:
-		F = (CPM_FCB*)&RAM[DE];
-		count = F->cr & 0x7f;
-		count += (F->ex & 0x1f) << 7;
-		count += F->s1 << 12;
-		count += F->s2 << 20;
-
-		F->r0 = count & 0xff;
-		F->r1 = (count >> 8) & 0xff;
-		F->r2 = (count >> 16) & 0xff;
+		HL = _SetRandom(DE);
 		break;
 		/*
 		C = 37 (25h) : Reset drive
