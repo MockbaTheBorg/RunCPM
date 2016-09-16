@@ -69,6 +69,8 @@ typedef unsigned int    uint32;
 #define SET_LOW_REGISTER(x, v)  x = (((x) & 0xff00) | ((v) & 0xff))
 #define SET_HIGH_REGISTER(x, v) x = (((x) & 0xff) | (((v) & 0xff) << 8))
 
+#define WORD16(x)	((x) & 0xffff)
+
 /* CP/M memory definitions */
 #define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
 					// This saves about 2K on the Arduino code and should bring speed imperovements
