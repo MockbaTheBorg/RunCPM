@@ -208,6 +208,8 @@ uint8 _OpenFile(uint16 fcbaddr) {
 	int32 reqext;	// Required extention to open
 	int32 b, i;
 
+	F->ex = 0;
+	F->cr = 0;
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		if (_sys_openfile(&filename[0])) {
@@ -234,11 +236,6 @@ uint8 _CloseFile(uint16 fcbaddr) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (fcbaddr == BatchFCB)
 				_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
-			F->ex = 0;
-			F->cr = 0;
-			F->r0 = 0;
-			F->r1 = 0;
-			F->r2 = 0;
 			result = 0x00;
 		} else {
 			_error(errWRITEPROT);
