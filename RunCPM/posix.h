@@ -133,13 +133,14 @@ int _sys_renamefile(uint8 *filename, uint8 *newname) {
 
 #ifdef DEBUGLOG
 void _sys_logbuffer(uint8 *buffer) {
+	FILE *file;
 #ifdef CONSOLELOG
 	puts((char *)buffer);
 #else
 	uint8 s = 0;
 	while (*(buffer + s))	// Computes buffer size
 		s++;
-	FILE *file = _sys_fopen_a((uint8*)LogName);
+	file = _sys_fopen_a((uint8*)LogName);
 	_sys_fwrite(buffer, 1, s, file);
 	_sys_fclose(file);
 #endif
