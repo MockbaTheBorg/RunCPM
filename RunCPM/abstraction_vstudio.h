@@ -154,12 +154,19 @@ void _sys_logbuffer(uint8 *buffer) {
 uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	uint8 bytesread;
+	uint8 dmabuf[128];
+	uint8 i;
 
 	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
+			for (i = 0; i < 128; i++)
+				dmabuf[i] = 0x1a;
+			bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
+			if (bytesread) {
+				for (i = 0; i < 128; i++)
+					_RamWrite(dmaAddr + i, dmabuf[i]);
+			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x01;
@@ -194,12 +201,19 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	uint8 bytesread;
+	uint8 dmabuf[128];
+	uint8 i;
 
 	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-			bytesread = (uint8)_sys_fread(_RamSysAddr(dmaAddr), 1, 128, file);
+			for (i = 0; i < 128; i++)
+				dmabuf[i] = 0x1a;
+			bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
+			if (bytesread) {
+				for (i = 0; i < 128; i++)
+					_RamWrite(dmaAddr + i, dmabuf[i]);
+			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x06;

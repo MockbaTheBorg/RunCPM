@@ -122,13 +122,20 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	SdFile f;
 	uint8 bytesread;
 	uint8 file = 0;
+	uint8 dmabuf[128];
+	uint8 i;
 
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
 	if (file) {
 		if (f.seekSet(fpos)) {
-			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z (EOF) prior to reading
-			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
+			for (i = 0; i < 128; i++)
+				dmabuf[i] = 0x1a;
+			bytesread = f.read(&dmabuf[0], 128);
+			if (bytesread) {
+				for (i = 0; i < 128; i++)
+					_RamWrite(dmaAddr + i, dmabuf[i]);
+			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x01;
@@ -168,13 +175,20 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	SdFile f;
 	uint8 bytesread;
 	uint8 file = 0;
+	uint8 dmabuf[128];
+	uint8 i;
 
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
 	if (file) {
 		if (f.seekSet(fpos)) {
-			_RamFill(dmaAddr, 128, 0x1a);	// Fills the buffer with ^Z prior to reading
-			bytesread = f.read(_RamSysAddr(dmaAddr), 128);
+			for (i = 0; i < 128; i++)
+				dmabuf[i] = 0x1a;
+			bytesread = f.read(&dmabuf[0], 128);
+			if (bytesread) {
+				for (i = 0; i < 128; i++)
+					_RamWrite(dmaAddr + i, dmabuf[i]);
+			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
 			result = 0x06;
