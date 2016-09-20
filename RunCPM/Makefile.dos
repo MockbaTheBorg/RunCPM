@@ -1,14 +1,12 @@
-# Generic DOS makefile (C source only)
-# Modify variables/macros to fit your program
+# DOS / DJGPP Makefile for RunCPM
 
-# make / make all | will compile your program.
-# make clean      | deletes all compiled object and executable files.
+PROG = RunCPM.exe
+
+MFILE = Makefile.dos
 
 # Compiler command
 CC = gcc.exe
-
-# Linker command
-LD = gcc.exe
+#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
 
 # Flags to pass to the compiler - add "-g" to include debug information
 CFLAGS = -Wall -O0
@@ -17,30 +15,22 @@ CFLAGS = -Wall -O0
 # Flags to pass to the linker
 LDFLAGS = -mconsole
 
-# Command used to delete files
+# Clean up program
 RM = del
 
-# List your object files here
-OBJS = main.o
+#------------------------------------------------------------------------
 
-# List your source files here
-SRCS = main.c
+all: $(PROG)
 
-# Define your compile target here.
-PROG = RunCPM.exe
+$(PROG): main.o
+	$(CC) main.o -o $(PROG) $(LDFLAGS)
 
-# Link the program
-$(PROG): $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) -o $(PROG)
+main.o: main.c $(wildcard *.h) $(MFILE)
+	$(CC) $(CFLAGS) -c main.c
 
-# All .o files depend on their corresponding .c file
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
-
-# Compile everything.
-all: clean $(PROG)
+rebuild: clean all
 
 .PHONY: clean
 clean:
+	$(RM) *.o 
 	$(RM) $(PROG)
-	$(RM) *.o
