@@ -439,6 +439,9 @@ uint8 _SetRandom(uint16 fcbaddr) {
 
 void _SetUser(uint8 user) {
 	userCode = LOW_REGISTER(DE);
+#ifdef USER_SUPPORT
+	_MakeUserDir();	// Creates the user dir if needed
+#endif
 }
 
 uint8 _CheckSUB(void) {

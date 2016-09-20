@@ -42,7 +42,7 @@
 
 /* Definition for CP/M 2.2 user number support */
 
-//#define USER_SUPPORT	// If this is defined, CP/M user support is added. RunCPM will ignore the contents of the /A, /B folders and instead
+#define USER_SUPPORT	// If this is defined, CP/M user support is added. RunCPM will ignore the contents of the /A, /B folders and instead
 						// look for /A/0 /A/1 and so on, as well for the other drive letters.
 						// User numbers are 0-9, then A-F for users 10-15. On case sensitive file-systems the usercodes A-F folders must be uppercase. 
 						// This preliminary feature should emulate the CP/M user.
