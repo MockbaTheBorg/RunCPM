@@ -11,7 +11,7 @@
 
 \ Use Light Dependent Resistor to adjust LED voltage
 \ LED = 255 - (LDR / 4)
-: fade ( led ldr -- ) ain 4 / 255 swap - swap aout ;
+: fade ( led ldr -- ) ain 2 rshift 255 swap - swap aout ;
 
 \ LED connected to pin D9 (PWM)
 \ LDR connected to pin A8
