@@ -309,6 +309,17 @@ uint8 _Truncate(char *fn, uint8 rc) {
 	return(result);
 }
 
+#ifdef USER_SUPPORT
+void _MakeUserDir() {
+	uint8 dFolder = cDrive + 'A';
+	uint8 uFolder = toupper(tohex(userCode));
+
+	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
+
+	CreateDirectory(path, NULL);
+}
+#endif
+
 /* Console abstraction functions */
 /*===============================================================================*/
 
