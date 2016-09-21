@@ -21,6 +21,7 @@ int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
 int32 Status = 0; /* Status of the CPU 0=running 1=end request 2=back to CCP */
 int32 Debug = 0;
 int32 Break = -1;
+int32 Step = -1;
 
 /*
 	Functions needed by the soft CPU implementation
@@ -1109,6 +1110,8 @@ static const char *CPMCalls[41] =
 	"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params",
 	"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A", "Write Random 0 fill"
 };
+
+int32 Watch = -1;
 #endif
 
 /* Memory management    */
@@ -1187,9 +1190,21 @@ void Z80reset(void) {
 	Status = 0;
 	Debug = 0;
 	Break = -1;
+	Step = -1;
 }
 
 #ifdef DEBUG
+void watchprint(uint16 pos) {
+	uint8 I, J;
+	_puts("\r\n");
+	_puts("  Watch : "); _puthex16(Watch);
+	_puts(" = "); _puthex8(_RamRead(Watch)); _putcon(':'); _puthex8(_RamRead(Watch + 1));
+	_puts(" / ");
+	for (J = 0, I = _RamRead(Watch); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
+	_putcon(':');
+	for (J = 0, I = _RamRead(Watch + 1); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
+}
+
 void memdump(uint16 pos) {
 	uint16 h = pos;
 	uint16 c = pos;
@@ -1320,6 +1335,10 @@ void Z80debug(void) {
 			}
 		}
 
+		if (Watch != -1) {
+			watchprint(Watch);
+		}
+
 		_puts("\r\n");
 		_puts("Command|? : ");
 		ch = _getch();
@@ -1392,6 +1411,20 @@ void Z80debug(void) {
 				I--;
 			}
 			break;
+		case 'T':
+			loop = FALSE;
+			Step = pos + 3; // This only works correctly with CALL
+							// If the called function messes with the stack, this will fail as well.
+			Debug = 0;
+			break;
+		case 'W':
+			_puts(" Addr: ");
+			scanf("%04x", &bpoint);
+			Watch = bpoint;
+			_puts("Watch set to ");
+			_puthex16(Watch);
+			_puts("\r\n");
+			break;
 		case '?':
 			_puts("\r\n");
 			_puts("Lowercase commands:\r\n");
@@ -1411,6 +1444,8 @@ void Z80debug(void) {
 			_puts("  C - Clears breakpoint\r\n");
 			_puts("  D - Dumps memory at address\r\n");
 			_puts("  L - Disassembles at address\r\n");
+			_puts("  T - Steps over a call\r\n");
+			_puts("  W - Sets a byte/word watch\r\n");
 			break;
 		default:
 			_puts(" ???\r\n");
@@ -1436,6 +1471,10 @@ void Z80run(void) {
 			_puthex16(Break);
 			_puts(":");
 			Debug = 1;
+		}
+		if (PC == Step) {
+			Debug = 1;
+			Step = -1;
 		}
 		if (Debug)
 			Z80debug();
