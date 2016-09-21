@@ -316,7 +316,7 @@ void _MakeUserDir() {
 
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
 
-	CreateDirectory(path, NULL);
+	CreateDirectory((char*)path, NULL);
 }
 #endif
 
