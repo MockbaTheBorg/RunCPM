@@ -49,8 +49,7 @@ CP/M only supported 16 disk drives, A: to P:, so creating other letters above P 
 
 RunCPM can run on an internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
 
-**CCP-DR.bin** - Is the original CCP from Digital Research.
-
+**CCP-DR.bin** - Is the original CCP from Digital Research.<br>
 **CCP-ZCPR.bin** - Is the original ZCPR2 ccp modification.
 
 Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.
