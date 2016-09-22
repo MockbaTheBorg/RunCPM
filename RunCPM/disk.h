@@ -63,6 +63,7 @@ int _SelectDisk(uint8 dr) {
 }
 
 uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
+	uint8 addDot = TRUE;
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
@@ -86,11 +87,15 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 			unique = FALSE;
 		i++;
 	}
-	*(filename++) = '.';
 	i = 0;
 	while (i < 3) {
-		if (F->tp[i] > 32)
+		if (F->tp[i] > 32) {
+			if (addDot) {
+				addDot = FALSE;
+				*(filename++) = '.';	// Only add the dot if there's an extension
+			}
 			*(filename++) = toupper(F->tp[i]);
+		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
 		i++;
