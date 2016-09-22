@@ -69,5 +69,5 @@ Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated B
 
 The "video monitor" is assumed to be VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.
 
-##
+<hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
