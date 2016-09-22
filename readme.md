@@ -1,9 +1,9 @@
 # RunCPM
 
-RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE. It can be built both on 32 and 64 bits environments and should be easily portable to other platforms.<br>
+RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules would be necessary.
 
-If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you. It is very stable and fun to use.
+If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm. It can also be built on the Arduino IDE and even on DJGPP for DOS.
@@ -12,7 +12,7 @@ RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm. It can 
 
 RunCPM builds on Arduino 1.6.6 or later.<br>
 RunCPM so far runs only on the Arduino DUE, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
-RunCPM needs a SDFat library. I am using the one from https://github.com/greiman/SdFat/.<br>
+RunCPM needs a SDFat library. I am using the one from (Bill Greiman)[https://github.com/greiman/SdFat/].<br>
 The file SdFatConfig.h of SdFat must be changed to: #define USE_LONG_FILE_NAMES 0 (if it is 1, RunCPM will fail if the folder contains files with long names).<br>
 RunCPM also needs a SD (or microSD) card shield to place the CP/M files in.
 
