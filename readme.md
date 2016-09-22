@@ -37,7 +37,7 @@ Cygwin can be used to build the posix implementation on Windows machines.
 Create a folder to contain the RunCPM executable. On that folder goes both the executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
 The 64K version provides the maximum amount of memory possible to CP/M application, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
 The 60K version provides a more realistic addressing space, keeping the CCP on the same loading address it would be on a similar CP/M computer.<br>
-Other amounts of memory can be used, but this would require rebuilding the CCP binary (available on Disk A.ZIP).
+Other amounts of memory can be used, but this would require rebuilding the CCP binaries (available on Disk A.ZIP).
 
 RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use the following procedures:
 
