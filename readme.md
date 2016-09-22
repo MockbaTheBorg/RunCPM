@@ -71,5 +71,7 @@ The "video monitor" is assumed to be VT100, as this is the standard for DOS/Wind
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution.
 
+RunCPM does not support any CP/M device other than CON: and will silently fail to sccess them.
+
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
