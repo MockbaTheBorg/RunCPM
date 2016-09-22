@@ -197,11 +197,14 @@ uint8 match(uint8 *fcbname, uint8 *pattern) {
 
 long _FileSize(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
-	long l = -1;
+	long r, l = -1;
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		l = _sys_filesize(filename);
+		r = l % 128;
+		if (r)
+			l = l + 128 - r;
 	}
 	return(l);
 }
