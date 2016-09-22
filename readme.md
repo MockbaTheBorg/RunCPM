@@ -55,8 +55,8 @@ RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M co
 Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
 
-The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the EXIT.COM program, which ends RunCPM execution.<br>
-This disk also contains Z80ASM, which is a very powerful Z80 assembly that generates .COM files directly.
+The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
+This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.
 Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience.
 
 ## Limitations
