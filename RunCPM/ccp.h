@@ -45,6 +45,7 @@ static const char *Commands[] =
 	"REN",
 	"USER",
 	// Extra CCP commands
+	"CLS",
 	"DEL",
 	"INFO",
 	"EXIT",
@@ -84,7 +85,9 @@ uint8 _ccp_cnum(void) {
 		i = 0;
 		while (Commands[i]) {
 			if (_ccp_strcmp((char*)command, (char*)Commands[i])) {
-				result = i; break;
+				result = i;
+				perr = defDMA + 2;
+				break;
 			}
 			i++;
 		}
@@ -222,6 +225,7 @@ void _ccp_dir(void) {
 
 	dirHead[0] = _RamRead(ParFCB) ? _RamRead(ParFCB) + '@' : 'A';
 
+	_puts("\r\n");
 	if (!_SearchFirst(ParFCB, TRUE)) {
 		_puts((char*)dirHead);
 		_ccp_printfcb(tmpFCB, FALSE);
@@ -246,15 +250,16 @@ void _ccp_dir(void) {
 // ERA command
 void _ccp_era(void) {
 	if (_ccp_bdos(F_DELETE, ParFCB, 0x00))
-		_puts("No file");
+		_puts("\r\nNo file");
 }
 
 // TYPE command
-void _ccp_type(void) {
-	uint8 i, c;
+uint8 _ccp_type(void) {
+	uint8 i, c, error = TRUE;
 	uint16 a;
 
 	if (!_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
+		_puts("\r\n");
 		while (!_ccp_bdos(F_READ, ParFCB, 0x00)) {
 			i = 128;
 			a = dmaAddr;
@@ -266,30 +271,28 @@ void _ccp_type(void) {
 				i--; a++;
 			}
 		}
-	} else {
-		_ccp_printfcb(ParFCB, TRUE);
-		_puts("?\r\n");
+		error = FALSE;
 	}
+	return(error);
 }
 
 // SAVE command
-void _ccp_save(void) {
+uint8 _ccp_save(void) {
+	uint8 error = TRUE;
 	uint16 pages = _ccp_fcbtonum();
 	uint16 i, dma;
 
-	if (pages > 255) {
-		_ccp_printfcb(ParFCB, TRUE);
-		_puts("?\r\n");
-	} else {
+	if (pages < 256) {
+		error = FALSE;
 		while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
 			pbuf++; blen--;
 		}
 		_ccp_nameToFCB(ParFCB);						// Loads file name onto the ParFCB
 		if (_ccp_bdos(F_MAKE, ParFCB, 0x00)) {
-			_puts("Create error");
+			_puts("Err: create");
 		} else {
 			if (_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
-				_puts("Open Error");
+				_puts("Err: open");
 			} else {
 				pages *= 2;									// Calculates the number of CP/M blocks to write
 				dma = defLoad;
@@ -297,50 +300,52 @@ void _ccp_save(void) {
 					_ccp_bdos(F_DMAOFF, dma, 0x00);
 					_ccp_bdos(F_WRITE, ParFCB, 0x00);
 					dma += 128;
-					_puts(".");
 				}
 				_ccp_bdos(F_CLOSE, ParFCB, 0x00);
 			}
 		}
 	}
+	return(error);
 }
 
 // REN command
 void _ccp_ren(void) {
 	uint8 ch, i;
 	pbuf++;
-	_HostnameToFCBname(_RamSysAddr(pbuf), _RamSysAddr(SecFCB + 1));
+
+	_ccp_nameToFCB(SecFCB);
 	for (i = 0; i < 12; i++) {	// Swap the filenames on the fcb
 		ch = _RamRead(ParFCB + i);
 		_RamWrite(ParFCB + i, _RamRead(SecFCB + i));
 		_RamWrite(SecFCB + i, ch);
 	}
 	if (_ccp_bdos(F_RENAME, ParFCB, 0x00)) {
-		_ccp_printfcb(ParFCB, TRUE);
-		_puts("?\r\n");
+		_puts("\r\nNo file");
 	}
 }
 
 // USER command
-void _ccp_user(void) {
+uint8 _ccp_user(void) {
+	uint8 error = TRUE;
+
 	curUser = (uint8)_ccp_fcbtonum();
 	if (curUser < 16) {
 		_ccp_bdos(F_USERNUM, curUser, 0x00);
-	} else {
-		_puts("User: 0->16 only");
+		error = FALSE;
 	}
+	return(error);
 }
 
 // INFO command
 void _ccp_info(void) {
-	_puts("RunCPM version " VERSION "\r\n");
+	_puts("\r\nRunCPM version " VERSION "\r\n");
 	_puts("BDOS Page set to "); _puthex16(BDOSjmppage); _puts("\r\n");
 	_puts("BIOS Page set to "); _puthex16(BIOSjmppage);
 }
 
 // External (.COM) command
-uint8 _ccp_external(void) {
-	uint8 result = FALSE;
+uint8 _ccp_ext(void) {
+	uint8 error = TRUE;
 	uint16 loadAddr = defLoad;
 
 	_RamWrite(CmdFCB + 9, 'C');
@@ -348,6 +353,7 @@ uint8 _ccp_external(void) {
 	_RamWrite(CmdFCB + 11, 'M');
 
 	if (!_ccp_bdos(F_OPEN, CmdFCB, 0x00)) {
+		_puts("\r\n");
 		_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
 		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
 			loadAddr += 128;
@@ -360,16 +366,17 @@ uint8 _ccp_external(void) {
 		PC = 0x0100;		// Sets CP/M application jump point
 		Z80run();			// Starts simulation
 
-		result = TRUE;
+		error = FALSE;
 	}
 
-	return(result);
+	return(error);
 }
 
 // Prints a command error
 void _ccp_cmdError() {
 	uint8 ch;
 
+	_puts("\r\n");
 	while (ch = _RamRead(perr++)) {
 		if (ch == ' ')
 			break;
@@ -425,7 +432,7 @@ void _ccp(void) {
 				continue;
 			}
 
-			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command as a simple drive select
+			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
 				_ccp_bdos(DRV_SET, _RamRead(CmdFCB) - 1, 0x00);
 				continue;
 			}
@@ -443,35 +450,36 @@ void _ccp(void) {
 			_ccp_initFCB(ParFCB);						// Initializes the parameter FCB
 			_ccp_nameToFCB(ParFCB);						// Loads the next file parameter onto the parameter FCB
 
-			_puts("\r\n");
-			// Checks if the command is valid and executes
+			i = FALSE;									// Checks if the command is valid and executes
 			switch (_ccp_cnum()) {
 			case 0:		// DIR
-				_ccp_dir();		break;
+				_ccp_dir();			break;
 			case 1:		// ERA
-				_ccp_era();		break;
+				_ccp_era();			break;
 			case 2:		// TYPE
-				_ccp_type();	break;
+				i = _ccp_type();	break;
 			case 3:		// SAVE
-				_ccp_save();	break;
+				i = _ccp_save();	break;
 			case 4:		// REN
-				_ccp_ren();		break;
+				_ccp_ren();			break;
 			case 5:		// USER
-				_ccp_user();	break;
+				i = _ccp_user();	break;
 				// Extra commands
-			case 6:		// DEL is an alias to ERA
-				_ccp_era();		break;
-			case 7:		// INFO
-				_ccp_info();	break;
-			case 8:		// EXIT
-				Status = 1;		break;
+			case 6:		// CLS
+				_clrscr();			break;
+			case 7:		// DEL is an alias to ERA
+				_ccp_era();			break;
+			case 8:		// INFO
+				_ccp_info();		break;
+			case 9:		// EXIT
+				Status = 1;			break;
 			case 255:	// It is an external command
-				if (_ccp_external())	// Will fall down to default if it doesn't exist
-					break;
+				i = _ccp_ext();		break;
 			default:
-				_ccp_cmdError();
-				break;
+				i = TRUE;			break;
 			}
+			if (i)
+				_ccp_cmdError();
 		}
 		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 			break;
