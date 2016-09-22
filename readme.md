@@ -29,7 +29,7 @@ Run "make -f Makefile.yyy", where "yyy" is:
 * *tdm* - when building with TDM-GCC under Windows,
 * *posix* - when building under Linux, FreeBSD, Mac OS X, etc.
 
-For Linux and FreeBSD the ncurses-dev package is required. In Mac OS X, install it using "brew install ncurses".<br>
+For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install it using "brew install ncurses".<br>
 Cygwin can be used to build the posix implementation on Windows machines.
 
 ## Getting Started
