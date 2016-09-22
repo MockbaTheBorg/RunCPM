@@ -1,4 +1,4 @@
-# RunCPM
+# RunCPM - Z80 CP/M 2.2 emulator
 
 RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules would be necessary.
