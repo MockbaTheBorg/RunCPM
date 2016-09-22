@@ -1,0 +1,44 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+
+This disk contains a basic CP/M system which will work fine with RunCPM
+
+Important things about this disk:
+
+ZSID has been patched for a bug according to Digital Research patches.
+It would add wrong values when entering 16 bit values in assembly.
+
+SUBMIT has been patched for a bug according to Digital Research patches.
+It would create the $$$.SUB on the current drive, not on the system drive (A:).
+
+The DRI BDOS source code (BDOS.ASM) is included and can be built using BDOS.SUB.
+This source code is the DR original and is included only for reference.
+This BDOS is not necessary to run RunCPM.
+
+The DRI CCP source code (CCP.ASM) is included and can be built using CCP.SUB.
+This source code is the DRI's original, used by RunCPM.
+When building SRI's CCP, adjust the ORG location accordingly on CCP.ASM.
+
+The ZCPR (v2) CCP source code (ZCPR.ASM) is included and can be built using ZCPR.SUB.
+This souce code is the ZCPR original, used by RunCPM.
+When building ZCPR CCP, adjust the ORG location accordingly on ZCPRHDR.LIB.
+
+The rights to all the code and software included in this disk belongs to whoever wrote them.
+
+The extra software included other than the official DRI's distribution is:
+
+LU - Library Utility . v3.10 . Copyright (c) 1983-1985 by Gary P. Novosielski
+MBASIC - BASIC-85 . v5.29 . Copyright (c) 1985, 1986 by Microsoft
+MLOAD - Multi-file HEX Load Utility . v2.1 . Copyright (c) 1984 by Ron Fowler
+TE - Text Editor . v1.06 . Copyright (c) 2015, 2016 by Miguel Garcia
+UNARC - Archive File Extractor . v1.6 . Copyright (c) 1986, 1987 by Robert A. Freed
+UNCR - File Un-Cruncher . v2.4 . Copyright (c) 1987 by S. Greenberg
+USQ - File Un-Squeezer . v1.20 . Copyright (c) 1984 by Dave Rand
+Z80ASM - Z80 Assemble . v1.32 . Copyright (c) 1983-1986 by SLR Systems
+ZEXALL/ZEXDOC - Z80 Instruction Exerciser . v1.00 . Copyright (c) 1994 by Frank D. Cringle
+ZTRAN - 8080 to Z80 code translator . v1.4 . Copyright (c) 1986 by Elliam Associates
