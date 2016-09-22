@@ -41,16 +41,16 @@ Other amounts of memory can be used, but this would require rebuilding the CCP b
 
 RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use to following procedure:
 
-*not using user areas* - Create subfolders under the executable folder named "A", "B", "C", ... for each disk drive you intend to use, each one of these folders will be one disk drive, and only user 0 is available. The user commands to select user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder.
-*using user areas* - Create subfolders under the executable folder named "A", "B", "C", ... for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. The user command will automatically create other user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the users 10 to 15 are created as letters "A" to "F".
+* *not using user areas* - Create subfolders under the executable folder named "A", "B", "C", ... for each disk drive you intend to use, each one of these folders will be one disk drive, and only user 0 is available. The user commands to select user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder.
+* *using user areas* - Create subfolders under the executable folder named "A", "B", "C", ... for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. The user command will automatically create other user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the users 10 to 15 are created as letters "A" to "F".
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of filesystem compatibility.
 CP/M only supported 16 disk drives, A: to P:, so creating other letters above P won't work either, same goes for user areas above 15 (F).
 
 RunCPM can run on an internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
 
-**CCP-DR.bin** - Is the original CCP from Digital Research.<br>
-**CCP-ZCPR.bin** - Is the original ZCPR2 ccp modification.
+* *CCP-DR.bin* - Is the original CCP from Digital Research.<br>
+* *CCP-ZCPR.bin* - Is the original ZCPR2 ccp modification.
 
 Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.
 
