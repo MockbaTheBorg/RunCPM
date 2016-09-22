@@ -37,7 +37,7 @@ Cygwin can be used to build the posix implementation on Windows machines.
 Create a folder to contain the RunCPM executable. On that folder goes both the executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
 The 64K version provides the maximum amount of memory possible to CP/M application, but it is unrealistic in terms of emulating a real CP/M computer.<br>
 The 60K version provides a realistic addressing space, keeping the CCP on the same loading address it would be on a similar CP/M computer.<br>
-Other amounts of memory can be used, but this would require rebuilding the CCP binary (available on DiskA).
+Other amounts of memory can be used, but this would require rebuilding the CCP binary (available on Disk A.ZIP).
 
 RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use to following procedure:
 
@@ -45,7 +45,7 @@ RunCPM can emulate the user areas as well (this is the default), so to create th
 * *using user areas* - Create subfolders under the executable folder named "A", "B", "C", ... for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. The user command will automatically create other user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the users 10 to 15 are created as letters "A" to "F".
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of filesystem compatibility.
-CP/M only supported 16 disk drives, A: to P:, so creating other letters above P won't work either, same goes for user areas above 15 (F).
+CP/M only supported 16 disk drives, A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
 RunCPM can run on an internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
 
@@ -60,7 +60,7 @@ This disk also contains Z80ASM, which is a very powerful Z80 assembly that gener
 ## Limitations
 
 The objective of RunCPM is *not* to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping the files on the native (host) filesystem.
-This will obviusly prevent the accurate physical emulation of disk drives, so applications like MOVCPM and STAT will not be completely useful.
+This will obviusly prevent the accurate physical emulation of disk drives, so applications like MOVCPM and STAT will not be completely useful.<br>
 They are provided on Disk A.ZIP just to keep compatibility with DR's file distribution.
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated BDOS is specific for CP/M 2.2.
