@@ -6,7 +6,7 @@ RunCPM is fully written in C and in a modular way, so porting to other platforms
 If you miss powerful programs like Wordstar, dBaseII, Mbasic and others, then RunCPM is for you. It is very stable and fun to use.
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
-RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm. It can lso be build on the Arduino IDE and even on DJGPP for DOS.
+RunCPM builds on Visual Studio 2013 or later. Posix builds use gcc/llvm. It can also be built on the Arduino IDE and even on DJGPP for DOS.
 
 ## Arduino
 
@@ -14,7 +14,7 @@ RunCPM builds on Arduino 1.6.6 or later.<br>
 RunCPM so far runs only on the Arduino DUE, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
 RunCPM needs a SDFat library. I am using the one from https://github.com/greiman/SdFat/.<br>
 The file SdFatConfig.h of SdFat must be changed to: #define USE_LONG_FILE_NAMES 0 (if it is 1, RunCPM will fail if the folder contains files with long names).<br>
-RunCPM also needs a SD (or microSD) card shield to place the CP/M files in.<br>
+RunCPM also needs a SD (or microSD) card shield to place the CP/M files in.
 
 Arduino digital and analog read/write support was added by Krzysztof Klis via BDOS calls (see the bottom of cpm.h file for details).
 
@@ -29,7 +29,7 @@ Run "make -f Makefile.yyy", where "yyy" is:
 * *tdm* - when building with TDM-GCC under Windows
 * *posix* - when building under Linux, FreeBSD, Mac OS X, etc.
 
-For Linux and FreeBSD the ncurses-dev package is required. In Mac OS X, install it using "brew install ncurses".
+For Linux and FreeBSD the ncurses-dev package is required. In Mac OS X, install it using "brew install ncurses".<br>
 Cygwin can be used to build the posix implementation on Windows machines.
 
 ## Getting Started
@@ -54,12 +54,12 @@ RunCPM can run on an internal CCP (beta) or using binary CCPs from real CP/M com
 
 Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.
 
-The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the EXIT.COM program, which ends RunCPM execution.
+The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the EXIT.COM program, which ends RunCPM execution.<br>
 This disk also contains Z80ASM, which is a very powerful Z80 assembly that generates .COM files directly.
 
 ## Limitations
 
-The objective of RunCPM is *not* to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping the files on the native (host) filesystem.
+The objective of RunCPM is *not* to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping the files on the native (host) filesystem.<br>
 This will obviusly prevent the accurate physical emulation of disk drives, so applications like MOVCPM and STAT will not be completely useful.<br>
 They are provided on Disk A.ZIP just to keep compatibility with DR's file distribution.
 
