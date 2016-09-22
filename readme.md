@@ -69,5 +69,7 @@ Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated B
 
 The "video monitor" is assumed to be VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.
 
+RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution.
+
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
