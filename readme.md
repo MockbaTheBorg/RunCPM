@@ -16,7 +16,7 @@ RunCPM needs a SDFat library. I am using the one from https://github.com/greiman
 The file SdFatConfig.h of SdFat must be changed to: #define USE_LONG_FILE_NAMES 0 (if it is 1, RunCPM will fail if the folder contains files with long names).<br>
 RunCPM also needs a SD (or microSD) card shield to place the CP/M files in.
 
-Arduino digital and analog read/write support was added by Krzysztof Klis via BDOS calls (see the bottom of cpm.h file for details).
+Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
 
 ## Building
 
