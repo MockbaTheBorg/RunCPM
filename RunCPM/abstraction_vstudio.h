@@ -14,7 +14,7 @@
 FILE *_sys_fopen_r(uint8 *filename);
 int _sys_fseek(FILE *file, long delta, int origin);
 long _sys_ftell(FILE *file);
-long _sys_fread(void *buffer, long size, long count, FILE *file);
+size_t _sys_fread(void *buffer, size_t size, size_t count, FILE *file);
 int _sys_fclose(FILE *file);
 
 /* Memory abstraction functions */
@@ -75,11 +75,11 @@ long _sys_ftell(FILE *file) {
 	return(ftell(file));
 }
 
-long _sys_fread(void *buffer, long size, long count, FILE *file) {
+size_t _sys_fread(void *buffer, size_t size, size_t count, FILE *file) {
 	return(fread(buffer, size, count, file));
 }
 
-long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
+size_t _sys_fwrite(const void *buffer, size_t size, size_t count, FILE *file) {
 	return(fwrite(buffer, size, count, file));
 }
 
