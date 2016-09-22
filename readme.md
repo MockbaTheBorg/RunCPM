@@ -48,8 +48,11 @@ All the letters for folders/subfolders and file names should be kept in uppercas
 CP/M only supported 16 disk drives, A: to P:, so creating other letters above P won't work either, same goes for user areas above 15 (F).
 
 RunCPM can run on an internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
-*CCP-DR.bin* - Is the original CCP from Digital Research.
-*CCP-ZCPR.bin* - Is the original ZCPR2 ccp modification.
+
+**CCP-DR.bin** - Is the original CCP from Digital Research.
+
+**CCP-ZCPR.bin** - Is the original ZCPR2 ccp modification.
+
 Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.
 
 The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the EXIT.COM program, which ends RunCPM execution.
