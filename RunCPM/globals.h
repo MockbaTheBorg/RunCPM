@@ -26,7 +26,7 @@
 //#define CCP_ZCPR
 
 /* Definition of the CCP memory information */
-#define CCPaddr		((SIZEK*1024)-0x0C00)
+#define CCPaddr		(BDOSjmppage-0x0800)
 //
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL v1.2"	// Will use the CCP from ccp.h
