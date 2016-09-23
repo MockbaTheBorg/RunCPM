@@ -10,6 +10,8 @@
 #include <conio.h>
 #endif
 
+#define HostOS 0x00
+
 /* Externals for abstracted functions need to go here */
 FILE *_sys_fopen_r(uint8 *filename);
 int _sys_fseek(FILE *file, long delta, int origin);

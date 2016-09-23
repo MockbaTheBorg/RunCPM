@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include "posix.h"
 
+#define HostOS 0x03
+
 struct ffblk fnd;
 
 uint8 _findfirst(uint8 isdir) {

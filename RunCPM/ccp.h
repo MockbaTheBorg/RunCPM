@@ -406,19 +406,20 @@ void _ccp_readInput(void) {
 			_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 		_ccp_bdos(F_OPEN, BatchFCB, 0x00);			// Open batch file
 		recs = _RamRead(BatchFCB + 15);				// Gets its record count
-		recs--;										// Counts one less
-		_RamWrite(BatchFCB + 32, recs);				// And sets to be the next read
-		_ccp_bdos(F_DMAOFF, defDMA, 0x00);			// Reset current DMA
-		_ccp_bdos(F_READ, BatchFCB, 0x00);			// And reads the last sector
-		chars = _RamRead(defDMA);					// Then moves it to the input buffer
-		for (i = 0; i <= chars; i++)
-			_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
-		_RamWrite(inBuf + i + 1, 0);
-		_puts(_RamSysAddr(inBuf + 2));
 		if (recs) {
+			recs--;										// Counts one less
+			_RamWrite(BatchFCB + 32, recs);				// And sets to be the next read
+			_ccp_bdos(F_DMAOFF, defDMA, 0x00);			// Reset current DMA
+			_ccp_bdos(F_READ, BatchFCB, 0x00);			// And reads the last sector
+			chars = _RamRead(defDMA);					// Then moves it to the input buffer
+			for (i = 0; i <= chars; i++)
+				_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
+			_RamWrite(inBuf + i + 1, 0);
+			_puts(_RamSysAddr(inBuf + 2));
 			_RamWrite(BatchFCB + 15, recs);			// Prepare the file to be truncated
 			_ccp_bdos(F_CLOSE, BatchFCB, 0x00);		// And truncates it
-		} else {
+		}
+		if (!recs) {
 			_ccp_bdos(F_DELETE, BatchFCB, 0x00);	// Or else just deletes it
 			sFlag = 0;								// and clears the submit flag
 		}
