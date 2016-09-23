@@ -27,7 +27,7 @@
 /* Definition of the CCP memory information */
 #define CCPaddr		((SIZEK*1024)-0x0C00)
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.0"	// Will use the CCP from ccp.h
+#define CCPname		"INTERNAL v1.2"	// Will use the CCP from ccp.h
 #define BatchFCB	tmpFCB + 36
 #endif
 #ifdef CCP_DR
