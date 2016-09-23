@@ -44,6 +44,7 @@ uint32 cpu_in(const uint32 Port) {
 #define STOP_INSTR      3   /* breakpoint   (instruction access)                */
 #define STOP_OPCODE     4   /* invalid operation encountered (8080, Z80, 8086)  */
 
+#define ADDRMASK        0xffff
 
 #define FLAG_C  1
 #define FLAG_N  2
