@@ -481,11 +481,11 @@ void _ccp(void) {
 				continue;
 			}
 
-			RAM[defDMA] = blen;							// Move the command line at this point to 0x0080
+			_RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
 			for (i = 0; i < blen; i++) {
-				RAM[defDMA + i + 1] = _RamRead(pbuf + i);
+				_RamWrite(defDMA + i + 1, _RamRead(pbuf + i));
 			}
-			RAM[defDMA + i + 1] = 0;
+			_RamWrite(defDMA + i + 1, 0);
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
 				pbuf++; blen--;

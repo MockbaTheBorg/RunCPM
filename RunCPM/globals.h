@@ -27,21 +27,25 @@
 
 /* Definition of the CCP memory information */
 #define CCPaddr		((SIZEK*1024)-0x0C00)
+//
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL v1.2"	// Will use the CCP from ccp.h
 #define VersionCCP	0x12
 #define BatchFCB	tmpFCB + 36
 #endif
+//
 #ifdef CCP_DR
 #define CCPname		"CCP-DR.BIN"
 #define VersionCCP	0x00
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
 #endif
+//
 #ifdef CCP_ZCPR
 #define CCPname		"CCP-ZCPR.BIN"
 #define VersionCCP	0x01
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
+//
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
 
 /* Definition for CP/M 2.2 user number support */

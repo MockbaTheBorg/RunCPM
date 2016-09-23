@@ -278,7 +278,7 @@ uint8 _findnext(uint8 isdir) {
 			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
-		RAM[tmpFCB] = filename[0] - '@';							// Set the requested drive onto the tmp FCB
+		_RamWrite(tmpFCB, filename[0] - '@');							// Set the requested drive onto the tmp FCB
 		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
 		result = 0x00;
 	} else {
