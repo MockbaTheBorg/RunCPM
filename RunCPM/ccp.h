@@ -394,6 +394,11 @@ void _ccp_cmdError() {
 	_puts("?\r\n");
 }
 
+// Reads input, either from the $$$.SUB or console
+void _ccp_readInput(uint8 submit) {
+	_ccp_bdos(C_READSTR, inBuf, 0x00);				// and reads the command line
+}
+
 // Main CCP code
 void _ccp(void) {
 	uint8 i;
@@ -401,7 +406,7 @@ void _ccp(void) {
 	_puts(CCPHEAD);
 
 	_ccp_bdos(F_USERNUM, 0x0000, 0x00);					// Set current user
-	_ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
+	i = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
 	_ccp_bdos(DRV_SET, curDrive, 0x00);
 
 	while (TRUE) {
@@ -415,7 +420,7 @@ void _ccp(void) {
 		_puts((char*)prompt);
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
-		_ccp_bdos(C_READSTR, inBuf, 0x00);				// and reads the command line
+		_ccp_readInput(i);
 
 		blen = _RamRead(inBuf + 1);						// Obtains the number of bytes read
 
@@ -490,9 +495,10 @@ void _ccp(void) {
 			if (i)
 				_ccp_cmdError();
 		}
-		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
+		if (Status > 0)
 			break;
 	}
+	_puts("\r\n");
 }
 
 #endif
