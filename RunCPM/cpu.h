@@ -53,16 +53,16 @@ uint32 cpu_in(const uint32 Port) {
 #define FLAG_Z  64
 #define FLAG_S  128
 
-#define SETFLAG(f,c)    AF = (c) ? AF | FLAG_ ## f : AF & ~FLAG_ ## f
+#define SETFLAG(f,c)    (AF = (c) ? AF | FLAG_ ## f : AF & ~FLAG_ ## f)
 #define TSTFLAG(f)      ((AF & FLAG_ ## f) != 0)
 
 #define PARITY(x)   parityTable[(x) & 0xff]
 /*  SET_PV and SET_PV2 are used to provide correct PARITY flag semantics for the 8080 in cases
 where the Z80 uses the overflow flag
 */
-#define SET_PVS(s)  ((cbits >> 6) ^ (cbits >> 5)) & 4
+#define SET_PVS(s)  (((cbits >> 6) ^ (cbits >> 5)) & 4)
 #define SET_PV      (SET_PVS(sum))
-#define SET_PV2(x)  (temp == (x)) << 2
+#define SET_PV2(x)  ((temp == (x)) << 2)
 
 #define POP(x)  {                               \
     register uint32 y = RAM_PP(SP);             \

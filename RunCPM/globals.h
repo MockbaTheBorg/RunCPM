@@ -29,21 +29,21 @@
 #define CCPaddr		(BDOSjmppage-0x0800)
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.3"	// Will use the CCP from ccp.h
+#define CCPname		"INTERNAL v1.3"		// Will use the CCP from ccp.h
 #define VersionCCP	0x13
-#define BatchFCB	tmpFCB + 36
+#define BatchFCB	(tmpFCB + 36)
 #endif
 //
 #ifdef CCP_DR
 #define CCPname		"CCP-DR." STR(SIZEK) "K"
 #define VersionCCP	0x00
-#define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb
 #endif
 //
 #ifdef CCP_ZCPR
 #define CCPname		"CCP-ZCPR." STR(SIZEK) "K"
 #define VersionCCP	0x01
-#define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
@@ -99,15 +99,15 @@ uint8 RAM[RAMSIZE];
 #endif
 
 //// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
-#define BIOSpage			RAMSIZE - 256
-#define BIOSjmppage			BIOSpage - 256
-#define BDOSpage			BIOSjmppage - 256
-#define BDOSjmppage			BDOSpage - 256
+#define BIOSpage			(RAMSIZE - 256)
+#define BIOSjmppage			(BIOSpage - 256)
+#define BDOSpage			(BIOSjmppage - 256)
+#define BDOSjmppage			(BDOSpage - 256)
 
-#define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
+#define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 
-#define SCBaddr BDOSpage + 16	// Address of the System Control Block
-#define tmpFCB  BDOSpage + 64	// Address of the temporary FCB
+#define SCBaddr (BDOSpage + 16)	// Address of the System Control Block
+#define tmpFCB  (BDOSpage + 64)	// Address of the temporary FCB
 
 /* Definition of global variables */
 static uint8	filename[17];		// Current filename in host filesystem format
@@ -121,7 +121,7 @@ static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
 
-#define tohex(x)	x < 10 ? x + 48 : x + 87
+#define tohex(x)	(x < 10 ? x + 48 : x + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus
