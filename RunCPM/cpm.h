@@ -5,6 +5,7 @@
 
 #define NOP		0x00
 #define JP		0xc3
+#define CALL	0xcd
 #define RET		0xc9
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call

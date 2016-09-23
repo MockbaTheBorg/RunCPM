@@ -20,6 +20,7 @@
 #define CmdFCB	BatchFCB + 36		// FCB for use by internal commands
 #define ParFCB	0x005C				// FCB for use by line parameters
 #define SecFCB	0x006C				// Secondary part of FCB for renaming files
+#define Trampoline CmdFCB+36		// Trampoline for running external commands
 
 #define inBuf	BDOSjmppage - 256	// Input buffer location
 #define cmdLen	125					// Maximum size of a command line (sz+rd+cmd+\0)
@@ -361,9 +362,17 @@ uint8 _ccp_ext(void) {
 		}
 		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
 
+		// Place a trampoline to call the external command
+		// as it may return using RET instead of JP 0000h
+		loadAddr = Trampoline;
+		_RamWrite(loadAddr, CALL);
+		_RamWrite16(loadAddr+1, defLoad);
+		_RamWrite(loadAddr+3, JP);
+		_RamWrite16(loadAddr+4, 0x0000);
+
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
-		PC = 0x0100;		// Sets CP/M application jump point
+		PC = loadAddr;		// Sets CP/M application jump point
 		Z80run();			// Starts simulation
 
 		error = FALSE;
