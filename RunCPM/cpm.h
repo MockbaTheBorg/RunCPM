@@ -145,9 +145,9 @@ void _logBdosIn(uint8 ch) {
 	};
 
 	if (ch < 41) {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN:\n", ch, CPMCalls[ch]); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN from 0x%04x:\n", ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d IN from 0x%04x:\n", ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	}
 	_logRegs();
 	switch (ch) {
