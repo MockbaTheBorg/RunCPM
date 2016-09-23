@@ -17,12 +17,12 @@
 #define F_DMAOFF		26
 #define F_USERNUM		32
 
-#define CmdFCB	BatchFCB + 36		// FCB for use by internal commands
+#define CmdFCB	(BatchFCB + 36)		// FCB for use by internal commands
 #define ParFCB	0x005C				// FCB for use by line parameters
 #define SecFCB	0x006C				// Secondary part of FCB for renaming files
-#define Trampoline CmdFCB+36		// Trampoline for running external commands
+#define Trampoline (CmdFCB + 36)	// Trampoline for running external commands
 
-#define inBuf	BDOSjmppage - 256	// Input buffer location
+#define inBuf	(BDOSjmppage - 256)	// Input buffer location
 #define cmdLen	125					// Maximum size of a command line (sz+rd+cmd+\0)
 
 #define defDMA	0x0080				// Default DMA address
@@ -49,7 +49,6 @@ static const char *Commands[] =
 	// Extra CCP commands
 	"CLS",
 	"DEL",
-	"INFO",
 	"EXIT",
 	NULL
 };
@@ -338,13 +337,6 @@ uint8 _ccp_user(void) {
 	return(error);
 }
 
-// INFO command
-void _ccp_info(void) {
-	_puts("\r\nRunCPM version " VERSION "\r\n");
-	_puts("BDOS Page set to "); _puthex16(BDOSjmppage); _puts("\r\n");
-	_puts("BIOS Page set to "); _puthex16(BIOSjmppage);
-}
-
 // External (.COM) command
 uint8 _ccp_ext(void) {
 	uint8 error = TRUE;
@@ -515,9 +507,7 @@ void _ccp(void) {
 				_clrscr();			break;
 			case 7:		// DEL is an alias to ERA
 				_ccp_era();			break;
-			case 8:		// INFO
-				_ccp_info();		break;
-			case 9:		// EXIT
+			case 8:		// EXIT
 				Status = 1;			break;
 			case 255:	// It is an external command
 				i = _ccp_ext();		break;
