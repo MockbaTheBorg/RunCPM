@@ -402,8 +402,6 @@ void _ccp_readInput(void) {
 	uint8 chars;
 
 	if (sFlag) {									// Are we running a submit?
-		for (i = 0; i < 36; i++)
-			_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 		_ccp_bdos(F_OPEN, BatchFCB, 0x00);			// Open batch file
 		recs = _RamRead(BatchFCB + 15);				// Gets its record count
 		if (recs) {
@@ -437,6 +435,9 @@ void _ccp(void) {
 	_ccp_bdos(F_USERNUM, 0x0000, 0x00);					// Set current user
 	sFlag = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
 	_ccp_bdos(DRV_SET, curDrive, 0x00);
+
+	for (i = 0; i < 36; i++)
+		_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 
 	while (TRUE) {
 		curDrive = _ccp_bdos(DRV_GET, 0x0000, 0x00);	// Get current drive
