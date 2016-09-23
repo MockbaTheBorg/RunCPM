@@ -698,6 +698,12 @@ void _Bdos(void) {
 		HL = VersionCCP;
 		break;
 		/*
+		C = 253 (FDh) : CCP address
+		*/
+	case 253:
+		HL = CCPaddr;
+		break;
+		/*
 		Unimplemented calls get listed
 		*/
 	default:
