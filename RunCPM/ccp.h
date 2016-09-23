@@ -32,6 +32,7 @@
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
 uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 curUser;	// 0 -> 15			.. Current user aread to access
+uint8 sFlag;	//					.. Submit Flag
 uint8 prompt[5] = "\r\n >";
 uint16 pbuf, perr;
 uint8 blen;							// Actual size of the typed command line (size of the buffer)
@@ -395,8 +396,35 @@ void _ccp_cmdError() {
 }
 
 // Reads input, either from the $$$.SUB or console
-void _ccp_readInput(uint8 submit) {
-	_ccp_bdos(C_READSTR, inBuf, 0x00);				// and reads the command line
+void _ccp_readInput(void) {
+	uint8 i;
+	uint8 recs;
+	uint8 chars;
+
+	if (sFlag) {									// Are we running a submit?
+		for (i = 0; i < 36; i++)
+			_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
+		_ccp_bdos(F_OPEN, BatchFCB, 0x00);			// Open batch file
+		recs = _RamRead(BatchFCB + 15);				// Gets its record count
+		recs--;										// Counts one less
+		_RamWrite(BatchFCB + 32, recs);				// And sets to be the next read
+		_ccp_bdos(F_DMAOFF, defDMA, 0x00);			// Reset current DMA
+		_ccp_bdos(F_READ, BatchFCB, 0x00);			// And reads the last sector
+		chars = _RamRead(defDMA);					// Then moves it to the input buffer
+		for (i = 0; i <= chars; i++)
+			_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
+		_RamWrite(inBuf + i + 1, 0);
+		_puts(_RamSysAddr(inBuf + 2));
+		if (recs) {
+			_RamWrite(BatchFCB + 15, recs);			// Prepare the file to be truncated
+			_ccp_bdos(F_CLOSE, BatchFCB, 0x00);		// And truncates it
+		} else {
+			_ccp_bdos(F_DELETE, BatchFCB, 0x00);	// Or else just deletes it
+			sFlag = 0;								// and clears the submit flag
+		}
+	} else {
+		_ccp_bdos(C_READSTR, inBuf, 0x00);				// and reads the command line
+	}
 }
 
 // Main CCP code
@@ -406,7 +434,7 @@ void _ccp(void) {
 	_puts(CCPHEAD);
 
 	_ccp_bdos(F_USERNUM, 0x0000, 0x00);					// Set current user
-	i = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
+	sFlag = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
 	_ccp_bdos(DRV_SET, curDrive, 0x00);
 
 	while (TRUE) {
@@ -420,7 +448,7 @@ void _ccp(void) {
 		_puts((char*)prompt);
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
-		_ccp_readInput(i);
+		_ccp_readInput();
 
 		blen = _RamRead(inBuf + 1);						// Obtains the number of bytes read
 
