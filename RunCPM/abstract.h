@@ -6,6 +6,8 @@
 #include <dirent.h>
 #include "posix.h"
 
+#define HostOS 0x03
+
 struct ffblk fnd;
 
 uint8 _findfirst(uint8 isdir) {
@@ -19,7 +21,7 @@ uint8 _findfirst(uint8 isdir) {
 			_HostnameToFCB(dmaAddr, fnd.ff_name);
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
-		RAM[tmpFCB] = filename[0] - '@';
+		_RamWrite(tmpFCB, filename[0] - '@');
 		_HostnameToFCB(tmpFCB, fnd.ff_name);
 		result = 0x00;
 	}
@@ -37,7 +39,7 @@ uint8 _findnext(uint8 isdir) {
 			_HostnameToFCB(dmaAddr, fnd.ff_name);
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
-		RAM[tmpFCB] = filename[0] - '@';
+		_RamWrite(tmpFCB, filename[0] - '@');
 		_HostnameToFCB(tmpFCB, fnd.ff_name);
 		result = 0x00;
 	}

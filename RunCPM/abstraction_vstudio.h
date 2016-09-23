@@ -10,11 +10,13 @@
 #include <conio.h>
 #endif
 
+#define HostOS 0x00
+
 /* Externals for abstracted functions need to go here */
 FILE *_sys_fopen_r(uint8 *filename);
 int _sys_fseek(FILE *file, long delta, int origin);
 long _sys_ftell(FILE *file);
-long _sys_fread(void *buffer, long size, long count, FILE *file);
+size_t _sys_fread(void *buffer, size_t size, size_t count, FILE *file);
 int _sys_fclose(FILE *file);
 
 /* Memory abstraction functions */
@@ -75,11 +77,11 @@ long _sys_ftell(FILE *file) {
 	return(ftell(file));
 }
 
-long _sys_fread(void *buffer, long size, long count, FILE *file) {
+size_t _sys_fread(void *buffer, size_t size, size_t count, FILE *file) {
 	return(fread(buffer, size, count, file));
 }
 
-long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
+size_t _sys_fwrite(const void *buffer, size_t size, size_t count, FILE *file) {
 	return(fwrite(buffer, size, count, file));
 }
 
@@ -276,7 +278,7 @@ uint8 _findnext(uint8 isdir) {
 			_HostnameToFCB(dmaAddr, (uint8*)&FindFileData.cFileName[0]); // Create fake DIR entry
 			_RamWrite(dmaAddr, 0);	// Sets the user of the requested file correctly on DIR entry
 		}
-		RAM[tmpFCB] = filename[0] - '@';							// Set the requested drive onto the tmp FCB
+		_RamWrite(tmpFCB, filename[0] - '@');							// Set the requested drive onto the tmp FCB
 		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
 		result = 0x00;
 	} else {

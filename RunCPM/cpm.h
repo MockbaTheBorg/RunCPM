@@ -5,6 +5,7 @@
 
 #define NOP		0x00
 #define JP		0xc3
+#define CALL	0xcd
 #define RET		0xc9
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
@@ -299,7 +300,7 @@ void _Bios(void) {
 }
 
 void _Bdos(void) {
-	int32	i, c, chr, count;
+	int32	i, j, c, chr, count;
 	uint8	ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
@@ -411,28 +412,48 @@ void _Bdos(void) {
 		c = _RamRead(i);	// Gets the number of characters to read
 		i++;	// Points to the number read
 		count = 0;
-		while (c)	// Very simplistic line input (Lacks ^E ^R ^U support)
+		while (c)	// Very simplistic line input
 		{
 			chr = _getch();
-#ifdef DEBUG
-			if (chr == 4)
-				Debug = 1;
-#endif
-			if (chr == 3 && count == 0) {
+			if (chr == 3 && count == 0) {						// ^C
 				_puts("^C");
 				Status = 2;
 				break;
 			}
-			if (chr == 0x0D || chr == 0x0A)
-				break;
-			if ((chr == 0x08 || chr == 0x7F) && count > 0) {
-				_putcon('\b');
-				_putcon(' ');
-				_putcon('\b');
+#ifdef DEBUG
+			if (chr == 4)										// ^D
+				Debug = 1;
+#endif
+			if (chr == 5)										// ^E
+				_puts("\r\n");
+			if ((chr == 0x08 || chr == 0x7F) && count > 0) {	// ^H and DEL
+				_puts("\b \b");
 				count--;
 				continue;
 			}
-			if (chr < 0x20 || chr > 0x7E)
+			if (chr == 0x0A || chr == 0x0D)						// ^J and ^M
+				break;
+			if (chr == 18) {									// ^R
+				_puts("#\r\n  ");
+				for (j = 1; j <= count; j++)
+					_putcon(_RamRead(i + j));
+			}
+			if (chr == 21) {									// ^U
+				_puts("#\r\n  ");
+				i = WORD16(DE);
+				c = _RamRead(i);
+				i++;
+				count = 0;
+			}
+			if (chr == 24) {									// ^X
+				for (j = 0; j < count; j++)
+					_puts("\b \b");
+				i = WORD16(DE);
+				c = _RamRead(i);
+				i++;
+				count = 0;
+			}
+			if (chr < 0x20 || chr > 0x7E)						// Invalid character
 				continue;
 			_putcon(chr);
 			count++; _RamWrite(i + count, chr);
@@ -655,6 +676,33 @@ void _Bdos(void) {
 		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 		break;
 #endif
+		/*
+		C = 250 (FAh) : HostOS
+		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos
+		*/
+	case 250:
+		HL = HostOS;
+		break;
+		/*
+		C = 251 (FBh) : Version
+		Returns: A = 0xVv - Version in BCD representation: V.v
+		*/
+	case 251:
+		HL = VersionBCD;
+		break;
+		/*
+		C = 252 (FCh) : CCP version
+		Returns: A = 0x00 - DRI / 0x01 - ZCPR2 / 0xVv - Internal version in BCD: V.v
+		*/
+	case 252:
+		HL = VersionCCP;
+		break;
+		/*
+		C = 253 (FDh) : CCP address
+		*/
+	case 253:
+		HL = CCPaddr;
+		break;
 		/*
 		Unimplemented calls get listed
 		*/

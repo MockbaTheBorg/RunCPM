@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
 	while (TRUE) {
 #ifdef CCP_INTERNAL
 		_PatchCPM();
+		Status = 0;
 		_ccp();
 		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 			break;
