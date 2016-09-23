@@ -15,6 +15,7 @@
 
 /* RunCPM version for the greeting header */
 #define VERSION	"2.7"
+#define VersionBCD 0x27
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -25,19 +26,26 @@
 //#define CCP_ZCPR
 
 /* Definition of the CCP memory information */
-#define CCPaddr		((SIZEK*1024)-0x0C00)
+#define CCPaddr		(BDOSjmppage-0x0800)
+//
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.0"	// Will use the CCP from ccp.h
+#define CCPname		"INTERNAL v1.2"	// Will use the CCP from ccp.h
+#define VersionCCP	0x12
 #define BatchFCB	tmpFCB + 36
 #endif
+//
 #ifdef CCP_DR
-#define CCPname		"CCP-DR.BIN"
+#define CCPname		"CCP-DR." STR(SIZEK) "K"
+#define VersionCCP	0x00
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
 #endif
+//
 #ifdef CCP_ZCPR
-#define CCPname		"CCP-ZCPR.BIN"
+#define CCPname		"CCP-ZCPR." STR(SIZEK) "K"
+#define VersionCCP	0x01
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
+//
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
 
 /* Definition for CP/M 2.2 user number support */
@@ -91,9 +99,9 @@ uint8 RAM[RAMSIZE];
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage		RAMSIZE - 256
-#define BDOSpage		BIOSpage - 256
-#define BIOSjmppage		BDOSpage - 256
-#define BDOSjmppage		BIOSjmppage - 256
+#define BIOSjmppage		BIOSpage - 256
+#define BDOSpage		BIOSjmppage - 256
+#define BDOSjmppage		BDOSpage - 256
 
 #define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 

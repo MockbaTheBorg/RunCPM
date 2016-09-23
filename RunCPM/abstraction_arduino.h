@@ -1,6 +1,8 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#define HostOS 0x01
+
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char *filename, uint16 address) {
@@ -259,7 +261,7 @@ uint8 _findnext(uint8 isdir) {
 				_HostnameToFCB(dmaAddr, dirname);
 				_RamWrite(dmaAddr, 0x00);
 			}
-			RAM[tmpFCB] = filename[0] - '@';
+			_RamWrite(tmpFCB, filename[0] - '@');
 			_HostnameToFCB(tmpFCB, dirname);
 			result = 0x00;
 			break;

@@ -37,7 +37,7 @@ void _error(uint8 error) {
 	_getch();
 	_puts("\r\n");
 	cDrive = oDrive;
-	RAM[0x0004] = (RAM[0x0004] & 0xf0) | oDrive;
+	_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | oDrive);
 	Status = 2;
 }
 
@@ -196,18 +196,21 @@ uint8 match(uint8 *fcbname, uint8 *pattern) {
 }
 
 long _FileSize(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
-	long l = -1;
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	long r, l = -1;
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		l = _sys_filesize(filename);
+		r = l % 128;
+		if (r)
+			l = l + 128 - r;
 	}
 	return(l);
 }
 
 uint8 _OpenFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	long l;
 	int32 reqext;	// Required extention to open
@@ -233,7 +236,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 }
 
 uint8 _CloseFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -250,7 +253,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 }
 
 uint8 _MakeFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -266,7 +269,7 @@ uint8 _MakeFile(uint16 fcbaddr) {
 }
 
 uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -277,7 +280,7 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 }
 
 uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[tmpFCB];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(tmpFCB);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr))
@@ -286,7 +289,7 @@ uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 }
 
 uint8 _DeleteFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	uint8 deleted = 0xff;
 
@@ -307,7 +310,7 @@ uint8 _DeleteFile(uint16 fcbaddr) {
 }
 
 uint8 _RenameFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -325,7 +328,7 @@ uint8 _RenameFile(uint16 fcbaddr) {
 }
 
 uint8 _ReadSeq(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
@@ -346,7 +349,7 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 }
 
 uint8 _WriteSeq(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	long fpos = (F->ex * 16384) + (F->cr * 128);
 
@@ -371,7 +374,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 }
 
 uint8 _ReadRand(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
@@ -390,7 +393,7 @@ uint8 _ReadRand(uint16 fcbaddr) {
 }
 
 uint8 _WriteRand(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	int32 record = F->r0 | (F->r1 << 8);
 	long fpos = record * 128;
@@ -413,7 +416,7 @@ uint8 _WriteRand(uint16 fcbaddr) {
 }
 
 uint8 _GetFileSize(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	int32 count = _FileSize(DE) >> 7;
 
@@ -427,7 +430,7 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 }
 
 uint8 _SetRandom(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)&RAM[fcbaddr];
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0x00;
 
 	int32 count = F->cr & 0x7f;

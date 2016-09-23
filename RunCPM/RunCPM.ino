@@ -45,6 +45,7 @@ void setup(void) {
 		while(true)
 		{
 			_PatchCPM();
+			Status = 0;
 			_ccp();
 			if (Status == 1)
 				break;
