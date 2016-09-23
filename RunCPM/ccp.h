@@ -340,13 +340,29 @@ uint8 _ccp_user(void) {
 // External (.COM) command
 uint8 _ccp_ext(void) {
 	uint8 error = TRUE;
+	uint8 found, drive, user = 0;
 	uint16 loadAddr = defLoad;
 
 	_RamWrite(CmdFCB + 9, 'C');
 	_RamWrite(CmdFCB + 10, 'O');
 	_RamWrite(CmdFCB + 11, 'M');
 
-	if (!_ccp_bdos(F_OPEN, CmdFCB, 0x00)) {
+	drive = _RamRead(CmdFCB);
+	found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);					// Look for the program on the FCB drive, current or specified
+	if (!found) {												// If not found
+		if (!drive) {											// and the search was on the default drive
+			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: same user
+			found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);
+			if (!found) {										// If still not found then
+				if (curUser) {									// If current user not = 0
+					user = curUser;								// save the current user
+					_ccp_bdos(F_USERNUM, 0x0000, 0x00);			// then set it to 0
+					found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);	// and try again
+				}
+			}
+		}
+	}
+	if (found) {
 		_puts("\r\n");
 		_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
 		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
@@ -355,13 +371,19 @@ uint8 _ccp_ext(void) {
 		}
 		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
 
+		if (user) {									// If a user was selected
+			user = 0;
+			_ccp_bdos(F_USERNUM, curUser, 0x00);	// Set it back
+			_RamWrite(CmdFCB, 0x00);
+		}
+
 		// Place a trampoline to call the external command
 		// as it may return using RET instead of JP 0000h
 		loadAddr = Trampoline;
 		_RamWrite(loadAddr, CALL);
-		_RamWrite16(loadAddr+1, defLoad);
-		_RamWrite(loadAddr+3, JP);
-		_RamWrite16(loadAddr+4, BIOSjmppage + 0x33);
+		_RamWrite16(loadAddr + 1, defLoad);
+		_RamWrite(loadAddr + 3, JP);
+		_RamWrite16(loadAddr + 4, BIOSjmppage + 0x33);
 
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
@@ -371,6 +393,11 @@ uint8 _ccp_ext(void) {
 		Z80run();			// Starts simulation
 
 		error = FALSE;
+	}
+
+	if (user) {									// If a user was selected
+		_ccp_bdos(F_USERNUM, curUser, 0x00);	// Set it back
+		_RamWrite(CmdFCB, 0x00);
 	}
 
 	return(error);
