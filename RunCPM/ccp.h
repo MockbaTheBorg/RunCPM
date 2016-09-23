@@ -374,6 +374,8 @@ uint8 _ccp_ext(void) {
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
 		PC = loadAddr;		// Sets CP/M application jump point
+		SP = BDOSjmppage;
+
 		Z80run();			// Starts simulation
 
 		error = FALSE;
