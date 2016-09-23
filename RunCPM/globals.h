@@ -35,13 +35,13 @@
 #endif
 //
 #ifdef CCP_DR
-#define CCPname		"CCP-DR.BIN"
+#define CCPname		"CCP-DR." STR(SIZEK) "K"
 #define VersionCCP	0x00
 #define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
 #endif
 //
 #ifdef CCP_ZCPR
-#define CCPname		"CCP-ZCPR.BIN"
+#define CCPname		"CCP-ZCPR." STR(SIZEK) "K"
 #define VersionCCP	0x01
 #define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
 #endif
@@ -99,9 +99,9 @@ uint8 RAM[RAMSIZE];
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage		RAMSIZE - 256
-#define BDOSpage		BIOSpage - 256
-#define BIOSjmppage		BDOSpage - 256
-#define BDOSjmppage		BIOSjmppage - 256
+#define BIOSjmppage		BIOSpage - 256
+#define BDOSpage		BIOSjmppage - 256
+#define BDOSjmppage		BDOSpage - 256
 
 #define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 
