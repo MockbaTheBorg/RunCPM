@@ -4,6 +4,8 @@
 #include <glob.h>
 #include "posix.h"
 
+#define HostOS 0x02
+
 glob_t	pglob;
 int	dirPos;
 

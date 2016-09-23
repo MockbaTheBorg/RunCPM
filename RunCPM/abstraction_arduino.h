@@ -1,6 +1,8 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#define HostOS 0x01
+
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char *filename, uint16 address) {

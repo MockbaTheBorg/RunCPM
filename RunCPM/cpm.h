@@ -677,6 +677,27 @@ void _Bdos(void) {
 		break;
 #endif
 		/*
+		C = 250 (FAh) : HostOS
+		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos
+		*/
+	case 250:
+		HL = HostOS;
+		break;
+		/*
+		C = 251 (FBh) : Version
+		Returns: A = 0xVv - Version in BCD representation: V.v
+		*/
+	case 251:
+		HL = VersionBCD;
+		break;
+		/*
+		C = 252 (FCh) : CCP version
+		Returns: A = 0x00 - DRI / 0x01 - ZCPR2 / 0xVv - Internal version in BCD: V.v
+		*/
+	case 252:
+		HL = VersionCCP;
+		break;
+		/*
 		Unimplemented calls get listed
 		*/
 	default:
