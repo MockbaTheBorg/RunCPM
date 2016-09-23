@@ -2,6 +2,7 @@
 #define CCP_H
 
 // CP/M BDOS calls
+#define C_READ			1
 #define C_WRITE			2
 #define C_READSTR		10
 #define DRV_ALLRESET	13
@@ -27,6 +28,8 @@
 
 #define defDMA	0x0080				// Default DMA address
 #define defLoad	0x0100				// Default load address
+
+#define pgSize	24					// for TYPE
 
 // CCP global variables
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
@@ -256,7 +259,7 @@ void _ccp_era(void) {
 
 // TYPE command
 uint8 _ccp_type(void) {
-	uint8 i, c, error = TRUE;
+	uint8 i, c, l = 0, error = TRUE;
 	uint16 a;
 
 	if (!_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
@@ -266,9 +269,16 @@ uint8 _ccp_type(void) {
 			a = dmaAddr;
 			while (i) {
 				c = _RamRead(a);
-				if (c == 0x1A)
+				if (c == 0x1a)
 					break;
 				_ccp_bdos(C_WRITE, c, 0x00);
+				if (c == 0x0a) {
+					l++;
+					if (l == pgSize) {
+						l = 0;
+						_ccp_bdos(C_READ, 0x0000, 0x00);
+					}
+				}
 				i--; a++;
 			}
 		}
@@ -297,10 +307,12 @@ uint8 _ccp_save(void) {
 			} else {
 				pages *= 2;									// Calculates the number of CP/M blocks to write
 				dma = defLoad;
+				_puts("\r\n");
 				for (i = 0; i < pages; i++) {
 					_ccp_bdos(F_DMAOFF, dma, 0x00);
 					_ccp_bdos(F_WRITE, ParFCB, 0x00);
 					dma += 128;
+					_ccp_bdos(C_WRITE, '.', 0x00);
 				}
 				_ccp_bdos(F_CLOSE, ParFCB, 0x00);
 			}
@@ -453,7 +465,6 @@ void _ccp(void) {
 
 	_puts(CCPHEAD);
 
-	_ccp_bdos(F_USERNUM, 0x0000, 0x00);					// Set current user
 	sFlag = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
 	_ccp_bdos(DRV_SET, curDrive, 0x00);
 
