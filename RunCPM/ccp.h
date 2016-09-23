@@ -361,7 +361,7 @@ uint8 _ccp_ext(void) {
 		_RamWrite(loadAddr, CALL);
 		_RamWrite16(loadAddr+1, defLoad);
 		_RamWrite(loadAddr+3, JP);
-		_RamWrite16(loadAddr+4, 0x0000);
+		_RamWrite16(loadAddr+4, BIOSjmppage + 0x33);
 
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
@@ -517,7 +517,7 @@ void _ccp(void) {
 			if (i)
 				_ccp_cmdError();
 		}
-		if (Status > 0)
+		if (Status == 1 || Status == 2)
 			break;
 	}
 	_puts("\r\n");

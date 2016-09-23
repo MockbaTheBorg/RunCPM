@@ -45,13 +45,13 @@ void _PatchCPM(void) {
 	_RamWrite(BDOSpage + 2, RET);
 
 	// Patches in the BIOS jump destinations
-	for (i = 0; i < 0x33; i = i + 3) {
+	for (i = 0; i < 0x36; i = i + 3) {
 		_RamWrite(BIOSjmppage + i, JP);
 		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
 	}
 
 	// Patches in the BIOS page content
-	for (i = 0; i < 0x33; i = i + 3) {
+	for (i = 0; i < 0x36; i = i + 3) {
 		_RamWrite(BIOSpage + i, OUTa);
 		_RamWrite(BIOSpage + i + 1, i & 0xff);
 		_RamWrite(BIOSpage + i + 2, RET);
@@ -280,6 +280,9 @@ void _Bios(void) {
 		break;
 	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
+		break;
+	case 0x33:				// This allows programs ending in RET be able to return to internal CCP
+		Status = 3;
 		break;
 	default:
 #ifdef DEBUG	// Show unimplementes calls only when debugging
