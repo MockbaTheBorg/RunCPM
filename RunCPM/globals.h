@@ -100,9 +100,9 @@ uint8 RAM[RAMSIZE];
 
 //// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 #define BIOSpage			RAMSIZE - 256
-#define BDOSpage			BIOSpage - 256
-#define BIOSjmppage			BDOSpage - 256
-#define BDOSjmppage			BIOSjmppage - 256
+#define BIOSjmppage			BIOSpage - 256
+#define BDOSpage			BIOSjmppage - 256
+#define BDOSjmppage			BDOSpage - 256
 
 #define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 
