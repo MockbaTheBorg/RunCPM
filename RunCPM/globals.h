@@ -24,6 +24,7 @@
 //#define CCP_INTERNAL	// If this is defined, CCP will be internal
 #define CCP_DR
 //#define CCP_ZCPR
+//#define CCP_CCPZ
 
 /* Definition of the CCP memory information */
 #define CCPaddr		(BDOSjmppage-0x0800)
@@ -38,6 +39,12 @@
 #define CCPname		"CCP-DR." STR(SIZEK) "K"
 #define VersionCCP	0x00
 #define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb
+#endif
+//
+#ifdef CCP_CCPZ
+#define CCPname		"CCP-CCPZ." STR(SIZEK) "K"
+#define VersionCCP	0x02
+#define BatchFCB	(CCPaddr + 0x7A)	// Position of the $$$.SUB fcb
 #endif
 //
 #ifdef CCP_ZCPR

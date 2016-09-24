@@ -38,6 +38,7 @@ Create a folder containing both the RunCPM executable and the CCP binaries for t
 The 64K version provides the maximum amount of memory possible to CP/M application, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
 The 60K version provides a more realistic addressing space, keeping the CCP on the same loading address it would be on a similar CP/M computer.<br>
 Other amounts of memory can be used, but this would require rebuilding the CCP binaries (available on disk A.ZIP).
+The CCP binaries are named with their extensions being the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly depending on the amount of memory selected when it is built.
 
 RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use the following procedures:
 
@@ -49,10 +50,11 @@ CP/M only supported 16 disk drives: A: to P:, so creating other letters above P 
 
 RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
 
-* **CCP-DR.BIN** - Is the original CCP from Digital Research.<br>
-* **CCP-ZCPR.BIN** - Is the original ZCPR2 ccp modification.
+* **CCP-DR** - Is the original CCP from Digital Research.<br>
+* **CCP-CCPZ** - Is the Z80 CCP from RLC and others.<br>
+* **CCP-ZCPR** - Is the original ZCPR2 ccp modification.
 
-Both CCPs are provided as source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
+These CCPs are provided with their source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
 
 The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
