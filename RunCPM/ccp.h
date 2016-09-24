@@ -363,12 +363,15 @@ uint8 _ccp_ext(void) {
 	found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);					// Look for the program on the FCB drive, current or specified
 	if (!found) {												// If not found
 		if (!drive) {											// and the search was on the default drive
-			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: same user
+			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: user 0
+			if (curUser) {
+				user = curUser;									// Save the current user
+				_ccp_bdos(F_USERNUM, 0x0000, 0x00);				// then set it to 0
+			}
 			found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);
 			if (!found) {										// If still not found then
 				if (curUser) {									// If current user not = 0
-					user = curUser;								// save the current user
-					_ccp_bdos(F_USERNUM, 0x0000, 0x00);			// then set it to 0
+					_RamWrite(CmdFCB, 0x00);					// look on current drive user 0
 					found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);	// and try again
 				}
 			}
