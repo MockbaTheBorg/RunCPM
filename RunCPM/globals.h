@@ -81,6 +81,11 @@
 						// User numbers are 0-9, then A-F for users 10-15. On case sensitive file-systems the usercodes A-F folders must be uppercase. 
 						// This preliminary feature should emulate the CP/M user.
 
+#define BATCHA			// If this is defined, the $$$.SUB will be looked for on drive A:
+//#define BATCH0		// If this is defined, the $$$.SUB will be looked for on user area 0
+						// The default behavior of DRI's CP/M 2.2 was to have $$$.SUB created on the current drive/user while looking for it
+						// on drive A: current user, which made it complicated to run SUBMITs when not logged to drive A: user 0
+
 /* Some environment and type definitions */
 
 #ifndef TRUE
