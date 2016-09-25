@@ -26,6 +26,7 @@
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
+//#define CCP_Z80
 
 /* Definition of the CCP memory information */
 //
@@ -62,6 +63,13 @@
 #define VersionCCP	0x03
 #define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
 #define CCPaddr		(BDOSjmppage-0x1000)
+#endif
+//
+#ifdef CCP_Z80
+#define CCPname		"CCP-Z80." STR(SIZEK) "K"
+#define VersionCCP	0x04
+#define BatchFCB	(CCPaddr + 0x79E)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"

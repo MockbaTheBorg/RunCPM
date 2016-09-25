@@ -695,7 +695,7 @@ void _Bdos(void) {
 		break;
 		/*
 		C = 252 (FCh) : CCP version
-		Returns: A = 0x00 - DRI / 0x01 - ZCPR2 / 0xVv - Internal version in BCD: V.v
+		Returns: A = 0x00-0x04 = DRI|CCPZ|ZCPR2|ZCPR3|Z80CCP / 0xVv = Internal version in BCD: V.v
 		*/
 	case 252:
 		HL = VersionCCP;
