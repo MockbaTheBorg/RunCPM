@@ -23,7 +23,6 @@
 /* Definition of which CCP to use: INTERNAL, DR or ZCPR (must define only one) */
 //#define CCP_INTERNAL	// If this is defined, CCP will be internal
 #define CCP_DR
-//#define CCP_ZCPR
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3

@@ -434,31 +434,32 @@ void _ccp_cmdError() {
 // Reads input, either from the $$$.SUB or console
 void _ccp_readInput(void) {
 	uint8 i;
-	uint8 recs;
+	uint8 recs = 0;
 	uint8 chars;
 
 	if (sFlag) {									// Are we running a submit?
-		_ccp_bdos(F_OPEN, BatchFCB, 0x00);			// Open batch file
-		recs = _RamRead(BatchFCB + 15);				// Gets its record count
-		if (recs) {
-			recs--;										// Counts one less
-			_RamWrite(BatchFCB + 32, recs);				// And sets to be the next read
-			_ccp_bdos(F_DMAOFF, defDMA, 0x00);			// Reset current DMA
-			_ccp_bdos(F_READ, BatchFCB, 0x00);			// And reads the last sector
-			chars = _RamRead(defDMA);					// Then moves it to the input buffer
-			for (i = 0; i <= chars; i++)
-				_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
-			_RamWrite(inBuf + i + 1, 0);
-			_puts(_RamSysAddr(inBuf + 2));
-			_RamWrite(BatchFCB + 15, recs);			// Prepare the file to be truncated
-			_ccp_bdos(F_CLOSE, BatchFCB, 0x00);		// And truncates it
+		if (!_ccp_bdos(F_OPEN, BatchFCB, 0x00)) {	// Open batch file
+			recs = _RamRead(BatchFCB + 15);			// Gets its record count
+			if (recs) {
+				recs--;								// Counts one less
+				_RamWrite(BatchFCB + 32, recs);		// And sets to be the next read
+				_ccp_bdos(F_DMAOFF, defDMA, 0x00);	// Reset current DMA
+				_ccp_bdos(F_READ, BatchFCB, 0x00);	// And reads the last sector
+				chars = _RamRead(defDMA);			// Then moves it to the input buffer
+				for (i = 0; i <= chars; i++)
+					_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
+				_RamWrite(inBuf + i + 1, 0);
+				_puts(_RamSysAddr(inBuf + 2));
+				_RamWrite(BatchFCB + 15, recs);		// Prepare the file to be truncated
+				_ccp_bdos(F_CLOSE, BatchFCB, 0x00);	// And truncates it
+			}
 		}
 		if (!recs) {
 			_ccp_bdos(F_DELETE, BatchFCB, 0x00);	// Or else just deletes it
 			sFlag = 0;								// and clears the submit flag
 		}
 	} else {
-		_ccp_bdos(C_READSTR, inBuf, 0x00);				// and reads the command line
+		_ccp_bdos(C_READSTR, inBuf, 0x00);			// Reads the command line from console
 	}
 }
 
