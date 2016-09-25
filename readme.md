@@ -48,11 +48,13 @@ RunCPM can emulate the user areas as well (this is the default), so to create th
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
-RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M computers. Two CCPs are provided:
+RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M computers. A few CCPs are provided:
 
 * **CCP-DR** - Is the original CCP from Digital Research.<br>
 * **CCP-CCPZ** - Is the Z80 CCP from RLC and others.<br>
-* **CCP-ZCPR** - Is the original ZCPR2 ccp modification.
+* **CCP-ZCP2** - Is the original ZCPR2 CCP modification.<br>
+* **CCP-ZCP3** - Is the original ZCPR3 CCP modification.<br>
+* **CCP-Z80** - Is the Z80CCP CCP modification, also from RLC and others.<br>
 
 These CCPs are provided with their source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
