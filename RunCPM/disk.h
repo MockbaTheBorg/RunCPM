@@ -481,12 +481,15 @@ uint8 _SetRandom(uint16 fcbaddr) {
 void _SetUser(uint8 user) {
 	userCode = LOW_REGISTER(DE);
 #ifdef USER_SUPPORT
-	_MakeUserDir();	// Creates the user dir if needed
+	if (userCode < 16) {	// If a valid user code
+		_MakeUserDir();		// Creates the user dir if needed
+	}
 #endif
 }
 
 uint8 _CheckSUB(void) {
 	_HostnameToFCB(tmpFCB, (uint8*)"$$$.SUB");
+	_RamWrite(tmpFCB, 1); // Forces $$$.sub to be checked on drive A: (same user for now)
 	return((_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xFF : 0x00);
 }
 
