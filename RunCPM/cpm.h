@@ -484,10 +484,10 @@ void _Bdos(void) {
 		C = 13 (0Dh) : Reset disk system
 		*/
 	case 13:
-		roVector = 0;	// Make all drives R/W
+		roVector = 0;		// Make all drives R/W
 		loginVector = 0;
 		dmaAddr = 0x0080;
-		cDrive = 0;		// userCode remains unchanged
+		cDrive = 0;			// userCode remains unchanged
 		HL = _CheckSUB();	// Checks if there's a $$$.SUB on the boot disk
 		break;
 		/*

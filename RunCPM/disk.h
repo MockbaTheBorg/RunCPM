@@ -87,7 +87,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = FOLDERCHAR;
 
 #ifdef USER_SUPPORT
-	*(filename++) = toupper(tohex(userCode));	
+	*(filename++) = toupper(tohex(userCode));
 	*(filename++) = FOLDERCHAR;
 #endif
 
@@ -479,18 +479,23 @@ uint8 _SetRandom(uint16 fcbaddr) {
 }
 
 void _SetUser(uint8 user) {
-	userCode = LOW_REGISTER(DE);
+	userCode = user & 0x1f;	// BDOS unoficially allows user areas 0-31
+							// this may create folders from G-V if this function is called from an user program
+							// It is an unwanted behavior, but kept as BDOS does it
 #ifdef USER_SUPPORT
-	if (userCode < 16) {	// If a valid user code
-		_MakeUserDir();		// Creates the user dir if needed
-	}
+	_MakeUserDir();			// Creates the user dir (0-F[G-V]) if needed
 #endif
 }
 
 uint8 _CheckSUB(void) {
-	_HostnameToFCB(tmpFCB, (uint8*)"$$$.SUB");
-	_RamWrite(tmpFCB, 1); // Forces $$$.sub to be checked on drive A: (same user for now)
-	return((_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xFF : 0x00);
+	uint8 result;
+	uint8 oCode = userCode;							// Saves the current user code (original BDOS does not do this)
+	_HostnameToFCB(tmpFCB, (uint8*)"$???????.???");	// The original BDOS in fact only looks for a file which start with $
+	_RamWrite(tmpFCB, 1);							// Forces it to be checked on drive A: user 0
+	userCode = 0;
+	result = (_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xff : 0x00;
+	userCode = oCode;								// Restores the current user code
+	return(result);
 }
 
 #endif
