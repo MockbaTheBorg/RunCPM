@@ -491,8 +491,12 @@ uint8 _CheckSUB(void) {
 	uint8 result;
 	uint8 oCode = userCode;							// Saves the current user code (original BDOS does not do this)
 	_HostnameToFCB(tmpFCB, (uint8*)"$???????.???");	// The original BDOS in fact only looks for a file which start with $
-	_RamWrite(tmpFCB, 1);							// Forces it to be checked on drive A: user 0
-	userCode = 0;
+#ifdef BATCHA
+	_RamWrite(tmpFCB, 1);							// Forces it to be checked on drive A:
+#endif
+#ifdef BATCH0
+	userCode = 0;									// Forces it to be checked on user 0
+#endif
 	result = (_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xff : 0x00;
 	userCode = oCode;								// Restores the current user code
 	return(result);
