@@ -19,6 +19,17 @@ Disk errors
 
 #define RW	(roVector & (1 << F->dr))
 
+/*
+FCB related numbers
+*/
+#define BlkSZ 128	// CP/M block size
+#define	BlkEX 128	// Number of blocks on an extension
+#define BlkS2 4096	// Number of blocks on a S2 (module)
+#define MaxCR 127	// Maximum value the CR field can take
+#define MaxRC 127	// Maximum value the RC field can take
+#define MaxEX 31	// Maximum value the EX field can take
+#define MaxS2 15	// Maximum valur the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
+
 void _error(uint8 error) {
 	_puts("\r\nBdos Error on ");
 	_putcon('A' + cDrive);
@@ -76,7 +87,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = FOLDERCHAR;
 
 #ifdef USER_SUPPORT
-	*(filename++) = toupper(tohex(userCode));	
+	*(filename++) = toupper(tohex(userCode));
 	*(filename++) = FOLDERCHAR;
 #endif
 
@@ -202,9 +213,9 @@ long _FileSize(uint16 fcbaddr) {
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		l = _sys_filesize(filename);
-		r = l % 128;
+		r = l % BlkSZ;
 		if (r)
-			l = l + 128 - r;
+			l = l + BlkSZ - r;
 	}
 	return(l);
 }
@@ -212,23 +223,23 @@ long _FileSize(uint16 fcbaddr) {
 uint8 _OpenFile(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
-	long l;
-	int32 reqext;	// Required extention to open
-	int32 b, i;
+	long len;
+	int32 i;
 
-	F->ex = 0;
-	F->cr = 0;
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		if (_sys_openfile(&filename[0])) {
-			l = _FileSize(fcbaddr);
 
-			reqext = (F->ex & 0x1f) | (F->s1 << 5);
-			b = l - reqext * 16384;
-			for (i = 0; i < 16; i++)
-				F->al[i] = (b > i * 1024) ? i + 1 : 0;
+			len = _FileSize(fcbaddr) / 128;	// Compute the len on the file in blocks
+
+			F->ex = 0x00;	// Initializes the FCB
 			F->s1 = 0x00;
-			F->rc = (uint8)(l / 128);
+			F->s2 = 0x00;
+			F->rc = len > MaxRC ? 0x80 : (uint8)len;
+			for (i = 0; i < 16; i++)	// Clean up AL
+				F->al[i] = 0x00;
+			F->cr = 0x00;
+
 			result = 0x00;
 		}
 	}
@@ -255,12 +266,21 @@ uint8 _CloseFile(uint16 fcbaddr) {
 uint8 _MakeFile(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
+	uint8 i;
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
-			if (_sys_makefile(&filename[0]))
+			if (_sys_makefile(&filename[0])) {
+				F->ex = 0x00;	// Makefile also initializes the FCB (file becomes "open")
+				F->s1 = 0x00;
+				F->s2 = 0x00;
+				F->rc = 0x00;
+				for (i = 0; i < 16; i++)	// Clean up AL
+					F->al[i] = 0x00;
+				F->cr = 0x00;
 				result = 0x00;
+			}
 		} else {
 			_error(errWRITEPROT);
 		}
@@ -330,19 +350,26 @@ uint8 _RenameFile(uint16 fcbaddr) {
 uint8 _ReadSeq(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
-	long fpos = (F->ex * 16384) + (F->cr * 128);
+
+	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) + 
+				((F->ex & MaxEX) * BlkEX * BlkSZ) + 
+				((F->cr & MaxCR) * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _sys_readseq(&filename[0], fpos);
 		if (!result) {	// Read succeeded, adjust FCB
 			F->cr++;
-			if (F->cr > 127) {
+			if (F->cr > MaxCR) {
 				F->cr = 0;
 				F->ex++;
 			}
-			if (F->ex > 127)
-				result = 0xff;	// (todo) not sure what to do 
+			if (F->ex > MaxEX) {
+				F->ex = 0;
+				F->s2++;
+			}
+			if (F->s2 > MaxS2)
+				result = 0xfe;	// (todo) not sure what to do 
 		}
 	}
 	return(result);
@@ -351,7 +378,10 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 uint8 _WriteSeq(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
-	long fpos = (F->ex * 16384) + (F->cr * 128);
+
+	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+		((F->ex & MaxEX) * BlkEX * BlkSZ) +
+		((F->cr & MaxCR) * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
@@ -359,12 +389,16 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 			result = _sys_writeseq(&filename[0], fpos);
 			if (!result) {	// Write succeeded, adjust FCB
 				F->cr++;
-				if (F->cr > 127) {
+				if (F->cr > MaxCR) {
 					F->cr = 0;
 					F->ex++;
 				}
-				if (F->ex > 127)
-					result = 0xff;	// (todo) not sure what to do 
+				if (F->ex > MaxEX) {
+					F->ex = 0;
+					F->s2++;
+				}
+				if (F->s2 > MaxS2)
+					result = 0xfe;	// (todo) not sure what to do 
 			}
 		} else {
 			_error(errWRITEPROT);
@@ -376,8 +410,9 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 uint8 _ReadRand(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
-	int32 record = F->r0 | (F->r1 << 8);
-	long fpos = record * 128;
+
+	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
+	long fpos = record * BlkSZ;
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
@@ -385,8 +420,7 @@ uint8 _ReadRand(uint16 fcbaddr) {
 		if (!result) {	// Read succeeded, adjust FCB
 			F->cr = record & 0x7F;
 			F->ex = (record >> 7) & 0x1f;
-			F->s1 = (record >> 12) & 0xff;
-			F->s2 = (record >> 20) & 0xff;
+			F->s2 = (record >> 12) & 0xff;
 		}
 	}
 	return(result);
@@ -395,8 +429,9 @@ uint8 _ReadRand(uint16 fcbaddr) {
 uint8 _WriteRand(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
-	int32 record = F->r0 | (F->r1 << 8);
-	long fpos = record * 128;
+
+	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
+	long fpos = record * BlkSZ;
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
@@ -405,8 +440,7 @@ uint8 _WriteRand(uint16 fcbaddr) {
 			if (!result) {	// Write succeeded, adjust FCB
 				F->cr = record & 0x7F;
 				F->ex = (record >> 7) & 0x1f;
-				F->s1 = (record >> 12) & 0xff;
-				F->s2 = (record >> 20) & 0xff;
+				F->s2 = (record >> 12) & 0xff;
 			}
 		} else {
 			_error(errWRITEPROT);
@@ -434,9 +468,8 @@ uint8 _SetRandom(uint16 fcbaddr) {
 	uint8 result = 0x00;
 
 	int32 count = F->cr & 0x7f;
-	count += (F->ex & 0x1f) << 7;
-	count += F->s1 << 12;
-	count += F->s2 << 20;
+		  count += (F->ex & 0x1f) << 7;
+		  count += F->s2 << 12;
 
 	F->r0 = count & 0xff;
 	F->r1 = (count >> 8) & 0xff;
@@ -446,15 +479,27 @@ uint8 _SetRandom(uint16 fcbaddr) {
 }
 
 void _SetUser(uint8 user) {
-	userCode = LOW_REGISTER(DE);
+	userCode = user & 0x1f;	// BDOS unoficially allows user areas 0-31
+							// this may create folders from G-V if this function is called from an user program
+							// It is an unwanted behavior, but kept as BDOS does it
 #ifdef USER_SUPPORT
-	_MakeUserDir();	// Creates the user dir if needed
+	_MakeUserDir();			// Creates the user dir (0-F[G-V]) if needed
 #endif
 }
 
 uint8 _CheckSUB(void) {
-	_HostnameToFCB(tmpFCB, (uint8*)"$$$.SUB");
-	return((_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xFF : 0x00);
+	uint8 result;
+	uint8 oCode = userCode;							// Saves the current user code (original BDOS does not do this)
+	_HostnameToFCB(tmpFCB, (uint8*)"$???????.???");	// The original BDOS in fact only looks for a file which start with $
+#ifdef BATCHA
+	_RamWrite(tmpFCB, 1);							// Forces it to be checked on drive A:
+#endif
+#ifdef BATCH0
+	userCode = 0;									// Forces it to be checked on user 0
+#endif
+	result = (_SearchFirst(tmpFCB, FALSE) == 0x00) ? 0xff : 0x00;
+	userCode = oCode;								// Restores the current user code
+	return(result);
 }
 
 #endif

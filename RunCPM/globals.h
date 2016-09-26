@@ -22,28 +22,54 @@
 
 /* Definition of which CCP to use: INTERNAL, DR or ZCPR (must define only one) */
 //#define CCP_INTERNAL	// If this is defined, CCP will be internal
-#define CCP_DR
-//#define CCP_ZCPR
+//#define CCP_DR
+#define CCP_CCPZ
+//#define CCP_ZCPR2
+//#define CCP_ZCPR3
+//#define CCP_Z80
 
 /* Definition of the CCP memory information */
-#define CCPaddr		(BDOSjmppage-0x0800)
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.2"	// Will use the CCP from ccp.h
-#define VersionCCP	0x12
-#define BatchFCB	tmpFCB + 36
+#define CCPname		"INTERNAL v1.3"		// Will use the CCP from ccp.h
+#define VersionCCP	0x13
+#define BatchFCB	(tmpFCB + 36)
+#define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_DR
 #define CCPname		"CCP-DR." STR(SIZEK) "K"
 #define VersionCCP	0x00
-#define BatchFCB	CCPaddr + 0x7AC	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#ifdef CCP_ZCPR
-#define CCPname		"CCP-ZCPR." STR(SIZEK) "K"
+#ifdef CCP_CCPZ
+#define CCPname		"CCP-CCPZ." STR(SIZEK) "K"
 #define VersionCCP	0x01
-#define BatchFCB	CCPaddr + 0x5E	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x7A)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x0800)
+#endif
+//
+#ifdef CCP_ZCPR2
+#define CCPname		"CCP-ZCP2." STR(SIZEK) "K"
+#define VersionCCP	0x02
+#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x0800)
+#endif
+//
+#ifdef CCP_ZCPR3
+#define CCPname		"CCP-ZCP3." STR(SIZEK) "K"
+#define VersionCCP	0x03
+#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x1000)
+#endif
+//
+#ifdef CCP_Z80
+#define CCPname		"CCP-Z80." STR(SIZEK) "K"
+#define VersionCCP	0x04
+#define BatchFCB	(CCPaddr + 0x79E)	// Position of the $$$.SUB fcb
+#define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
@@ -54,6 +80,11 @@
 						// look for /A/0 /A/1 and so on, as well for the other drive letters.
 						// User numbers are 0-9, then A-F for users 10-15. On case sensitive file-systems the usercodes A-F folders must be uppercase. 
 						// This preliminary feature should emulate the CP/M user.
+
+#define BATCHA			// If this is defined, the $$$.SUB will be looked for on drive A:
+//#define BATCH0		// If this is defined, the $$$.SUB will be looked for on user area 0
+						// The default behavior of DRI's CP/M 2.2 was to have $$$.SUB created on the current drive/user while looking for it
+						// on drive A: current user, which made it complicated to run SUBMITs when not logged to drive A: user 0
 
 /* Some environment and type definitions */
 
@@ -93,20 +124,21 @@ typedef unsigned int    uint32;
 uint8 RAM[RAMSIZE];
 #define _RamSysAddr(a) &RAM[a]
 #define _RamRead(a) RAM[a]
+#define _RamRead16(a) ((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
 #define _RamWrite(a, v) RAM[a] = v
 #define _RamWrite16(a, v) RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
 #endif
 
-// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
-#define BIOSpage		RAMSIZE - 256
-#define BIOSjmppage		BIOSpage - 256
-#define BDOSpage		BIOSjmppage - 256
-#define BDOSjmppage		BDOSpage - 256
+//// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
+#define BIOSpage			(RAMSIZE - 256)
+#define BIOSjmppage			(BIOSpage - 256)
+#define BDOSpage			(BIOSjmppage - 256)
+#define BDOSjmppage			(BDOSpage - 256)
 
-#define DPBaddr BIOSpage + 64	// Address of the Disk Parameters Block (Hardcoded in BIOS)
+#define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 
-#define SCBaddr BDOSpage + 16	// Address of the System Control Block
-#define tmpFCB  BDOSpage + 64	// Address of the temporary FCB
+#define SCBaddr (BDOSpage + 16)	// Address of the System Control Block
+#define tmpFCB  (BDOSpage + 64)	// Address of the temporary FCB
 
 /* Definition of global variables */
 static uint8	filename[17];		// Current filename in host filesystem format
@@ -120,7 +152,7 @@ static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
 
-#define tohex(x)	x < 10 ? x + 48 : x + 87
+#define tohex(x)	(x < 10 ? x + 48 : x + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus
