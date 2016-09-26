@@ -45,13 +45,13 @@ void _PatchCPM(void) {
 	_RamWrite(BDOSpage + 2, RET);
 
 	// Patches in the BIOS jump destinations
-	for (i = 0; i < 0x33; i = i + 3) {
+	for (i = 0; i < 0x36; i = i + 3) {
 		_RamWrite(BIOSjmppage + i, JP);
 		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
 	}
 
 	// Patches in the BIOS page content
-	for (i = 0; i < 0x33; i = i + 3) {
+	for (i = 0; i < 0x36; i = i + 3) {
 		_RamWrite(BIOSpage + i, OUTa);
 		_RamWrite(BIOSpage + i + 1, i & 0xff);
 		_RamWrite(BIOSpage + i + 2, RET);
@@ -145,9 +145,9 @@ void _logBdosIn(uint8 ch) {
 	};
 
 	if (ch < 41) {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN:\n", ch, CPMCalls[ch]); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN from 0x%04x:\n", ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d IN from 0x%04x:\n", ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	}
 	_logRegs();
 	switch (ch) {
@@ -280,6 +280,9 @@ void _Bios(void) {
 		break;
 	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
+		break;
+	case 0x33:				// This allows programs ending in RET be able to return to internal CCP
+		Status = 3;
 		break;
 	default:
 #ifdef DEBUG	// Show unimplementes calls only when debugging
@@ -481,10 +484,10 @@ void _Bdos(void) {
 		C = 13 (0Dh) : Reset disk system
 		*/
 	case 13:
-		roVector = 0;	// Make all drives R/W
+		roVector = 0;		// Make all drives R/W
 		loginVector = 0;
 		dmaAddr = 0x0080;
-		cDrive = 0;		// userCode remains unchanged
+		cDrive = 0;			// userCode remains unchanged
 		HL = _CheckSUB();	// Checks if there's a $$$.SUB on the boot disk
 		break;
 		/*
@@ -692,7 +695,7 @@ void _Bdos(void) {
 		break;
 		/*
 		C = 252 (FCh) : CCP version
-		Returns: A = 0x00 - DRI / 0x01 - ZCPR2 / 0xVv - Internal version in BCD: V.v
+		Returns: A = 0x00-0x04 = DRI|CCPZ|ZCPR2|ZCPR3|Z80CCP / 0xVv = Internal version in BCD: V.v
 		*/
 	case 252:
 		HL = VersionCCP;
