@@ -36,46 +36,61 @@ int _sys_select(uint8 *disk) {
 	uint8 result = FALSE;
 	SdFile f;
 
+	digitalWrite(LED, HIGH);
 	if (f.open((char *)disk, O_READ)) {
 		if (f.isDir())
 			result = TRUE;
 		f.close();
 	}
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
 long _sys_filesize(uint8 *filename) {
 	long l = -1;
 	SdFile f;
+
+	digitalWrite(LED, HIGH);
 	if (f.open((char*)filename, O_RDONLY)) {
 		l = f.fileSize();
 		f.close();
 	}
+	digitalWrite(LED, LOW);
 	return(l);
 }
 
 int _sys_openfile(uint8 *filename) {
 	SdFile f;
+
+	digitalWrite(LED, HIGH);
 	uint8 file = f.open((char*)filename, O_READ);
 	if (file)
 		f.close();
+	digitalWrite(LED, LOW);
 	return(file);
 }
 
 int _sys_makefile(uint8 *filename) {
 	SdFile f;
+
+	digitalWrite(LED, HIGH);
 	uint8 file = f.open((char*)filename, O_CREAT | O_WRITE);
 	if (file)
 		f.close();
+	digitalWrite(LED, LOW);
 	return(file);
 }
 
 int _sys_deletefile(uint8 *filename) {
+	digitalWrite(LED, HIGH);
 	return(sd.remove((char *)filename));
+	digitalWrite(LED, LOW);
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
+	digitalWrite(LED, HIGH);
 	return(sd.rename((char*)filename, (char*)newname));
+	digitalWrite(LED, LOW);
 }
 
 #ifdef DEBUGLOG
@@ -102,6 +117,7 @@ bool _sys_extendfile(char *fn, long fpos)
 	SdFile f;
 	long i;
 
+	digitalWrite(LED, HIGH);
 	if (f.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > f.fileSize()) {
 			for (i = 0; i < f.fileSize() - fpos; i++) {
@@ -115,7 +131,7 @@ bool _sys_extendfile(char *fn, long fpos)
 	} else {
 		result = false;
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -127,6 +143,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 dmabuf[128];
 	uint8 i;
 
+	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
 	if (file) {
@@ -146,7 +163,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -155,6 +172,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	SdFile f;
 	uint8 file = 0;
 
+	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_RDWR);
 	if (file) {
@@ -168,7 +186,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -180,6 +198,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 dmabuf[128];
 	uint8 i;
 
+	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
 		file = f.open((char*)filename, O_READ);
 	if (file) {
@@ -199,7 +218,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -208,6 +227,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	SdFile f;
 	uint8 file = 0;
 
+	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos)) {
 		file = f.open((char*)filename, O_RDWR);
 	}
@@ -222,7 +242,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -243,6 +263,7 @@ uint8 _findnext(uint8 isdir) {
 	path[2] = filename[2];
 #endif
 
+	digitalWrite(LED, HIGH);
 	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
 									// (todo) Get rid of these chdir() someday
 	if (dirPos)
@@ -268,7 +289,7 @@ uint8 _findnext(uint8 isdir) {
 		}
 	}
 	sd.chdir("/", true);			// (todo) Get rid of these chdir() someday
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -282,12 +303,13 @@ uint8 _Truncate(char *filename, uint8 rc) {
 	uint8 result = 0xff;
 	SdFile f;
 
+	digitalWrite(LED, HIGH);
 	if (f.open((char*)filename, O_RDWR)) {
 		if (f.truncate(rc * 128))
 			result = 0x00;
 		f.close();
 	}
-
+	digitalWrite(LED, LOW);
 	return(result);
 }
 
@@ -298,7 +320,9 @@ void _MakeUserDir() {
 
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
 
-	CreateDirectory((char*)path, NULL);
+	digitalWrite(LED, HIGH);
+	sd.mkdir((char*)path, true);
+	digitalWrite(LED, LOW);
 }
 #endif
 

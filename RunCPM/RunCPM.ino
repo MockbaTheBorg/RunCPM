@@ -6,7 +6,7 @@
 SdFat sd;
 
 #define LED 13
-#define DELAY 500
+#define DELAY 250
 #define SDcs 4  // Pin for the SD chip select signal
 
 #include "abstraction_arduino.h"
