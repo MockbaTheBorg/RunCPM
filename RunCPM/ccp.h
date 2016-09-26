@@ -423,7 +423,7 @@ void _ccp_cmdError() {
 	uint8 ch;
 
 	_puts("\r\n");
-	while (ch = _RamRead(perr++)) {
+	while ((ch = _RamRead(perr++))) {
 		if (ch == ' ')
 			break;
 		_ccp_bdos(C_WRITE, toupper(ch), 0x00);
@@ -449,7 +449,7 @@ void _ccp_readInput(void) {
 				for (i = 0; i <= chars; i++)
 					_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
 				_RamWrite(inBuf + i + 1, 0);
-				_puts(_RamSysAddr(inBuf + 2));
+				_puts((char*)_RamSysAddr(inBuf + 2));
 				_RamWrite(BatchFCB + 15, recs);		// Prepare the file to be truncated
 				_ccp_bdos(F_CLOSE, BatchFCB, 0x00);	// And truncates it
 			}
