@@ -63,6 +63,49 @@ The disk A.ZIP contains a basic initial CP/M environment, with the source code f
 This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.
 Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience.
 
+## Lua Scripting Support
+
+The internal CCP can be built with support for Lua scripting.<br>
+Lua scripts can be written on the CP/M environment using any text editor and then executed as if they were CP/M extrinsic commands.<br>
+
+The order of execution when an extrinsic command is typed with no explicit drive is:<br>
+* The command with extension .COM is searched on the current drive.<br>
+* If not found it is searched on drive A: user area 0.<br>
+* If not found it is searched on the current drive user area 0.<br>
+* If not found then use .LUA extension and repeat the search.
+
+Lua scripts have access to these functions:
+* **BdosCall(C, DE)** - **C** is the number of the function to call and **DE** the parameter to pass.<br>
+  The C and DE CPU registers are loaded accordingly and the BDOS function if called.<br>
+  The function returns the contents of the HL register upon returning from the BDOS call.
+* **RamRead(addr)** - **addr** is the memory address to read from, the function returns a byte.
+* **RamWrite(addr, v)** - **addr** is the memory address to write **v** to. **v** must be a byte.
+* **RamRead16(addr)** - **addr** is the memory address to read from, the function returns a 16 bit word.
+* **RamWrite16(addr, v)** - **addr** is the memory address to write **v** to. **v** must be a 16 bit word.
+* **ReadReg(reg)** - **reg** is the 16 bit CPU register to read from, the function returns a 16 bit word.
+* **WriteReg(reg, v)** - **reg** is the CPU register to write to. **v** must be a 16 bit word.
+  Extra care must be taken when willing to replace only part of the 16 bit register.<br>
+
+The **ReadReg** and **WriteReg** functions refer to the CPU registers as index values.
+The possible values for **reg** on those functions are:<br>
+```
+ 0: PCX - External view of PC
+ 1: AF
+ 2: CC
+ 3: DE
+ 4: HL
+ 5: IX
+ 6: IY
+ 7: PC
+ 8: SP
+ 9: AF'
+10: BC'
+11: DE'
+12: HL'
+13: IFF - Interrupt Flip Flop<br>
+14: IR - Interrupt (upper) / Refresh (lower) register
+```
+
 ## Limitations
 
 The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping the files on the native (host) filesystem.<br>
