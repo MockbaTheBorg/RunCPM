@@ -14,8 +14,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.7"
-#define VersionBCD 0x27
+#define VERSION	"2.8"
+#define VersionBCD 0x28
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -35,6 +35,7 @@
 #define VersionCCP	0x13
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
+#define HASLUA							// Will enable Lua scripting on the internal CCP
 #endif
 //
 #ifdef CCP_DR
