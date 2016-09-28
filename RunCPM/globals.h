@@ -35,7 +35,6 @@
 #define VersionCCP	0x13
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
-#define HASLUA							// Will enable Lua scripting on the internal CCP
 #endif
 //
 #ifdef CCP_DR
@@ -74,6 +73,8 @@
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
+
+#define HASLUA			// Will enable Lua scripting (BDOS call 254)
 
 /* Definition for CP/M 2.2 user number support */
 
@@ -173,6 +174,8 @@ extern "C"
 	extern void _HostnameToFCB(uint16 fcbaddr, uint8 *filename);
 	extern void _HostnameToFCBname(uint8 *from, uint8 *to);
 	extern uint8 match(uint8 *fcbname, uint8 *pattern);
+
+	extern void _puts(const char *str);
 
 #ifdef __cplusplus
 }

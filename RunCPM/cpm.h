@@ -706,6 +706,14 @@ void _Bdos(void) {
 	case 253:
 		HL = CCPaddr;
 		break;
+#ifdef HASLUA
+		/*
+		C = 254 (FEh) : Run Lua file
+		*/
+	case 254:
+		HL = _RunLua(DE);
+		break;
+#endif
 		/*
 		Unimplemented calls get listed
 		*/
