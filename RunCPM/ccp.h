@@ -1,15 +1,6 @@
 #ifndef CCP_H
 #define CCP_H
 
-// Lua scripting support
-#ifdef HASLUA
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-lua_State *L;
-#endif
-
-
 // CP/M BDOS calls
 #define C_READ			1
 #define C_WRITE			2
@@ -26,6 +17,7 @@ lua_State *L;
 #define DRV_GET			25
 #define F_DMAOFF		26
 #define F_USERNUM		32
+#define F_RUNLUA		254
 
 #define CmdFCB	(BatchFCB + 36)		// FCB for use by internal commands
 #define ParFCB	0x005C				// FCB for use by line parameters
@@ -364,8 +356,6 @@ uint8 _ccp_lua(void) {
 	uint8 found, drive, user = 0;
 	uint16 loadAddr = defLoad;
 
-	uint8 luascript[17];
-
 	_RamWrite(CmdFCB + 9, 'L');
 	_RamWrite(CmdFCB + 10, 'U');
 	_RamWrite(CmdFCB + 11, 'A');
@@ -391,23 +381,13 @@ uint8 _ccp_lua(void) {
 	if (found) {
 		_puts("\r\n");
 
-		_FCBtoHostname(CmdFCB, &luascript[0]);
-
-		int result = luaL_loadfile(L, (char*)luascript);
-		if (result) {
-			_puts(lua_tostring(L, -1));
-		} else {
-			result = lua_pcall(L, 0, LUA_MULTRET, 0);
-			if (result)
-				_puts(lua_tostring(L, -1));
-		}
+		_ccp_bdos(F_RUNLUA, CmdFCB);
 
 		if (user) {									// If a user was selected
 			user = 0;
 			_ccp_bdos(F_USERNUM, curUser);			// Set it back
 			_RamWrite(CmdFCB, 0x00);
 		}
-
 		error = FALSE;
 	}
 
@@ -534,150 +514,8 @@ void _ccp_readInput(void) {
 	}
 }
 
-#ifdef HASLUA
-// Lua "Trampoline" functions
-int luaBdosCall(lua_State *L) {
-	uint8 function = (uint8)luaL_checkinteger(L, 1);
-	uint16 de = (uint16)luaL_checkinteger(L, 2);
-
-	uint16 result = _ccp_bdos(function, de);
-	lua_pushinteger(L, result);
-	return(1);
-}
-
-int luaRamRead(lua_State *L) {
-	uint16 addr = (uint16)luaL_checkinteger(L, 1);
-
-	uint8 result = _RamRead(addr);
-	lua_pushinteger(L, result);
-	return(1);
-}
-
-int luaRamWrite(lua_State *L) {
-	uint16 addr = (uint16)luaL_checkinteger(L, 1);
-	uint8 value = (uint8)luaL_checkinteger(L, 2);
-
-	_RamWrite(addr, value);
-	return(0);
-}
-
-int luaRamRead16(lua_State *L) {
-	uint16 addr = (uint16)luaL_checkinteger(L, 1);
-
-	uint16 result = _RamRead16(addr);
-	lua_pushinteger(L, result);
-	return(1);
-}
-
-int luaRamWrite16(lua_State *L) {
-	uint16 addr = (uint16)luaL_checkinteger(L, 1);
-	uint16 value = (uint8)luaL_checkinteger(L, 2);
-
-	_RamWrite16(addr, value);
-	return(0);
-}
-
-int luaReadReg(lua_State *L) {
-	uint8 reg = (uint8)luaL_checkinteger(L, 1);
-	uint16 result;
-
-	switch (reg) {
-	case 0:
-		result = PCX & 0xffff;	break;	/* external view of PC                          */
-	case 1:
-		result = AF & 0xffff;	break;	/* AF register                                  */
-	case 2:
-		result = BC & 0xffff;	break;	/* BC register                                  */
-	case 3:
-		result = DE & 0xffff;	break;	/* DE register                                  */
-	case 4:
-		result = HL & 0xffff;	break;	/* HL register                                  */
-	case 5:
-		result = IX & 0xffff;	break;	/* IX register                                  */
-	case 6:
-		result = IY & 0xffff;	break;	/* IY register                                  */
-	case 7:
-		result = PC & 0xffff;	break;	/* program counter                              */
-	case 8:
-		result = SP & 0xffff;	break;	/* SP register                                  */
-	case 9:
-		result = AF1 & 0xffff;	break;	/* alternate AF register                        */
-	case 10:
-		result = BC1 & 0xffff;	break;	/* alternate BC register                        */
-	case 11:
-		result = DE1 & 0xffff;	break;	/* alternate DE register                        */
-	case 12:
-		result = HL1 & 0xffff;	break;	/* alternate HL register                        */
-	case 13:
-		result = IFF & 0xffff;	break;	/* Interrupt Flip Flop                          */
-	case 14:
-		result = IR & 0xffff;	break;	/* Interrupt (upper) / Refresh (lower) register */
-	default:
-		result = -1;	break;
-	}
-
-	lua_pushinteger(L, result);
-	return(1);
-}
-
-int luaWriteReg(lua_State *L) {
-	uint8 reg = (uint8)luaL_checkinteger(L, 1);
-	uint16 value = (uint8)luaL_checkinteger(L, 2);
-
-	switch (reg) {
-	case 0:
-		PCX = value;	break;	/* external view of PC                          */
-	case 1:
-		AF = value;		break;	/* AF register                                  */
-	case 2:
-		BC = value;		break;	/* BC register                                  */
-	case 3:
-		DE = value;		break;	/* DE register                                  */
-	case 4:
-		HL = value;		break;	/* HL register                                  */
-	case 5:
-		IX = value;		break;	/* IX register                                  */
-	case 6:
-		IY = value;		break;	/* IY register                                  */
-	case 7:
-		PC = value;		break;	/* program counter                              */
-	case 8:
-		SP = value;		break;	/* SP register                                  */
-	case 9:
-		AF1 = value;	break;	/* alternate AF register                        */
-	case 10:
-		BC1 = value;	break;	/* alternate BC register                        */
-	case 11:
-		DE1 = value;	break;	/* alternate DE register                        */
-	case 12:
-		HL1 = value;	break;	/* alternate HL register                        */
-	case 13:
-		IFF = value;	break;	/* Interrupt Flip Flop                          */
-	case 14:
-		IR = value;		break;	/* Interrupt (upper) / Refresh (lower) register */
-	default:
-		break;
-	}
-
-	return(0);
-}
-#endif
-
 // Main CCP code
 void _ccp(void) {
-
-#ifdef HASLUA
-	L = luaL_newstate();
-	luaL_openlibs(L);
-// Register Lua functions
-	lua_register(L, "BdosCall", luaBdosCall);
-	lua_register(L, "RamRead", luaRamRead);
-	lua_register(L, "RamWrite", luaRamWrite);
-	lua_register(L, "RamRead16", luaRamRead16);
-	lua_register(L, "RamWrite16", luaRamWrite16);
-	lua_register(L, "ReadReg", luaReadReg);
-	lua_register(L, "WriteReg", luaWriteReg);
-#endif
 
 	uint8 i;
 
@@ -782,9 +620,6 @@ void _ccp(void) {
 			break;
 	}
 	_puts("\r\n");
-#ifdef HASLUA
-	lua_close(L);
-#endif
 }
 
 #endif

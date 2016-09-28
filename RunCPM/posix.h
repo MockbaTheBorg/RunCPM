@@ -259,4 +259,11 @@ void _MakeUserDir() {
 }
 #endif
 
+#ifdef HASLUA
+uint8 _RunLuaScript(char *filename) {
+
+	return(1);
+}
+#endif
+
 #endif

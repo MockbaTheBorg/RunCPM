@@ -191,6 +191,7 @@
     <ClInclude Include="cpu.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="globals.h" />
+    <ClInclude Include="lua.h" />
     <ClInclude Include="lua\lapi.h" />
     <ClInclude Include="lua\lauxlib.h" />
     <ClInclude Include="lua\lcode.h" />

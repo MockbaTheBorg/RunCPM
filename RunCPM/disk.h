@@ -502,4 +502,19 @@ uint8 _CheckSUB(void) {
 	return(result);
 }
 
+#ifdef HASLUA
+uint8 _RunLua(uint16 fcbaddr) {
+	uint8 luascript[17];
+	uint8 result = 0xff;
+
+	if (_FCBtoHostname(fcbaddr, &luascript[0])) {	// Script name must be unique
+		if (!_SearchFirst(fcbaddr, FALSE)) {			// and must exist
+			result = _RunLuaScript((char*)&luascript[0]);
+		}
+	}
+
+	return(result);
+}
+#endif
+
 #endif
