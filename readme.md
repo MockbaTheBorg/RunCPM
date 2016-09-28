@@ -102,7 +102,7 @@ The possible values for **reg** on those functions are:<br>
 10: BC'
 11: DE'
 12: HL'
-13: IFF - Interrupt Flip Flop<br>
+13: IFF - Interrupt Flip Flop
 14: IR - Interrupt (upper) / Refresh (lower) register
 ```
 
