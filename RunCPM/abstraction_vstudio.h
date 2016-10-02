@@ -10,6 +10,16 @@
 #include <conio.h>
 #endif
 
+// Lua scripting support
+#ifdef HASLUA
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+
+#include "lua.h"
+lua_State *L;
+#endif
+
 #define HostOS 0x00
 
 /* Externals for abstracted functions need to go here */
@@ -319,6 +329,36 @@ void _MakeUserDir() {
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
 
 	CreateDirectory((char*)path, NULL);
+}
+#endif
+
+#ifdef HASLUA
+uint8 _RunLuaScript(char *filename) {
+
+	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	// Register Lua functions
+	lua_register(L, "BdosCall", luaBdosCall);
+	lua_register(L, "RamRead", luaRamRead);
+	lua_register(L, "RamWrite", luaRamWrite);
+	lua_register(L, "RamRead16", luaRamRead16);
+	lua_register(L, "RamWrite16", luaRamWrite16);
+	lua_register(L, "ReadReg", luaReadReg);
+	lua_register(L, "WriteReg", luaWriteReg);
+
+	int result = luaL_loadfile(L, filename);
+	if (result) {
+		_puts(lua_tostring(L, -1));
+	} else {
+		result = lua_pcall(L, 0, LUA_MULTRET, 0);
+		if (result)
+			_puts(lua_tostring(L, -1));
+	}
+
+	lua_close(L);
+
+	return(result);
 }
 #endif
 

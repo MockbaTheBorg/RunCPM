@@ -14,8 +14,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.7"
-#define VersionBCD 0x27
+#define VERSION	"2.8"
+#define VersionBCD 0x28
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -73,6 +73,8 @@
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
+
+#define HASLUA			// Will enable Lua scripting (BDOS call 254)
 
 /* Definition for CP/M 2.2 user number support */
 
@@ -172,6 +174,8 @@ extern "C"
 	extern void _HostnameToFCB(uint16 fcbaddr, uint8 *filename);
 	extern void _HostnameToFCBname(uint8 *from, uint8 *to);
 	extern uint8 match(uint8 *fcbname, uint8 *pattern);
+
+	extern void _puts(const char *str);
 
 #ifdef __cplusplus
 }
