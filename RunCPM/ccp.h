@@ -17,6 +17,7 @@
 #define DRV_GET			25
 #define F_DMAOFF		26
 #define F_USERNUM		32
+#define F_RUNLUA		254
 
 #define CmdFCB	(BatchFCB + 36)		// FCB for use by internal commands
 #define ParFCB	0x005C				// FCB for use by line parameters
@@ -57,12 +58,11 @@ static const char *Commands[] =
 };
 
 // Used to call BDOS from inside the CCP
-uint8 _ccp_bdos(uint8 function, uint16 de, uint8 a) {
+uint16 _ccp_bdos(uint8 function, uint16 de) {
 	SET_LOW_REGISTER(BC, function);
 	DE = de;
-	SET_HIGH_REGISTER(AF, a);
 	_Bdos();
-	return(HIGH_REGISTER(AF));
+	return(HL & 0xffff);
 }
 
 // Compares two strings (Atmel doesn't like strcmp)
@@ -110,8 +110,8 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 
 	ch = _RamRead(fcb);
 	if (ch && compact) {
-		_ccp_bdos(C_WRITE, ch + '@', 0x00);
-		_ccp_bdos(C_WRITE, ':', 0x00);
+		_ccp_bdos(C_WRITE, ch + '@');
+		_ccp_bdos(C_WRITE, ':');
 	}
 
 	for (i = 1; i < 12; i++) {
@@ -119,8 +119,8 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 		if (ch == ' ' && compact)
 			continue;
 		if (i == 9)
-			_ccp_bdos(C_WRITE, compact ? '.' : ' ', 0x00);
-		_ccp_bdos(C_WRITE, ch, 0x00);
+			_ccp_bdos(C_WRITE, compact ? '.' : ' ');
+		_ccp_bdos(C_WRITE, ch);
 	}
 }
 
@@ -253,7 +253,7 @@ void _ccp_dir(void) {
 
 // ERA command
 void _ccp_era(void) {
-	if (_ccp_bdos(F_DELETE, ParFCB, 0x00))
+	if (_ccp_bdos(F_DELETE, ParFCB))
 		_puts("\r\nNo file");
 }
 
@@ -262,21 +262,21 @@ uint8 _ccp_type(void) {
 	uint8 i, c, l = 0, error = TRUE;
 	uint16 a;
 
-	if (!_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
+	if (!_ccp_bdos(F_OPEN, ParFCB)) {
 		_puts("\r\n");
-		while (!_ccp_bdos(F_READ, ParFCB, 0x00)) {
+		while (!_ccp_bdos(F_READ, ParFCB)) {
 			i = 128;
 			a = dmaAddr;
 			while (i) {
 				c = _RamRead(a);
 				if (c == 0x1a)
 					break;
-				_ccp_bdos(C_WRITE, c, 0x00);
+				_ccp_bdos(C_WRITE, c);
 				if (c == 0x0a) {
 					l++;
 					if (l == pgSize) {
 						l = 0;
-						_ccp_bdos(C_READ, 0x0000, 0x00);
+						_ccp_bdos(C_READ, 0x0000);
 					}
 				}
 				i--; a++;
@@ -299,22 +299,22 @@ uint8 _ccp_save(void) {
 			pbuf++; blen--;
 		}
 		_ccp_nameToFCB(ParFCB);						// Loads file name onto the ParFCB
-		if (_ccp_bdos(F_MAKE, ParFCB, 0x00)) {
+		if (_ccp_bdos(F_MAKE, ParFCB)) {
 			_puts("Err: create");
 		} else {
-			if (_ccp_bdos(F_OPEN, ParFCB, 0x00)) {
+			if (_ccp_bdos(F_OPEN, ParFCB)) {
 				_puts("Err: open");
 			} else {
 				pages *= 2;									// Calculates the number of CP/M blocks to write
 				dma = defLoad;
 				_puts("\r\n");
 				for (i = 0; i < pages; i++) {
-					_ccp_bdos(F_DMAOFF, dma, 0x00);
-					_ccp_bdos(F_WRITE, ParFCB, 0x00);
+					_ccp_bdos(F_DMAOFF, dma);
+					_ccp_bdos(F_WRITE, ParFCB);
 					dma += 128;
-					_ccp_bdos(C_WRITE, '.', 0x00);
+					_ccp_bdos(C_WRITE, '.');
 				}
-				_ccp_bdos(F_CLOSE, ParFCB, 0x00);
+				_ccp_bdos(F_CLOSE, ParFCB);
 			}
 		}
 	}
@@ -332,7 +332,7 @@ void _ccp_ren(void) {
 		_RamWrite(ParFCB + i, _RamRead(SecFCB + i));
 		_RamWrite(SecFCB + i, ch);
 	}
-	if (_ccp_bdos(F_RENAME, ParFCB, 0x00)) {
+	if (_ccp_bdos(F_RENAME, ParFCB)) {
 		_puts("\r\nNo file");
 	}
 }
@@ -343,11 +343,62 @@ uint8 _ccp_user(void) {
 
 	curUser = (uint8)_ccp_fcbtonum();
 	if (curUser < 16) {
-		_ccp_bdos(F_USERNUM, curUser, 0x00);
+		_ccp_bdos(F_USERNUM, curUser);
 		error = FALSE;
 	}
 	return(error);
 }
+
+#ifdef HASLUA
+// External (.LUA) command
+uint8 _ccp_lua(void) {
+	uint8 error = TRUE;
+	uint8 found, drive, user = 0;
+	uint16 loadAddr = defLoad;
+
+	_RamWrite(CmdFCB + 9, 'L');
+	_RamWrite(CmdFCB + 10, 'U');
+	_RamWrite(CmdFCB + 11, 'A');
+
+	drive = _RamRead(CmdFCB);
+	found = !_ccp_bdos(F_OPEN, CmdFCB);							// Look for the program on the FCB drive, current or specified
+	if (!found) {												// If not found
+		if (!drive) {											// and the search was on the default drive
+			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: user 0
+			if (curUser) {
+				user = curUser;									// Save the current user
+				_ccp_bdos(F_USERNUM, 0x0000);					// then set it to 0
+			}
+			found = !_ccp_bdos(F_OPEN, CmdFCB);
+			if (!found) {										// If still not found then
+				if (curUser) {									// If current user not = 0
+					_RamWrite(CmdFCB, 0x00);					// look on current drive user 0
+					found = !_ccp_bdos(F_OPEN, CmdFCB);			// and try again
+				}
+			}
+		}
+	}
+	if (found) {
+		_puts("\r\n");
+
+		_ccp_bdos(F_RUNLUA, CmdFCB);
+
+		if (user) {									// If a user was selected
+			user = 0;
+			_ccp_bdos(F_USERNUM, curUser);			// Set it back
+			_RamWrite(CmdFCB, 0x00);
+		}
+		error = FALSE;
+	}
+
+	if (user) {									// If a user was selected
+		_ccp_bdos(F_USERNUM, curUser);			// Set it back
+		_RamWrite(CmdFCB, 0x00);
+	}
+
+	return(error);
+}
+#endif
 
 // External (.COM) command
 uint8 _ccp_ext(void) {
@@ -360,37 +411,37 @@ uint8 _ccp_ext(void) {
 	_RamWrite(CmdFCB + 11, 'M');
 
 	drive = _RamRead(CmdFCB);
-	found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);					// Look for the program on the FCB drive, current or specified
+	found = !_ccp_bdos(F_OPEN, CmdFCB);							// Look for the program on the FCB drive, current or specified
 	if (!found) {												// If not found
 		if (!drive) {											// and the search was on the default drive
 			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: user 0
 			if (curUser) {
 				user = curUser;									// Save the current user
-				_ccp_bdos(F_USERNUM, 0x0000, 0x00);				// then set it to 0
+				_ccp_bdos(F_USERNUM, 0x0000);					// then set it to 0
 			}
-			found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);
+			found = !_ccp_bdos(F_OPEN, CmdFCB);
 			if (!found) {										// If still not found then
 				if (curUser) {									// If current user not = 0
 					_RamWrite(CmdFCB, 0x00);					// look on current drive user 0
-					found = !_ccp_bdos(F_OPEN, CmdFCB, 0x00);	// and try again
+					found = !_ccp_bdos(F_OPEN, CmdFCB);			// and try again
 				}
 			}
 		}
 	}
 	if (found) {
 		_puts("\r\n");
-		_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
-		while (!_ccp_bdos(F_READ, CmdFCB, 0x00)) {
+		_ccp_bdos(F_DMAOFF, loadAddr);
+		while (!_ccp_bdos(F_READ, CmdFCB)) {
 			loadAddr += 128;
-			_ccp_bdos(F_DMAOFF, loadAddr, 0x00);
+			_ccp_bdos(F_DMAOFF, loadAddr);
 		}
-		_ccp_bdos(F_DMAOFF, defDMA, 0x00);
+		_ccp_bdos(F_DMAOFF, defDMA);
 
 		if (user) {									// If a user was selected
 			user = 0;
-			_ccp_bdos(F_USERNUM, curUser, 0x00);	// Set it back
-			_RamWrite(CmdFCB, 0x00);
+			_ccp_bdos(F_USERNUM, curUser);			// Set it back
 		}
+		_RamWrite(CmdFCB, drive);
 
 		// Place a trampoline to call the external command
 		// as it may return using RET instead of JP 0000h
@@ -411,9 +462,9 @@ uint8 _ccp_ext(void) {
 	}
 
 	if (user) {									// If a user was selected
-		_ccp_bdos(F_USERNUM, curUser, 0x00);	// Set it back
-		_RamWrite(CmdFCB, 0x00);
+		_ccp_bdos(F_USERNUM, curUser);			// Set it back
 	}
+	_RamWrite(CmdFCB, drive);
 
 	return(error);
 }
@@ -426,7 +477,7 @@ void _ccp_cmdError() {
 	while ((ch = _RamRead(perr++))) {
 		if (ch == ' ')
 			break;
-		_ccp_bdos(C_WRITE, toupper(ch), 0x00);
+		_ccp_bdos(C_WRITE, toupper(ch));
 	}
 	_puts("?\r\n");
 }
@@ -438,46 +489,47 @@ void _ccp_readInput(void) {
 	uint8 chars;
 
 	if (sFlag) {									// Are we running a submit?
-		if (!_ccp_bdos(F_OPEN, BatchFCB, 0x00)) {	// Open batch file
+		if (!_ccp_bdos(F_OPEN, BatchFCB)) {			// Open batch file
 			recs = _RamRead(BatchFCB + 15);			// Gets its record count
 			if (recs) {
 				recs--;								// Counts one less
 				_RamWrite(BatchFCB + 32, recs);		// And sets to be the next read
-				_ccp_bdos(F_DMAOFF, defDMA, 0x00);	// Reset current DMA
-				_ccp_bdos(F_READ, BatchFCB, 0x00);	// And reads the last sector
+				_ccp_bdos(F_DMAOFF, defDMA);		// Reset current DMA
+				_ccp_bdos(F_READ, BatchFCB);		// And reads the last sector
 				chars = _RamRead(defDMA);			// Then moves it to the input buffer
 				for (i = 0; i <= chars; i++)
 					_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
 				_RamWrite(inBuf + i + 1, 0);
 				_puts((char*)_RamSysAddr(inBuf + 2));
 				_RamWrite(BatchFCB + 15, recs);		// Prepare the file to be truncated
-				_ccp_bdos(F_CLOSE, BatchFCB, 0x00);	// And truncates it
+				_ccp_bdos(F_CLOSE, BatchFCB);		// And truncates it
 			}
 		}
 		if (!recs) {
-			_ccp_bdos(F_DELETE, BatchFCB, 0x00);	// Or else just deletes it
+			_ccp_bdos(F_DELETE, BatchFCB);			// Or else just deletes it
 			sFlag = 0;								// and clears the submit flag
 		}
 	} else {
-		_ccp_bdos(C_READSTR, inBuf, 0x00);			// Reads the command line from console
+		_ccp_bdos(C_READSTR, inBuf);				// Reads the command line from console
 	}
 }
 
 // Main CCP code
 void _ccp(void) {
+
 	uint8 i;
 
 	_puts(CCPHEAD);
 
-	sFlag = _ccp_bdos(DRV_ALLRESET, 0x0000, 0x00);
-	_ccp_bdos(DRV_SET, curDrive, 0x00);
+	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
+	_ccp_bdos(DRV_SET, curDrive);
 
 	for (i = 0; i < 36; i++)
 		_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 
 	while (TRUE) {
-		curDrive = _ccp_bdos(DRV_GET, 0x0000, 0x00);	// Get current drive
-		curUser = _ccp_bdos(F_USERNUM, 0x00FF, 0x00);	// Get current user
+		curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);			// Get current drive
+		curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);			// Get current user
 		_RamWrite(0x0004, (curUser << 4) + curDrive);	// Set user/drive on addr 0x0004
 
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
@@ -490,7 +542,7 @@ void _ccp(void) {
 
 		blen = _RamRead(inBuf + 1);						// Obtains the number of bytes read
 
-		_ccp_bdos(F_DMAOFF, defDMA, 0x00);				// Reset current DMA
+		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
 
 		if (blen) {
 			_RamWrite(inBuf + 2 + blen, 0);				// "Closes" the read buffer with a \0
@@ -513,7 +565,7 @@ void _ccp(void) {
 			}
 
 			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
-				_ccp_bdos(DRV_SET, _RamRead(CmdFCB) - 1, 0x00);
+				_ccp_bdos(DRV_SET, _RamRead(CmdFCB) - 1);
 				continue;
 			}
 
@@ -552,7 +604,12 @@ void _ccp(void) {
 			case 8:		// EXIT
 				Status = 1;			break;
 			case 255:	// It is an external command
-				i = _ccp_ext();		break;
+				i = _ccp_ext();
+#ifdef HASLUA
+				if (i)
+					i = _ccp_lua();
+#endif
+				break;
 			default:
 				i = TRUE;			break;
 			}
