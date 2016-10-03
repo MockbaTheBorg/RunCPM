@@ -6,10 +6,10 @@
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char *filename, uint16 address) {
-	SdFile f;
+	File f;
 	bool result = false;
 
-	if (f.open(filename, FILE_READ)) {
+	if (f = SD.open(filename, FILE_READ)) {
 		while (f.available())
 			_RamWrite(address++, f.read());
 		f.close();
@@ -34,11 +34,11 @@ typedef struct {
 
 int _sys_select(uint8 *disk) {
 	uint8 result = FALSE;
-	SdFile f;
+	File f;
 
 	digitalWrite(LED, HIGH);
-	if (f.open((char *)disk, O_READ)) {
-		if (f.isDir())
+	if (f = SD.open((char *)disk, O_READ)) {
+		if (f.isDirectory())
 			result = TRUE;
 		f.close();
 	}
@@ -48,11 +48,11 @@ int _sys_select(uint8 *disk) {
 
 long _sys_filesize(uint8 *filename) {
 	long l = -1;
-	SdFile f;
+	File f;
 
 	digitalWrite(LED, HIGH);
-	if (f.open((char*)filename, O_RDONLY)) {
-		l = f.fileSize();
+	if (f = SD.open((char*)filename, O_RDONLY)) {
+		l = f.size();
 		f.close();
 	}
 	digitalWrite(LED, LOW);
@@ -60,36 +60,36 @@ long _sys_filesize(uint8 *filename) {
 }
 
 int _sys_openfile(uint8 *filename) {
-	SdFile f;
+	File f;
 
 	digitalWrite(LED, HIGH);
-	uint8 file = f.open((char*)filename, O_READ);
-	if (file)
+	f = SD.open((char*)filename, O_READ);
+	if (f)
 		f.close();
 	digitalWrite(LED, LOW);
-	return(file);
+	return((int)f);
 }
 
 int _sys_makefile(uint8 *filename) {
-	SdFile f;
+	File f;
 
 	digitalWrite(LED, HIGH);
-	uint8 file = f.open((char*)filename, O_CREAT | O_WRITE);
-	if (file)
+	f = SD.open((char*)filename, O_CREAT | O_WRITE);
+	if (f)
 		f.close();
 	digitalWrite(LED, LOW);
-	return(file);
+	return((int)f);
 }
 
 int _sys_deletefile(uint8 *filename) {
 	digitalWrite(LED, HIGH);
-	return(sd.remove((char *)filename));
+	return(SD.remove((char *)filename));
 	digitalWrite(LED, LOW);
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
 	digitalWrite(LED, HIGH);
-	return(sd.rename((char*)filename, (char*)newname));
+//	return(SD.rename((char*)filename, (char*)newname));
 	digitalWrite(LED, LOW);
 }
 
@@ -98,11 +98,11 @@ void _sys_logbuffer(uint8 *buffer) {
 #ifdef CONSOLELOG
 	puts((char *)buffer);
 #else
-	SdFile f;
+	File f;
 	uint8 s = 0;
 	while (*(buffer+s))	// Computes buffer size
 		s++;
-	if(f.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
+	if(f = SD.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
 		f.write(buffer, s);
 		f.flush();
 		f.close();
@@ -114,13 +114,13 @@ void _sys_logbuffer(uint8 *buffer) {
 bool _sys_extendfile(char *fn, long fpos)
 {
 	uint8 result = true;
-	SdFile f;
+	File f;
 	long i;
 
 	digitalWrite(LED, HIGH);
-	if (f.open(fn, O_WRITE | O_APPEND)) {
-		if (fpos > f.fileSize()) {
-			for (i = 0; i < f.fileSize() - fpos; i++) {
+	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
+		if (fpos > f.size()) {
+			for (i = 0; i < f.size() - fpos; i++) {
 				if (f.write((uint8_t)0) < 0) {
 					result = false;
 					break;
@@ -137,17 +137,16 @@ bool _sys_extendfile(char *fn, long fpos)
 
 uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
-	SdFile f;
+	File f;
 	uint8 bytesread;
-	uint8 file = 0;
 	uint8 dmabuf[128];
 	uint8 i;
 
 	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
-		file = f.open((char*)filename, O_READ);
-	if (file) {
-		if (f.seekSet(fpos)) {
+		f = SD.open((char*)filename, O_READ);
+	if (f) {
+		if (f.seek(fpos)) {
 			for (i = 0; i < 128; i++)
 				dmabuf[i] = 0x1a;
 			bytesread = f.read(&dmabuf[0], 128);
@@ -169,14 +168,13 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 
 uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
-	SdFile f;
-	uint8 file = 0;
+	File f;
 
 	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
-		file = f.open((char*)filename, O_RDWR);
-	if (file) {
-		if (f.seekSet(fpos)) {
+		f = SD.open((char*)filename, O_RDWR);
+	if (f) {
+		if (f.seek(fpos)) {
 			if (f.write(_RamSysAddr(dmaAddr), 128))
 				result = 0x00;
 		} else {
@@ -192,17 +190,16 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 
 uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
-	SdFile f;
+	File f;
 	uint8 bytesread;
-	uint8 file = 0;
 	uint8 dmabuf[128];
 	uint8 i;
 
 	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos))
-		file = f.open((char*)filename, O_READ);
-	if (file) {
-		if (f.seekSet(fpos)) {
+		f = SD.open((char*)filename, O_READ);
+	if (f) {
+		if (f.seek(fpos)) {
 			for (i = 0; i < 128; i++)
 				dmabuf[i] = 0x1a;
 			bytesread = f.read(&dmabuf[0], 128);
@@ -224,15 +221,14 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 
 uint8 _sys_writerand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
-	SdFile f;
-	uint8 file = 0;
+	File f;
 
 	digitalWrite(LED, HIGH);
 	if (_sys_extendfile((char*)filename, fpos)) {
-		file = f.open((char*)filename, O_RDWR);
+		f = SD.open((char*)filename, O_RDWR);
 	}
-	if (file) {
-		if (f.seekSet(fpos)) {
+	if (f) {
+		if (f.seek(fpos)) {
 			if (f.write(_RamSysAddr(dmaAddr), 128))
 				result = 0x00;
 		} else {
@@ -247,7 +243,8 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 }
 
 uint8 _findnext(uint8 isdir) {
-	SdFile f;
+  File root;
+	File f;
 	uint8 result = 0xff;
 #ifdef USER_SUPPORT
 	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
@@ -255,6 +252,7 @@ uint8 _findnext(uint8 isdir) {
 	uint8 path[2] = { '?', 0 };
 #endif
 	uint8 dirname[13];
+  char* fname;
 	bool isfile;
 	int i;
 
@@ -264,15 +262,20 @@ uint8 _findnext(uint8 isdir) {
 #endif
 
 	digitalWrite(LED, HIGH);
-	sd.chdir((char *)path, true);	// This switches sd momentarily to the folder
-									// (todo) Get rid of these chdir() someday
-	if (dirPos)
-		sd.vwd()->seekSet(dirPos);
+  root = SD.open((char *)path);
+	if (dirPos) {
+		root.rewindDirectory();
+    for (i = 0; i < dirPos; i++)
+      f = root.openNextFile();
+      f.close();
+	}
 
-	while (f.openNext(sd.vwd(), O_READ)) {
-		dirPos = sd.vwd()->curPosition();
-		f.getName((char*)dirname, 13);
-		isfile = f.isFile();
+	while (f = root.openNextFile()) {
+    dirPos++;
+    fname = f.name();
+    for (i = 0; i < strlen(fname); i++)
+      dirname[i] = fname[i];
+		isfile = !f.isDirectory();
 		f.close();
 		if (!isfile)
 			continue;
@@ -288,7 +291,7 @@ uint8 _findnext(uint8 isdir) {
 			break;
 		}
 	}
-	sd.chdir("/", true);			// (todo) Get rid of these chdir() someday
+//	SD.chdir("/", true);			// (todo) Get rid of these chdir() someday
 	digitalWrite(LED, LOW);
 	return(result);
 }
@@ -301,11 +304,11 @@ uint8 _findfirst(uint8 isdir) {
 
 uint8 _Truncate(char *filename, uint8 rc) {
 	uint8 result = 0xff;
-	SdFile f;
+	File f;
 
 	digitalWrite(LED, HIGH);
-	if (f.open((char*)filename, O_RDWR)) {
-		if (f.truncate(rc * 128))
+	if (f = SD.open((char*)filename, O_RDWR)) {
+//		if (f.truncate(rc * 128))
 			result = 0x00;
 		f.close();
 	}
@@ -321,7 +324,7 @@ void _MakeUserDir() {
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
 
 	digitalWrite(LED, HIGH);
-	sd.mkdir((char*)path, true);
+	SD.mkdir((char*)path);
 	digitalWrite(LED, LOW);
 }
 #endif
