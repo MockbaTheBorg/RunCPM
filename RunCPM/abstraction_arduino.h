@@ -61,24 +61,30 @@ long _sys_filesize(uint8 *filename) {
 
 int _sys_openfile(uint8 *filename) {
 	File f;
+	int result = 0;
 
 	digitalWrite(LED, HIGH);
 	f = SD.open((char*)filename, O_READ);
-	if (f)
+	if (f) {
 		f.close();
+		result = 1;
+	}
 	digitalWrite(LED, LOW);
-	return((int)f);
+	return(result);
 }
 
 int _sys_makefile(uint8 *filename) {
 	File f;
+	int result = 0;
 
 	digitalWrite(LED, HIGH);
 	f = SD.open((char*)filename, O_CREAT | O_WRITE);
-	if (f)
+	if (f) {
 		f.close();
+		result = 1;
+	}
 	digitalWrite(LED, LOW);
-	return((int)f);
+	return(result);
 }
 
 int _sys_deletefile(uint8 *filename) {
@@ -88,29 +94,29 @@ int _sys_deletefile(uint8 *filename) {
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
-  File fold, fnew;
-  int result = false;
-  uint8 c;
-  
+	File fold, fnew;
+	int result = false;
+	uint8 c;
+
 	digitalWrite(LED, HIGH);
-  if (fold = SD.open((char*)filename, O_READ)) {
-    if (fnew = SD.open((char*)newname, O_CREAT | O_WRITE)) {
-      result = true;
-      while ((c = fold.read()) >= 0) {
-        if (fnew.write(c) < 1) {
-          result = false;
-          break;
-        }
-      }
-      fnew.close();
-    }
-    fold.close();
-  }
-  if (result)
-    SD.remove((char*)filename);
-  else
-    SD.remove((char*)newname);
-  return(result);
+	if (fold = SD.open((char*)filename, O_READ)) {
+		if (fnew = SD.open((char*)newname, O_CREAT | O_WRITE)) {
+			result = true;
+			while ((c = fold.read()) >= 0) {
+				if (fnew.write(c) < 1) {
+					result = false;
+					break;
+				}
+			}
+			fnew.close();
+		}
+		fold.close();
+	}
+	if (result)
+		SD.remove((char*)filename);
+	else
+		SD.remove((char*)newname);
+	return(result);
 	digitalWrite(LED, LOW);
 }
 
@@ -267,15 +273,15 @@ uint8 _findnext(uint8 isdir) {
 	File f;
 	uint8 result = 0xff;
 	uint8 dirname[13];
-  char* fname;
+	char* fname;
 	bool isfile;
 	int i;
 
 	digitalWrite(LED, HIGH);
 	while (f = root.openNextFile()) {
-    fname = f.name();
-    for (i = 0; i < strlen(fname) + 1 && i < 13; i++)
-      dirname[i] = fname[i];
+	fname = f.name();
+	for (i = 0; i < strlen(fname) + 1 && i < 13; i++)
+		dirname[i] = fname[i];
 		isfile = !f.isDirectory();
 		f.close();
 		if (!isfile)
@@ -298,17 +304,17 @@ uint8 _findnext(uint8 isdir) {
 
 uint8 _findfirst(uint8 isdir) {
 #ifdef USER_SUPPORT
-  uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
+	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
 #else
-  uint8 path[2] = { '?', 0 };
+	uint8 path[2] = { '?', 0 };
 #endif
-  path[0] = filename[0];
+	path[0] = filename[0];
 #ifdef USER_SUPPORT
-  path[2] = filename[2];
+	path[2] = filename[2];
 #endif
-  if (root)
-    root.close();
-  root = SD.open((char *)path); // Set directory search to start from the first position
+	if (root)
+		root.close();
+	root = SD.open((char *)path); // Set directory search to start from the first position
 	_HostnameToFCBname(filename, pattern);
 	return(_findnext(isdir));
 }
