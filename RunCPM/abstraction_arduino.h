@@ -51,7 +51,7 @@ long _sys_filesize(uint8 *filename) {
 	File f;
 
 	digitalWrite(LED, HIGH);
-	if (f = SD.open((char*)filename, O_RDONLY)) {
+	if (f = SD.open((char *)filename, O_RDONLY)) {
 		l = f.size();
 		f.close();
 	}
@@ -64,7 +64,7 @@ int _sys_openfile(uint8 *filename) {
 	int result = 0;
 
 	digitalWrite(LED, HIGH);
-	f = SD.open((char*)filename, O_READ);
+	f = SD.open((char *)filename, O_READ);
 	if (f) {
 		f.close();
 		result = 1;
@@ -78,7 +78,7 @@ int _sys_makefile(uint8 *filename) {
 	int result = 0;
 
 	digitalWrite(LED, HIGH);
-	f = SD.open((char*)filename, O_CREAT | O_WRITE);
+	f = SD.open((char *)filename, O_CREAT | O_WRITE);
 	if (f) {
 		f.close();
 		result = 1;
@@ -89,20 +89,20 @@ int _sys_makefile(uint8 *filename) {
 
 int _sys_deletefile(uint8 *filename) {
 	digitalWrite(LED, HIGH);
-	return(SD.remove((char*)filename));
+	return(SD.remove((char *)filename));
 	digitalWrite(LED, LOW);
 }
 
-int _sys_renamefile(uint8 *filename, uint8 *newname) {
+int _sys_movefile(char *filename, char *newname, int size) {
 	File fold, fnew;
-	int result = false;
+	int i, result = false;
 	uint8 c;
 
 	digitalWrite(LED, HIGH);
-	if (fold = SD.open((char*)filename, O_READ)) {
-		if (fnew = SD.open((char*)newname, O_CREAT | O_WRITE)) {
+	if (fold = SD.open(filename, O_READ)) {
+		if (fnew = SD.open(newname, O_CREAT | O_WRITE)) {
 			result = true;
-			while ((c = fold.read()) >= 0) {
+			for (i = 0; i < size; i++) {
 				if (fnew.write(c) < 1) {
 					result = false;
 					break;
@@ -113,11 +113,15 @@ int _sys_renamefile(uint8 *filename, uint8 *newname) {
 		fold.close();
 	}
 	if (result)
-		SD.remove((char*)filename);
+		SD.remove(filename);
 	else
-		SD.remove((char*)newname);
-	return(result);
+		SD.remove(newname);
 	digitalWrite(LED, LOW);
+	return(result);
+}
+
+int _sys_renamefile(uint8 *filename, uint8 *newname) {
+	return _sys_movefile((char *)filename, (char *)newname, _sys_filesize(filename));
 }
 
 #ifdef DEBUGLOG
@@ -323,13 +327,11 @@ uint8 _Truncate(char *filename, uint8 rc) {
 	uint8 result = 0xff;
 	File f;
 
-	digitalWrite(LED, HIGH);
-	if (f = SD.open((char*)filename, O_RDWR)) {
-//		if (f.truncate(rc * 128))
+	if (_sys_movefile(filename, "$$$$$$$$.$$$", _sys_filesize((uint8 *)filename))) {
+		if (_sys_movefile("$$$$$$$$.$$$", filename, rc * 128)) {
 			result = 0x00;
-		f.close();
+		}
 	}
-	digitalWrite(LED, LOW);
 	return(result);
 }
 
