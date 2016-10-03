@@ -103,6 +103,7 @@ int _sys_movefile(char *filename, char *newname, int size) {
 		if (fnew = SD.open(newname, O_CREAT | O_WRITE)) {
 			result = true;
 			for (i = 0; i < size; i++) {
+				c = fold.read();
 				if (fnew.write(c) < 1) {
 					result = false;
 					break;
