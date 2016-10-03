@@ -83,13 +83,34 @@ int _sys_makefile(uint8 *filename) {
 
 int _sys_deletefile(uint8 *filename) {
 	digitalWrite(LED, HIGH);
-	return(SD.remove((char *)filename));
+	return(SD.remove((char*)filename));
 	digitalWrite(LED, LOW);
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
+  File fold, fnew;
+  int result = false;
+  uint8 c;
+  
 	digitalWrite(LED, HIGH);
-//	return(SD.rename((char*)filename, (char*)newname));
+  if (fold = SD.open((char*)filename, O_READ)) {
+    if (fnew = SD.open((char*)newname, O_CREAT | O_WRITE)) {
+      result = true;
+      while ((c = fold.read()) >= 0) {
+        if (fnew.write(c) < 1) {
+          result = false;
+          break;
+        }
+      }
+      fnew.close();
+    }
+    fold.close();
+  }
+  if (result)
+    SD.remove((char*)filename);
+  else
+    SD.remove((char*)newname);
+  return(result);
 	digitalWrite(LED, LOW);
 }
 
