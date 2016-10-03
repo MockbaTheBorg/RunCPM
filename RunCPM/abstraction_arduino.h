@@ -20,7 +20,7 @@ bool _RamLoad(char *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-int		dirPos;
+File root;
 #define FOLDERCHAR '/'
 
 typedef struct {
@@ -243,35 +243,15 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 }
 
 uint8 _findnext(uint8 isdir) {
-  File root;
 	File f;
 	uint8 result = 0xff;
-#ifdef USER_SUPPORT
-	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
-#else
-	uint8 path[2] = { '?', 0 };
-#endif
 	uint8 dirname[13];
   char* fname;
 	bool isfile;
 	int i;
 
-	path[0] = filename[0];
-#ifdef USER_SUPPORT
-	path[2] = filename[2];
-#endif
-
 	digitalWrite(LED, HIGH);
-  root = SD.open((char *)path);
-	if (dirPos) {
-		root.rewindDirectory();
-    for (i = 0; i < dirPos; i++)
-      f = root.openNextFile();
-      f.close();
-	}
-
 	while (f = root.openNextFile()) {
-    dirPos++;
     fname = f.name();
     for (i = 0; i < strlen(fname); i++)
       dirname[i] = fname[i];
@@ -291,13 +271,23 @@ uint8 _findnext(uint8 isdir) {
 			break;
 		}
 	}
-//	SD.chdir("/", true);			// (todo) Get rid of these chdir() someday
 	digitalWrite(LED, LOW);
 	return(result);
 }
 
 uint8 _findfirst(uint8 isdir) {
-	dirPos = 0;	// Set directory search to start from the first position
+#ifdef USER_SUPPORT
+  uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
+#else
+  uint8 path[2] = { '?', 0 };
+#endif
+  path[0] = filename[0];
+#ifdef USER_SUPPORT
+  path[2] = filename[2];
+#endif
+  if (root)
+    root.close();
+  root = SD.open((char *)path); // Set directory search to start from the first position
 	_HostnameToFCBname(filename, pattern);
 	return(_findnext(isdir));
 }
