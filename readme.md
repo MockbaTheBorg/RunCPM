@@ -10,10 +10,8 @@ RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can 
 
 ## Arduino
 
-RunCPM builds on Arduino 1.6.6 or later.<br>
+RunCPM builds on Arduino IDE 1.6.6 or later.<br>
 RunCPM so far runs only on the Arduino DUE, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
-RunCPM needs a SDFat library. I am using the one from [Bill Greiman](https://github.com/greiman/SdFat/).<br>
-The file SdFatConfig.h of SdFat must be changed to: `#define USE_LONG_FILE_NAMES 0` (if left at 1, RunCPM will fail if the folder contains files with long names).<br>
 RunCPM also needs a SD (or microSD) card shield to place the CP/M files in.
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
@@ -105,6 +103,7 @@ The possible values for **reg** on those functions are:<br>
 13: IFF - Interrupt Flip Flop
 14: IR - Interrupt (upper) / Refresh (lower) register
 ```
+The disk A.ZIP contains a script called LUAINFO.LUA, which replicates the functionality of INFO.Z80, which provides information about RunCPM.
 
 ## Limitations
 
