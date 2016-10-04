@@ -1,12 +1,12 @@
 # RunCPM - Z80 CP/M 2.2 emulator
 
 RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
-RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules would be necessary.
+RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules should be necessary.
 
 If you miss powerful programs like Wordstar, dBaseII, MBASIC and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
-RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS.
+RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It has been successfully built also on Cygwin and Mingw. Makefiles are provided with the distribution.
 
 ## Arduino
 
@@ -107,15 +107,15 @@ The disk A.ZIP contains a script called LUAINFO.LUA, which replicates the functi
 
 ## Limitations
 
-The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping the files on the native (host) filesystem.<br>
-This will obviusly prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be completely useful.<br>
-They are provided on disk A.ZIP just to keep compatibility with DRI's official distribution.
+The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
+This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be completely useful.<br>
+They are provided on disk A.ZIP just to maintain compatibility with DRI's official distribution.
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated BDOS is specific for CP/M 2.2.
 
-The "video monitor" is assumed to be VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.
+The "video monitor" is assumed to be ANSI/VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.
 
-RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution.
+RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution. The R/O attributes of the containing folder are not modified.
 
 RunCPM does not support any CP/M device other than CON: and will silently fail to access them.
 
