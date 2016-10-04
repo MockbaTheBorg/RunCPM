@@ -6,7 +6,7 @@ RunCPM is fully written in C and in a modular way, so porting to other platforms
 If you miss powerful programs like Wordstar, dBaseII, MBASIC and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
-RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It has been successfully built also on Cygwin and Mingw. Makefiles are provided with the distribution.
+RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
 ## Arduino
 
@@ -20,15 +20,14 @@ Arduino digital and analog read/write support was added by Krzysztof Kliś via B
 
 RunCPM builds natively on Visual Studio
 
-Run "make -f Makefile.yyy", where "yyy" is:
+Run "make yyy", where "yyy" is:
 
 * **dos** - when building with DJGPP under MS-DOS,
 * **mingw** - when building with MinGW under Windows,
-* **tdm** - when building with TDM-GCC under Windows,
-* **posix** - when building under Linux, FreeBSD, Mac OS X, etc.
+* **posix** - when building under Linux, FreeBSD, Mac OS X, etc,
+* **tdm** - when building with TDM-GCC under Windows.
 
-For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install it using "brew install ncurses".<br>
-Cygwin can be used to build the Posix implementation on Windows machines.
+For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install it using "brew install ncurses".
 
 ## Getting Started
 
