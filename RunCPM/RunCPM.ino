@@ -1,9 +1,7 @@
 #include "globals.h"
 
 #include <SPI.h>
-#include <SdFat.h>
-
-SdFat sd;
+#include <SD.h>
 
 #undef HASLUA	// Arduino can't have Lua for now
 
@@ -42,7 +40,7 @@ void setup(void) {
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
-	if (sd.begin(SDcs, SPI_HALF_SPEED)) {
+	if (SD.begin(SDcs)) {
 #ifdef CCP_INTERNAL
 		while(true)
 		{
@@ -53,7 +51,7 @@ void setup(void) {
 				break;
 		}
 #else
-		if (sd.exists(CCPname)) {
+		if (SD.exists(CCPname)) {
 			while (true) {
 				_puts(CCPHEAD);
 				if (_RamLoad(CCPname, CCPaddr)) {
