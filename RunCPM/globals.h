@@ -74,7 +74,8 @@
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
 
-#define HASLUA			// Will enable Lua scripting (BDOS call 254)
+//#define HASLUA		// Will enable Lua scripting (BDOS call 254)
+						// Should be passed externally per-platform with -DHASLUA
 
 /* Definition for CP/M 2.2 user number support */
 

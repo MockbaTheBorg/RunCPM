@@ -3,8 +3,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-#undef HASLUA	// Arduino can't have Lua for now
-
 #define LED 13
 #define DELAY 250
 #define SDcs 4  // Pin for the SD chip select signal
