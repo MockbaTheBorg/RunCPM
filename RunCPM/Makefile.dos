@@ -15,6 +15,9 @@ CFLAGS = -Wall -O0
 # Flags to pass to the linker
 LDFLAGS = -mconsole
 
+# Objects to build
+OBJS = main.o
+
 # Clean up program
 RM = del
 
@@ -23,14 +26,16 @@ RM = del
 all: $(PROG)
 
 $(PROG): main.o
-	$(CC) main.o -o $(PROG) $(LDFLAGS)
+	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
 
 main.o: main.c $(wildcard *.h) $(MFILE)
+	$(LUABUILD)
 	$(CC) $(CFLAGS) -c main.c
 
 rebuild: clean all
 
 .PHONY: clean
 clean:
-	$(RM) *.o 
+	$(LUACLEAN)
+	$(RM) *.o
 	$(RM) $(PROG)

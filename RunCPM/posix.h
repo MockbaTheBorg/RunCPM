@@ -262,7 +262,30 @@ void _MakeUserDir() {
 #ifdef HASLUA
 uint8 _RunLuaScript(char *filename) {
 
-	return(1);
+	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	// Register Lua functions
+	lua_register(L, "BdosCall", luaBdosCall);
+	lua_register(L, "RamRead", luaRamRead);
+	lua_register(L, "RamWrite", luaRamWrite);
+	lua_register(L, "RamRead16", luaRamRead16);
+	lua_register(L, "RamWrite16", luaRamWrite16);
+	lua_register(L, "ReadReg", luaReadReg);
+	lua_register(L, "WriteReg", luaWriteReg);
+
+	int result = luaL_loadfile(L, filename);
+	if (result) {
+		_puts(lua_tostring(L, -1));
+	} else {
+		result = lua_pcall(L, 0, LUA_MULTRET, 0);
+		if (result)
+			_puts(lua_tostring(L, -1));
+	}
+
+	lua_close(L);
+
+	return(result);
 }
 #endif
 
