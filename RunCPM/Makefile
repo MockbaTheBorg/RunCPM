@@ -1,24 +1,26 @@
 # Main Makefile for RunCPM
-PLAT= none
+#
+# Usage:
+#	To build:	make <platform> build
+#	To clean:	make <platform> clean	
 
-PLATS= dos mingw posix tdm 
+PLATS = dos mingw posix tdm
 
-all:	$(PLAT)
+all:	none
 
 dos mingw posix tdm:
-	@echo "Building... $@"
-	$(MAKE) -f Makefile.$@
-
-dosclean mingwclean posixclean tdmclean:
-	@echo "Building... $@"
-	$(MAKE) -f Makefile.$@ clean
-
-none:
-	@echo "To build RunCPM issue 'make PLATFORM'."
-	@echo "Valid patforms are: $(PLATS)"
+	$(eval SYS=$@)
+	@echo "Platform = $@ (type 'make all' for help)"
 
 clean:
-	@echo "To clean use 'make PLATFORMclean'."
-	@echo "Valid patforms are: $(PLATS)"
+	$(MAKE) -f Makefile.$(SYS) clean
 
-.PHONY: all $(PLATS) dosclean mingwclean posixclean tdmclean none clean
+build:
+	$(MAKE) -f Makefile.$(SYS) all
+
+none:
+	@echo "To build RunCPM issue 'make PLATFORM build'."
+	@echo "To clean RunCPM issue 'make PLATFORM clean'."
+	@echo "Valid platforms are: $(PLATS)"
+
+.PHONY: all $(PLATS) clean build none

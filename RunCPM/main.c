@@ -57,6 +57,9 @@ int main(int argc, char *argv[]) {
 	_clrscr();
 	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
+#ifdef HASLUA
+	_puts("       with Lua scripting support\r\n");
+#endif
 	_puts("-----------------------------------------\r\n");
 	_puts("CCP: " CCPname " Loaded at 0x");
 	_puthex16(CCPaddr);
