@@ -1,0 +1,45 @@
+# Posix Makefile for RunCPM
+
+PROG = RunCPM
+
+MFILE = Makefile.macosx
+
+# Compiler command
+CC = gcc
+#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
+
+# Flags to pass to the compiler - add "-g" to include debug information
+CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -DHASLUA
+#CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
+
+# Flags to pass to the linker
+LDFLAGS = -lncurses -lm -ldl
+
+# Objects to build
+OBJS = main.o lua/liblua.a
+
+# Lua building
+LUABUILD = $(MAKE) -C lua macosx
+LUACLEAN = $(MAKE) -C lua clean
+
+# Clean up program
+RM = rm -f
+
+#------------------------------------------------------------------------
+
+all: $(PROG)
+
+$(PROG): main.o
+	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
+
+main.o: main.c $(wildcard *.h) $(MFILE)
+	$(LUABUILD)
+	$(CC) $(CFLAGS) -c main.c
+
+rebuild: clean all
+
+.PHONY: clean
+clean:
+	$(LUACLEAN)
+	$(RM) *.o
+	$(RM) $(PROG)
