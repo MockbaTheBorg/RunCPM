@@ -9,14 +9,18 @@ CC = mingw32-gcc
 #CC = mingw32-gcc -DDEBUG=1 -DDEBUGLOG=1
 
 # Flags to pass to the compiler - add "-g" to include debug information
-CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable
+CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -DHASLUA
 #CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
 
 # Flags to pass to the linker
 LDFLAGS = -mconsole
 
 # Objects to build
-OBJS = main.o
+OBJS = main.o lua/liblua.a
+
+# Lua building
+LUABUILD = $(MAKE) -C lua mingw
+LUACLEAN = $(RM) lua\*.o ; $(RM) lua\*.a ; $(RM) lua\*.exe
 
 # Clean up program
 RM = del
