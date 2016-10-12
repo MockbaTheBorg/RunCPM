@@ -104,6 +104,8 @@ The possible values for **reg** on those functions are:<br>
 ```
 The disk A.ZIP contains a script called LUAINFO.LUA, which replicates the functionality of INFO.Z80, which provides information about RunCPM.
 
+Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character. The comment on the last line comments out the EOF character and prevents Lua errors.
+
 ## Limitations
 
 The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>

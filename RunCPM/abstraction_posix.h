@@ -2,6 +2,17 @@
 #define ABSTRACT_H
 
 #include <glob.h>
+
+// Lua scripting support
+#ifdef HASLUA
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+
+#include "lua.h"
+lua_State *L;
+#endif
+
 #include "posix.h"
 
 #define HostOS 0x02
