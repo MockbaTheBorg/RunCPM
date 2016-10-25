@@ -109,7 +109,7 @@ Caveat: Lua scripts must have a comment (--) on their last line, to prevent issu
 ## Limitations
 
 The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
-This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be completely useful.<br>
+This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be useful.<br>
 They are provided on disk A.ZIP just to maintain compatibility with DRI's official distribution.
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated BDOS is specific for CP/M 2.2.
