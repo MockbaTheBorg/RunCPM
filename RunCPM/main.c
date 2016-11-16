@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 	_puts("       with Lua scripting support\r\n");
 #endif
 	_puts("-----------------------------------------\r\n");
-	_puts("CCP: " CCPname " Loaded at 0x");
+	_puts("CCP: " CCPname "  CCP Address: 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 

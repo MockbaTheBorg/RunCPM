@@ -4,7 +4,8 @@
 #include <SD.h>
 
 #define LED 13
-#define DELAY 250
+#define sDELAY 50
+#define DELAY 100
 #define SDcs 4  // Pin for the SD chip select signal
 
 #include "abstraction_arduino.h"
@@ -20,11 +21,13 @@
 void setup(void) {
 	pinMode(LED, OUTPUT);
 	digitalWrite(LED, LOW);
-	pinMode(SDcs, OUTPUT);
-	digitalWrite(SDcs, LOW);
 	Serial.begin(9600);
-	while (!Serial);    // Wait until serial is connected
-
+	while (!Serial) {	// Wait until serial is connected
+		digitalWrite(LED, HIGH);
+		delay(sDELAY);
+		digitalWrite(LED, LOW);
+		delay(sDELAY);
+	}
 #ifdef DEBUGLOG
 	_sys_deletefile((uint8 *)LogName);
 #endif
@@ -34,7 +37,7 @@ void setup(void) {
 	_puts("Arduino read/write support by Krzysztof Klis\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("--------------------------------------------\r\n");
-	_puts("CCP: " CCPname " Loaded at 0x");
+	_puts("CCP: " CCPname "  CCP Address: 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
