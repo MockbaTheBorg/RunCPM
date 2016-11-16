@@ -16,6 +16,8 @@ If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to pla
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
 
+LED blink codes: Arduino LED (pin 13) will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
+
 ## Building
 
 RunCPM builds natively on Visual Studio
