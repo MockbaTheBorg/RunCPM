@@ -6,7 +6,13 @@
 #define LED 13
 #define sDELAY 50
 #define DELAY 100
-#define SDcs 4  // Pin for the SD chip select signal
+
+// Pin for the SD chip select signal
+#ifdef CORE_TEENSY
+	#define SDcs BUILTIN_SDCARD
+#else
+	#define SDcs 4
+#endif
 
 #include "abstraction_arduino.h"
 #include "ram.h"
@@ -82,4 +88,8 @@ void loop(void) {
 	delay(DELAY);
 	digitalWrite(LED, LOW);
 	delay(DELAY);
+	digitalWrite(LED, HIGH);
+	delay(DELAY);
+	digitalWrite(LED, LOW);
+	delay(DELAY * 3);
 }
