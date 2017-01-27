@@ -61,7 +61,7 @@ void setup(void) {
 		if (SD.exists(CCPname)) {
 			while (true) {
 				_puts(CCPHEAD);
-				if (_RamLoad(CCPname, CCPaddr)) {
+				if (_RamLoad((char *)CCPname, CCPaddr)) {
 					_PatchCPM();
 					Z80reset();
 					SET_LOW_REGISTER(BC, _RamRead(0x0004));
@@ -91,5 +91,5 @@ void loop(void) {
 	digitalWrite(LED, HIGH);
 	delay(DELAY);
 	digitalWrite(LED, LOW);
-	delay(DELAY * 3);
+	delay(DELAY * 4);
 }
