@@ -143,11 +143,11 @@ void _sys_logbuffer(uint8 *buffer) {
 }
 #endif
 
-bool _sys_extendfile(char *fn, long fpos)
+bool _sys_extendfile(char *fn, unsigned long fpos)
 {
 	uint8 result = true;
 	File f;
-	long i;
+	unsigned long i;
 
 	digitalWrite(LED, HIGH);
 	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
@@ -280,7 +280,7 @@ uint8 _findnext(uint8 isdir) {
 	uint8 dirname[13];
 	char* fname;
 	bool isfile;
-	int i;
+	unsigned int i;
 
 	digitalWrite(LED, HIGH);
 	while (f = root.openNextFile()) {
@@ -328,8 +328,8 @@ uint8 _Truncate(char *filename, uint8 rc) {
 	uint8 result = 0xff;
 	File f;
 
-	if (_sys_movefile(filename, "$$$$$$$$.$$$", _sys_filesize((uint8 *)filename))) {
-		if (_sys_movefile("$$$$$$$$.$$$", filename, rc * 128)) {
+	if (_sys_movefile(filename, (char *)"$$$$$$$$.$$$", _sys_filesize((uint8 *)filename))) {
+		if (_sys_movefile((char *)"$$$$$$$$.$$$", filename, rc * 128)) {
 			result = 0x00;
 		}
 	}
