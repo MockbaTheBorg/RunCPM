@@ -153,8 +153,8 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 
 		plen = 8;
 		pad = ' ';
+		ch = toupper(_RamRead(pbuf));
 		while (blen && plen) {
-			ch = toupper(_RamRead(pbuf));
 			if (_ccp_delim(ch)) {
 				break;
 			}
@@ -167,6 +167,7 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 			}
 			plen--; n++;
 			_RamWrite(fcb++, ch);
+			ch = toupper(_RamRead(pbuf));
 		}
 
 		while (plen--)
