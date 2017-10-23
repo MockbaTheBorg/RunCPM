@@ -20,9 +20,9 @@ LED blink codes: Arduino LED (pin 13) will blink fast when RunCPM is waiting for
 
 ## Building
 
-RunCPM builds natively on Visual Studio
+RunCPM builds natively on Visual Studio.
 
-Run "make yyy", where "yyy" is:
+For building on other systems run "make yyy", where "yyy" is:
 
 * **dos** - when building with DJGPP under MS-DOS,
 * **mingw** - when building with MinGW under Windows,
