@@ -25,10 +25,10 @@ FCB related numbers
 #define BlkSZ 128	// CP/M block size
 #define	BlkEX 128	// Number of blocks on an extension
 #define BlkS2 4096	// Number of blocks on a S2 (module)
-#define MaxCR 127	// Maximum value the CR field can take
+#define MaxCR 128	// Maximum value the CR field can take
 #define MaxRC 127	// Maximum value the RC field can take
 #define MaxEX 31	// Maximum value the EX field can take
-#define MaxS2 15	// Maximum valur the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
+#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
 
 void _error(uint8 error) {
 	_puts("\r\nBdos Error on ");
@@ -232,13 +232,9 @@ uint8 _OpenFile(uint16 fcbaddr) {
 
 			len = _FileSize(fcbaddr) / 128;	// Compute the len on the file in blocks
 
-			F->ex = 0x00;	// Initializes the FCB
-			F->s1 = 0x00;
-			F->s2 = 0x00;
 			F->rc = len > MaxRC ? 0x80 : (uint8)len;
 			for (i = 0; i < 16; i++)	// Clean up AL
 				F->al[i] = 0x00;
-			F->cr = 0x00;
 
 			result = 0x00;
 		}
@@ -351,9 +347,9 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
-	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) + 
-				((F->ex & MaxEX) * BlkEX * BlkSZ) + 
-				((F->cr & MaxCR) * BlkSZ);
+	long fpos =	((F->s2 & MaxS2) * BlkS2 * BlkSZ) + 
+				(F->ex * BlkEX * BlkSZ) + 
+				(F->cr * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
@@ -361,7 +357,7 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 		if (!result) {	// Read succeeded, adjust FCB
 			F->cr++;
 			if (F->cr > MaxCR) {
-				F->cr = 0;
+				F->cr = 1;
 				F->ex++;
 			}
 			if (F->ex > MaxEX) {
@@ -379,9 +375,9 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
-	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
-		((F->ex & MaxEX) * BlkEX * BlkSZ) +
-		((F->cr & MaxCR) * BlkSZ);
+	long fpos =	((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+				(F->ex * BlkEX * BlkSZ) + 
+				(F->cr * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
@@ -390,7 +386,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 			if (!result) {	// Write succeeded, adjust FCB
 				F->cr++;
 				if (F->cr > MaxCR) {
-					F->cr = 0;
+					F->cr = 1;
 					F->ex++;
 				}
 				if (F->ex > MaxEX) {

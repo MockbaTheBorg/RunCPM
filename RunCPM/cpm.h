@@ -122,7 +122,18 @@ void _logChar(char *txt, uint8 c) {
 }
 
 void _logBiosIn(uint8 ch) {
-	sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+	static const char *BIOSCalls[18] =
+	{
+		"boot", "wboot", "const", "conin", "conout", "list", "punch/aux", "reader", "home", "seldsk", "settrk", "setsec", "setdma",
+		"read", "write", "listst", "sectran", "altwboot"
+	};
+	int index = ch / 3;
+	if (index < 18) {
+		sprintf((char *)LogBuffer, "\nBios call: %3d (%s) IN:\n", ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
+	} else {
+		sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+	}
+
 	_logRegs();
 }
 
@@ -281,11 +292,11 @@ void _Bios(void) {
 	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
 		break;
-	case 0x33:				// This allows programs ending in RET be able to return to internal CCP
+	case 0x33:				// This lets programs ending in RET be able to return to internal CCP
 		Status = 3;
 		break;
 	default:
-#ifdef DEBUG	// Show unimplementes calls only when debugging
+#ifdef DEBUG	// Show unimplemented BIOS calls only when debugging
 		_puts("\r\nUnimplemented BIOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);
@@ -718,7 +729,7 @@ void _Bdos(void) {
 		Unimplemented calls get listed
 		*/
 	default:
-#ifdef DEBUG	// Show unimplementes calls only when debugging
+#ifdef DEBUG	// Show unimplemented BDOS calls only when debugging
 		_puts("\r\nUnimplemented BDOS call.\r\n");
 		_puts("C = 0x");
 		_puthex8(ch);

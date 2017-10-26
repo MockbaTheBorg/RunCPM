@@ -14,16 +14,16 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.8"
-#define VersionBCD 0x28
+#define VERSION	"2.9"
+#define VersionBCD 0x29
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
-/* Definition of which CCP to use: INTERNAL, DR or ZCPR (must define only one) */
-//#define CCP_INTERNAL	// If this is defined, CCP will be internal
-//#define CCP_DR
-#define CCP_CCPZ
+/* Definition of which CCP to use (must define only one) */
+//#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
+#define CCP_DR
+//#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
 //#define CCP_Z80
@@ -40,35 +40,35 @@
 #ifdef CCP_DR
 #define CCPname		"CCP-DR." STR(SIZEK) "K"
 #define VersionCCP	0x00
-#define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_CCPZ
 #define CCPname		"CCP-CCPZ." STR(SIZEK) "K"
 #define VersionCCP	0x01
-#define BatchFCB	(CCPaddr + 0x7A)	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x7A)	// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR2
 #define CCPname		"CCP-ZCP2." STR(SIZEK) "K"
 #define VersionCCP	0x02
-#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR3
 #define CCPname		"CCP-ZCP3." STR(SIZEK) "K"
 #define VersionCCP	0x03
-#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x1000)
 #endif
 //
 #ifdef CCP_Z80
 #define CCPname		"CCP-Z80." STR(SIZEK) "K"
 #define VersionCCP	0x04
-#define BatchFCB	(CCPaddr + 0x79E)	// Position of the $$$.SUB fcb
+#define BatchFCB	(CCPaddr + 0x79E)	// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
@@ -115,9 +115,9 @@ typedef unsigned int    uint32;
 
 /* CP/M memory definitions */
 #define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
-					// This saves about 2K on the Arduino code and should bring speed imperovements
+					// This saves about 2K on the Arduino code and should bring speed improvements
 
-#define SIZEK 64	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+#define SIZEK 60	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
 					// Can be set to less than 60, but this would require rebuilding the CCP
 					// For SIZEK<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
