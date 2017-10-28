@@ -100,7 +100,7 @@ int _kbhit(void) {
 	pfds[0].fd = STDIN_FILENO;
 	pfds[0].events = POLLIN;
 
-	return (poll(pfds, 1, 0) == 1) && (pfds[0].revents & POLLRDNORM);
+	return poll(pfds, 1, 0);
 }
 
 uint8 _getch(void) {
