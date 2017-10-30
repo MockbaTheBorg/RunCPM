@@ -31,7 +31,7 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.3"		// Will use the CCP from ccp.h
+#define CCPname		"INTERNAL v1.3"			// Will use the CCP from ccp.h
 #define VersionCCP	0x13
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
@@ -39,36 +39,36 @@
 //
 #ifdef CCP_DR
 #define CCPname		"CCP-DR." STR(SIZEK) "K"
-#define VersionCCP	0x00
-#define BatchFCB	(CCPaddr + 0x7AC)	// Position of the $$$.SUB fcb on this CCP
-#define CCPaddr		(BDOSjmppage-0x0800)
+#define VersionCCP	0x00					// Version to be used by INFO.COM
+#define BatchFCB	(CCPaddr + 0x7AC)		// Position of the $$$.SUB fcb on this CCP
+#define CCPaddr		(BDOSjmppage-0x0800)	// CCP memory address
 #endif
 //
 #ifdef CCP_CCPZ
 #define CCPname		"CCP-CCPZ." STR(SIZEK) "K"
 #define VersionCCP	0x01
-#define BatchFCB	(CCPaddr + 0x7A)	// Position of the $$$.SUB fcb on this CCP
+#define BatchFCB	(CCPaddr + 0x7A)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR2
 #define CCPname		"CCP-ZCP2." STR(SIZEK) "K"
 #define VersionCCP	0x02
-#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb on this CCP
+#define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR3
 #define CCPname		"CCP-ZCP3." STR(SIZEK) "K"
 #define VersionCCP	0x03
-#define BatchFCB	(CCPaddr + 0x5E)	// Position of the $$$.SUB fcb on this CCP
+#define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x1000)
 #endif
 //
 #ifdef CCP_Z80
 #define CCPname		"CCP-Z80." STR(SIZEK) "K"
 #define VersionCCP	0x04
-#define BatchFCB	(CCPaddr + 0x79E)	// Position of the $$$.SUB fcb on this CCP
+#define BatchFCB	(CCPaddr + 0x79E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
