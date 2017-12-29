@@ -104,7 +104,7 @@ The possible values for **reg** on those functions are:<br>
 13: IFF - Interrupt Flip Flop
 14: IR - Interrupt (upper) / Refresh (lower) register
 ```
-The disk A.ZIP contains a script called LUAINFO.LUA that replicates the functionality of INFO.Z80, which provides information about RunCPM.
+The disk A.ZIP contains a script called LUAINFO.LUA, which replicates the functionality of INFO.Z80, which provides information about RunCPM.
 
 Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character. The comment on the last line comments out the CP/M EOF (^Z) character and prevents Lua errors.
 
