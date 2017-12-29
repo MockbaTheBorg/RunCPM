@@ -232,6 +232,9 @@ uint8 _OpenFile(uint16 fcbaddr) {
 
 			len = _FileSize(fcbaddr) / 128;	// Compute the len on the file in blocks
 
+			F->s1 = 0x00;
+			F->s2 = 0x00;
+	
 			F->rc = len > MaxRC ? 0x80 : (uint8)len;
 			for (i = 0; i < 16; i++)	// Clean up AL
 				F->al[i] = 0x00;
