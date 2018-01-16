@@ -6,6 +6,13 @@
 #include <ctype.h>
 #endif
 
+/* Definitions for aux/printer devices */
+#define USE_AUX
+#define AUX_FILENAME "punch.txt"
+
+#define USE_PRINTER
+#define PRINTER_FILENAME "printer.txt"
+
 /* Definitions for file/console based debugging */
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
@@ -14,8 +21,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.9"
-#define VersionBCD 0x29
+#define VERSION	"3.0"
+#define VersionBCD 0x30
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
