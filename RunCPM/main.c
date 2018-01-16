@@ -91,6 +91,14 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 #endif
+#ifdef USE_AUX
+		if (aux_dev)
+			fflush(aux_dev);
+#endif
+#ifdef USE_PRINTER
+		if (printer_dev)
+			fflush(printer_dev);
+#endif
 	}
 
 	_console_reset();
