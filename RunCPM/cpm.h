@@ -230,16 +230,6 @@ void _logBdosOut(uint8 ch) {
 }
 #endif
 
-#ifdef USE_AUX
-FILE *aux_dev;
-BOOL aux_open = FALSE;
-#endif
-
-#ifdef USE_PRINTER
-FILE *printer_dev;
-BOOL printer_open = FALSE;
-#endif
-
 void _Bios(void) {
 	uint8 ch = LOW_REGISTER(PCX);
 
@@ -378,11 +368,11 @@ void _Bdos(void) {
 	case 4:
 #ifdef USE_AUX
 		if (!aux_open) {
-			aux_dev = _sys_fopen_w(AUX_FILENAME);
+			aux_dev = _sys_fopen_w((uint8*)AUX_FILENAME);
 			aux_open = TRUE;
 		}
 		if (aux_dev)
-			fputc(LOW_REGISTER(DE), aux_dev);
+			_sys_fputc(LOW_REGISTER(DE), aux_dev);
 #endif
 		break;
 		/*
@@ -391,11 +381,11 @@ void _Bdos(void) {
 	case 5:
 #ifdef USE_PRINTER
 		if (!printer_open) {
-			printer_dev = _sys_fopen_w(PRINTER_FILENAME);
+			printer_dev = _sys_fopen_w((uint8*)PRINTER_FILENAME);
 			printer_open = TRUE;
 		}
 		if (printer_dev)
-			fputc(LOW_REGISTER(DE), printer_dev);
+			_sys_fputc(LOW_REGISTER(DE), printer_dev);
 #endif
 		break;
 		/*
