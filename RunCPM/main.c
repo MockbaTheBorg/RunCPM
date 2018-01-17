@@ -38,6 +38,16 @@ shoud be kept the same.
   #endif
 #endif
 
+#ifdef USE_AUX
+FILE *aux_dev;
+int aux_open = FALSE;
+#endif
+
+#ifdef USE_PRINTER
+FILE *printer_dev;
+int printer_open = FALSE;
+#endif
+
 #include "ram.h"		// ram.h - Implements the RAM
 #include "console.h"	// console.h - Defines all the console abstraction functions
 #include "cpu.h"		// cpu.h - Implements the emulated CPU
@@ -93,11 +103,11 @@ int main(int argc, char *argv[]) {
 #endif
 #ifdef USE_AUX
 		if (aux_dev)
-			fflush(aux_dev);
+			_sys_fflush(aux_dev);
 #endif
 #ifdef USE_PRINTER
 		if (printer_dev)
-			fflush(printer_dev);
+			_sys_fflush(printer_dev);
 #endif
 	}
 

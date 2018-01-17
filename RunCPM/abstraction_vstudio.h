@@ -95,8 +95,16 @@ size_t _sys_fwrite(const void *buffer, size_t size, size_t count, FILE *file) {
 	return(fwrite(buffer, size, count, file));
 }
 
+int _sys_fputc(int ch, FILE *file) {
+	return(fputc(ch, file));
+}
+
 int _sys_feof(FILE *file) {
 	return(feof(file));
+}
+
+int _sys_fflush(FILE *file) {
+	return(fflush(file));
 }
 
 int _sys_fclose(FILE *file) {

@@ -32,6 +32,18 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
+File _sys_fopen_w(uint8 *filename) {
+	return(SD.open((char *)filename, O_CREAT | O_WRITE));
+}
+
+int _sys_fputc(int ch, File f) {
+	return(f.write(ch));
+}
+
+void _sys_fflush(File f) {
+	f.flush();
+}
+
 int _sys_select(uint8 *disk) {
 	uint8 result = FALSE;
 	File f;

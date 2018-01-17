@@ -15,6 +15,17 @@
 #endif
 
 #include "abstraction_arduino.h"
+
+#ifdef USE_AUX
+File aux_dev;
+int aux_open = FALSE;
+#endif
+
+#ifdef USE_PRINTER
+File printer_dev;
+int printer_open = FALSE;
+#endif
+
 #include "ram.h"
 #include "console.h"
 #include "cpu.h"
@@ -73,6 +84,14 @@ void setup(void) {
 					_puts("Unable to load the CCP. CPU halted.\r\n");
 					break;
 				}
+#ifdef USE_AUX
+				if (aux_dev)
+					_sys_fflush(aux_dev);
+#endif
+#ifdef USE_PRINTER
+				if (printer_dev)
+					_sys_fflush(printer_dev);
+#endif
 			}
 		} else {
 			_puts("Unable to load CP/M CCP. CPU halted.\r\n");
