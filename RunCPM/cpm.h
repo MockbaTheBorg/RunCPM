@@ -490,7 +490,7 @@ void _Bdos(void) {
 			if (count == c)
 				break;
 		}
-		_RamWrite(i, count);	// Saves the number or characters read
+		_RamWrite(i, count);	// Saves the number of characters read
 		_putcon('\r');	// Gives a visual feedback that read ended
 		break;
 		/*
