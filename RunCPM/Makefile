@@ -4,11 +4,11 @@
 #	To build:	make <platform> build
 #	To clean:	make <platform> clean	
 
-PLATS = dos macosx mingw posix tdm
+PLATS = dos macosx mingw msys2 posix tdm
 
 all:	none
 
-dos macosx mingw posix tdm:
+dos macosx mingw msys2 posix tdm:
 	$(eval SYS=$@)
 	@echo "Platform = $@ (type 'make all' for help)"
 
