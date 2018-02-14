@@ -6,6 +6,13 @@
 #include <ctype.h>
 #endif
 
+/* Definitions for aux/printer devices */
+#define USE_AUX
+#define AUX_FILENAME "punch.txt"
+
+#define USE_PRINTER
+#define PRINTER_FILENAME "printer.txt"
+
 /* Definitions for file/console based debugging */
 //#define DEBUG
 //#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
@@ -14,8 +21,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"2.9"
-#define VersionBCD 0x29
+#define VERSION	"3.0"
+#define VersionBCD 0x30
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -125,18 +132,18 @@ typedef unsigned int    uint32;
 
 #ifdef RAM_FAST		// Makes all function calls to memory access into direct RAM access (less calls / less code)
 uint8 RAM[RAMSIZE];
-#define _RamSysAddr(a) &RAM[a]
-#define _RamRead(a) RAM[a]
-#define _RamRead16(a) ((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
-#define _RamWrite(a, v) RAM[a] = v
-#define _RamWrite16(a, v) RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
+#define _RamSysAddr(a)		&RAM[a]
+#define _RamRead(a)			RAM[a]
+#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
+#define _RamWrite(a, v)		RAM[a] = v
+#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
 #endif
 
 //// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
-#define BIOSpage			(RAMSIZE - 256)
-#define BIOSjmppage			(BIOSpage - 256)
-#define BDOSpage			(BIOSjmppage - 256)
-#define BDOSjmppage			(BDOSpage - 256)
+#define BIOSpage	(RAMSIZE - 256)
+#define BIOSjmppage	(BIOSpage - 256)
+#define BDOSpage	(BIOSjmppage - 256)
+#define BDOSjmppage	(BDOSpage - 256)
 
 #define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameters Block (Hardcoded in BIOS)
 

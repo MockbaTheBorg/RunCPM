@@ -94,8 +94,7 @@ parityTable[i]          0..255  (number of 1's in i is odd) ? 0 : 4
 incTable[i]             0..256! (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4)
 decTable[i]             0..255  (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | 2
 cbitsTable[i]           0..511  (i & 0x10) | ((i >> 8) & 1)
-cbitsDup8Table[i]       0..511  (i & 0x10) | ((i >> 8) & 1) | ((i & 0xff) << 8) | (i & 0xa8) |
-(((i & 0xff) == 0) << 6)
+cbitsDup8Table[i]       0..511  (i & 0x10) | ((i >> 8) & 1) | ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6)
 cbitsDup16Table[i]      0..511  (i & 0x10) | ((i >> 8) & 1) | (i & 0x28)
 cbits2Table[i]          0..511  (i & 0x10) | ((i >> 8) & 1) | 2
 rrcaTable[i]            0..255  ((i & 1) << 15) | ((i >> 1) << 8) | ((i >> 1) & 0x28) | (i & 1)
@@ -105,16 +104,12 @@ subTable[i]             0..255  ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) ==
 andTable[i]             0..255  (i << 8) | (i & 0xa8) | ((i == 0) << 6) | 0x10 | parityTable[i]
 xororTable[i]           0..255  (i << 8) | (i & 0xa8) | ((i == 0) << 6) | parityTable[i]
 rotateShiftTable[i]     0..255  (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i & 0xff]
-incZ80Table[i]          0..256! (i & 0xa8) | (((i & 0xff) == 0) << 6) |
-(((i & 0xf) == 0) << 4) | ((i == 0x80) << 2)
-decZ80Table[i]          0..255  (i & 0xa8) | (((i & 0xff) == 0) << 6) |
-(((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2
+incZ80Table[i]          0..256! (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4) | ((i == 0x80) << 2)
+decZ80Table[i]          0..255  (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2
 cbitsZ80Table[i]        0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1)
-cbitsZ80DupTable[i]     0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) |
-((i >> 8) & 1) | (i & 0xa8)
+cbitsZ80DupTable[i]     0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | (i & 0xa8)
 cbits2Z80Table[i]       0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2
-cbits2Z80DupTable[i]    0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 |
-(i & 0xa8)
+cbits2Z80DupTable[i]    0..511  (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 | (i & 0xa8)
 negTable[i]             0..255  (((i & 0x0f) != 0) << 4) | ((i == 0x80) << 2) | 2 | (i != 0)
 rrdrldTable[i]          0..255  (i << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i]
 cpTable[i]              0..255  (i & 0x80) | (((i & 0xff) == 0) << 6)
@@ -216,8 +211,7 @@ static const uint8 cbitsTable[512] = {
 	17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,
 };
 
-/* cbitsDup8Table[i] = (i & 0x10) | ((i >> 8) & 1) | ((i & 0xff) << 8) | (i & 0xa8) |
-(((i & 0xff) == 0) << 6), i = 0..511 */
+/* cbitsDup8Table[i] = (i & 0x10) | ((i >> 8) & 1) | ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6), i = 0..511 */
 static const uint16 cbitsDup8Table[512] = {
 	0x0040,0x0100,0x0200,0x0300,0x0400,0x0500,0x0600,0x0700,
 	0x0808,0x0908,0x0a08,0x0b08,0x0c08,0x0d08,0x0e08,0x0f08,
@@ -625,8 +619,7 @@ static const uint8 rotateShiftTable[256] = {
 	164,160,160,164,160,164,164,160,168,172,172,168,172,168,168,172,
 };
 
-/* incZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) |
-(((i & 0xf) == 0) << 4) | ((i == 0x80) << 2), i = 0..256 */
+/* incZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4) | ((i == 0x80) << 2), i = 0..256 */
 static const uint8 incZ80Table[257] = {
 	80,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8,
 	16,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8,
@@ -646,8 +639,7 @@ static const uint8 incZ80Table[257] = {
 	176,160,160,160,160,160,160,160,168,168,168,168,168,168,168,168, 80,
 };
 
-/* decZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) |
-(((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2, i = 0..255 */
+/* decZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2, i = 0..255 */
 static const uint8 decZ80Table[256] = {
 	66,  2,  2,  2,  2,  2,  2,  2, 10, 10, 10, 10, 10, 10, 10, 26,
 	2,  2,  2,  2,  2,  2,  2,  2, 10, 10, 10, 10, 10, 10, 10, 26,
@@ -703,8 +695,7 @@ static const uint8 cbitsZ80Table[512] = {
 	17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,
 };
 
-/* cbitsZ80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) |
-((i >> 8) & 1) | (i & 0xa8), i = 0..511 */
+/* cbitsZ80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | (i & 0xa8), i = 0..511 */
 static const uint8 cbitsZ80DupTable[512] = {
 	0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8,
 	16, 16, 16, 16, 16, 16, 16, 16, 24, 24, 24, 24, 24, 24, 24, 24,
@@ -776,8 +767,7 @@ static const uint8 cbits2Z80Table[512] = {
 	19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,
 };
 
-/* cbits2Z80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 |
-(i & 0xa8), i = 0..511 */
+/* cbits2Z80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 | (i & 0xa8), i = 0..511 */
 static const uint8 cbits2Z80DupTable[512] = {
 	2,  2,  2,  2,  2,  2,  2,  2, 10, 10, 10, 10, 10, 10, 10, 10,
 	18, 18, 18, 18, 18, 18, 18, 18, 26, 26, 26, 26, 26, 26, 26, 26,
@@ -1123,13 +1113,13 @@ void PUT_BYTE(register uint32 Addr, register uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 }
 
+uint16 GET_WORD(register uint32 a) {
+	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
+}
+
 void PUT_WORD(register uint32 Addr, register uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 	_RamWrite((Addr + 1) & ADDRMASK, Value >> 8);
-}
-
-uint16 GET_WORD(register uint32 a) {
-	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
 }
 
 #define RAM_MM(a)   GET_BYTE(a--)

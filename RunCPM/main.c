@@ -27,15 +27,21 @@ shoud be kept the same.
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
-  #ifdef ARDUINO
-    #include "abstraction_arduino.h"
+  #ifdef __DJGPP
+    #include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
   #else
-    #ifdef __DJGPP
-      #include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
-    #else
-      #include "abstraction_posix.h"
-    #endif
+    #include "abstraction_posix.h"
   #endif
+#endif
+
+#ifdef USE_AUX
+FILE *aux_dev;
+int aux_open = FALSE;
+#endif
+
+#ifdef USE_PRINTER
+FILE *printer_dev;
+int printer_open = FALSE;
 #endif
 
 #include "ram.h"		// ram.h - Implements the RAM
@@ -90,6 +96,14 @@ int main(int argc, char *argv[]) {
 			if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 				break;
 		}
+#endif
+#ifdef USE_AUX
+		if (aux_dev)
+			_sys_fflush(aux_dev);
+#endif
+#ifdef USE_PRINTER
+		if (printer_dev)
+			_sys_fflush(printer_dev);
 #endif
 	}
 

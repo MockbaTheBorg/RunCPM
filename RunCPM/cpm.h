@@ -366,11 +366,27 @@ void _Bdos(void) {
 		C = 4 : Auxiliary (Punch) output
 		*/
 	case 4:
+#ifdef USE_AUX
+		if (!aux_open) {
+			aux_dev = _sys_fopen_w((uint8*)AUX_FILENAME);
+			aux_open = TRUE;
+		}
+		if (aux_dev)
+			_sys_fputc(LOW_REGISTER(DE), aux_dev);
+#endif
 		break;
 		/*
 		C = 5 : Printer output
 		*/
 	case 5:
+#ifdef USE_PRINTER
+		if (!printer_open) {
+			printer_dev = _sys_fopen_w((uint8*)PRINTER_FILENAME);
+			printer_open = TRUE;
+		}
+		if (printer_dev)
+			_sys_fputc(LOW_REGISTER(DE), printer_dev);
+#endif
 		break;
 		/*
 		C = 6 : Direct console IO
@@ -474,7 +490,7 @@ void _Bdos(void) {
 			if (count == c)
 				break;
 		}
-		_RamWrite(i, count);	// Saves the number or characters read
+		_RamWrite(i, count);	// Saves the number of characters read
 		_putcon('\r');	// Gives a visual feedback that read ended
 		break;
 		/*
