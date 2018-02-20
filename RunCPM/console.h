@@ -26,11 +26,8 @@ void _puts(const char *str)	// Puts a \0 terminated string
 
 void _puthex8(uint8 c)		// Puts a HH hex string
 {
-	uint8 h;
-	h = c >> 4;
-	_putcon(tohex(h));
-	h = c & 0x0f;
-	_putcon(tohex(h));
+	_putcon(tohex(c >> 4));
+	_putcon(tohex(c & 0x0f));
 }
 
 void _puthex16(uint16 w)	// puts a HHHH hex string

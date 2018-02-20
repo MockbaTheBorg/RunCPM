@@ -21,8 +21,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.0"
-#define VersionBCD 0x30
+#define VERSION	"3.1"
+#define VersionBCD 0x31
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -162,7 +162,7 @@ static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
 
-#define tohex(x)	(x < 10 ? x + 48 : x + 87)
+#define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus
