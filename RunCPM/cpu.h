@@ -57,9 +57,7 @@ uint32 cpu_in(const uint32 Port) {
 #define TSTFLAG(f)      ((AF & FLAG_ ## f) != 0)
 
 #define PARITY(x)   parityTable[(x) & 0xff]
-/*  SET_PV and SET_PV2 are used to provide correct PARITY flag semantics for the 8080 in cases
-where the Z80 uses the overflow flag
-*/
+
 #define SET_PVS(s)  (((cbits >> 6) ^ (cbits >> 5)) & 4)
 #define SET_PV      (SET_PVS(sum))
 #define SET_PV2(x)  ((temp == (x)) << 2)
@@ -72,8 +70,7 @@ where the Z80 uses the overflow flag
 #define JPC(cond) {                             \
     if (cond) {                                 \
         PC = GET_WORD(PC);                      \
-    }                                           \
-    else {                                      \
+    } else {                                    \
         PC += 2;                                \
     }                                           \
 }
@@ -83,8 +80,7 @@ where the Z80 uses the overflow flag
         register uint32 adrr = GET_WORD(PC);    \
         PUSH(PC + 2);                           \
         PC = adrr;                              \
-    }                                           \
-    else {                                      \
+    } else {                                    \
         PC += 2;                                \
     }                                           \
 }
@@ -1162,19 +1158,7 @@ x == (C - 1) & 0xff for IND
     INOUTFLAGS((HIGH_REGISTER(BC) & 0xa8) | ((HIGH_REGISTER(BC) == 0) << 6), x)
 
 void Z80reset(void) {
-	PCX = 0;
-	AF = 0;
-	BC = 0;
-	DE = 0;
-	HL = 0;
-	IX = 0;
-	IY = 0;
 	PC = 0;
-	SP = 0;
-	AF1 = 0;
-	BC1 = 0;
-	DE1 = 0;
-	HL1 = 0;
 	IFF = 0;
 	IR = 0;
 	Status = 0;
@@ -1445,8 +1429,8 @@ void Z80debug(void) {
 #endif
 
 void Z80run(void) {
-	register uint32 temp = 0;
-	register uint32 acu = 0;
+	register uint32 temp;
+	register uint32 acu;
 	register uint32 sum;
 	register uint32 cbits;
 	register uint32 op;

@@ -296,9 +296,9 @@ uint8 _findnext(uint8 isdir) {
 
 	digitalWrite(LED, HIGH);
 	while (f = root.openNextFile()) {
-	fname = f.name();
-	for (i = 0; i < strlen(fname) + 1 && i < 13; i++)
-		dirname[i] = fname[i];
+	  fname = f.name();
+	  for (i = 0; i < strlen(fname) + 1 && i < 13; i++)
+		  dirname[i] = fname[i];
 		isfile = !f.isDirectory();
 		f.close();
 		if (!isfile)
