@@ -83,7 +83,7 @@ uint8 LogBuffer[128];
 void _logRegs(void) {
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
-	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
 	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
 		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
 }
@@ -93,12 +93,12 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 	uint8 i, m, c, pos;
 	uint8 head = 8;
 	uint8 hexa[] = "0123456789ABCDEF";
-	for (i = 0; i < amount; i++) {
+	for (i = 0; i < amount; ++i) {
 		pos = 0;
-		for (m = 0; m < head; m++)
+		for (m = 0; m < head; ++m)
 			LogBuffer[pos++] = ' ';
 		sprintf((char*)LogBuffer, "  %04x: ", address);
-		for (m = 0; m < 16; m++) {
+		for (m = 0; m < 16; ++m) {
 			c = _RamRead(address++);
 			LogBuffer[pos++] = hexa[c >> 4];
 			LogBuffer[pos++] = hexa[c & 0x0f];
@@ -440,7 +440,7 @@ void _Bdos(void) {
 	case 10:
 		i = WORD16(DE);
 		c = _RamRead(i);	// Gets the number of characters to read
-		i++;	// Points to the number read
+		++i;	// Points to the number read
 		count = 0;
 		while (c)	// Very simplistic line input
 		{
@@ -465,28 +465,28 @@ void _Bdos(void) {
 				break;
 			if (chr == 18) {									// ^R
 				_puts("#\r\n  ");
-				for (j = 1; j <= count; j++)
+				for (j = 1; j <= count; ++j)
 					_putcon(_RamRead(i + j));
 			}
 			if (chr == 21) {									// ^U
 				_puts("#\r\n  ");
 				i = WORD16(DE);
 				c = _RamRead(i);
-				i++;
+				++i;
 				count = 0;
 			}
 			if (chr == 24) {									// ^X
-				for (j = 0; j < count; j++)
+				for (j = 0; j < count; ++j)
 					_puts("\b \b");
 				i = WORD16(DE);
 				c = _RamRead(i);
-				i++;
+				++i;
 				count = 0;
 			}
 			if (chr < 0x20 || chr > 0x7E)						// Invalid character
 				continue;
 			_putcon(chr);
-			count++; _RamWrite(i + count, chr);
+			++count; _RamWrite(i + count, chr);
 			if (count == c)
 				break;
 		}
