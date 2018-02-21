@@ -1429,7 +1429,7 @@ void Z80debug(void) {
 #endif
 
 static inline void Z80run(void) {
-	register uint32 temp;
+	register uint32 temp = 0;
 	register uint32 acu;
 	register uint32 sum;
 	register uint32 cbits;
