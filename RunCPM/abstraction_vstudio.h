@@ -8,6 +8,10 @@
 #include <windows.h>
 #include <stdio.h>
 #include <conio.h>
+#ifdef PROFILE
+#include <time.h>
+#define millis() clock()
+#endif
 #endif
 
 // Lua scripting support

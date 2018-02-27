@@ -1102,11 +1102,11 @@ int32 Watch = -1;
 
 /* Memory management    */
 static uint8 GET_BYTE(register uint32 Addr) {
-	return _RamRead(Addr & ADDRMASK);
+	return _RamRead(Addr);
 }
 
 static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
-	_RamWrite(Addr & ADDRMASK, Value);
+	_RamWrite(Addr, Value);
 }
 
 static uint16 GET_WORD(register uint32 a) {
@@ -1114,8 +1114,8 @@ static uint16 GET_WORD(register uint32 a) {
 }
 
 static void PUT_WORD(register uint32 Addr, register uint32 Value) {
-	_RamWrite(Addr & ADDRMASK, Value);
-	_RamWrite((Addr + 1) & ADDRMASK, Value >> 8);
+	_RamWrite(Addr, Value);
+	_RamWrite(++Addr, Value >> 8);
 }
 
 #define RAM_MM(a)   GET_BYTE(a--)
@@ -1126,8 +1126,8 @@ static void PUT_WORD(register uint32 Addr, register uint32 Value) {
 #define MM_PUT_BYTE(a,v) PUT_BYTE(--a, v)
 
 #define PUSH(x) do {            \
-    MM_PUT_BYTE(SP, (x) >> 8);  \
-    MM_PUT_BYTE(SP, x);         \
+	MM_PUT_BYTE(SP, (x) >> 8);  \
+	MM_PUT_BYTE(SP, x);         \
 } while (0)
 
 /*  Macros for the IN/OUT instructions INI/INIR/IND/INDR/OUTI/OTIR/OUTD/OTDR
