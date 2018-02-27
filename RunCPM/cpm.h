@@ -10,6 +10,11 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
+#ifdef PROFILE
+unsigned long time_start = 0;
+unsigned long time_now = 0;
+#endif
+
 void _PatchCPM(void) {
 	uint16 i;
 
@@ -438,6 +443,13 @@ void _Bdos(void) {
 		DE) = First char
 		*/
 	case 10:
+#ifdef PROFILE
+		if (time_start != 0) {
+			time_now = millis();
+			printf(": %ld\n", time_now - time_start);
+			time_start = 0;
+		}
+#endif
 		i = WORD16(DE);
 		c = _RamRead(i);	// Gets the number of characters to read
 		++i;	// Points to the number read
@@ -461,8 +473,12 @@ void _Bdos(void) {
 				count--;
 				continue;
 			}
-			if (chr == 0x0A || chr == 0x0D)						// ^J and ^M
+			if (chr == 0x0A || chr == 0x0D)	{					// ^J and ^M
+#ifdef PROFILE
+				time_start = millis();
+#endif
 				break;
+			}
 			if (chr == 18) {									// ^R
 				_puts("#\r\n  ");
 				for (j = 1; j <= count; ++j)

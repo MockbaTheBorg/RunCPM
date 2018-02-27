@@ -84,6 +84,9 @@
 //#define HASLUA		// Will enable Lua scripting (BDOS call 254)
 						// Should be passed externally per-platform with -DHASLUA
 
+//#define PROFILE			// For measuring time taken to run a CP/M command
+						// This should be enabled only for debugging purposes when trying to improve emulation speed
+
 /* Definition for CP/M 2.2 user number support */
 
 #define USER_SUPPORT	// If this is defined, CP/M user support is added. RunCPM will ignore the contents of the /A, /B folders and instead

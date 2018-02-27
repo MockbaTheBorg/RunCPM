@@ -1,6 +1,10 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#ifdef PROFILE
+#define printf(a, b) Serial.println(b)
+#endif
+
 #define HostOS 0x01
 
 /* Memory abstraction functions */

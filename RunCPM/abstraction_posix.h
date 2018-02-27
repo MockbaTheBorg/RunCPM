@@ -2,6 +2,10 @@
 #define ABSTRACT_H
 
 #include <glob.h>
+#ifdef PROFILE
+#include <time.h>
+#define millis() clock()/1000
+#endif
 
 // Lua scripting support
 #ifdef HASLUA
