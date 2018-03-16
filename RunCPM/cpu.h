@@ -1102,11 +1102,11 @@ int32 Watch = -1;
 
 /* Memory management    */
 static uint8 GET_BYTE(register uint32 Addr) {
-	return _RamRead(Addr);
+	return _RamRead(Addr & ADDRMASK);
 }
 
 static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
-	_RamWrite(Addr, Value);
+	_RamWrite(Addr & ADDRMASK, Value);
 }
 
 static uint16 GET_WORD(register uint32 a) {
