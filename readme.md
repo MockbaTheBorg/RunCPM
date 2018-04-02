@@ -121,7 +121,7 @@ When using a serial terminal emulator, make sure it sends either CR or LF when y
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution. The R/O attributes of the containing folder are not modified.
 
-RunCPM suports the CON: device for interaction, and a very early support of PRT: (printing to file only) has been implemented recently.
+RunCPM suports the CON: device for interaction, and a very early support of AUX: and PRT: (printing to file only) devices has been implemented recently.
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
