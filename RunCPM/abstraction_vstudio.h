@@ -387,10 +387,15 @@ BOOL _signal_handler(DWORD signal) {
 }
 
 void _console_init(void) {
-	HANDLE hConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
-	DWORD dwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
 
-	SetConsoleMode(hConsoleHandle, dwMode);
+	DWORD dwOutMode = ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
+	DWORD dwInMode = ENABLE_VIRTUAL_TERMINAL_INPUT;
+
+	SetConsoleMode(hOutHandle, dwOutMode);
+	SetConsoleMode(hInHandle, dwInMode);
+
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
 }
 
