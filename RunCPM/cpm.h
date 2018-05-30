@@ -88,9 +88,12 @@ uint8 LogBuffer[128];
 void _logRegs(void) {
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
+	uint8 c = HIGH_REGISTER(AF);
+	if (c < 32 || c > 126)
+		c = 46;
 	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
-	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
-		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
+	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x(%c)|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
+		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), c, Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
 }
 
 void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines, so 1 CP/M block = 8, not 128
@@ -134,16 +137,16 @@ void _logBiosIn(uint8 ch) {
 	};
 	int index = ch / 3;
 	if (index < 18) {
-		sprintf((char *)LogBuffer, "\nBios call: %3d (%s) IN:\n", ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh (%s) IN:\n", ch, ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh IN:\n", ch, ch); _sys_logbuffer(LogBuffer);
 	}
 
 	_logRegs();
 }
 
 void _logBiosOut(uint8 ch) {
-	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "               OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
@@ -161,9 +164,9 @@ void _logBdosIn(uint8 ch) {
 	};
 
 	if (ch < 41) {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN from 0x%04x:\n", ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh (%s) IN from 0x%04x:\n", ch, ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d IN from 0x%04x:\n", ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh IN from 0x%04x:\n", ch, ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	}
 	_logRegs();
 	switch (ch) {
