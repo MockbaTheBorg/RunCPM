@@ -9,7 +9,7 @@ CC = gcc
 #CC = gcc -DDEBUG=1 -DDEBUGLOG=1
 
 # Flags to pass to the compiler - add "-g" to include debug information
-CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -DHASLUA
+CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
 #CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
 
 # Flags to pass to the linker

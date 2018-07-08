@@ -59,7 +59,7 @@ int _SelectDisk(uint8 dr) {
 	if (!dr) {
 		dr = cDrive;	// This will set dr to defDisk in case no disk is passed
 	} else {
-		dr--;			// Called from BDOS, set dr back to 0=A: format
+		--dr;			// Called from BDOS, set dr back to 0=A: format
 	}
 
 	disk[0] += dr;
@@ -96,7 +96,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 			*(filename++) = toupper(F->fn[i]);
 		if (F->fn[i] == '?')
 			unique = FALSE;
-		i++;
+		++i;
 	}
 	i = 0;
 	while (i < 3) {
@@ -109,7 +109,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 		}
 		if (F->tp[i] == '?')
 			unique = FALSE;
-		i++;
+		++i;
 	}
 	*filename = 0x00;
 
@@ -120,72 +120,72 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
-	filename++;
+	++filename;
 	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
 #ifdef USER_SUPPORT
 		filename += 3;
 #else
-		filename++;
+		++filename;
 #endif
 	} else {
-		filename--;
+		--filename;
 	}
 
 	while (*filename != 0 && *filename != '.') {
 		F->fn[i] = toupper(*filename);
-		filename++;
-		i++;
+		++filename;
+		++i;
 	}
 	while (i < 8) {
 		F->fn[i] = ' ';
-		i++;
+		++i;
 	}
 	if (*filename == '.')
-		filename++;
+		++filename;
 	i = 0;
 	while (*filename != 0) {
 		F->tp[i] = toupper(*filename);
-		filename++;
-		i++;
+		++filename;
+		++i;
 	}
 	while (i < 3) {
 		F->tp[i] = ' ';
-		i++;
+		++i;
 	}
 }
 
 void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.TXT) to FCB name (AB      TXT)
 	int i = 0;
 
-	from++;
+	++from;
 	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
 #ifdef USER_SUPPORT
 		from += 3;
 #else
-		from++;
+		++from;
 #endif
 	} else {
-		from--;
+		--from;
 	}
 
 	while (*from != 0 && *from != '.') {
 		*to = toupper(*from);
-		to++; from++; i++;
+		++to; ++from; ++i;
 	}
 	while (i < 8) {
 		*to = ' ';
-		to++;  i++;
+		++to;  ++i;
 	}
 	if (*from == '.')
-		from++;
+		++from;
 	i = 0;
 	while (*from != 0) {
 		*to = toupper(*from);
-		to++; from++; i++;
+		++to; ++from; ++i;
 	}
 	while (i < 3) {
 		*to = ' ';
-		to++;  i++;
+		++to;  ++i;
 	}
 	*to = 0;
 }
@@ -194,9 +194,9 @@ uint8 match(uint8 *fcbname, uint8 *pattern) {
 	uint8 result = 1;
 	uint8 i;
 
-	for (i = 0; i < 12; i++) {
+	for (i = 0; i < 12; ++i) {
 		if (*pattern == '?' || *pattern == *fcbname) {
-			pattern++; fcbname++;
+			++pattern; ++fcbname;
 			continue;
 		} else {
 			result = 0;
@@ -236,7 +236,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 			F->s2 = 0x00;
 	
 			F->rc = len > MaxRC ? 0x80 : (uint8)len;
-			for (i = 0; i < 16; i++)	// Clean up AL
+			for (i = 0; i < 16; ++i)	// Clean up AL
 				F->al[i] = 0x00;
 
 			result = 0x00;
@@ -275,7 +275,7 @@ uint8 _MakeFile(uint16 fcbaddr) {
 				F->s1 = 0x00;
 				F->s2 = 0x00;
 				F->rc = 0x00;
-				for (i = 0; i < 16; i++)	// Clean up AL
+				for (i = 0; i < 16; ++i)	// Clean up AL
 					F->al[i] = 0x00;
 				F->cr = 0x00;
 				result = 0x00;
@@ -358,14 +358,14 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _sys_readseq(&filename[0], fpos);
 		if (!result) {	// Read succeeded, adjust FCB
-			F->cr++;
+			++F->cr;
 			if (F->cr > MaxCR) {
 				F->cr = 1;
-				F->ex++;
+				++F->ex;
 			}
 			if (F->ex > MaxEX) {
 				F->ex = 0;
-				F->s2++;
+				++F->s2;
 			}
 			if (F->s2 > MaxS2)
 				result = 0xfe;	// (todo) not sure what to do 
@@ -387,14 +387,14 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
 			result = _sys_writeseq(&filename[0], fpos);
 			if (!result) {	// Write succeeded, adjust FCB
-				F->cr++;
+				++F->cr;
 				if (F->cr > MaxCR) {
 					F->cr = 1;
-					F->ex++;
+					++F->ex;
 				}
 				if (F->ex > MaxEX) {
 					F->ex = 0;
-					F->s2++;
+					++F->s2;
 				}
 				if (F->s2 > MaxS2)
 					result = 0xfe;	// (todo) not sure what to do 

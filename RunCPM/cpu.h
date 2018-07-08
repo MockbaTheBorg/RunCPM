@@ -57,9 +57,7 @@ uint32 cpu_in(const uint32 Port) {
 #define TSTFLAG(f)      ((AF & FLAG_ ## f) != 0)
 
 #define PARITY(x)   parityTable[(x) & 0xff]
-/*  SET_PV and SET_PV2 are used to provide correct PARITY flag semantics for the 8080 in cases
-where the Z80 uses the overflow flag
-*/
+
 #define SET_PVS(s)  (((cbits >> 6) ^ (cbits >> 5)) & 4)
 #define SET_PV      (SET_PVS(sum))
 #define SET_PV2(x)  ((temp == (x)) << 2)
@@ -72,8 +70,7 @@ where the Z80 uses the overflow flag
 #define JPC(cond) {                             \
     if (cond) {                                 \
         PC = GET_WORD(PC);                      \
-    }                                           \
-    else {                                      \
+    } else {                                    \
         PC += 2;                                \
     }                                           \
 }
@@ -83,8 +80,7 @@ where the Z80 uses the overflow flag
         register uint32 adrr = GET_WORD(PC);    \
         PUSH(PC + 2);                           \
         PC = adrr;                              \
-    }                                           \
-    else {                                      \
+    } else {                                    \
         PC += 2;                                \
     }                                           \
 }
@@ -1105,21 +1101,21 @@ int32 Watch = -1;
 #endif
 
 /* Memory management    */
-uint8 GET_BYTE(register uint32 Addr) {
+static uint8 GET_BYTE(register uint32 Addr) {
 	return _RamRead(Addr & ADDRMASK);
 }
 
-void PUT_BYTE(register uint32 Addr, register uint32 Value) {
+static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 }
 
-uint16 GET_WORD(register uint32 a) {
+static uint16 GET_WORD(register uint32 a) {
 	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
 }
 
-void PUT_WORD(register uint32 Addr, register uint32 Value) {
-	_RamWrite(Addr & ADDRMASK, Value);
-	_RamWrite((Addr + 1) & ADDRMASK, Value >> 8);
+static void PUT_WORD(register uint32 Addr, register uint32 Value) {
+	_RamWrite(Addr, Value);
+	_RamWrite(++Addr, Value >> 8);
 }
 
 #define RAM_MM(a)   GET_BYTE(a--)
@@ -1130,8 +1126,8 @@ void PUT_WORD(register uint32 Addr, register uint32 Value) {
 #define MM_PUT_BYTE(a,v) PUT_BYTE(--a, v)
 
 #define PUSH(x) do {            \
-    MM_PUT_BYTE(SP, (x) >> 8);  \
-    MM_PUT_BYTE(SP, x);         \
+	MM_PUT_BYTE(SP, (x) >> 8);  \
+	MM_PUT_BYTE(SP, x);         \
 } while (0)
 
 /*  Macros for the IN/OUT instructions INI/INIR/IND/INDR/OUTI/OTIR/OUTD/OTDR
@@ -1161,20 +1157,8 @@ x == (C - 1) & 0xff for IND
 #define INOUTFLAGS_NONZERO(x)                                           \
     INOUTFLAGS((HIGH_REGISTER(BC) & 0xa8) | ((HIGH_REGISTER(BC) == 0) << 6), x)
 
-void Z80reset(void) {
-	PCX = 0;
-	AF = 0;
-	BC = 0;
-	DE = 0;
-	HL = 0;
-	IX = 0;
-	IY = 0;
+static inline void Z80reset(void) {
 	PC = 0;
-	SP = 0;
-	AF1 = 0;
-	BC1 = 0;
-	DE1 = 0;
-	HL1 = 0;
 	IFF = 0;
 	IR = 0;
 	Status = 0;
@@ -1190,9 +1174,9 @@ void watchprint(uint16 pos) {
 	_puts("  Watch : "); _puthex16(Watch);
 	_puts(" = "); _puthex8(_RamRead(Watch)); _putcon(':'); _puthex8(_RamRead(Watch + 1));
 	_puts(" / ");
-	for (J = 0, I = _RamRead(Watch); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
+	for (J = 0, I = _RamRead(Watch); J < 8; ++J, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
 	_putcon(':');
-	for (J = 0, I = _RamRead(Watch + 1); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
+	for (J = 0, I = _RamRead(Watch + 1); J < 8; ++J, I <<= 1) _putcon(I & 0x80 ? '1' : '0');
 }
 
 void memdump(uint16 pos) {
@@ -1202,23 +1186,23 @@ void memdump(uint16 pos) {
 	uint8 ch = pos & 0xff;
 
 	_puts("       ");
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < 16; ++i) {
 		_puthex8(ch++ & 0x0f);
 		_puts(" ");
 	}
 	_puts("\r\n");
 	_puts("       ");
-	for (i = 0; i < 16; i++)
+	for (i = 0; i < 16; ++i)
 		_puts("---");
 	_puts("\r\n");
-	for (l = 0; l < 16; l++) {
+	for (l = 0; l < 16; ++l) {
 		_puthex16(h);
 		_puts(" : ");
-		for (i = 0; i < 16; i++) {
+		for (i = 0; i < 16; ++i) {
 			_puthex8(_RamRead(h++));
 			_puts(" ");
 		}
-		for (i = 0; i < 16; i++) {
+		for (i = 0; i < 16; ++i) {
 			ch = _RamRead(c++);
 			_putcon(ch > 31 && ch < 127 ? ch : '.');
 		}
@@ -1234,20 +1218,20 @@ uint8 Disasm(uint16 pos) {
 	uint8 C;
 
 	switch (ch) {
-	case 0xCB: pos++; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
-	case 0xED: pos++; txt = MnemonicsED[_RamRead(pos++)]; count++; break;
-	case 0xDD: pos++; C = 'X';
+	case 0xCB: ++pos; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
+	case 0xED: ++pos; txt = MnemonicsED[_RamRead(pos++)]; count++; break;
+	case 0xDD: ++pos; C = 'X';
 		if (_RamRead(pos) != 0xCB) {
-			txt = MnemonicsXX[_RamRead(pos++)]; count++;
+			txt = MnemonicsXX[_RamRead(pos++)]; ++count;
 		} else {
-			pos++; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
+			++pos; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
 		}
 		break;
-	case 0xFD: pos++; C = 'Y';
+	case 0xFD: ++pos; C = 'Y';
 		if (_RamRead(pos) != 0xCB) {
-			txt = MnemonicsXX[_RamRead(pos++)]; count++;
+			txt = MnemonicsXX[_RamRead(pos++)]; ++count;
 		} else {
-			pos++; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
+			++pos; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
 		}
 		break;
 	default:   txt = Mnemonics[_RamRead(pos++)];
@@ -1256,12 +1240,12 @@ uint8 Disasm(uint16 pos) {
 		switch (*txt) {
 		case '*':
 			txt += 2;
-			count++;
+			++count;
 			_puthex8(_RamRead(pos++));
 			break;
 		case '^':
 			txt += 2;
-			count++;
+			++count;
 			_puthex8(_RamRead(pos++));
 			break;
 		case '#':
@@ -1272,17 +1256,17 @@ uint8 Disasm(uint16 pos) {
 			break;
 		case '@':
 			txt += 2;
-			count++;
+			++count;
 			jr = _RamRead(pos++);
 			_puthex16(pos + jr);
 			break;
 		case '%':
 			_putch(C);
-			txt++;
+			++txt;
 			break;
 		default:
 			_putch(*txt);
-			txt++;
+			++txt;
 		}
 	}
 
@@ -1305,7 +1289,7 @@ void Z80debug(void) {
 		_puts(" HL:"); _puthex16(HL);
 		_puts(" AF:"); _puthex16(AF);
 		_puts(" : [");
-		for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
+		for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
 		_puts("]\r\n");
 		_puts("IX:");  _puthex16(IX);
 		_puts(" IY:"); _puthex16(IY);
@@ -1368,7 +1352,7 @@ void Z80debug(void) {
 				_puts(" : ");
 				l += Disasm(l);
 				_puts("\r\n");
-				I--;
+				--I;
 			}
 			break;
 		case 'B':
@@ -1398,7 +1382,7 @@ void Z80debug(void) {
 				_puts(" : ");
 				l += Disasm(l);
 				_puts("\r\n");
-				I--;
+				--I;
 			}
 			break;
 		case 'T':
@@ -1444,9 +1428,9 @@ void Z80debug(void) {
 }
 #endif
 
-void Z80run(void) {
+static inline void Z80run(void) {
 	register uint32 temp = 0;
-	register uint32 acu = 0;
+	register uint32 acu;
 	register uint32 sum;
 	register uint32 cbits;
 	register uint32 op;
@@ -1557,7 +1541,7 @@ void Z80run(void) {
 			if ((BC -= 0x100) & 0xff00)
 				PC += (int8)GET_BYTE(PC) + 1;
 			else
-				PC++;
+				++PC;
 			break;
 
 		case 0x11:      /* LD DE,nnnn */
@@ -1636,7 +1620,7 @@ void Z80run(void) {
 
 		case 0x20:      /* JR NZ,dd */
 			if (TSTFLAG(Z))
-				PC++;
+				++PC;
 			else
 				PC += (int8)GET_BYTE(PC) + 1;
 			break;
@@ -1701,7 +1685,7 @@ void Z80run(void) {
 			if (TSTFLAG(Z))
 				PC += (int8)GET_BYTE(PC) + 1;
 			else
-				PC++;
+				++PC;
 			break;
 
 		case 0x29:      /* ADD HL,HL */
@@ -1743,7 +1727,7 @@ void Z80run(void) {
 
 		case 0x30:      /* JR NC,dd */
 			if (TSTFLAG(C))
-				PC++;
+				++PC;
 			else
 				PC += (int8)GET_BYTE(PC) + 1;
 			break;
@@ -1787,7 +1771,7 @@ void Z80run(void) {
 			if (TSTFLAG(C))
 				PC += (int8)GET_BYTE(PC) + 1;
 			else
-				PC++;
+				++PC;
 			break;
 
 		case 0x39:      /* ADD HL,SP */
@@ -2044,7 +2028,7 @@ void Z80run(void) {
 			_puts("Press any key...");
 			_getch();
 #endif
-			PC--;
+			--PC;
 			goto end_decode;
 			break;
 
@@ -3369,7 +3353,7 @@ void Z80run(void) {
 				break;
 
 			default:                /* ignore DD */
-				PC--;
+				--PC;
 			}
 			break;
 
@@ -4606,7 +4590,7 @@ void Z80run(void) {
 				break;
 
 			default:            /* ignore FD */
-				PC--;
+				--PC;
 			}
 			break;
 

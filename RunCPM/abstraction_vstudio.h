@@ -8,6 +8,10 @@
 #include <windows.h>
 #include <stdio.h>
 #include <conio.h>
+#ifdef PROFILE
+#include <time.h>
+#define millis() clock()
+#endif
 #endif
 
 // Lua scripting support
@@ -163,7 +167,7 @@ void _sys_logbuffer(uint8 *buffer) {
 #else
 	uint8 s = 0;
 	while (*(buffer + s))	// Computes buffer size
-		s++;
+		++s;
 	FILE *file = _sys_fopen_a((uint8*)LogName);
 	_sys_fwrite(buffer, 1, s, file);
 	_sys_fclose(file);
@@ -180,11 +184,11 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			for (i = 0; i < 128; i++)
+			for (i = 0; i < 128; ++i)
 				dmabuf[i] = 0x1a;
 			bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
 			if (bytesread) {
-				for (i = 0; i < 128; i++)
+				for (i = 0; i < 128; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
@@ -227,11 +231,11 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
 		if (!_sys_fseek(file, fpos, 0)) {
-			for (i = 0; i < 128; i++)
+			for (i = 0; i < 128; ++i)
 				dmabuf[i] = 0x1a;
 			bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
 			if (bytesread) {
-				for (i = 0; i < 128; i++)
+				for (i = 0; i < 128; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
@@ -288,7 +292,7 @@ uint8 _findnext(uint8 isdir) {
 				continue;
 			}
 		}
-		found++; dirPos++;
+		++found; ++dirPos;
 		break;
 	}
 	if (found) {
@@ -383,10 +387,15 @@ BOOL _signal_handler(DWORD signal) {
 }
 
 void _console_init(void) {
-	HANDLE hConsoleHandle = GetStdHandle(STD_INPUT_HANDLE);
-	DWORD dwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
 
-	SetConsoleMode(hConsoleHandle, dwMode);
+	DWORD dwOutMode = ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
+	DWORD dwInMode = ENABLE_VIRTUAL_TERMINAL_INPUT;
+
+	SetConsoleMode(hOutHandle, dwOutMode);
+	SetConsoleMode(hInHandle, dwInMode);
+
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
 }
 
