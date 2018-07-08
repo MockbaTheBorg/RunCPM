@@ -1,6 +1,10 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#ifdef PROFILE
+#define printf(a, b) Serial.println(b)
+#endif
+
 #define HostOS 0x01
 
 /* Memory abstraction functions */
@@ -114,7 +118,7 @@ int _sys_movefile(char *filename, char *newname, int size) {
 	if (fold = SD.open(filename, O_READ)) {
 		if (fnew = SD.open(newname, O_CREAT | O_WRITE)) {
 			result = true;
-			for (i = 0; i < size; i++) {
+			for (i = 0; i < size; ++i) {
 				c = fold.read();
 				if (fnew.write(c) < 1) {
 					result = false;
@@ -145,7 +149,7 @@ void _sys_logbuffer(uint8 *buffer) {
 	File f;
 	uint8 s = 0;
 	while (*(buffer+s))	// Computes buffer size
-		s++;
+		++s;
 	if(f = SD.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
 		f.write(buffer, s);
 		f.flush();
@@ -164,7 +168,7 @@ bool _sys_extendfile(char *fn, unsigned long fpos)
 	digitalWrite(LED, HIGH);
 	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > f.size()) {
-			for (i = 0; i < f.size() - fpos; i++) {
+			for (i = 0; i < f.size() - fpos; ++i) {
 				if (f.write((uint8_t)0) < 0) {
 					result = false;
 					break;
@@ -191,11 +195,11 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 		f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
-			for (i = 0; i < 128; i++)
+			for (i = 0; i < 128; ++i)
 				dmabuf[i] = 0x1a;
 			bytesread = f.read(&dmabuf[0], 128);
 			if (bytesread) {
-				for (i = 0; i < 128; i++)
+				for (i = 0; i < 128; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
@@ -244,11 +248,11 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 		f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
-			for (i = 0; i < 128; i++)
+			for (i = 0; i < 128; ++i)
 				dmabuf[i] = 0x1a;
 			bytesread = f.read(&dmabuf[0], 128);
 			if (bytesread) {
-				for (i = 0; i < 128; i++)
+				for (i = 0; i < 128; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
@@ -296,9 +300,9 @@ uint8 _findnext(uint8 isdir) {
 
 	digitalWrite(LED, HIGH);
 	while (f = root.openNextFile()) {
-	fname = f.name();
-	for (i = 0; i < strlen(fname) + 1 && i < 13; i++)
-		dirname[i] = fname[i];
+	  fname = f.name();
+	  for (i = 0; i < strlen(fname) + 1 && i < 13; ++i)
+		  dirname[i] = fname[i];
 		isfile = !f.isDirectory();
 		f.close();
 		if (!isfile)

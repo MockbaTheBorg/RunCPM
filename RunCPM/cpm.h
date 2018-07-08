@@ -10,6 +10,11 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
+#ifdef PROFILE
+unsigned long time_start = 0;
+unsigned long time_now = 0;
+#endif
+
 void _PatchCPM(void) {
 	uint16 i;
 
@@ -83,9 +88,12 @@ uint8 LogBuffer[128];
 void _logRegs(void) {
 	uint8 J, I;
 	uint8 Flags[9] = { 'S','Z','5','H','3','P','N','C' };
-	for (J = 0, I = LOW_REGISTER(AF); J < 8; J++, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
-	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
-		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
+	uint8 c = HIGH_REGISTER(AF);
+	if (c < 32 || c > 126)
+		c = 46;
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) Flags[J] = I & 0x80 ? Flags[J] : '.';
+	sprintf((char*)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x(%c)|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
+		WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), c, Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC)); _sys_logbuffer(LogBuffer);
 }
 
 void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines, so 1 CP/M block = 8, not 128
@@ -93,12 +101,12 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 	uint8 i, m, c, pos;
 	uint8 head = 8;
 	uint8 hexa[] = "0123456789ABCDEF";
-	for (i = 0; i < amount; i++) {
+	for (i = 0; i < amount; ++i) {
 		pos = 0;
-		for (m = 0; m < head; m++)
+		for (m = 0; m < head; ++m)
 			LogBuffer[pos++] = ' ';
 		sprintf((char*)LogBuffer, "  %04x: ", address);
-		for (m = 0; m < 16; m++) {
+		for (m = 0; m < 16; ++m) {
 			c = _RamRead(address++);
 			LogBuffer[pos++] = hexa[c >> 4];
 			LogBuffer[pos++] = hexa[c & 0x0f];
@@ -129,16 +137,16 @@ void _logBiosIn(uint8 ch) {
 	};
 	int index = ch / 3;
 	if (index < 18) {
-		sprintf((char *)LogBuffer, "\nBios call: %3d (%s) IN:\n", ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh (%s) IN:\n", ch, ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBios call: %3d IN:\n", ch); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh IN:\n", ch, ch); _sys_logbuffer(LogBuffer);
 	}
 
 	_logRegs();
 }
 
 void _logBiosOut(uint8 ch) {
-	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char *)LogBuffer, "               OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
@@ -156,9 +164,9 @@ void _logBdosIn(uint8 ch) {
 	};
 
 	if (ch < 41) {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d (%s) IN from 0x%04x:\n", ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh (%s) IN from 0x%04x:\n", ch, ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d IN from 0x%04x:\n", ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh IN from 0x%04x:\n", ch, ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
 	}
 	_logRegs();
 	switch (ch) {
@@ -232,6 +240,7 @@ void _logBdosOut(uint8 ch) {
 
 void _Bios(void) {
 	uint8 ch = LOW_REGISTER(PCX);
+	uint8 c = 0;
 
 #ifdef DEBUGLOG
 #ifdef LOGONLY
@@ -251,7 +260,9 @@ void _Bios(void) {
 		SET_HIGH_REGISTER(AF, _chready());
 		break;
 	case 0x09:				// 3 - CONIN - Console input
-		SET_HIGH_REGISTER(AF, _getch());
+		while (!c)
+			c = _getch();
+		SET_HIGH_REGISTER(AF, c);
 #ifdef DEBUG
 		if (HIGH_REGISTER(AF) == 4)
 			Debug = 1;
@@ -438,9 +449,16 @@ void _Bdos(void) {
 		DE) = First char
 		*/
 	case 10:
+#ifdef PROFILE
+		if (time_start != 0) {
+			time_now = millis();
+			printf(": %ld\n", time_now - time_start);
+			time_start = 0;
+		}
+#endif
 		i = WORD16(DE);
 		c = _RamRead(i);	// Gets the number of characters to read
-		i++;	// Points to the number read
+		++i;	// Points to the number read
 		count = 0;
 		while (c)	// Very simplistic line input
 		{
@@ -461,32 +479,36 @@ void _Bdos(void) {
 				count--;
 				continue;
 			}
-			if (chr == 0x0A || chr == 0x0D)						// ^J and ^M
+			if (chr == 0x0A || chr == 0x0D)	{					// ^J and ^M
+#ifdef PROFILE
+				time_start = millis();
+#endif
 				break;
+			}
 			if (chr == 18) {									// ^R
 				_puts("#\r\n  ");
-				for (j = 1; j <= count; j++)
+				for (j = 1; j <= count; ++j)
 					_putcon(_RamRead(i + j));
 			}
 			if (chr == 21) {									// ^U
 				_puts("#\r\n  ");
 				i = WORD16(DE);
 				c = _RamRead(i);
-				i++;
+				++i;
 				count = 0;
 			}
 			if (chr == 24) {									// ^X
-				for (j = 0; j < count; j++)
+				for (j = 0; j < count; ++j)
 					_puts("\b \b");
 				i = WORD16(DE);
 				c = _RamRead(i);
-				i++;
+				++i;
 				count = 0;
 			}
 			if (chr < 0x20 || chr > 0x7E)						// Invalid character
 				continue;
 			_putcon(chr);
-			count++; _RamWrite(i + count, chr);
+			++count; _RamWrite(i + count, chr);
 			if (count == c)
 				break;
 		}

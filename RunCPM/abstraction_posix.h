@@ -2,6 +2,10 @@
 #define ABSTRACT_H
 
 #include <glob.h>
+#ifdef PROFILE
+#include <time.h>
+#define millis() clock()/1000
+#endif
 
 // Lua scripting support
 #ifdef HASLUA
@@ -37,8 +41,8 @@ uint8 _findnext(uint8 isdir)
 	dir[2] = filename[2];
 #endif
 	if (!glob(dir, 0, NULL, &pglob)) {
-		for (i = dirPos; i < pglob.gl_pathc; i++) {
-			dirPos++;
+		for (i = dirPos; i < pglob.gl_pathc; ++i) {
+			++dirPos;
 			dirname = pglob.gl_pathv[i];
 			_HostnameToFCBname((uint8*)dirname, fcbname);
 			if (match(fcbname, pattern) && (stat(dirname, &st) == 0) && ((st.st_mode & S_IFREG) != 0)) {

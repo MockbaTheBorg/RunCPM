@@ -21,8 +21,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.0"
-#define VersionBCD 0x30
+#define VERSION	"3.1"
+#define VersionBCD 0x31
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -38,8 +38,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.3"			// Will use the CCP from ccp.h
-#define VersionCCP	0x13
+#define CCPname		"INTERNAL v1.4"			// Will use the CCP from ccp.h
+#define VersionCCP	0x14
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -83,6 +83,9 @@
 
 //#define HASLUA		// Will enable Lua scripting (BDOS call 254)
 						// Should be passed externally per-platform with -DHASLUA
+
+//#define PROFILE			// For measuring time taken to run a CP/M command
+						// This should be enabled only for debugging purposes when trying to improve emulation speed
 
 /* Definition for CP/M 2.2 user number support */
 
@@ -162,7 +165,7 @@ static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
 
-#define tohex(x)	(x < 10 ? x + 48 : x + 87)
+#define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus

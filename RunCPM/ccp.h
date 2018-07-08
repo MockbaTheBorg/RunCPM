@@ -35,9 +35,9 @@
 // CCP global variables
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
 uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
-uint8 curUser;	// 0 -> 15			.. Current user aread to access
+uint8 curUser;	// 0 -> 15			.. Current user area to access
 uint8 sFlag;	//					.. Submit Flag
-uint8 prompt[5] = "\r\n >";
+uint8 prompt[5] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;							// Actual size of the typed command line (size of the buffer)
 
@@ -536,6 +536,7 @@ void _ccp(void) {
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
 
 		prompt[2] = 'A' + curDrive;						// Shows the prompt
+		prompt[3] = '0' + curUser;
 		_puts((char*)prompt);
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line

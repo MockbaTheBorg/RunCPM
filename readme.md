@@ -116,11 +116,12 @@ They are provided on disk A.ZIP just to maintain compatibility with DRI's offici
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated BDOS is specific for CP/M 2.2.
 
-The "video monitor" is assumed to be ANSI/VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.
+The "video monitor" is assumed to be ANSI/VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.<br>
+When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution. The R/O attributes of the containing folder are not modified.
 
-RunCPM does not support any CP/M device other than CON: and will silently fail to access them.
+RunCPM suports the CON: device for interaction, and a very early support of AUX: and PRT: (printing to file only) devices has been implemented recently.
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
