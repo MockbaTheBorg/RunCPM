@@ -5,7 +5,11 @@
 #define printf(a, b) Serial.println(b)
 #endif
 
+#ifdef CORE_TEENSY
+#define HostOS 0x04
+#else
 #define HostOS 0x01
+#endif
 
 /* Memory abstraction functions */
 /*===============================================================================*/

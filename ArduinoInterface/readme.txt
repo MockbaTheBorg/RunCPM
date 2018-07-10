@@ -1,4 +1,6 @@
-Additional BDOS calls for Arduino.
+Additional BDOS calls for Arduino / Teensy.
+
+HostOS is available for all platforms - see cpm.h
 
 =====================================================
 
@@ -46,4 +48,13 @@ BDOS function 224 (0xE0) - AnalogWrite:
  LD D, pin_number
  LD E, value (0-255)
  CALL 5
+
+=====================================================
+
+BDOS function 250 (0xFA) - HostOS:
+
+ LD C, 250
+ CALL 5
+
+Returns result in HL (1 = Arduino, 4 = Teensy).
 
