@@ -696,7 +696,7 @@ void _Bdos(void) {
 	case 40:
 		HL = _WriteRand(DE);
 		break;
-#ifdef ARDUINO
+#if defined ARDUINO || defined CORE_TEENSY
 		/*
 		C = 220 (DCh) : PinMode
 		*/
@@ -730,7 +730,7 @@ void _Bdos(void) {
 #endif
 		/*
 		C = 250 (FAh) : HostOS
-		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos
+		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos / 0x04 - Teensy
 		*/
 	case 250:
 		HL = HostOS;
