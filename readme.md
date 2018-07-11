@@ -1,22 +1,22 @@
 # RunCPM - Z80 CP/M 2.2 emulator
 
-RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS and Arduino DUE. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
+RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS, Arduino DUE and the Teensy. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules should be necessary.
 
-If you miss powerful programs like Wordstar, dBaseII, MBASIC and others, then RunCPM is for you. It is very stable and fun to use.<br>
+If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
-## Arduino
+## Arduino / Teensy
 
 RunCPM builds on Arduino IDE 1.6.6 or later.<br>
 RunCPM so far runs on the Arduino DUE and on the Teensy 3.5 and 3.6, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
-If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has on on-board SD adapter.
+If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter.
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
 
-LED blink codes: Arduino LED (pin 13) will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
+LED blink codes: Arduino/Teensy user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
 
 ## Building
 
@@ -34,10 +34,11 @@ For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install 
 ## Getting Started
 
 Create a folder containing both the RunCPM executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
-The 64K version provides the maximum amount of memory possible to CP/M application, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
-The 60K version provides a more realistic addressing space, keeping the CCP on the same loading address it would be on a similar CP/M computer.<br>
+The 64K version provides the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
+The 60K version provides a more realistic addressing space, keeping the CCP entry point on the same loading address it would be on a similar CP/M computer.<br>
 Other amounts of memory can be used, but this would require rebuilding the CCP binaries (available on disk A.ZIP).
 The CCP binaries are named with their extensions being the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly depending on the amount of memory selected when it is built.
+Reducing the amount of memory would probaly facilitate porting RunCPM to smaller RAM processors, success stories are welcome.
 
 RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use the following procedures:
 
@@ -56,6 +57,7 @@ RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M co
 * **CCP-Z80** - Is the Z80CCP CCP modification, also from RLC and others.<br>
 
 These CCPs are provided with their source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
+SUBMIT (.SUB) files are provided to allow for rebuilding the CCPs and some of the RunCPM utilities.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
 
 The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
@@ -104,22 +106,22 @@ The possible values for **reg** on those functions are:<br>
 13: IFF - Interrupt Flip Flop
 14: IR - Interrupt (upper) / Refresh (lower) register
 ```
-The disk A.ZIP contains a script called LUAINFO.LUA, which replicates the functionality of INFO.Z80, which provides information about RunCPM.
+The disk A.ZIP contains a script called LUAINFO.LUA, with the same functionality of INFO.COM, which provides information about RunCPM.
 
-Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character. The comment on the last line comments out the CP/M EOF (^Z) character and prevents Lua errors.
+Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character when the scripts are created with CP/M text editors. The comment on the last line comments out the CP/M EOF (^Z) character and prevents Lua interpreter errors.
 
 ## Limitations
 
-The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
+The objective of RunCPM is **not** to emulate a Z80 CP/M 2.2 computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
 This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be useful.<br>
-They are provided on disk A.ZIP just to maintain compatibility with DRI's official distribution.
+They are provided on disk A.ZIP just to maintain compatibility with DRI's official CP/M 2.2 distribution.
 
-Other CP/M flavors like CP/M 3 or CP/M Plus are not supported, as the emulated BDOS is specific for CP/M 2.2.
+Other CP/M flavors like CP/M 3 or CP/M Plus are not supported as of yet, as the emulated BDOS of RunCPM is specific for CP/M 2.2.
 
-The "video monitor" is assumed to be ANSI/VT100, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.<br>
+The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.<br>
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
-RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only during RunCPM's execution. The R/O attributes of the containing folder are not modified.
+RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
 
 RunCPM suports the CON: device for interaction, and a very early support of AUX: and PRT: (printing to file only) devices has been implemented recently.
 
