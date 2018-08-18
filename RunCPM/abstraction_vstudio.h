@@ -425,7 +425,7 @@ byte _getche(void)
 */
 
 /* Implemented by conio.h
-void _putch(byte)
+void _putch(uint8 byte)
 {
 
 }
