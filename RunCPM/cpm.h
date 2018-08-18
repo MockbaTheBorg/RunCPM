@@ -240,7 +240,6 @@ void _logBdosOut(uint8 ch) {
 
 void _Bios(void) {
 	uint8 ch = LOW_REGISTER(PCX);
-	uint8 c = 0;
 
 #ifdef DEBUGLOG
 #ifdef LOGONLY
@@ -260,9 +259,7 @@ void _Bios(void) {
 		SET_HIGH_REGISTER(AF, _chready());
 		break;
 	case 0x09:				// 3 - CONIN - Console input
-		while (!c)
-			c = _getch();
-		SET_HIGH_REGISTER(AF, c);
+		SET_HIGH_REGISTER(AF, _getch());
 #ifdef DEBUG
 		if (HIGH_REGISTER(AF) == 4)
 			Debug = 1;
