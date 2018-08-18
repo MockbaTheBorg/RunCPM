@@ -306,7 +306,7 @@ uint8 _ccp_save(void) {
 			if (_ccp_bdos(F_OPEN, ParFCB)) {
 				_puts("Err: open");
 			} else {
-				pages *= 2;									// Calculates the number of CP/M blocks to write
+				pages *= 2;							// Calculates the number of CP/M blocks to write
 				dma = defLoad;
 				_puts("\r\n");
 				for (i = 0; i < pages; i++) {
@@ -529,8 +529,8 @@ void _ccp(void) {
 		_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 
 	while (TRUE) {
-		curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);			// Get current drive
-		curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);			// Get current user
+		curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);	// Get current drive
+		curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);	// Get current user
 		_RamWrite(0x0004, (curUser << 4) + curDrive);	// Set user/drive on addr 0x0004
 
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
