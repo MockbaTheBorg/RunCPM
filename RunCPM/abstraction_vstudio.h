@@ -397,6 +397,8 @@ void _console_init(void) {
 	SetConsoleMode(hInHandle, dwInMode);
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
+
+	SetConsoleTitle("RunCPM v" VERSION);
 }
 
 void _console_reset(void) {
