@@ -125,5 +125,15 @@ RunCPM does not support making files read-only or any other CP/M attributes. All
 
 RunCPM suports the CON: device for interaction, and a very early support of AUX: and PRT: (printing to file only) devices has been implemented recently.
 
+## References
+
+https://weblambdazero.blogspot.com/2016/07/cpm-on-stick_16.html<br>
+https://lehwalder.wordpress.com/2017/04/17/cpm-auf-dem-arduino-due-mit-runcpm-bzw-cpmdunino/ - in German<br>
+https://hackaday.io/project/19560-z80-cpm-computer-using-an-arduino<br>
+http://www.chstercius.cz/runcpm/<br>
+https://hackaday.com/2014/12/30/z80-cpm-and-fat-file-formats/<br>
+https://ubuntuforum-br.org/index.php?topic=120787.0 - in Portuguese<br>
+http://mrwrightteacher.net/retrochallenge2018/<br>
+
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
