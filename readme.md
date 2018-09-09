@@ -18,6 +18,9 @@ Arduino digital and analog read/write support was added by Krzysztof Kliś via B
 
 LED blink codes: Arduino/Teensy user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
 
+RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
+It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
+
 ## Building
 
 RunCPM builds natively on Visual Studio.
