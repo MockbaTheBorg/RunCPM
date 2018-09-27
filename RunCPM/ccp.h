@@ -228,7 +228,7 @@ void _ccp_dir(void) {
 			_RamWrite(ParFCB + i, '?');
 	}
 
-	dirHead[0] = _RamRead(ParFCB) ? _RamRead(ParFCB) + '@' : 'A';
+	dirHead[0] = _RamRead(ParFCB) ? _RamRead(ParFCB) + '@' : prompt[2];
 
 	_puts("\r\n");
 	if (!_SearchFirst(ParFCB, TRUE)) {
