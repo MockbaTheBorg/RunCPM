@@ -46,16 +46,3 @@ Network Trash Folder
 Temporary Items
 .apdisk
 .vs
-
-# RunCPM targets and intermediate files
-x64
-release
-RunCPM/*.o
-RunCPM/*.exe
-RunCPM/RunCPM
-
-RunCPM/lua/*.o
-RunCPM/lua/*.exe
-RunCPM/lua/*.a
-RunCPM/lua/lua
-RunCPM/lua/luac
