@@ -13,11 +13,11 @@
 #define DELAY 100
 
 // Pin for the SD chip select signal
-#ifdef CORE_TEENSY
-	#define SDcs BUILTIN_SDCARD
-#endif
 #ifdef ARDUINO
 	#define SDcs 4
+#endif
+#ifdef CORE_TEENSY
+  #define SDcs BUILTIN_SDCARD
 #endif
 
 #include "abstraction_arduino.h"
