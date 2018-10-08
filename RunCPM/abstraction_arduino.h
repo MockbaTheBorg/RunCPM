@@ -5,10 +5,14 @@
 #define printf(a, b) Serial.println(b)
 #endif
 
+#ifdef ARDUINO
+#define HostOS 0x01
+#endif
 #ifdef CORE_TEENSY
 #define HostOS 0x04
-#else
-#define HostOS 0x01
+#endif
+#ifdef ESP32
+#define HostOS 0x05
 #endif
 
 /* Memory abstraction functions */

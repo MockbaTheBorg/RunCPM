@@ -693,7 +693,7 @@ void _Bdos(void) {
 	case 40:
 		HL = _WriteRand(DE);
 		break;
-#if defined ARDUINO || defined CORE_TEENSY
+#if defined ARDUINO || defined CORE_TEENSY || defined ESP32
 		/*
 		C = 220 (DCh) : PinMode
 		*/
@@ -721,9 +721,12 @@ void _Bdos(void) {
 		/*
 		C = 224 (E0h) : AnalogWrite
 		*/
-	case 224:
+#ifndef ESP32
+ 	case 224:
 		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 		break;
+#endif
+
 #endif
 		/*
 		C = 250 (FAh) : HostOS
