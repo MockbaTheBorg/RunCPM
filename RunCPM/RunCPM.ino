@@ -13,7 +13,7 @@
 #define DELAY 100
 
 // Pin for the SD chip select signal
-#ifdef ARDUINO
+#ifdef ARDUINO_SAM_DUE
 	#define SDcs 4
 #endif
 #ifdef CORE_TEENSY
