@@ -37,7 +37,7 @@ uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x
 uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 curUser;	// 0 -> 15			.. Current user area to access
 uint8 sFlag;	//					.. Submit Flag
-uint8 prompt[5] = "\r\n  >";
+uint8 prompt[6] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;							// Actual size of the typed command line (size of the buffer)
 

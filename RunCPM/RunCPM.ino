@@ -1,16 +1,22 @@
 #include "globals.h"
 
 #include <SPI.h>
-#include <SD.h>
+#ifdef ESP32
+  #include <mySD.h>
+  #define LED 22
+#else
+  #include <SD.h>
+  #define LED 13
+#endif
 
-#define LED 13
 #define sDELAY 50
 #define DELAY 100
 
 // Pin for the SD chip select signal
 #ifdef CORE_TEENSY
 	#define SDcs BUILTIN_SDCARD
-#else
+#endif
+#ifdef ARDUINO
 	#define SDcs 4
 #endif
 
@@ -58,7 +64,11 @@ void setup(void) {
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
+#ifdef ESP32
+  if (SD.begin(13,15,2,14)) {
+#else
 	if (SD.begin(SDcs)) {
+#endif
 #ifdef CCP_INTERNAL
 		while(true)
 		{
