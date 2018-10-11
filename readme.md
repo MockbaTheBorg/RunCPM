@@ -148,7 +148,8 @@ http://mrwrightteacher.net/retrochallenge2018/<br>
 https://store.arduino.cc/usa/arduino-due<br>
 https://www.pjrc.com/store/teensy35.html<br>
 https://www.pjrc.com/store/teensy36.html<br>
-https://github.com/LilyGO/ESP32-TTGO-T1<br>
+https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
+https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 
 ## Extra software needed
 
