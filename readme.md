@@ -166,13 +166,13 @@ The ESP32 build may require additional changes to the code to support different 
 
 ## Dedications
 
-I dedicate this software to some awesome people, some of who are not among us anymore.
+I dedicate this software to really awesome people, some of who are not among us anymore.
 
 Gary Kildall - For devising an operating system which definitely played a role on changing the world.<br>
 Dr. Richard Walters - For writing the Z80 version of one of the most useful and fun languages I had the joy to use.<br>
 Krzysztof Klis -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
 TomL. Burnett - For helping with testing many different CP/M applications on it.<br>
-All the folks who are actively helping with finding/fixing bugs and issues - thanks guys.<br>
+All the folks who are actively helping with finding/fixing bugs and issues on Github - thanks guys.<br>
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
