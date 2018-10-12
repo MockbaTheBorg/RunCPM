@@ -24,6 +24,8 @@ LED blink codes: Arduino/Teensy/ESP32 user LED will blink fast when RunCPM is wa
 RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
+When using Arduino boards, the serial speed as well as other parameters, like LED pin and SD Card pins may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.
+
 If building for Teensy and ESP32, please read the entire document, as there is more information below.
 
 ## Building
@@ -53,6 +55,8 @@ RunCPM can emulate the user areas as well (this is the default), so to create th
 * **when using user areas** - Create subfolders under the executable folder named "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. The "user" command will automatically create other user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the users 10 to 15 are created as letters "A" to "F".
 * **when not using user areas** - Create subfolders under the executable folder named "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and only user 0 is available. The "user" command to select user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder.
 
+Using user areas is the default, and it is the recommended setting, as this is what CP/M 2.2 does.
+
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
@@ -67,6 +71,8 @@ RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M co
 These CCPs are provided with their source code on the A.ZIP package, and can be natively rebuilt if needed.<br>
 SUBMIT (.SUB) files are provided to allow for rebuilding the CCPs and some of the RunCPM utilities.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
+
+The default setting for CCP is the Digital Research one, changing it requires rebuilding the code.
 
 The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
 This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.
@@ -143,7 +149,7 @@ https://hackaday.com/2014/12/30/z80-cpm-and-fat-file-formats/<br>
 https://ubuntuforum-br.org/index.php?topic=120787.0 - in Portuguese<br>
 http://mrwrightteacher.net/retrochallenge2018/<br>
 
-## Boards tested so far
+## Arduino compatible boards tested so far
 
 https://store.arduino.cc/usa/arduino-due<br>
 https://www.pjrc.com/store/teensy35.html<br>
