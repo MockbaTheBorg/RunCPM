@@ -726,6 +726,14 @@ void _Bdos(void) {
 		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 		break;
 #endif
+		/*
+		C = 232 (E8h) : ESP32 specific BDOS call
+		*/
+#ifdef ESP32
+	case 232:
+		HL = esp32bdos(DE);
+		break;
+#endif
 
 #endif
 		/*

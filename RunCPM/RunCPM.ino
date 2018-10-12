@@ -3,7 +3,7 @@
 #include <SPI.h>
 #ifdef ESP32
   #include <mySD.h>
-  #define LED 22
+  #define LED 5 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2
 #else
   #include <SD.h>
   #define LED 13
@@ -21,6 +21,9 @@
 #endif
 
 #include "abstraction_arduino.h"
+#ifdef ESP32
+#include "esp32.h"
+#endif
 
 #ifdef USE_AUX
 File aux_dev;
@@ -51,6 +54,7 @@ void setup(void) {
 		digitalWrite(LED, LOW);
 		delay(sDELAY);
 	}
+
 #ifdef DEBUGLOG
 	_sys_deletefile((uint8 *)LogName);
 #endif
