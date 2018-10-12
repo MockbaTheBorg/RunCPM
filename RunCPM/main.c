@@ -34,11 +34,13 @@ shoud be kept the same.
   #endif
 #endif
 
+// AUX: device configuration
 #ifdef USE_AUX
 FILE *aux_dev;
 int aux_open = FALSE;
 #endif
 
+// PRT: device configuration
 #ifdef USE_PRINTER
 FILE *printer_dev;
 int printer_open = FALSE;

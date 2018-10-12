@@ -1,14 +1,19 @@
 #include "globals.h"
 
 #include <SPI.h>
+
+// LED related definitions
 #ifdef ESP32
   #include <mySD.h>
-  #define LED 5 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2
+  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2
+  #define LEDinv 0 // 0=normal 1=inverted
 #else
   #include <SD.h>
   #define LED 13
+  #define LEDinv 0
 #endif
 
+// Delays for LED blinking
 #define sDELAY 50
 #define DELAY 100
 
@@ -21,15 +26,22 @@
 #endif
 
 #include "abstraction_arduino.h"
+
+// ESP32 specific BDOS call routines
 #ifdef ESP32
 #include "esp32.h"
 #endif
 
+// Serial port speed
+#define SERIALSPD 9600
+
+// AUX: device configuration
 #ifdef USE_AUX
 File aux_dev;
 int aux_open = FALSE;
 #endif
 
+// PRT: device configuration
 #ifdef USE_PRINTER
 File printer_dev;
 int printer_open = FALSE;
@@ -47,11 +59,11 @@ int printer_open = FALSE;
 void setup(void) {
 	pinMode(LED, OUTPUT);
 	digitalWrite(LED, LOW);
-	Serial.begin(9600);
+	Serial.begin(SERIALSPD);
 	while (!Serial) {	// Wait until serial is connected
-		digitalWrite(LED, HIGH);
+		digitalWrite(LED, HIGH^LEDinv);
 		delay(sDELAY);
-		digitalWrite(LED, LOW);
+		digitalWrite(LED, LOW^LEDinv);
 		delay(sDELAY);
 	}
 
@@ -117,12 +129,12 @@ void setup(void) {
 }
 
 void loop(void) {
-	digitalWrite(LED, HIGH);
+	digitalWrite(LED, HIGH^LEDinv);
 	delay(DELAY);
-	digitalWrite(LED, LOW);
+	digitalWrite(LED, LOW^LEDinv);
 	delay(DELAY);
-	digitalWrite(LED, HIGH);
+	digitalWrite(LED, HIGH^LEDinv);
 	delay(DELAY);
-	digitalWrite(LED, LOW);
+	digitalWrite(LED, LOW^LEDinv);
 	delay(DELAY * 4);
 }
