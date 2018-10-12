@@ -150,6 +150,7 @@ https://www.pjrc.com/store/teensy35.html<br>
 https://www.pjrc.com/store/teensy36.html<br>
 https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
 https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
+https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
 
 ## Extra software needed
 
