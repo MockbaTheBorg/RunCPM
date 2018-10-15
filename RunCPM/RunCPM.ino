@@ -5,8 +5,9 @@
 // LED related definitions
 #ifdef ESP32
   #include <mySD.h>
-  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2
+  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
   #define LEDinv 0 // 0=normal 1=inverted
+  #define mySDpins 13,15,2,14 // Some boards use 26,14,12,27
 #else
   #include <SD.h>
   #define LED 13
@@ -81,7 +82,7 @@ void setup(void) {
 	_puts("\r\n");
 
 #ifdef ESP32
-  if (SD.begin(13,15,2,14)) {
+  if (SD.begin(mySDpins)) {
 #else
 	if (SD.begin(SDcs)) {
 #endif
