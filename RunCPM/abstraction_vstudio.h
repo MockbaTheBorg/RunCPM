@@ -376,6 +376,9 @@ uint8 _RunLuaScript(char *filename) {
 
 /* Console abstraction functions */
 /*===============================================================================*/
+DWORD cOutMode; // Stores initial console mode for the std output
+DWORD cInMode; // Stores initial console mode for the std input
+TCHAR cTitle[MAX_PATH]; // Stores the initial console title
 
 BOOL _signal_handler(DWORD signal) {
 	BOOL result = FALSE;
@@ -390,19 +393,25 @@ void _console_init(void) {
 	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
 
-	DWORD dwOutMode = ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
-	DWORD dwInMode = ENABLE_VIRTUAL_TERMINAL_INPUT;
+	GetConsoleMode(hOutHandle, &cOutMode);
+	GetConsoleMode(hInHandle, &cInMode);
 
-	SetConsoleMode(hOutHandle, dwOutMode);
-	SetConsoleMode(hInHandle, dwInMode);
+	GetConsoleTitle(cTitle, MAX_PATH);
+
+	SetConsoleMode(hOutHandle, cOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
+	SetConsoleTitle("RunCPM v" VERSION);
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
-
-	SetConsoleTitle("RunCPM v" VERSION);
 }
 
 void _console_reset(void) {
+	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
 
+	SetConsoleMode(hOutHandle, cOutMode);
+	SetConsoleMode(hInHandle, cInMode);
+	SetConsoleTitle(cTitle);
 }
 
 /* Implemented by conio.h
