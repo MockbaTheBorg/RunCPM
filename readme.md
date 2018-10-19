@@ -173,13 +173,15 @@ The ESP32 build may require additional changes to the code to support different 
 
 ## Dedications
 
-I dedicate this software to really awesome people, some of who are not among us anymore.
+I dedicate this software to:<br>
+*Krzysztof Klis* -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
+*Yeti* - For being an awesome agitator since RunCPM went on GitHub.<br>
+And all the other folks who are actively helping with finding/fixing bugs and issues on Github - thanks guys.<br>
 
-Gary Kildall - For devising an operating system which definitely played a role on changing the world.<br>
-Dr. Richard Walters - For writing the Z80 version of one of the most useful and fun languages I had the joy to use.<br>
-Krzysztof Klis -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
-TomL. Burnett - For helping with testing many different CP/M applications on it.<br>
-All the folks who are actively helping with finding/fixing bugs and issues on Github - thanks guys.<br>
+I dedicate it also to the memory of some awesome people who unfortunately are not among us anymore:<br>
+*Gary Kildall* - For devising an operating system which definitely played a role on changing the world.<br>
+*Dr. Richard Walters* - For writing the Z80 version of mumps, one of the most useful and fun languages I had the joy to use.<br>
+*Tom L. Burnett* - For helping me with testing/debugging many different CP/M 2.2 applications on RunCPM.<br>
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
