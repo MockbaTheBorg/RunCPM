@@ -166,7 +166,7 @@ For the Teensy follow the instructions from here: https://www.pjrc.com/teensy/td
 For the ESP32 follow the instructions from here: https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/<br>
 The ESP32 build requires the mySD library from here: https://github.com/nhatuan84/esp32-micro-sdcard<br>
 
-## Limitations
+## ESP32 Limitations
 
 The ESP32 build doesn't yet support the analogWrite BDOS call.<br>
 The ESP32 build may require additional changes to the code to support different ESP32 boards.<br>
