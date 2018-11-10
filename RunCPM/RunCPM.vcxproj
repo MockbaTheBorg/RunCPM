@@ -194,9 +194,16 @@
     <ClInclude Include="lua\lzio.h" />
     <ClInclude Include="posix.h" />
     <ClInclude Include="ram.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="RunCPM.ino" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RunCPM.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="RunCPM.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
