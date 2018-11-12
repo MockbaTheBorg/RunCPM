@@ -28,6 +28,13 @@ When using Arduino boards, the serial speed as well as other parameters, like LE
 
 If building for Teensy and ESP32, please read the entire document, as there is more information below.
 
+## Experimental Platforms
+
+RunCPM now has experimental support for the STM32F4DISCOVERY board (https://www.st.com/en/evaluation-tools/stm32f4discovery.html).
+This support is preliminary and some programs are already working fine.
+I suspect the issues are related either to the SD Card library or probably lack of available memory, so it will need more testing.
+The SD card can be plugged to a LCD/SD board from Kentec (EB-STM32F4DISCOVERY-LCD).
+
 ## Building
 
 RunCPM builds natively on Visual Studio.
@@ -158,6 +165,7 @@ https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
 https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
 https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pico-kit.html - No user LED on board<br>
+https://www.st.com/en/evaluation-tools/stm32f4discovery.html - Not fully operational yet
 
 ## Extra software needed
 
