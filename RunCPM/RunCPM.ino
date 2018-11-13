@@ -1,17 +1,31 @@
 #include "globals.h"
 
+#define STM32 // Must be manually activated for STM32 support
+
 #include <SPI.h>
 
 // LED related definitions
-#ifdef ESP32
+#if defined STM32
+  #include <STM32SD.h>
+  #define LED PD13
+  #define LEDinv 0
+  #define SDINIT
+  #define O_CREAT FA_CREATE_NEW
+  #define O_READ FA_READ
+  #define O_WRITE FA_WRITE
+  #define O_RDONLY FA_READ
+  #define O_APPEND FA_OPEN_APPEND
+  #define O_RDWR FA_READ | FA_WRITE
+#elif defined ESP32
   #include <mySD.h>
   #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
   #define LEDinv 0 // 0=normal 1=inverted
-  #define mySDpins 13,15,2,14 // Some boards use 26,14,12,27
+  #define SDINIT 13,15,2,14 // Some boards use 26,14,12,27
 #else
   #include <SD.h>
   #define LED 13
   #define LEDinv 0
+  #define SDINIT SDcs
 #endif
 
 // Delays for LED blinking
@@ -81,11 +95,7 @@ void setup(void) {
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
-#ifdef ESP32
-  if (SD.begin(mySDpins)) {
-#else
-	if (SD.begin(SDcs)) {
-#endif
+  if (SD.begin(SDINIT)) {
 #ifdef CCP_INTERNAL
 		while(true)
 		{
