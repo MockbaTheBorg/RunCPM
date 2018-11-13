@@ -14,6 +14,9 @@
 #ifdef ESP32
 #define HostOS 0x05
 #endif
+#ifdef STM32
+#define HostOS 0x06
+#endif
 
 /* Memory abstraction functions */
 /*===============================================================================*/
