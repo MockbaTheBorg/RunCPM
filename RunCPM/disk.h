@@ -486,6 +486,11 @@ void _SetUser(uint8 user) {
 #endif
 }
 
+uint8 _MakeDisk(uint16 fcbaddr) {
+	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	return(_sys_makedisk(F->dr));
+}
+
 uint8 _CheckSUB(void) {
 	uint8 result;
 	uint8 oCode = userCode;							// Saves the current user code (original BDOS does not do this)
