@@ -45,7 +45,7 @@
 #endif
 //
 #ifdef CCP_DR
-#define CCPname		"CCP-DR." STR(SIZEK) "K"
+#define CCPname		"CCP-DR." STR(TPASIZE) "K"
 #define VersionCCP	0x00					// Version to be used by INFO.COM
 #define BatchFCB	(CCPaddr + 0x7AC)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)	// CCP memory address
@@ -79,7 +79,7 @@
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(SIZEK) "K)\r\n"
+#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(TPASIZE) "K)\r\n"
 
 //#define HASLUA		// Will enable Lua scripting (BDOS call 254)
 						// Should be passed externally per-platform with -DHASLUA
@@ -127,14 +127,14 @@ typedef unsigned int    uint32;
 #define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
 					// This saves about 2K on the Arduino code and should bring speed improvements
 
-#define SIZEK 60	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
-					// Can be set to less than 60, but this would require rebuilding the CCP
-					// For SIZEK<60 CCP ORG = (SIZEK * 1024) - 0x0C00
+#define TPASIZE 60	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+					// Values other than 60 or 64 would require rebuilding the CCP
+					// For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
-#define RAMSIZE SIZEK * 1024
+#define MEMSIZE 64 * 1024	// RAM(plus ROM) needs to be 64K to avoid compatibility issues
 
 #ifdef RAM_FAST		// Makes all function calls to memory access into direct RAM access (less calls / less code)
-uint8 RAM[RAMSIZE];
+static uint8 RAM[MEMSIZE];
 #define _RamSysAddr(a)		&RAM[a]
 #define _RamRead(a)			RAM[a]
 #define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
@@ -143,9 +143,13 @@ uint8 RAM[RAMSIZE];
 #endif
 
 //// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
-#define BIOSpage	(RAMSIZE - 256)
+
+// BIOS Pages (always on the top of memory)
+#define BIOSpage	(MEMSIZE - 256)
 #define BIOSjmppage	(BIOSpage - 256)
-#define BDOSpage	(BIOSjmppage - 256)
+
+// BDOS Pages (depend on TPASIZE)
+#define BDOSpage (TPASIZE * 1024) - 768
 #define BDOSjmppage	(BDOSpage - 256)
 
 #define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameters Block (Hardcoded in BIOS)

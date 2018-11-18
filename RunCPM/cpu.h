@@ -1106,8 +1106,7 @@ static uint8 GET_BYTE(register uint32 Addr) {
 }
 
 static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
-	if(Addr < BIOSjmppage)
-		_RamWrite(Addr & ADDRMASK, Value);
+	_RamWrite(Addr & ADDRMASK, Value);
 }
 
 static uint16 GET_WORD(register uint32 a) {
@@ -1115,10 +1114,8 @@ static uint16 GET_WORD(register uint32 a) {
 }
 
 static void PUT_WORD(register uint32 Addr, register uint32 Value) {
-	if (Addr < BIOSjmppage) {
-		_RamWrite(Addr, Value);
-		_RamWrite(++Addr, Value >> 8);
-	}
+	_RamWrite(Addr, Value);
+	_RamWrite(++Addr, Value >> 8);
 }
 
 #define RAM_MM(a)   GET_BYTE(a--)
