@@ -738,7 +738,7 @@ void _Bdos(void) {
 #endif
 		/*
 		C = 250 (FAh) : HostOS
-		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos / 0x04 - Teensy
+		Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos / 0x04 - Teensy / 0x05 - ESP32 / 0x06 - STM32
 		*/
 	case 250:
 		HL = HostOS;
