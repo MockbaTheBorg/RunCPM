@@ -6,7 +6,7 @@ RunCPM is fully written in C and in a modular way, so porting to other platforms
 If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
 
-RunCPM was written to serve as a test environment when I was restoring the only copy of Z80 MicroMumps v4 which exists online (https://github.com/MockbaTheBorg/MicroMumps).<br>
+RunCPM was written to serve as a test environment when I was restoring the only copy of Z80 MicroMumps v4.06 which exists online (https://github.com/MockbaTheBorg/MicroMumps).<br>
 Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulator via a disk image every time I moved a bit forward on the restoration was becoming too time consuming. So I decided to write something that would allow me to run the executable right away after making any modifications.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
