@@ -14,7 +14,7 @@
 #ifdef ESP32
 #define HostOS 0x05
 #endif
-#ifdef STM32
+#ifdef _STM32_DEF_
 #define HostOS 0x06
 #endif
 

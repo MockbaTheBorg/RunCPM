@@ -730,9 +730,14 @@ void _Bdos(void) {
 		C = 232 (E8h) : ESP32 specific BDOS call
 		*/
 #ifdef ESP32
-	case 232:
-		HL = esp32bdos(DE);
-		break;
+  case 232:
+    HL = esp32bdos(DE);
+    break;
+#endif
+#ifdef STM32
+  case 232:
+    HL = stm32bdos(DE);
+    break;
 #endif
 
 #endif
