@@ -11,29 +11,26 @@ Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulat
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
-## Arduino / Teensy / ESP32
+## Arduino / Teensy / ESP32 / STM32
 
 RunCPM builds on Arduino IDE 1.8.7 or later.<br>
-RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and 3.6 and on the ESP32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
+RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and 3.6, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
 If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy and some ESP32 do have an on-board microSD adapter.
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
 
-LED blink codes: Arduino/Teensy/ESP32 user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
+LED blink codes: Arduino/Teensy/ESP32/STM32 user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
 
 RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
 When using Arduino boards, the serial speed as well as other parameters, like LED pin and SD Card pins may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.
 
-If building for Teensy and ESP32, please read the entire document, as there is more information below.
+If building for Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
 
 ## Experimental Platforms
 
-RunCPM now has experimental support for the STM32F4DISCOVERY board (https://www.st.com/en/evaluation-tools/stm32f4discovery.html).
-This support is preliminary and some programs are already working fine.
-I suspect the issues are related either to the SD Card library or probably lack of available memory, so it will need more testing.
-The SD card can be plugged to a LCD/SD board from Kentec (EB-STM32F4DISCOVERY-LCD).
+None at the moment.
 
 ## Building
 
@@ -165,19 +162,24 @@ https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
 https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
 https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pico-kit.html - No user LED on board<br>
-https://www.st.com/en/evaluation-tools/stm32f4discovery.html - Experimental : Not fully operational yet
+https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)
 
 ## Extra software needed
 
 For the Arduino DUE, support for it needs to be added through the board manager.<br>
 For the Teensy follow the instructions from here: https://www.pjrc.com/teensy/td_download.html<br>
 For the ESP32 follow the instructions from here: https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/<br>
-The ESP32 build requires the mySD library from here: https://github.com/nhatuan84/esp32-micro-sdcard<br>
+All boards now use the SdFat library, from here: https://github.com/greiman/SdFat
+The SdFat library can be installed via Arduino's Library Manager, which is the recommended method of installation.
 
 ## ESP32 Limitations
 
 The ESP32 build doesn't yet support the analogWrite BDOS call.<br>
 The ESP32 build may require additional changes to the code to support different ESP32 boards.<br>
+
+## STM32 Limitations
+
+The STM32 build uses the slower SPI mode for accessing the SD card.<br>
 
 ## Dedications
 
