@@ -149,7 +149,17 @@ int _sys_movefile(char *filename, char *newname, int size) {
 }
 
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
-	return _sys_movefile((char *)filename, (char *)newname, _sys_filesize(filename));
+  File f;
+  int result = 0;
+
+  digitalWrite(LED, HIGH^LEDinv);
+  f = SD.open((char *)filename, O_WRITE | O_APPEND);
+  if (f) {
+    if (f.rename(SD.vwd(), (char*)newname))
+      result = 1;
+  }
+  digitalWrite(LED, LOW^LEDinv);
+  return(result);
 }
 
 #ifdef DEBUGLOG
@@ -305,15 +315,11 @@ uint8 _findnext(uint8 isdir) {
 	File f;
 	uint8 result = 0xff;
 	uint8 dirname[13];
-	char* fname;
 	bool isfile;
-	unsigned int i;
 
 	digitalWrite(LED, HIGH^LEDinv);
 	while (f = root.openNextFile()) {
-	  fname = f.name();
-	  for (i = 0; i < strlen(fname) + 1 && i < 13; ++i)
-		  dirname[i] = fname[i];
+    f.getName((char*)&dirname[0], 13);
 		isfile = !f.isDirectory();
 		f.close();
 		if (!isfile)

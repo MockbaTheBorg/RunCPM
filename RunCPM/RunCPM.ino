@@ -1,48 +1,47 @@
 #include "globals.h"
 
 #include <SPI.h>
+#include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
-// LED related definitions
-#if defined STM32
-  #include <STM32SD.h>
+// SDCard/LED related definitions
+#if defined _STM32_DEF_ // STM32 boards
+  const uint8_t SOFT_MISO_PIN = PC8;
+  const uint8_t SOFT_MOSI_PIN = PD2;
+  const uint8_t SOFT_SCK_PIN  = PC12;
+  const uint8_t SD_CHIP_SELECT_PIN = PC11;
+  SdFatSoftSpi<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> SD; // (fixme) Not sure if this is the best method of accessing the SD
+  #define SDINIT SD_CHIP_SELECT_PIN
   #define LED PD13
   #define LEDinv 0
-  #define SDINIT
-  #define O_CREAT FA_CREATE_NEW
-  #define O_READ FA_READ
-  #define O_WRITE FA_WRITE
-  #define O_RDONLY FA_READ
-  #define O_APPEND FA_OPEN_APPEND
-  #define O_RDWR FA_READ | FA_WRITE
-#elif defined ESP32
-  #include <mySD.h>
+#elif defined ESP32 // ESP32 boards
+  SdFat SD;
+  #define SDINIT 14,2,15,13 // Some boards use 27,12,14,26
+  #define SDMHZ 20 // It it fails, try 10
   #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
   #define LEDinv 0 // 0=normal 1=inverted
-  #define SDINIT 13,15,2,14 // Some boards use 26,14,12,27
-#else
-  #include <SD.h>
+#elif defined CORE_TEENSY // Teensy 3.5 and 3.6
+  SdFatSdio SD;
+  #define SDINIT
   #define LED 13
   #define LEDinv 0
-  #define SDINIT SDcs
+#else // Arduino DUE
+  SdFat SD;
+  #define SDINIT 4
+  #define LED 13
+  #define LEDinv 0
 #endif
 
 // Delays for LED blinking
 #define sDELAY 50
 #define DELAY 100
 
-// Pin for the SD chip select signal
-#ifdef ARDUINO_SAM_DUE
-	#define SDcs 4
-#endif
-#ifdef CORE_TEENSY
-  #define SDcs BUILTIN_SDCARD
-#endif
-
 #include "abstraction_arduino.h"
 
-// ESP32 specific BDOS call routines
-#ifdef ESP32
-#include "esp32.h"
+#ifdef ESP32        // ESP32 specific CP/M BDOS call routines
+  #include "esp32.h"
+#endif
+#ifdef _STM32_DEF_  // STM32 specific CP/M BDOS call routines
+  #include "stm32.h"
 #endif
 
 // Serial port speed
@@ -89,11 +88,16 @@ void setup(void) {
 	_puts("Arduino read/write support by Krzysztof Klis\r\n");
 	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
 	_puts("--------------------------------------------\r\n");
-	_puts("CCP: " CCPname "  CCP Address: 0x");
+	_puts("CCP: " CCPname "    CCP Address: 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
+#ifdef ESP32
+  SPI.begin(SDINIT);
+  if (SD.begin(SS, SD_SCK_MHZ(SDMHZ))) {
+#else
   if (SD.begin(SDINIT)) {
+#endif
 #ifdef CCP_INTERNAL
 		while(true)
 		{
@@ -114,7 +118,7 @@ void setup(void) {
 					PC = CCPaddr;
 					Z80run();
 					if (Status == 1)
-						break;
+  						break;
 				} else {
 					_puts("Unable to load the CCP. CPU halted.\r\n");
 					break;
