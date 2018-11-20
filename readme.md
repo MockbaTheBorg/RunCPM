@@ -15,7 +15,7 @@ RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can 
 
 RunCPM builds on Arduino IDE 1.8.7 or later.<br>
 RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and 3.6, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
-If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy and some ESP32 do have an on-board microSD adapter.
+If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter. Some ESP32 and STM32 boards may need external SD card adapters.
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
 
