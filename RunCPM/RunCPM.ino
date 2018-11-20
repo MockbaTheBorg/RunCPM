@@ -1,6 +1,6 @@
 #include "globals.h"
 
-#define STM32 // Must be manually activated for STM32 support
+//#define STM32 // Must be manually activated for STM32 support
 
 #include <SPI.h>
 
