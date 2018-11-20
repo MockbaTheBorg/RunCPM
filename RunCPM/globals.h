@@ -38,7 +38,7 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.4"			// Will use the CCP from ccp.h
+#define CCPname		"INTERNAL v1.5"			// Will use the CCP from ccp.h
 #define VersionCCP	0x14
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)

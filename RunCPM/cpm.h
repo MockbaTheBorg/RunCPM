@@ -300,7 +300,7 @@ void _Bios(void) {
 	case 0x30:				// 16 - SECTRAN - Sector translate
 		HL = BC;			// HL=BC=No translation (1:1)
 		break;
-	case 0x33:				// This lets programs ending in RET be able to return to internal CCP
+	case 0x33:				// 17 - RETTOCCP - This allows programs ending in RET return to internal CCP
 		Status = 3;
 		break;
 	default:

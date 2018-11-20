@@ -261,7 +261,7 @@ void _ccp_era(void) {
 // TYPE command
 uint8 _ccp_type(void) {
 	uint8 i, c, l = 0, error = TRUE;
-	uint16 a;
+	uint16 a, p;
 
 	if (!_ccp_bdos(F_OPEN, ParFCB)) {
 		_puts("\r\n");
@@ -277,11 +277,15 @@ uint8 _ccp_type(void) {
 					l++;
 					if (l == pgSize) {
 						l = 0;
-						_ccp_bdos(C_READ, 0x0000);
+						p = _ccp_bdos(C_READ, 0x0000);
+						if (p == 3)
+							break;
 					}
 				}
 				i--; a++;
 			}
+			if (p == 3)
+				break;
 		}
 		error = FALSE;
 	}
@@ -362,19 +366,19 @@ uint8 _ccp_lua(void) {
 	_RamWrite(CmdFCB + 11, 'A');
 
 	drive = _RamRead(CmdFCB);
-	found = !_ccp_bdos(F_OPEN, CmdFCB);							// Look for the program on the FCB drive, current or specified
-	if (!found) {												// If not found
-		if (!drive) {											// and the search was on the default drive
-			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: user 0
+	found = !_ccp_bdos(F_OPEN, CmdFCB);					// Look for the program on the FCB drive, current or specified
+	if (!found) {										// If not found
+		if (!drive) {									// and the search was on the default drive
+			_RamWrite(CmdFCB, 0x01);					// Then look on drive A: user 0
 			if (curUser) {
-				user = curUser;									// Save the current user
-				_ccp_bdos(F_USERNUM, 0x0000);					// then set it to 0
+				user = curUser;							// Save the current user
+				_ccp_bdos(F_USERNUM, 0x0000);			// then set it to 0
 			}
 			found = !_ccp_bdos(F_OPEN, CmdFCB);
-			if (!found) {										// If still not found then
-				if (curUser) {									// If current user not = 0
-					_RamWrite(CmdFCB, 0x00);					// look on current drive user 0
-					found = !_ccp_bdos(F_OPEN, CmdFCB);			// and try again
+			if (!found) {								// If still not found then
+				if (curUser) {							// If current user not = 0
+					_RamWrite(CmdFCB, 0x00);			// look on current drive user 0
+					found = !_ccp_bdos(F_OPEN, CmdFCB);	// and try again
 				}
 			}
 		}
@@ -384,9 +388,9 @@ uint8 _ccp_lua(void) {
 
 		_ccp_bdos(F_RUNLUA, CmdFCB);
 
-		if (user) {									// If a user was selected
+		if (user) {								// If a user was selected
 			user = 0;
-			_ccp_bdos(F_USERNUM, curUser);			// Set it back
+			_ccp_bdos(F_USERNUM, curUser);		// Set it back
 			_RamWrite(CmdFCB, 0x00);
 		}
 		error = FALSE;
@@ -411,32 +415,36 @@ uint8 _ccp_ext(void) {
 	_RamWrite(CmdFCB + 10, 'O');
 	_RamWrite(CmdFCB + 11, 'M');
 
-	drive = _RamRead(CmdFCB);
-	found = !_ccp_bdos(F_OPEN, CmdFCB);							// Look for the program on the FCB drive, current or specified
-	if (!found) {												// If not found
-		if (!drive) {											// and the search was on the default drive
-			_RamWrite(CmdFCB, 0x01);							// Then look on drive A: user 0
+	drive = _RamRead(CmdFCB);							// Get the drive from the command FCB
+	found = !_ccp_bdos(F_OPEN, CmdFCB);					// Look for the program on the FCB drive, current or specified
+	if (!found) {										// If not found
+		if (!drive) {									// and the search was on the default drive
+			_RamWrite(CmdFCB, 0x01);					// Then look on drive A: user 0
 			if (curUser) {
-				user = curUser;									// Save the current user
-				_ccp_bdos(F_USERNUM, 0x0000);					// then set it to 0
+				user = curUser;							// Save the current user
+				_ccp_bdos(F_USERNUM, 0x0000);			// then set it to 0
 			}
 			found = !_ccp_bdos(F_OPEN, CmdFCB);
-			if (!found) {										// If still not found then
-				if (curUser) {									// If current user not = 0
-					_RamWrite(CmdFCB, 0x00);					// look on current drive user 0
-					found = !_ccp_bdos(F_OPEN, CmdFCB);			// and try again
+			if (!found) {								// If still not found then
+				if (curUser) {							// If current user not = 0
+					_RamWrite(CmdFCB, 0x00);			// look on current drive user 0
+					found = !_ccp_bdos(F_OPEN, CmdFCB);	// and try again
 				}
 			}
 		}
 	}
-	if (found) {
+	if (found) {									// Program was found somewhere
 		_puts("\r\n");
-		_ccp_bdos(F_DMAOFF, loadAddr);
-		while (!_ccp_bdos(F_READ, CmdFCB)) {
+		_ccp_bdos(F_DMAOFF, loadAddr);				// Sets the DMA address for the loading
+		while (!_ccp_bdos(F_READ, CmdFCB)) {		// Loads the program into memory
 			loadAddr += 128;
-			_ccp_bdos(F_DMAOFF, loadAddr);
+			if (loadAddr == BDOSjmppage) {			// Breaks if it reaches the end of TPA
+				_puts("\r\nNo Memory");
+				break;
+			}
+			_ccp_bdos(F_DMAOFF, loadAddr);			// Points the DMA offset to the next loadAddr
 		}
-		_ccp_bdos(F_DMAOFF, defDMA);
+		_ccp_bdos(F_DMAOFF, defDMA);				// Points the DMA offset back to the default
 
 		if (user) {									// If a user was selected
 			user = 0;
@@ -447,25 +455,25 @@ uint8 _ccp_ext(void) {
 		// Place a trampoline to call the external command
 		// as it may return using RET instead of JP 0000h
 		loadAddr = Trampoline;
-		_RamWrite(loadAddr, CALL);
+		_RamWrite(loadAddr, CALL);					// CALL 0100h
 		_RamWrite16(loadAddr + 1, defLoad);
-		_RamWrite(loadAddr + 3, JP);
+		_RamWrite(loadAddr + 3, JP);				// JP RETTOCCP
 		_RamWrite16(loadAddr + 4, BIOSjmppage + 0x33);
 
-		Z80reset();			// Resets the Z80 CPU
-		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
-		PC = loadAddr;		// Sets CP/M application jump point
-		SP = BDOSjmppage;
+		Z80reset();									// Resets the Z80 CPU
+		SET_LOW_REGISTER(BC, _RamRead(0x0004));		// Sets C to the current drive/user
+		PC = loadAddr;								// Sets CP/M application jump point
+		SP = BDOSjmppage;							// Sets the stack to the top of the TPA
 
-		Z80run();			// Starts simulation
+		Z80run();									// Starts Z80 simulation
 
 		error = FALSE;
 	}
 
-	if (user) {									// If a user was selected
-		_ccp_bdos(F_USERNUM, curUser);			// Set it back
+	if (user) {										// If a user was selected
+		_ccp_bdos(F_USERNUM, curUser);				// Set it back
 	}
-	_RamWrite(CmdFCB, drive);
+	_RamWrite(CmdFCB, drive);						// Set the command FCB drive back to what it was
 
 	return(error);
 }
@@ -586,6 +594,7 @@ void _ccp(void) {
 
 			i = FALSE;									// Checks if the command is valid and executes
 			switch (_ccp_cnum()) {
+				// Standard CP/M commands
 			case 0:		// DIR
 				_ccp_dir();			break;
 			case 1:		// ERA
@@ -598,7 +607,7 @@ void _ccp(void) {
 				_ccp_ren();			break;
 			case 5:		// USER
 				i = _ccp_user();	break;
-				// Extra commands
+				// Extra CCP commands
 			case 6:		// CLS
 				_clrscr();			break;
 			case 7:		// DEL is an alias to ERA
