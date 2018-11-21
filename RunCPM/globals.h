@@ -15,7 +15,7 @@
 
 /* Definitions for file/console based debugging */
 //#define DEBUG
-//#define DEBUGLOG	// Writes extensive call trace information to RunCPM.log
+//#define DEBUGLOG		// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG	// Writes debug information to console instead of file
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
@@ -52,28 +52,28 @@
 #endif
 //
 #ifdef CCP_CCPZ
-#define CCPname		"CCP-CCPZ." STR(SIZEK) "K"
+#define CCPname		"CCP-CCPZ." STR(TPASIZE) "K"
 #define VersionCCP	0x01
 #define BatchFCB	(CCPaddr + 0x7A)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR2
-#define CCPname		"CCP-ZCP2." STR(SIZEK) "K"
+#define CCPname		"CCP-ZCP2." STR(TPASIZE) "K"
 #define VersionCCP	0x02
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
 #ifdef CCP_ZCPR3
-#define CCPname		"CCP-ZCP3." STR(SIZEK) "K"
+#define CCPname		"CCP-ZCP3." STR(TPASIZE) "K"
 #define VersionCCP	0x03
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x1000)
 #endif
 //
 #ifdef CCP_Z80
-#define CCPname		"CCP-Z80." STR(SIZEK) "K"
+#define CCPname		"CCP-Z80." STR(TPASIZE) "K"
 #define VersionCCP	0x04
 #define BatchFCB	(CCPaddr + 0x79E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
