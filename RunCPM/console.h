@@ -15,7 +15,7 @@ uint8 _getchNB(void)		// Gets a character, non-blocking, no echo
 
 void _putcon(uint8 ch)		// Puts a character
 {
-	_putch(ch & 0x7f);
+	_putch(ch);
 }
 
 void _puts(const char *str)	// Puts a \0 terminated string
