@@ -12,13 +12,13 @@
   SdFatSoftSpi<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> SD; // (fixme) Not sure if this is the best method of accessing the SD
   #define SDINIT SD_CHIP_SELECT_PIN
   #define LED PD13
-  #define LEDinv 0
+  #define LEDinv 0 // 0=normal 1=inverted
 #elif defined ESP32 // ESP32 boards
   SdFat SD;
   #define SDINIT 14,2,15,13 // Some boards use 27,12,14,26
   #define SDMHZ 20 // It it fails, try 10
   #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
-  #define LEDinv 0 // 0=normal 1=inverted
+  #define LEDinv 0
 #elif defined CORE_TEENSY // Teensy 3.5 and 3.6
   SdFatSdio SD;
   #define SDINIT

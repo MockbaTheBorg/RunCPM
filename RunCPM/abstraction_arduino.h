@@ -120,34 +120,6 @@ int _sys_deletefile(uint8 *filename) {
 	digitalWrite(LED, LOW^LEDinv);
 }
 
-int _sys_movefile(char *filename, char *newname, int size) {
-	File fold, fnew;
-	int i, result = false;
-	uint8 c;
-
-	digitalWrite(LED, HIGH^LEDinv);
-	if (fold = SD.open(filename, O_READ)) {
-		if (fnew = SD.open(newname, O_CREAT | O_WRITE)) {
-			result = true;
-			for (i = 0; i < size; ++i) {
-				c = fold.read();
-				if (fnew.write(c) < 1) {
-					result = false;
-					break;
-				}
-			}
-			fnew.close();
-		}
-		fold.close();
-	}
-	if (result)
-		SD.remove(filename);
-	else
-		SD.remove(newname);
-	digitalWrite(LED, LOW^LEDinv);
-	return(result);
-}
-
 int _sys_renamefile(uint8 *filename, uint8 *newname) {
   File f;
   int result = 0;
@@ -155,8 +127,10 @@ int _sys_renamefile(uint8 *filename, uint8 *newname) {
   digitalWrite(LED, HIGH^LEDinv);
   f = SD.open((char *)filename, O_WRITE | O_APPEND);
   if (f) {
-    if (f.rename(SD.vwd(), (char*)newname))
+    if (f.rename(SD.vwd(), (char*)newname)) {
+      f.close();      
       result = 1;
+    }
   }
   digitalWrite(LED, LOW^LEDinv);
   return(result);
@@ -358,15 +332,19 @@ uint8 _findfirst(uint8 isdir) {
 }
 
 uint8 _Truncate(char *filename, uint8 rc) {
-	uint8 result = 0xff;
-	File f;
+  File f;
+  int result = 0;
 
-	if (_sys_movefile(filename, (char *)"$$$$$$$$.$$$", _sys_filesize((uint8 *)filename))) {
-		if (_sys_movefile((char *)"$$$$$$$$.$$$", filename, rc * 128)) {
-			result = 0x00;
-		}
-	}
-	return(result);
+  digitalWrite(LED, HIGH^LEDinv);
+  f = SD.open((char *)filename, O_WRITE | O_APPEND);
+  if (f) {
+    if (f.truncate(rc*128)) {
+      f.close();
+      result = 1;
+    }
+  }
+  digitalWrite(LED, LOW^LEDinv);
+  return(result);
 }
 
 #ifdef USER_SUPPORT
