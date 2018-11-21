@@ -79,8 +79,10 @@ Other CCPs may be adapted to work, and if succeeding, please share it so we can 
 The default setting for CCP is the Digital Research one, changing it requires rebuilding the code.
 
 The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
-This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.
-Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience.
+There is also a **FORMAT** program which creates a drive folder as if it was formatting a disk. It does nothing to pre-existing drive folders, so it is very safe to use.<br>
+Disks created by **FORMAT** cannot be removed from inside RunCPM, only manually by accessing the SD Card on a host machine.<br>
+This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.<br>
+Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience. These applications are listed on the 1STREAD.ME file.
 
 ## Lua Scripting Support
 
@@ -91,7 +93,7 @@ The order of execution when an extrinsic command is typed with no explicit drive
 * The command with extension .COM is searched on the current drive.<br>
 * If not found it is searched on drive A: user area 0.<br>
 * If not found it is searched on the current drive user area 0.<br>
-* If not found then use .LUA extension and repeat the search.
+* If not found then use .LUA extension instead and repeat the above search.
 
 Lua scripts have access to these functions:
 * **BdosCall(C, DE)** - **C** is the number of the function to call and **DE** the parameter to pass.<br>
