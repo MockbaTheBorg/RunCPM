@@ -726,20 +726,32 @@ void _Bdos(void) {
 		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 		break;
 #endif
+
+#endif
+		/*
+		C = 230 (E6h) : Set 8 bit masking
+		*/
+	case 230:
+		mask8bit = LOW_REGISTER(DE);
+		break;
+		/*
+		C = 231 (E7h) : Host specific BDOS call
+		*/
+	case 231:
+		HL = hostbdos(DE);
+		break;
 		/*
 		C = 232 (E8h) : ESP32 specific BDOS call
 		*/
 #ifdef ESP32
-  case 232:
-    HL = esp32bdos(DE);
-    break;
+	case 232:
+		HL = esp32bdos(DE);
+		break;
 #endif
-#ifdef STM32
-  case 232:
-    HL = stm32bdos(DE);
-    break;
-#endif
-
+#ifdef _STM32_DEF_
+	case 232:
+		HL = stm32bdos(DE);
+		break;
 #endif
 		/*
 		C = 249 (F9h) : MakeDisk

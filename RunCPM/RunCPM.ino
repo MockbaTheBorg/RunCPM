@@ -5,25 +5,17 @@
 
 // SDCard/LED related definitions
 #if defined _STM32_DEF_ // STM32 boards
-  const uint8_t SOFT_MISO_PIN = PC8;
-  const uint8_t SOFT_MOSI_PIN = PD2;
-  const uint8_t SOFT_SCK_PIN  = PC12;
-  const uint8_t SD_CHIP_SELECT_PIN = PC11;
-  SdFatSoftSpi<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> SD; // (fixme) Not sure if this is the best method of accessing the SD
-  #define SDINIT SD_CHIP_SELECT_PIN
+  SdFatSoftSpi<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
+  #define SDINIT PC11 // CS
   #define LED PD13
   #define LEDinv 0 // 0=normal 1=inverted
   #define BOARD "STM32F407DISC1"
 #elif defined ESP32 // ESP32 boards
-  const uint8_t SOFT_MISO_PIN = 2; // Some boards use 2,15,14,13, other 12,14,27,26
-  const uint8_t SOFT_MOSI_PIN = 15;
-  const uint8_t SOFT_SCK_PIN  = 14;
-  const uint8_t SD_CHIP_SELECT_PIN = 13;
-  SdFatSoftSpi<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> SD; // (fixme) Not sure if this is the best method of accessing the SD
-  #define SDINIT SD_CHIP_SELECT_PIN
-  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
-  #define LEDinv 0
-  #define BOARD "TTGO_T1"
+  SdFatSoftSpi<2, 15, 14> SD; // MISO, MOSI, SCK Some boards use 2,15,14,13, other 12,14,27,26
+  #define SDINIT 13 // CS
+  #define LED 5 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
+  #define LEDinv 1
+  #define BOARD "LOLIN32_PRO"
 #elif defined CORE_TEENSY // Teensy 3.5 and 3.6
   SdFatSdio SD;
   #define SDINIT
@@ -70,6 +62,7 @@ int printer_open = FALSE;
 #include "console.h"
 #include "cpu.h"
 #include "disk.h"
+#include "host.h"
 #include "cpm.h"
 #ifdef CCP_INTERNAL
 #include "ccp.h"
