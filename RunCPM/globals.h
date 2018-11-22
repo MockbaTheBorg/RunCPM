@@ -58,14 +58,14 @@
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#ifdef CCP_ZCPR2							// ZCPR2 seems to require a TPASIZE of 64
+#ifdef CCP_ZCPR2
 #define CCPname		"CCP-ZCP2." STR(TPASIZE) "K"
 #define VersionCCP	0x02
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#ifdef CCP_ZCPR3							// ZCPR3 seems to require a TPASIZE of 64
+#ifdef CCP_ZCPR3
 #define CCPname		"CCP-ZCP3." STR(TPASIZE) "K"
 #define VersionCCP	0x03
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
