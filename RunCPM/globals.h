@@ -21,8 +21,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.5"
-#define VersionBCD 0x35
+#define VERSION	"3.6"
+#define VersionBCD 0x36
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -58,14 +58,14 @@
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#ifdef CCP_ZCPR2
+#ifdef CCP_ZCPR2							// ZCPR2 seems to require a TPASIZE of 64
 #define CCPname		"CCP-ZCP2." STR(TPASIZE) "K"
 #define VersionCCP	0x02
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
 //
-#ifdef CCP_ZCPR3
+#ifdef CCP_ZCPR3							// ZCPR3 seems to require a TPASIZE of 64
 #define CCPname		"CCP-ZCP3." STR(TPASIZE) "K"
 #define VersionCCP	0x03
 #define BatchFCB	(CCPaddr + 0x5E)		// Position of the $$$.SUB fcb on this CCP

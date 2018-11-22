@@ -50,6 +50,7 @@ int printer_open = FALSE;
 #include "console.h"	// console.h - Defines all the console abstraction functions
 #include "cpu.h"		// cpu.h - Implements the emulated CPU
 #include "disk.h"		// disk.h - Defines all the disk access abstraction functions
+#include "host.h"		// host.h - Custom host-specific BDOS call
 #include "cpm.h"		// cpm.h - Defines the CPM structures and calls
 #ifdef CCP_INTERNAL
 #include "ccp.h"		// ccp.h - Defines a simple internal CCP
@@ -69,7 +70,7 @@ int main(int argc, char *argv[]) {
 	_puts("       with Lua scripting support\r\n");
 #endif
 	_puts("-----------------------------------------\r\n");
-	_puts("CCP: " CCPname "    CCP Address: 0x");
+	_puts("CCP : " CCPname "    CCP Address: 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
