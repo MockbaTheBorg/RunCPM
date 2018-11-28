@@ -7,11 +7,11 @@
 #endif
 
 /* Definitions for aux/printer devices */
-#define USE_AUX
-#define AUX_FILENAME "punch.txt"
+#define USE_PUN
+#define PUN_FILENAME "punch.txt"
 
-#define USE_PRINTER
-#define PRINTER_FILENAME "printer.txt"
+#define USE_PRT
+#define PRT_FILENAME "printer.txt"
 
 /* Definitions for file/console based debugging */
 //#define DEBUG

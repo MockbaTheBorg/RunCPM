@@ -374,9 +374,9 @@ void _Bdos(void) {
 		C = 4 : Auxiliary (Punch) output
 		*/
 	case 4:
-#ifdef USE_AUX
+#ifdef USE_PUN
 		if (!aux_open) {
-			aux_dev = _sys_fopen_w((uint8*)AUX_FILENAME);
+			aux_dev = _sys_fopen_w((uint8*)PUN_FILENAME);
 			aux_open = TRUE;
 		}
 		if (aux_dev)
@@ -387,9 +387,9 @@ void _Bdos(void) {
 		C = 5 : Printer output
 		*/
 	case 5:
-#ifdef USE_PRINTER
+#ifdef USE_PRT
 		if (!printer_open) {
-			printer_dev = _sys_fopen_w((uint8*)PRINTER_FILENAME);
+			printer_dev = _sys_fopen_w((uint8*)PRT_FILENAME);
 			printer_open = TRUE;
 		}
 		if (printer_dev)
