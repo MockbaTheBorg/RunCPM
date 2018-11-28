@@ -49,16 +49,16 @@
 // Serial port speed
 #define SERIALSPD 9600
 
-// AUX: device configuration
-#ifdef USE_AUX
-File aux_dev;
-int aux_open = FALSE;
+// PUN: device configuration
+#ifdef USE_PUN
+File pun_dev;
+int pun_open = FALSE;
 #endif
 
-// PRT: device configuration
-#ifdef USE_PRINTER
-File printer_dev;
-int printer_open = FALSE;
+// LST: device configuration
+#ifdef USE_LST
+File lst_dev;
+int lst_open = FALSE;
 #endif
 
 #include "ram.h"
@@ -125,12 +125,12 @@ void setup(void) {
 					break;
 				}
 #ifdef USE_PUN
-				if (aux_dev)
-					_sys_fflush(aux_dev);
+				if (pun_dev)
+					_sys_fflush(pun_dev);
 #endif
-#ifdef USE_PRT
-				if (printer_dev)
-					_sys_fflush(printer_dev);
+#ifdef USE_LST
+				if (lst_dev)
+					_sys_fflush(lst_dev);
 #endif
 			}
 		} else {

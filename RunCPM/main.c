@@ -36,14 +36,14 @@ shoud be kept the same.
 
 // AUX: device configuration
 #ifdef USE_PUN
-FILE *aux_dev;
-int aux_open = FALSE;
+FILE *pun_dev;
+int pun_open = FALSE;
 #endif
 
 // PRT: device configuration
-#ifdef USE_PRT
-FILE *printer_dev;
-int printer_open = FALSE;
+#ifdef USE_LST
+FILE *lst_dev;
+int lst_open = FALSE;
 #endif
 
 #include "ram.h"		// ram.h - Implements the RAM
@@ -101,12 +101,12 @@ int main(int argc, char *argv[]) {
 		}
 #endif
 #ifdef USE_PUN
-		if (aux_dev)
-			_sys_fflush(aux_dev);
+		if (pun_dev)
+			_sys_fflush(pun_dev);
 #endif
-#ifdef USE_PRT
-		if (printer_dev)
-			_sys_fflush(printer_dev);
+#ifdef USE_LST
+		if (lst_dev)
+			_sys_fflush(lst_dev);
 #endif
 	}
 

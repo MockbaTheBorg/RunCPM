@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 
 /* Externals for abstracted functions need to go here */
 FILE* _sys_fopen_r(uint8 *filename);

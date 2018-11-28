@@ -118,7 +118,7 @@ uint8 _getche(void) {
 }
 
 void _clrscr(void) {
-	system("clear");
+	uint8 ch = system("clear");
 }
 
 #endif

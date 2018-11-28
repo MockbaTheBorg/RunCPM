@@ -59,6 +59,10 @@ void _sys_fflush(File f) {
 	f.flush();
 }
 
+int _sys_fclose(File f) {
+  f.close();
+}
+
 int _sys_select(uint8 *disk) {
 	uint8 result = FALSE;
 	File f;
