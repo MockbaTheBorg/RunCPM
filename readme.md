@@ -47,23 +47,28 @@ For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install 
 
 ## Getting Started
 
+**Preparing the RunCPM folder :**<br>
 Create a folder containing both the RunCPM executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
-The 64K version provides the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
-The 60K version provides a more realistic addressing space, keeping the CCP entry point on the same loading address it would be on a similar CP/M computer.<br>
-Other amounts of memory can be used, but this would require rebuilding the CCP binaries (available on disk A.ZIP).
-The CCP binaries are named with their extensions being the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly depending on the amount of memory selected when it is built.
-Reducing the amount of memory would probaly facilitate porting RunCPM to smaller RAM processors, success stories are welcome.
+If using a SD card, RunCPM and its CCPs need to be on the SD card's root folder.<br>
+The 64K version CCPs will provide the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M 2.2 computer.<br>
+The 60K version CCPs will provide a more realistic addressing space, by keeping the CCP entry point on the same loading address it would be on a physical CP/M computer.<br>
+Other amounts of memory can be used, but this would require rebuilding the CCP binaries (sources available on disk A.ZIP).
+The CCP binaries are named with their file name extensions matching the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly, depending on the amount of memory selected when it is built.<br>
+**IMPORTANT NOTE** - Starting on version 3.4, regardless of the amount of memory allocated to the CP/M system, RunCPM will still allocate 64K of RAM on the host system so the BIOS is always on the same starting position. This favors the porting of even more different CCP codes to RunCPM.
 
-RunCPM can emulate the user areas as well (this is the default), so to create the disk drives use the following procedures:
+**Preparing the CP/M virtual drives :**<br>
+**VERY IMPORTANT NOTE** - Starting on RunCPM version 3.7 user areas are now mandatory. The support of non-user-area SD cards has been dropped between versions 3.5 and 3.6, so if you are running on a version up to 3.5, please consider moving to 3.7 or higher but not before updating your SD card structure to match the support of user areas (see below).<br><br>
 
-* **when using user areas** - Create subfolders under the executable folder named "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. The "user" command will automatically create other user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the users 10 to 15 are created as letters "A" to "F".
-* **when not using user areas** - Create subfolders under the executable folder named "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and only user 0 is available. The "user" command to select user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder.
+RunCPM emulates the CP/M disks and user areas by means of subfolders under the RunCPM executable location, to prepare a folder or SD card for running RunCPM use the following procedures:<br>
+* **when using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. Switching to another user area inside CP/M will automatically create the respective user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the user areas 10 to 15 are created as letters "A" to "F".
+* **when not using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and only user area 0 is available. Switching to other user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder itself.
 
-Using user areas is the default, and it is the recommended setting, as this is what CP/M 2.2 does.
+Using user areas is the default, and it is the recommended setting, mandatory from version 3.7 on, as this is the standard CP/M 2.2 behavior.
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
+**Available CCPs :**<br>
 RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M computers. A few CCPs are provided:
 
 * **CCP-DR** - Is the original CCP from Digital Research.<br>
@@ -78,11 +83,18 @@ Other CCPs may be adapted to work, and if succeeding, please share it so we can 
 
 The default setting for CCP is the Digital Research one, changing it requires rebuilding the code.
 
-The disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
+**Contents of the "master" disk (A.ZIP) :**<br>
+The master disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
 There is also a **FORMAT** program which creates a drive folder as if it was formatting a disk. It does nothing to pre-existing drive folders, so it is very safe to use.<br>
-Disks created by **FORMAT** cannot be removed from inside RunCPM, only manually by accessing the SD Card on a host machine.<br>
-This disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.<br>
+Disks created by **FORMAT** cannot be removed from inside RunCPM itself, if needed, it must be done manually by accessing the RunCPM folder or SD Card on a host machine and removing the disk drive folder.<br>
+The master disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.<br>
 Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience. These applications are listed on the 1STREAD.ME file.
+
+## Printing
+
+Printing to the PUN: and LST: devices is allowed and will generate files called "PUN.TXT" and "LST.TXT" under user area 0 of disk A:. These files can then be tranferred over to a host computer via XMODEM for real physical printing.
+These files are created when the first printing occurs, and will be kept open throughout RunCPM usage. They can be erased inside CP/M to trigger the start of a new printing.
+As of now RunCPM does not support printing to physical devices.
 
 ## Lua Scripting Support
 
@@ -134,7 +146,7 @@ Caveat: Lua scripts must have a comment (--) on their last line, to prevent issu
 
 The objective of RunCPM is **not** to emulate a Z80 CP/M 2.2 computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
 This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be useful.<br>
-They are provided on disk A.ZIP just to maintain compatibility with DRI's official CP/M 2.2 distribution.
+They are still provided on the master disk A.ZIP just to maintain compatibility with DRI's official CP/M 2.2 distribution.
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported as of yet, as the emulated BDOS of RunCPM is specific for CP/M 2.2.
 
@@ -142,8 +154,6 @@ The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standa
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
-
-RunCPM suports the CON: device for interaction, and a very early support of AUX: and PRT: (printing to file only) devices has been implemented recently.
 
 ## References
 
