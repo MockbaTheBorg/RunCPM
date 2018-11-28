@@ -124,11 +124,11 @@ void setup(void) {
 					_puts("Unable to load the CCP. CPU halted.\r\n");
 					break;
 				}
-#ifdef USE_AUX
+#ifdef USE_PUN
 				if (aux_dev)
 					_sys_fflush(aux_dev);
 #endif
-#ifdef USE_PRINTER
+#ifdef USE_PRT
 				if (printer_dev)
 					_sys_fflush(printer_dev);
 #endif
