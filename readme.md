@@ -191,6 +191,7 @@ All Arduino libraries can be found here: https://www.arduinolibraries.info/
 
 The ESP32 build doesn't yet support the analogWrite BDOS call.<br>
 The ESP32 build may require additional changes to the code to support different ESP32 boards.<br>
+The ESP32 build uses the slower SPI mode for accessing the SD card.<br>
 
 ## STM32 Limitations
 
