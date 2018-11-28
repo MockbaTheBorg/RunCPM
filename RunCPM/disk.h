@@ -86,10 +86,8 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	}
 	*(filename++) = FOLDERCHAR;
 
-#ifdef USER_SUPPORT
 	*(filename++) = toupper(tohex(userCode));
 	*(filename++) = FOLDERCHAR;
-#endif
 
 	while (i < 8) {
 		if (F->fn[i] > 32)
@@ -122,11 +120,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 
 	++filename;
 	if (*filename == FOLDERCHAR) {	// Skips the drive and / if needed
-#ifdef USER_SUPPORT
 		filename += 3;
-#else
-		++filename;
-#endif
 	} else {
 		--filename;
 	}
@@ -159,11 +153,7 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.
 
 	++from;
 	if (*from == FOLDERCHAR) {	// Skips the drive and / if needed
-#ifdef USER_SUPPORT
 		from += 3;
-#else
-		++from;
-#endif
 	} else {
 		--from;
 	}
@@ -481,9 +471,7 @@ void _SetUser(uint8 user) {
 	userCode = user & 0x1f;	// BDOS unoficially allows user areas 0-31
 							// this may create folders from G-V if this function is called from an user program
 							// It is an unwanted behavior, but kept as BDOS does it
-#ifdef USER_SUPPORT
 	_MakeUserDir();			// Creates the user dir (0-F[G-V]) if needed
-#endif
 }
 
 uint8 _MakeDisk(uint16 fcbaddr) {
