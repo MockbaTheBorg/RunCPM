@@ -44,7 +44,8 @@ For building on other systems run "make yyy", where "yyy" is:
 * **posix** - when building under Linux, FreeBSD, Mac OS X, etc,
 * **tdm** - when building with TDM-GCC under Windows.
 
-For Linux and FreeBSD the ncurses-devel package is required. On Mac OS X, install it using "brew install ncurses".
+For Linux and FreeBSD the "ncurses.h" header file (and library) is required. The name of the package providing it depends on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
+On Mac OS X, install it using "brew install ncurses".
 
 ## Getting Started
 
