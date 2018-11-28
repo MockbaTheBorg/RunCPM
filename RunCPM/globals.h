@@ -6,12 +6,9 @@
 #include <ctype.h>
 #endif
 
-/* Definitions for aux/printer devices */
-#define USE_PUN
-#define PUN_FILENAME "punch.txt"
-
-#define USE_PRT
-#define PRT_FILENAME "printer.txt"
+/* Definitions for enabling PUN: and LST: devices */
+#define USE_PUN	// The pun.txt and lst.txt files will appear on drive A: user 0
+#define USE_LST
 
 /* Definitions for file/console based debugging */
 //#define DEBUG
@@ -21,8 +18,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.6"
-#define VersionBCD 0x36
+#define VERSION	"3.7"
+#define VersionBCD 0x37
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)

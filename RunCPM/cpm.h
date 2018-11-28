@@ -10,6 +10,14 @@
 #define INa		0xdb	// Triggers a BIOS call
 #define OUTa	0xd3	// Triggers a BDOS call
 
+/* set up full PUN and LST filenames to be on drive A: user 0 */
+#ifdef USE_PUN
+char pun_file[17] = { 'A',FOLDERCHAR,'0',FOLDERCHAR,'P','U','N','.','T','X','T',0 };
+#endif
+#ifdef USE_LST
+char lst_file[17] = { 'A',FOLDERCHAR,'0',FOLDERCHAR,'L','S','T','.','T','X','T',0 };
+#endif
+
 #ifdef PROFILE
 unsigned long time_start = 0;
 unsigned long time_now = 0;
@@ -375,25 +383,25 @@ void _Bdos(void) {
 		*/
 	case 4:
 #ifdef USE_PUN
-		if (!aux_open) {
-			aux_dev = _sys_fopen_w((uint8*)PUN_FILENAME);
-			aux_open = TRUE;
+		if (!pun_open) {
+			pun_dev = _sys_fopen_w((uint8*)pun_file);
+			pun_open = TRUE;
 		}
-		if (aux_dev)
-			_sys_fputc(LOW_REGISTER(DE), aux_dev);
+		if (pun_dev)
+			_sys_fputc(LOW_REGISTER(DE), pun_dev);
 #endif
 		break;
 		/*
 		C = 5 : Printer output
 		*/
 	case 5:
-#ifdef USE_PRT
-		if (!printer_open) {
-			printer_dev = _sys_fopen_w((uint8*)PRT_FILENAME);
-			printer_open = TRUE;
+#ifdef USE_LST
+		if (!lst_open) {
+			lst_dev = _sys_fopen_w((uint8*)lst_file);
+			lst_open = TRUE;
 		}
-		if (printer_dev)
-			_sys_fputc(LOW_REGISTER(DE), printer_dev);
+		if (lst_dev)
+			_sys_fputc(LOW_REGISTER(DE), lst_dev);
 #endif
 		break;
 		/*
