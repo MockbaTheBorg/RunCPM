@@ -315,15 +315,9 @@ uint8 _findnext(uint8 isdir) {
 }
 
 uint8 _findfirst(uint8 isdir) {
-#ifdef USER_SUPPORT
 	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
-#else
-	uint8 path[2] = { '?', 0 };
-#endif
 	path[0] = filename[0];
-#ifdef USER_SUPPORT
 	path[2] = filename[2];
-#endif
 	if (root)
 		root.close();
 	root = SD.open((char *)path); // Set directory search to start from the first position
@@ -347,7 +341,6 @@ uint8 _Truncate(char *filename, uint8 rc) {
   return(result);
 }
 
-#ifdef USER_SUPPORT
 void _MakeUserDir() {
 	uint8 dFolder = cDrive + 'A';
 	uint8 uFolder = toupper(tohex(userCode));
@@ -358,7 +351,6 @@ void _MakeUserDir() {
 	SD.mkdir((char*)path);
 	digitalWrite(LED, LOW^LEDinv);
 }
-#endif
 
 uint8 _sys_makedisk(uint8 drive) {
 	uint8 result = 0;
@@ -370,11 +362,9 @@ uint8 _sys_makedisk(uint8 drive) {
 		digitalWrite(LED, HIGH^LEDinv);
 		if (!SD.mkdir((char*)disk)) {
 			result = 0xfe;
-#ifdef USER_SUPPORT
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
 			SD.mkdir((char*)path);
-#endif
 		}
 		digitalWrite(LED, LOW^LEDinv);
 	}

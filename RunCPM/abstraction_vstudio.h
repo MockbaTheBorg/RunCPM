@@ -333,7 +333,6 @@ uint8 _Truncate(char *fn, uint8 rc) {
 	return(result);
 }
 
-#ifdef USER_SUPPORT
 void _MakeUserDir() {
 	uint8 dFolder = cDrive + 'A';
 	uint8 uFolder = toupper(tohex(userCode));
@@ -342,7 +341,6 @@ void _MakeUserDir() {
 
 	CreateDirectory((char*)path, NULL);
 }
-#endif
 
 uint8 _sys_makedisk(uint8 drive) {
 	uint8 result = 0;
@@ -353,11 +351,9 @@ uint8 _sys_makedisk(uint8 drive) {
 		uint8 disk[2] = { dFolder, 0 };
 		if (!CreateDirectory((char*)disk, NULL)) {
 			result = 0xfe;
-#ifdef USER_SUPPORT
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
 			CreateDirectory((char*)path, NULL);
-#endif
 		}
 	}
 
