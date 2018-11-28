@@ -1,13 +1,14 @@
 # RunCPM - Z80 CP/M 2.2 emulator
 
-RunCPM is an application which allows you to execute old CP/M 8 bits programs on Windows, Mac OS X, Linux, FreeBSD, MS-DOS, Arduino DUE and the Teensy. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
-RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification of the main code modules should be necessary.
+RunCPM is an application which can execute vintage CP/M 8 bits programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, MS-DOS, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
+RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
 
 If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
-RunCPM emulates CP/M 2.2 from Digital Research as close as possible.
+RunCPM emulates CP/M 2.2 from Digital Research as close as possible, the only difference being that it uses regular folders on the host instead of disk images.
 
 RunCPM was written to serve as a test environment when I was restoring the only copy of Z80 MicroMumps v4.06 which exists online (https://github.com/MockbaTheBorg/MicroMumps).<br>
-Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulator via a disk image every time I moved a bit forward on the restoration was becoming too time consuming. So I decided to write something that would allow me to run the executable right away after making any modifications.
+Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulator via a disk image every time I moved a bit forward on the restoration was becoming too time consuming. So I decided to write something that would allow me to run the executable right away after making any modifications.<br>
+RunCPM then evolved as more and more CP/M applications were added to its compatibility list.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
@@ -17,16 +18,16 @@ RunCPM builds on Arduino IDE 1.8.7 or later.<br>
 RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and 3.6, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
 If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter. Some ESP32 and STM32 boards may need external SD card adapters.
 
-Arduino digital and analog read/write support was added by Krzysztof Kliś via BDOS calls (see the bottom of cpm.h file for details).
+Arduino digital and analog read/write support was added by Krzysztof Kliś via extra non-standard BDOS calls (see the bottom of cpm.h file for details).
 
-LED blink codes: Arduino/Teensy/ESP32/STM32 user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). 
+LED blink codes: Arduino/Teensy/ESP32/STM32 user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). Other than that the user LED will indicate disk activity.
 
 RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
 When using Arduino boards, the serial speed as well as other parameters, like LED pin and SD Card pins may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.
 
-If building for Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
+If building for the Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
 
 ## Experimental Platforms
 
@@ -43,7 +44,7 @@ For building on other systems run "make yyy", where "yyy" is:
 * **posix** - when building under Linux, FreeBSD, Mac OS X, etc,
 * **tdm** - when building with TDM-GCC under Windows.
 
-For Linux and FreeBSD the ncurses-dev package is required. On Mac OS X, install it using "brew install ncurses".
+For Linux and FreeBSD the ncurses-devel package is required. On Mac OS X, install it using "brew install ncurses".
 
 ## Getting Started
 
@@ -54,16 +55,16 @@ The 64K version CCPs will provide the maximum amount of memory possible to CP/M 
 The 60K version CCPs will provide a more realistic addressing space, by keeping the CCP entry point on the same loading address it would be on a physical CP/M computer.<br>
 Other amounts of memory can be used, but this would require rebuilding the CCP binaries (sources available on disk A.ZIP).
 The CCP binaries are named with their file name extensions matching the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly, depending on the amount of memory selected when it is built.<br>
-**IMPORTANT NOTE** - Starting on version 3.4, regardless of the amount of memory allocated to the CP/M system, RunCPM will still allocate 64K of RAM on the host system so the BIOS is always on the same starting position. This favors the porting of even more different CCP codes to RunCPM.
+**IMPORTANT NOTE** - Starting on version 3.4, regardless of the amount of memory allocated to the CP/M system, RunCPM will still allocate 64K of RAM on the host so the BIOS is always at the same starting position. This favors the porting of even more different CCP codes to RunCPM.
 
 **Preparing the CP/M virtual drives :**<br>
-**VERY IMPORTANT NOTE** - Starting on RunCPM version 3.7 user areas are now mandatory. The support of non-user-area SD cards has been dropped between versions 3.5 and 3.6, so if you are running on a version up to 3.5, please consider moving to 3.7 or higher but not before updating your SD card structure to match the support of user areas (see below).<br><br>
+**VERY IMPORTANT NOTE** - Starting on RunCPM version 3.7 user areas are now mandatory. The support of non-user-area disk folders has been dropped between versions 3.5 and 3.6, so if you are running on a version up to 3.5, please consider moving to 3.7 or higher but not before updating your disk folders structure to match the support of user areas (see below).<br><br>
 
 RunCPM emulates the CP/M disks and user areas by means of subfolders under the RunCPM executable location, to prepare a folder or SD card for running RunCPM use the following procedures:<br>
 * **when using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. Switching to another user area inside CP/M will automatically create the respective user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the user areas 10 to 15 are created as letters "A" to "F".
 * **when not using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and only user area 0 is available. Switching to other user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder itself.
 
-Using user areas is the default, and it is the recommended setting, mandatory from version 3.7 on, as this is the standard CP/M 2.2 behavior.
+The support for user areas is the default, and it is mandatory from version 3.7 on, as this is the standard CP/M 2.2 behavior.
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
@@ -101,7 +102,7 @@ As of now RunCPM does not support printing to physical devices.
 The internal CCP can be built with support for Lua scripting.<br>
 Lua scripts can be written on the CP/M environment using any text editor and then executed as if they were CP/M extrinsic commands.<br>
 
-The order of execution when an extrinsic command is typed with no explicit drive is:<br>
+The order of execution on the internal CCP when an extrinsic command is typed with no explicit drive is:<br>
 * The command with extension .COM is searched on the current drive.<br>
 * If not found it is searched on drive A: user area 0.<br>
 * If not found it is searched on the current drive user area 0.<br>
@@ -138,7 +139,7 @@ The possible values for **reg** on those functions are:<br>
 13: IFF - Interrupt Flip Flop
 14: IR - Interrupt (upper) / Refresh (lower) register
 ```
-The disk A.ZIP contains a script called LUAINFO.LUA, with the same functionality of INFO.COM, which provides information about RunCPM.
+The disk A.ZIP contains an example script called LUAINFO.LUA, with the same functionality of INFO.COM, which provides information about RunCPM.
 
 Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character when the scripts are created with CP/M text editors. The comment on the last line comments out the CP/M EOF (^Z) character and prevents Lua interpreter errors.
 
@@ -154,6 +155,8 @@ The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standa
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
+
+Lua scripting is not supported on platforms other than Windows, Linux and MacOS. There is no Lua support for Arduino based platforms yet.
 
 ## References
 
@@ -196,7 +199,7 @@ The STM32 build uses the slower SPI mode for accessing the SD card.<br>
 ## Dedications
 
 I dedicate this software to:<br>
-* *Krzysztof Klis* -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
+* *Krzysztof Kliś* -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
 * *Yeti* - For being an awesome agitator since RunCPM went on GitHub.<br>
 * All the other folks who are actively helping with finding/fixing bugs and issues on Github - thanks guys.<br>
 
