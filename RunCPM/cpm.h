@@ -330,8 +330,8 @@ void _Bios(void) {
 }
 
 void _Bdos(void) {
-	int32	i, j, c, chr, count;
-	uint8	ch = LOW_REGISTER(BC);
+	uint16	i;
+	uint8	j, count, chr, c, ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
 #ifdef LOGONLY
@@ -513,11 +513,11 @@ void _Bdos(void) {
 			if (chr < 0x20 || chr > 0x7E)						// Invalid character
 				continue;
 			_putcon(chr);
-			++count; _RamWrite(i + count, chr);
-			if (count == c)
+			++count; _RamWrite((i + count) & 0xffff, chr);
+			if (count == c)										// Reached the expected count
 				break;
 		}
-		_RamWrite(i, count);	// Saves the number of characters read
+		_RamWrite(i & 0xffff, count);	// Saves the number of characters read
 		_putcon('\r');	// Gives a visual feedback that read ended
 		break;
 		/*

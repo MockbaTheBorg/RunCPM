@@ -319,9 +319,9 @@ uint8 _findfirst(uint8 isdir) {
 uint8 _Truncate(char *fn, uint8 rc) {
 	uint8 result = 0x00;
 	LARGE_INTEGER fp;
-	fp.QuadPart = rc * 128;
+	fp.QuadPart = (LONGLONG)rc * 128;
 	wchar_t filename[15];
-	MultiByteToWideChar(CP_ACP, 0, fn, -1, filename, 4096);
+	MultiByteToWideChar(CP_ACP, 0, fn, -1, filename, 15);
 	HANDLE fh = CreateFileW(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (fh == INVALID_HANDLE_VALUE) {
 		result = 0xff;
