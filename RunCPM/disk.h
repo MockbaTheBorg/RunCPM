@@ -45,7 +45,7 @@ void _error(uint8 error) {
 		_puts("\r\nCP/M ERR");
 		break;
 	}
-	_getch();
+	uint8 ch = _getch();
 	_puts("\r\n");
 	cDrive = oDrive;
 	_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | oDrive);
@@ -54,7 +54,7 @@ void _error(uint8 error) {
 
 int _SelectDisk(uint8 dr) {
 	uint8 result = 0xff;
-	uint8 disk[2] = "A";
+	uint8 disk[2] = { 'A', 0 };
 
 	if (!dr) {
 		dr = cDrive;	// This will set dr to defDisk in case no disk is passed
