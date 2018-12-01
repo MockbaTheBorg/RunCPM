@@ -261,7 +261,7 @@ void _ccp_era(void) {
 // TYPE command
 uint8 _ccp_type(void) {
 	uint8 i, c, l = 0, error = TRUE;
-	uint16 a, p;
+	uint16 a, p = 0;
 
 	if (!_ccp_bdos(F_OPEN, ParFCB)) {
 		_puts("\r\n");
