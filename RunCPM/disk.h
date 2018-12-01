@@ -45,7 +45,7 @@ void _error(uint8 error) {
 		_puts("\r\nCP/M ERR");
 		break;
 	}
-	uint8 ch = _getch();
+	Status = _getch();
 	_puts("\r\n");
 	cDrive = oDrive;
 	_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | oDrive);

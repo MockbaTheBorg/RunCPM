@@ -59,7 +59,7 @@ void _sys_fflush(File f) {
 	f.flush();
 }
 
-int _sys_fclose(File f) {
+void _sys_fclose(File f) {
   f.close();
 }
 

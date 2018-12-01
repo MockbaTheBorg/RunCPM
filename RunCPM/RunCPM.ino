@@ -16,9 +16,9 @@
 #elif defined ESP32 // ESP32 boards
   SdFatSoftSpiEX<2, 15, 14> SD; // MISO, MOSI, SCK Some boards use 2,15,14,13, other 12,14,27,26
   #define SDINIT 13 // CS
-  #define LED 5 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
-  #define LEDinv 1
-  #define BOARD "LOLIN32_PRO"
+  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
+  #define LEDinv 0
+  #define BOARD "TTGO_T1"
 #elif defined CORE_TEENSY // Teensy 3.5 and 3.6
   SdFatSdio SD;
   #define SDINIT
