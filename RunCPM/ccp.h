@@ -544,7 +544,7 @@ void _ccp(void) {
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
 
 		prompt[2] = 'A' + curDrive;						// Shows the prompt
-		prompt[3] = '0' + curUser;
+		prompt[3] = (curUser < 10) ? '0' + curUser : 'W' + curUser;
 		_puts((char*)prompt);
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
@@ -613,6 +613,8 @@ void _ccp(void) {
 			case 7:		// DEL is an alias to ERA
 				_ccp_era();			break;
 			case 8:		// EXIT
+				_puts("Terminating RunCPM.\r\n");
+				_puts("CPU Halted.\r\n");
 				Status = 1;			break;
 			case 255:	// It is an external command
 				i = _ccp_ext();
