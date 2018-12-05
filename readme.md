@@ -185,7 +185,8 @@ https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SP
 For the Arduino DUE, support for it needs to be added through the board manager.<br>
 For the Teensy follow the instructions from here: https://www.pjrc.com/teensy/td_download.html<br>
 For the ESP32 follow the instructions from here: https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/<br>
-All boards now use the SdFat library, from here: https://github.com/greiman/SdFat/
+For the STM32 follow the instructions from here: https://github.com/stm32duino/Arduino_Core_STM32<br>
+All boards now use the SdFat library, from here: https://github.com/greiman/SdFat/<br>
 All Arduino libraries can be found here: https://www.arduinolibraries.info/
 
 ## ESP32 Limitations
