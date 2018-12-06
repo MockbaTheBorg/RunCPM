@@ -31,7 +31,8 @@ If building for the Teensy, ESP32 and STM32, please read the entire document, as
 
 ## Experimental Platforms
 
-None at the moment.
+Atmel SAM4S Xplained Pro.<br>
+Altera/Intel DE1 Cyclone II FPGA (NiosII).
 
 ## Building
 
