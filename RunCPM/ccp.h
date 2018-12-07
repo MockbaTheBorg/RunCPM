@@ -528,8 +528,6 @@ void _ccp(void) {
 
 	uint8 i;
 
-	_puts(CCPHEAD);
-
 	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
 	_ccp_bdos(DRV_SET, curDrive);
 

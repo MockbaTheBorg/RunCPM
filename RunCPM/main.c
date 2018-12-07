@@ -75,39 +75,32 @@ int main(int argc, char *argv[]) {
 	_puts("\r\n");
 
 	while (TRUE) {
-#ifdef CCP_INTERNAL
-		_PatchCPM();
+		_puts(CCPHEAD);
+		_PatchCPM();	// Patches the CP/M entry points and other things in
 		Status = 0;
-		_ccp();
-		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
-			break;
-#else
-		if(! _sys_exists((uint8*)CCPname)) {
-			_puts("\r\nCan't open CCP!\r\n");
-			break;
-		} else {
-			//**********  Boot code  **********//
-			_puts(CCPHEAD);
+		if(VersionCCP >= 0x10 || _sys_exists((uint8*)CCPname)) {
+#ifndef CCP_INTERNAL
 			_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
-			_PatchCPM();	// Patches the CP/M entry points and other things in
-
-
 			Z80reset();			// Resets the Z80 CPU
 			SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
 			PC = CCPaddr;		// Sets CP/M application jump point
 			Z80run();			// Starts simulation
+#else
+			_ccp();
+#endif
 			if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 				break;
-		}
-#endif
 #ifdef USE_PUN
-		if (pun_dev)
-			_sys_fflush(pun_dev);
+			if (pun_dev)
+				_sys_fflush(pun_dev);
 #endif
 #ifdef USE_LST
-		if (lst_dev)
-			_sys_fflush(lst_dev);
+			if (lst_dev)
+				_sys_fflush(lst_dev);
 #endif
+		} else {
+			_puts("Unable to load CP/M CCP.\r\nCPU halted.\r\n");
+		}
 	}
 
 	_console_reset();
