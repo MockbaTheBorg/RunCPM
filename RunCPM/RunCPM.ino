@@ -25,6 +25,13 @@
   #define LED 13
   #define LEDinv 0
   #define BOARD "TEENSY 3.5"
+#elif defined ADAFRUIT_GRAND_CENTRAL_M4
+  #define USE_SDIO 0
+  SdFat SD;
+  #define SDINIT SDCARD_SS_PIN
+  #define LED 13
+  #define LEDinv 0
+  #define BOARD "ADAFRUIT GRAND CENTRAL M4"
 #else // Arduino DUE
   SdFatEX SD;
   #define SDINIT 4
@@ -98,7 +105,16 @@ void setup(void) {
   _puts("\r\n");
 
   _puts("Initializing SD card.\r\n");
+#if defined ADAFRUIT_GRAND_CENTRAL_M4
+  if (SD.cardBegin(SDINIT, SD_SCK_MHZ(50))) {
+
+    if (!SD.fsBegin()) {
+      _puts("\nFile System initialization failed.\n");
+      return;
+    }
+#else
   if (SD.begin(SDINIT)) {
+#endif
     if (VersionCCP >= 0x10 || SD.exists(CCPname)) {
       while (true) {
         _puts(CCPHEAD);
