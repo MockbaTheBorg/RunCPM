@@ -172,6 +172,7 @@ http://www.chstercius.cz/runcpm/<br>
 https://hackaday.com/2014/12/30/z80-cpm-and-fat-file-formats/<br>
 https://ubuntuforum-br.org/index.php?topic=120787.0 - in Portuguese<br>
 http://mrwrightteacher.net/retrochallenge2018/<br>
+https://learn.adafruit.com/z80-cpm-emulator-for-the-samd51-grand-central<br>
 
 ## Arduino compatible boards tested so far
 
@@ -182,7 +183,8 @@ https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
 https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
 https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pico-kit.html - No user LED on board<br>
-https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)
+https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)<br>
+https://www.adafruit.com/product/4064
 
 ## Extra software needed
 
