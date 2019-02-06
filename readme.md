@@ -222,7 +222,7 @@ May the computers in heaven be all 8-bit.<br>
 ## A Final Word
 
 If you like this project, and feels like helping me out with my music, please check:<br>
-http://GoFundMe.com/make-analog-music-great-again/
+https://www.gofundme.com/make-analog-music-great-again/
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
