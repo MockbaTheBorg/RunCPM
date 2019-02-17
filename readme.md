@@ -219,10 +219,5 @@ I dedicate it also to the memory of some awesome people who unfortunately are no
 * *Mr. Tom L. Burnett* - For helping me with testing/debugging many different CP/M 2.2 applications on RunCPM.<br>
 May the computers in heaven be all 8-bit.<br>
 
-## A Final Word
-
-If you like this project, and feels like helping me out with my music, please check:<br>
-https://www.gofundme.com/make-analog-music-great-again/
-
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
