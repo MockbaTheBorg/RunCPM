@@ -41,8 +41,9 @@ RunCPM builds natively on Visual Studio.
 For building on other systems run "make yyy", where "yyy" is:
 
 * **dos** - when building with DJGPP under MS-DOS,
+* **macosx** - Mac OS X
 * **mingw** - when building with MinGW under Windows,
-* **posix** - when building under Linux, FreeBSD, Mac OS X, etc,
+* **posix** - when building under Linux, FreeBSD etc,
 * **tdm** - when building with TDM-GCC under Windows.
 
 For Linux and FreeBSD the "ncurses.h" header file (and library) is required. The name of the package providing it depends on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
