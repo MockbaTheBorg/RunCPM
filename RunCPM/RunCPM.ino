@@ -4,9 +4,11 @@
 #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
 // SDCard/LED related definitions
-//   SdFatSoftSpiEX and SdFatEX require changes to SdFatConfig.h:
-//     #define ENABLE_EXTENDED_TRANSFER_CLASS 1
-//     #define ENABLE_SOFTWARE_SPI_CLASS 1
+//
+//   SdFatSoftSpiEX and SdFatEX require changes to the following lines on SdFatConfig.h:
+//     #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)
+//     #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
+//
 #if defined _STM32_DEF_ // STM32 boards
   SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
   #define SDINIT PC11 // CS
