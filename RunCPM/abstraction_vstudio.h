@@ -124,7 +124,8 @@ int _sys_rename(uint8 *name1, uint8 *name2) {
 }
 
 int _sys_select(uint8 *disk) {
-	return((uint8)GetFileAttributes((LPCSTR)disk) & 0x10);
+	uint32 attr = GetFileAttributes((LPCSTR)disk);
+	return(attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 }
 
 long _sys_filesize(uint8 *filename) {
