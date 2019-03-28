@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 	_puts("       with Lua scripting support\r\n");
 #endif
 	_puts("-----------------------------------------\r\n");
-	_puts("CCP : " CCPname "    CCP Address: 0x");
+	_puts("CCP : " CCPname "   CCP Address: 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 
@@ -78,29 +78,29 @@ int main(int argc, char *argv[]) {
 		_puts(CCPHEAD);
 		_PatchCPM();	// Patches the CP/M entry points and other things in
 		Status = 0;
-		if(VersionCCP >= 0x10 || _sys_exists((uint8*)CCPname)) {
-#ifndef CCP_INTERNAL
-			_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
-			Z80reset();			// Resets the Z80 CPU
-			SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
-			PC = CCPaddr;		// Sets CP/M application jump point
-			Z80run();			// Starts simulation
+#ifdef CCP_INTERNAL
+		_ccp();
 #else
-			_ccp();
+		if(!_sys_exists((uint8*)CCPname)) {
+			_puts("Unable to load CP/M CCP.\r\nCPU halted.\r\n");
+			break;
+		}
+		_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
+		Z80reset();			// Resets the Z80 CPU
+		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
+		PC = CCPaddr;		// Sets CP/M application jump point
+		Z80run();			// Starts simulation
 #endif
-			if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
-				break;
+		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
+			break;
 #ifdef USE_PUN
-			if (pun_dev)
-				_sys_fflush(pun_dev);
+		if (pun_dev)
+			_sys_fflush(pun_dev);
 #endif
 #ifdef USE_LST
-			if (lst_dev)
-				_sys_fflush(lst_dev);
+		if (lst_dev)
+			_sys_fflush(lst_dev);
 #endif
-		} else {
-			_puts("Unable to load CP/M CCP.\r\nCPU halted.\r\n");
-		}
 	}
 
 	_console_reset();

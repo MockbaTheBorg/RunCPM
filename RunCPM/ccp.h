@@ -68,7 +68,7 @@ uint16 _ccp_bdos(uint8 function, uint16 de) {
 // Compares two strings (Atmel doesn't like strcmp)
 uint8 _ccp_strcmp(char *stra, char *strb) {
 	while (*stra && *strb && (*stra == *strb)) {
-		stra++; strb++;
+		++stra; ++strb;
 	}
 	return(*stra == *strb);
 }
@@ -82,7 +82,7 @@ uint8 _ccp_cnum(void) {
 	if (!_RamRead(CmdFCB)) {	// If a drive was set, then the command is external
 		while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
 			command[i] = _RamRead(CmdFCB + i + 1);
-			i++;
+			++i;
 		}
 		command[i] = 0;
 
@@ -93,7 +93,7 @@ uint8 _ccp_cnum(void) {
 				perr = defDMA + 2;
 				break;
 			}
-			i++;
+			++i;
 		}
 	}
 	return(result);
@@ -114,7 +114,7 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 		_ccp_bdos(C_WRITE, ':');
 	}
 
-	for (i = 1; i < 12; i++) {
+	for (i = 1; i < 12; ++i) {
 		ch = _RamRead(fcb + i);
 		if (ch == ' ' && compact)
 			continue;
@@ -128,9 +128,9 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 void _ccp_initFCB(uint16 address) {
 	uint8 i;
 
-	for (i = 0; i < 36; i++)
+	for (i = 0; i < 36; ++i)
 		_RamWrite(address + i, 0x00);
-	for (i = 0; i < 11; i++) {
+	for (i = 0; i < 11; ++i) {
 		_RamWrite(address + 1 + i, 0x20);
 		_RamWrite(address + 17 + i, 0x20);
 	}
@@ -144,12 +144,12 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 	if (_RamRead(pbuf + 1) == ':') {
 		ch = toupper(_RamRead(pbuf++));
 		_RamWrite(fcb, ch - '@');		// Makes the drive 0x1-0xF for A-P
-		pbuf++;							// Points pbuf past the :
+		++pbuf;							// Points pbuf past the :
 		blen -= 2;
 	}
 
 	if (blen) {
-		fcb++;
+		++fcb;
 
 		plen = 8;
 		pad = ' ';
@@ -158,14 +158,14 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 			if (_ccp_delim(ch)) {
 				break;
 			}
-			pbuf++; blen--;
+			++pbuf; --blen;
 			if (ch == '*')
 				pad = '?';
 			if (pad == '?' || ch == '?') {
 				ch = pad;
 				n = n | 0x80;	// Name is not unique
 			}
-			plen--; n++;
+			--plen; ++n;
 			_RamWrite(fcb++, ch);
 			ch = toupper(_RamRead(pbuf));
 		}
@@ -176,21 +176,21 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 		plen = 3;
 		pad = ' ';
 		if (ch == '.') {
-			pbuf++; blen--;
+			++pbuf; --blen;
 		}
 		while (blen && plen) {
 			ch = toupper(_RamRead(pbuf));
 			if (_ccp_delim(ch)) {
 				break;
 			}
-			pbuf++; blen--;
+			++pbuf; --blen;
 			if (ch == '*')
 				pad = '?';
 			if (pad == '?' || ch == '?') {
 				ch = pad;
 				n = n | 0x80;	// Name is not unique
 			}
-			plen--; n++;
+			--plen; ++n;
 			_RamWrite(fcb++, ch);
 		}
 
@@ -219,12 +219,12 @@ uint16 _ccp_fcbtonum() {
 void _ccp_dir(void) {
 	uint8 i;
 	uint8 dirHead[6] = "A: ";
-	uint8 dirSep[4] = " : ";
+	uint8 dirSep[6] = "  |  ";
 	uint32 fcount = 0;	// Number of files printed
 	uint32 ccount = 0;	// Number of columns printed
 
 	if (_RamRead(ParFCB + 1) == ' ') {
-		for (i = 1; i < 12; i++)
+		for (i = 1; i < 12; ++i)
 			_RamWrite(ParFCB + i, '?');
 	}
 
@@ -234,7 +234,7 @@ void _ccp_dir(void) {
 	if (!_SearchFirst(ParFCB, TRUE)) {
 		_puts((char*)dirHead);
 		_ccp_printfcb(tmpFCB, FALSE);
-		fcount++; ccount++;
+		++fcount; ++ccount;
 		while (!_SearchNext(ParFCB, TRUE)) {
 			if (!ccount) {
 				_puts("\r\n");
@@ -243,7 +243,7 @@ void _ccp_dir(void) {
 				_puts((char*)dirSep);
 			}
 			_ccp_printfcb(tmpFCB, FALSE);
-			fcount++; ccount++;
+			++fcount; ++ccount;
 			if (ccount > 3)
 				ccount = 0;
 		}
@@ -274,7 +274,7 @@ uint8 _ccp_type(void) {
 					break;
 				_ccp_bdos(C_WRITE, c);
 				if (c == 0x0a) {
-					l++;
+					++l;
 					if (l == pgSize) {
 						l = 0;
 						p = _ccp_bdos(C_READ, 0x0000);
@@ -282,7 +282,7 @@ uint8 _ccp_type(void) {
 							break;
 					}
 				}
-				i--; a++;
+				--i; ++a;
 			}
 			if (p == 3)
 				break;
@@ -301,7 +301,7 @@ uint8 _ccp_save(void) {
 	if (pages < 256) {
 		error = FALSE;
 		while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
-			pbuf++; blen--;
+			++pbuf; --blen;
 		}
 		_ccp_nameToFCB(ParFCB);						// Loads file name onto the ParFCB
 		if (_ccp_bdos(F_MAKE, ParFCB)) {
@@ -329,10 +329,10 @@ uint8 _ccp_save(void) {
 // REN command
 void _ccp_ren(void) {
 	uint8 ch, i;
-	pbuf++;
+	++pbuf;
 
 	_ccp_nameToFCB(SecFCB);
-	for (i = 0; i < 12; i++) {	// Swap the filenames on the fcb
+	for (i = 0; i < 12; ++i) {	// Swap the filenames on the fcb
 		ch = _RamRead(ParFCB + i);
 		_RamWrite(ParFCB + i, _RamRead(SecFCB + i));
 		_RamWrite(SecFCB + i, ch);
@@ -501,12 +501,12 @@ void _ccp_readInput(void) {
 		if (!_ccp_bdos(F_OPEN, BatchFCB)) {			// Open batch file
 			recs = _RamRead(BatchFCB + 15);			// Gets its record count
 			if (recs) {
-				recs--;								// Counts one less
+				--recs;								// Counts one less
 				_RamWrite(BatchFCB + 32, recs);		// And sets to be the next read
 				_ccp_bdos(F_DMAOFF, defDMA);		// Reset current DMA
 				_ccp_bdos(F_READ, BatchFCB);		// And reads the last sector
 				chars = _RamRead(defDMA);			// Then moves it to the input buffer
-				for (i = 0; i <= chars; i++)
+				for (i = 0; i <= chars; ++i)
 					_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
 				_RamWrite(inBuf + i + 1, 0);
 				_puts((char*)_RamSysAddr(inBuf + 2));
@@ -531,7 +531,7 @@ void _ccp(void) {
 	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
 	_ccp_bdos(DRV_SET, curDrive);
 
-	for (i = 0; i < 36; i++)
+	for (i = 0; i < 36; ++i)
 		_RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
 
 	while (TRUE) {
@@ -557,7 +557,7 @@ void _ccp(void) {
 			pbuf = inBuf + 2;							// Points pbuf to the first command character
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
-				pbuf++; blen--;
+				++pbuf; --blen;
 			}
 			if (!blen)									// There were only spaces
 				continue;
@@ -578,13 +578,13 @@ void _ccp(void) {
 			}
 
 			_RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
-			for (i = 0; i < blen; i++) {
+			for (i = 0; i < blen; ++i) {
 				_RamWrite(defDMA + i + 1, _RamRead(pbuf + i));
 			}
 			_RamWrite(defDMA + i + 1, 0);
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
-				pbuf++; blen--;
+				++pbuf; --blen;
 			}
 
 			_ccp_initFCB(ParFCB);						// Initializes the parameter FCB

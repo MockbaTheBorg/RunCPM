@@ -173,7 +173,6 @@ extern "C"
 	extern uint8* _RamSysAddr(uint16 address);
 	extern void _RamWrite(uint16 address, uint8 value);
 #endif
-	extern void _RamFill(uint16 address, int size, uint8 value);
 
 	extern void _Bdos(void);
 	extern void _Bios(void);
