@@ -16,6 +16,7 @@
 //#define CONSOLELOG	// Writes debug information to console instead of file
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
+//#define iDEBUG		// Instruction debugger (PC only, for development)
 
 /* RunCPM version for the greeting header */
 #define VERSION	"3.7"
