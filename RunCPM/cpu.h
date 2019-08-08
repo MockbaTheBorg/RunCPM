@@ -23,6 +23,12 @@ int32 Debug = 0;
 int32 Break = -1;
 int32 Step = -1;
 
+#ifdef iDEBUG
+FILE *iLogFile;
+char iLogBuffer[16];
+const char *iLogTxt;
+#endif
+
 /*
 	Functions needed by the soft CPU implementation
 */
@@ -875,7 +881,7 @@ static const uint8 cpTable[256] = {
 	128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,
 };
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(iDEBUG)
 static const char *Mnemonics[256] =
 {
 	"NOP", "LD BC,#h", "LD (BC),A", "INC BC", "INC B", "DEC B", "LD B,*h", "RLCA",
@@ -1455,6 +1461,25 @@ static inline void Z80run(void) {
 #endif
 
 		PCX = PC;
+
+#ifdef iDEBUG
+		iLogFile = fopen("iDump.log", "a");
+		switch (RAM[PCX & 0xffff]) {
+		case 0xCB: iLogTxt = MnemonicsCB[RAM[PCX & 0xffff + 1]]; break;
+		case 0xED: iLogTxt = MnemonicsED[RAM[PCX & 0xffff + 1]]; break;
+		case 0xDD:
+		case 0xFD:
+			if (RAM[PCX & 0xffff] == 0xCB) {
+				iLogTxt = MnemonicsXCB[RAM[PCX & 0xffff + 1]]; break;
+			} else {
+				iLogTxt = MnemonicsXX[RAM[PCX & 0xffff + 1]]; break;
+			}
+		default: iLogTxt = Mnemonics[RAM[PCX & 0xffff]];
+		}
+		sprintf(iLogBuffer, "0x%04x : 0x%02x = %s\n", PCX, RAM[PCX & 0xffff], iLogTxt);
+		fputs(iLogBuffer, iLogFile);
+		fclose(iLogFile);
+#endif
 
 		switch (RAM_PP(PC)) {
 
