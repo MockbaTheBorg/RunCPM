@@ -168,7 +168,7 @@ bool _sys_extendfile(char *fn, unsigned long fpos)
 	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > f.size()) {
 			for (i = 0; i < f.size() - fpos; ++i) {
-				if (f.write((uint8_t)0) < 0) {
+				if (f.write((uint8_t)0) != 1) {
 					result = false;
 					break;
 				}
