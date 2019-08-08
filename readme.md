@@ -164,6 +164,10 @@ Lua scripting is not supported on platforms other than Windows, Linux and MacOS.
 
 Some applications, like hi-tech C for example, will try to access user areas higher than 15 to verify if they are running on a different CP/M flavor than 2.2. This causes the generation of user areas with letters higher than F. This is an expected behavior and won't be "fixed".
 
+## Online contact/support
+
+https://discord.gg/7aQAGG - I have created this discord channel to be able to (eventually) meet people in real time and talk about RunCPM. Feel free to join.
+
 ## References
 
 https://weblambdazero.blogspot.com/2016/07/cpm-on-stick_16.html<br>
