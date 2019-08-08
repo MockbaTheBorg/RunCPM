@@ -178,6 +178,9 @@ https://hackaday.com/2014/12/30/z80-cpm-and-fat-file-formats/<br>
 https://ubuntuforum-br.org/index.php?topic=120787.0 - in Portuguese<br>
 http://mrwrightteacher.net/retrochallenge2018/<br>
 https://learn.adafruit.com/z80-cpm-emulator-for-the-samd51-grand-central<br>
+https://forum.armbian.com/topic/8569-runcpm-on-armbian-cpm-weekend-fun/<br>
+https://blog.hackster.io/z80-cp-m-emulator-runs-on-adafruits-new-grand-central-dev-board-6a28ad73dfbc<br>
+https://ht-deko.com/arduino/runcpm.html - in Japanese<br>
 
 ## Arduino compatible boards tested so far
 
@@ -189,7 +192,9 @@ https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
 https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pico-kit.html - No user LED on board<br>
 https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)<br>
-https://www.adafruit.com/product/4064
+https://www.adafruit.com/product/4064<br>
+
+I have seen comments of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
 
 ## Extra software needed
 
