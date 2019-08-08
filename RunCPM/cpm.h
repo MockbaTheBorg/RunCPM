@@ -32,12 +32,12 @@ void _PatchCPM(void) {
 	_RamWrite(0x0000, JP);		/* JP BIOS+3 (warm boot) */
 	_RamWrite16(0x0001, BIOSjmppage + 3);
 
-	/* IOBYTE - Points to Console */
-	_RamWrite(0x0003, 0x3D);
-
-	/* Current drive/user - A:/0 */
-	if (Status != 2)
+	if (Status != 2) {
+		/* IOBYTE - Points to Console */
+		_RamWrite(0x0003, 0x3D);
+		/* Current drive/user - A:/0 */
 		_RamWrite(0x0004, 0x00);
+	}
 
 	/* BDOS entry point (0x0005) */
 	_RamWrite(0x0005, JP);
