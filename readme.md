@@ -182,7 +182,7 @@ https://forum.armbian.com/topic/8569-runcpm-on-armbian-cpm-weekend-fun/<br>
 https://blog.hackster.io/z80-cp-m-emulator-runs-on-adafruits-new-grand-central-dev-board-6a28ad73dfbc<br>
 https://ht-deko.com/arduino/runcpm.html - in Japanese<br>
 
-## Arduino compatible boards tested so far
+## RunCPM compatible boards tested so far
 
 https://store.arduino.cc/usa/arduino-due<br>
 https://www.pjrc.com/store/teensy35.html<br>
@@ -193,6 +193,7 @@ https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.htm
 https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pico-kit.html - No user LED on board<br>
 https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)<br>
 https://www.adafruit.com/product/4064<br>
+https://github.com/SmartArduino/SZDOITWiKi/wiki/ESP8266---ESPduino-32<br>
 
 I have seen comments of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
 
