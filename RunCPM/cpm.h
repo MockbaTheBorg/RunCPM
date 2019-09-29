@@ -3,7 +3,6 @@
 
 /* see main.c for definition */
 
-#define NOP		0x00
 #define JP		0xc3
 #define CALL	0xcd
 #define RET		0xc9
