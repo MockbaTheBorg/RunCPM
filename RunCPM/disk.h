@@ -23,10 +23,10 @@ Disk errors
 FCB related numbers
 */
 #define BlkSZ 128	// CP/M block size
-#define	BlkEX 128	// Number of blocks on an extension
+#define BlkEX 128	// Number of blocks on an extension
 #define BlkS2 4096	// Number of blocks on a S2 (module)
 #define MaxCR 128	// Maximum value the CR field can take
-#define MaxRC 127	// Maximum value the RC field can take
+#define MaxRC 128	// Maximum value the RC field can take
 #define MaxEX 31	// Maximum value the EX field can take
 #define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
 
@@ -56,7 +56,7 @@ int _SelectDisk(uint8 dr) {
 	uint8 result = 0xff;
 	uint8 disk[2] = { 'A', 0 };
 
-	if (!dr) {
+	if (!dr || dr=='?') {
 		dr = cDrive;	// This will set dr to defDisk in case no disk is passed
 	} else {
 		--dr;			// Called from BDOS, set dr back to 0=A: format
@@ -78,8 +78,9 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
+	uint8 c;
 
-	if (F->dr) {
+	if (F->dr && F->dr!='?') {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
 		*(filename++) = cDrive + 'A';
@@ -89,25 +90,38 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = toupper(tohex(userCode));
 	*(filename++) = FOLDERCHAR;
 
-	while (i < 8) {
-		if (F->fn[i] > 32)
-			*(filename++) = toupper(F->fn[i]);
-		if (F->fn[i] == '?')
-			unique = FALSE;
-		++i;
-	}
-	i = 0;
-	while (i < 3) {
-		if (F->tp[i] > 32) {
-			if (addDot) {
-				addDot = FALSE;
-				*(filename++) = '.';	// Only add the dot if there's an extension
-			}
-			*(filename++) = toupper(F->tp[i]);
+	if( F->dr != '?' ) {
+		while (i < 8) {
+			c = F->fn[i] & 0x7F;
+			if (c > 32)
+				*(filename++) = toupper(c);
+			if (c == '?')
+				unique = FALSE;
+			++i;
 		}
-		if (F->tp[i] == '?')
-			unique = FALSE;
-		++i;
+		i = 0;
+		while (i < 3) {
+			c = F->tp[i] & 0x7F;
+			if (c > 32) {
+				if (addDot) {
+					addDot = FALSE;
+					*(filename++) = '.';	// Only add the dot if there's an extension
+				}
+				*(filename++) = toupper(c);
+			}
+			if (c == '?')
+				unique = FALSE;
+			++i;
+		}
+	} else {
+		for( i=0; i<8; ++i ) {
+			*(filename++) = '?';
+		}
+		*(filename++) = '.';
+		for( i=0; i<3; ++i ) {
+			*(filename++) = '?';
+		}
+		unique = FALSE;
 	}
 	*filename = 0x00;
 
@@ -220,12 +234,12 @@ uint8 _OpenFile(uint16 fcbaddr) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		if (_sys_openfile(&filename[0])) {
 
-			len = _FileSize(fcbaddr) / 128;	// Compute the len on the file in blocks
+			len = _FileSize(fcbaddr) / BlkSZ;	// Compute the len on the file in blocks
 
 			F->s1 = 0x00;
 			F->s2 = 0x00;
 	
-			F->rc = len > MaxRC ? 0x80 : (uint8)len;
+			F->rc = len > MaxRC ? MaxRC : (uint8)len;
 			for (i = 0; i < 16; ++i)	// Clean up AL
 				F->al[i] = 0x00;
 
@@ -283,7 +297,13 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
-		result = _findfirst(isdir);
+		allUsers = F->dr == '?';
+		allExtents = F->ex == '?';
+		if( allUsers ) {
+			result = _findfirstallusers(isdir);
+		} else {
+			result = _findfirst(isdir);
+		}
 	}
 	return(result);
 }
@@ -292,8 +312,13 @@ uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(tmpFCB);
 	uint8 result = 0xff;
 
-	if (!_SelectDisk(F->dr))
-		result = _findnext(isdir);
+	if (!_SelectDisk(F->dr)) {
+		if( allUsers ) {
+			result = _findnextallusers(isdir);
+		} else {
+			result = _findnext(isdir);
+		}
+	}
 	return(result);
 }
 
