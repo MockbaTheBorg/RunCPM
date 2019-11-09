@@ -46,10 +46,6 @@ static uint16 fileExtents = 0;
 static uint16 fileExtentsUsed = 0;
 static uint16 firstFreeAllocBlock;
 
-extern void _putcon(uint8 ch);		// Puts a character
-extern void _puts(const char *str);	// Puts a \0 terminated string
-extern void _puthex8(uint8 c);		// Puts a HH hex string
-
 void _mockupDirEntry() {
 	CPM_DIRENTRY *DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
 	uint8 blocks;
