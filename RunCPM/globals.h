@@ -161,7 +161,18 @@ static uint8	cDrive = 0;			// Currently selected drive
 static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
-
+static uint8	allUsers = FALSE; // true when dr is '?' in BDOS search first
+static uint8	allExtents = FALSE;// true when ex is '?' in BDOS search first
+static uint8	currFindUser = 0; // user number of current directory in BDOS search first on all user numbers
+static uint8	blockShift;			// disk allocation block shift
+static uint8	blockMask;			// disk allocation block mask
+static uint8	extentMask;			// disk extent mask
+static uint16	firstBlockAfterDir;	// first allocation block after directory
+static uint16	numAllocBlocks;	// # of allocation blocks on disk
+static uint8	extentsPerDirEntry;	// # of logical (16K) extents in a directory entry
+#define logicalExtentBytes (16*1024UL)
+static uint16	physicalExtentBytes;	// # bytes described by 1 directory entry
+	
 #define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
