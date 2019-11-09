@@ -19,15 +19,15 @@
 //#define iDEBUG		// Instruction debugger (PC only, for development)
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.7"
-#define VersionBCD 0x37
+#define VERSION	"3.8"
+#define VersionBCD 0x38
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
 /* Definition of which CCP to use (must define only one) */
-//#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
-#define CCP_DR
+#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
+//#define CCP_DR
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
@@ -161,14 +161,14 @@ static uint8	cDrive = 0;			// Currently selected drive
 static uint8	userCode = 0;		// Current user code
 static uint16	roVector = 0;
 static uint16	loginVector = 0;
-static uint8	allUsers = FALSE; // true when dr is '?' in BDOS search first
-static uint8	allExtents = FALSE;// true when ex is '?' in BDOS search first
-static uint8	currFindUser = 0; // user number of current directory in BDOS search first on all user numbers
+static uint8	allUsers = FALSE;	// true when dr is '?' in BDOS search first
+static uint8	allExtents = FALSE; // true when ex is '?' in BDOS search first
+static uint8	currFindUser = 0;	// user number of current directory in BDOS search first on all user numbers
 static uint8	blockShift;			// disk allocation block shift
 static uint8	blockMask;			// disk allocation block mask
 static uint8	extentMask;			// disk extent mask
 static uint16	firstBlockAfterDir;	// first allocation block after directory
-static uint16	numAllocBlocks;	// # of allocation blocks on disk
+static uint16	numAllocBlocks;		// # of allocation blocks on disk
 static uint8	extentsPerDirEntry;	// # of logical (16K) extents in a directory entry
 #define logicalExtentBytes (16*1024UL)
 static uint16	physicalExtentBytes;	// # bytes described by 1 directory entry

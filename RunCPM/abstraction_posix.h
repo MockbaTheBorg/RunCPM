@@ -21,8 +21,6 @@ lua_State *L;
 
 #define HostOS 0x02
 
-#include <ctype.h>
-
 #define BlkSZ 128	// CP/M block size
 #define BlkEX 128	// Number of blocks on an extension
 #define ExtSZ (BlkSZ * BlkEX)
