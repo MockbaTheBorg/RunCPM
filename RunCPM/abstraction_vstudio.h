@@ -1,6 +1,8 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#define NOF17	// This platform does not have the BDOS F17/F18 patch
+
 /* see main.c for definition */
 
 #ifdef _WIN32
@@ -62,6 +64,14 @@ typedef struct {
 	uint8 al[16];
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
+
+typedef struct {
+	uint8 dr;
+	uint8 fn[8];
+	uint8 tp[3];
+	uint8 ex, s1, s2, rc;
+	uint8 al[16];
+} CPM_DIRENTRY;
 
 BOOL _sys_exists(uint8 *filename) {
 	return(GetFileAttributesA((char*)filename) != INVALID_FILE_ATTRIBUTES);

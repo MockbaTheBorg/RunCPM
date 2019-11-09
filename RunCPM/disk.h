@@ -23,7 +23,7 @@ Disk errors
 FCB related numbers
 */
 #define BlkSZ 128	// CP/M block size
-#define BlkEX 128	// Number of blocks on an extension
+#define	BlkEX 128	// Number of blocks on an extension
 #define BlkS2 4096	// Number of blocks on a S2 (module)
 #define MaxCR 128	// Maximum value the CR field can take
 #define MaxRC 128	// Maximum value the RC field can take
@@ -56,7 +56,7 @@ int _SelectDisk(uint8 dr) {
 	uint8 result = 0xff;
 	uint8 disk[2] = { 'A', 0 };
 
-	if (!dr || dr=='?') {
+	if (!dr || dr == '?') {
 		dr = cDrive;	// This will set dr to defDisk in case no disk is passed
 	} else {
 		--dr;			// Called from BDOS, set dr back to 0=A: format
@@ -80,7 +80,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	uint8 unique = TRUE;
 	uint8 c;
 
-	if (F->dr && F->dr!='?') {
+	if (F->dr && F->dr != '?') {
 		*(filename++) = (F->dr - 1) + 'A';
 	} else {
 		*(filename++) = cDrive + 'A';
@@ -90,7 +90,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	*(filename++) = toupper(tohex(userCode));
 	*(filename++) = FOLDERCHAR;
 
-	if( F->dr != '?' ) {
+	if (F->dr != '?') {
 		while (i < 8) {
 			c = F->fn[i] & 0x7F;
 			if (c > 32)
@@ -105,7 +105,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 			if (c > 32) {
 				if (addDot) {
 					addDot = FALSE;
-					*(filename++) = '.';	// Only add the dot if there's an extension
+					*(filename++) = '.';  // Only add the dot if there's an extension
 				}
 				*(filename++) = toupper(c);
 			}
@@ -114,11 +114,11 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 			++i;
 		}
 	} else {
-		for( i=0; i<8; ++i ) {
+		for (i = 0; i < 8; ++i) {
 			*(filename++) = '?';
 		}
 		*(filename++) = '.';
-		for( i=0; i<3; ++i ) {
+		for (i = 0; i < 3; ++i) {
 			*(filename++) = '?';
 		}
 		unique = FALSE;
@@ -299,11 +299,15 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		allUsers = F->dr == '?';
 		allExtents = F->ex == '?';
+#ifndef NOF17
 		if( allUsers ) {
 			result = _findfirstallusers(isdir);
 		} else {
 			result = _findfirst(isdir);
 		}
+#else
+		result = _findfirst(isdir);
+#endif
 	}
 	return(result);
 }
@@ -313,11 +317,15 @@ uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
+#ifndef NOF17
 		if( allUsers ) {
 			result = _findnextallusers(isdir);
 		} else {
 			result = _findnext(isdir);
 		}
+#else
+		result = _findnext(isdir);
+#endif
 	}
 	return(result);
 }
