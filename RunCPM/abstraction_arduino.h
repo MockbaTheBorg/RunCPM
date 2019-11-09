@@ -18,6 +18,14 @@
 #define HostOS 0x06
 #endif
 
+#include <ctype.h>
+
+#define BlkSZ 128	// CP/M block size
+#define BlkEX 128	// Number of blocks on an extension
+#define ExtSZ (BlkSZ * BlkEX)
+#define MaxEX 31	// Maximum value the EX field can take
+#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
+
 /* Memory abstraction functions */
 /*===============================================================================*/
 bool _RamLoad(char *filename, uint16 address) {
@@ -35,8 +43,10 @@ bool _RamLoad(char *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-File root;
+File rootdir,userdir;
 #define FOLDERCHAR '/'
+
+static dir_t   fileDirEntry;
 
 typedef struct {
 	uint8 dr;
@@ -47,19 +57,27 @@ typedef struct {
 	uint8 cr, r0, r1, r2;
 } CPM_FCB;
 
+typedef struct {
+	uint8 dr;
+	uint8 fn[8];
+	uint8 tp[3];
+	uint8 ex, s1, s2, rc;
+	uint8 al[16];
+} CPM_DIRENTRY;
+
 File _sys_fopen_w(uint8 *filename) {
 	return(SD.open((char *)filename, O_CREAT | O_WRITE));
 }
 
-int _sys_fputc(int ch, File f) {
+int _sys_fputc(uint8 ch, File &f) {
 	return(f.write(ch));
 }
 
-void _sys_fflush(File f) {
+void _sys_fflush(File &f) {
 	f.flush();
 }
 
-void _sys_fclose(File f) {
+void _sys_fclose(File &f) {
   f.close();
 }
 
@@ -97,6 +115,7 @@ int _sys_openfile(uint8 *filename) {
 	digitalWrite(LED, HIGH^LEDinv);
 	f = SD.open((char *)filename, O_READ);
 	if (f) {
+		f.dirEntry(&fileDirEntry);
 		f.close();
 		result = 1;
 	}
@@ -168,7 +187,7 @@ bool _sys_extendfile(char *fn, unsigned long fpos)
 	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > f.size()) {
 			for (i = 0; i < f.size() - fpos; ++i) {
-				if (f.write((uint8_t)0) != 1) {
+				if (f.write((uint8)0) != 1) {
 					result = false;
 					break;
 				}
@@ -186,7 +205,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 	uint8 bytesread;
-	uint8 dmabuf[128];
+	uint8 dmabuf[BlkSZ];
 	uint8 i;
 
 	digitalWrite(LED, HIGH^LEDinv);
@@ -194,11 +213,11 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 		f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
-			for (i = 0; i < 128; ++i)
+			for (i = 0; i < BlkSZ; ++i)
 				dmabuf[i] = 0x1a;
-			bytesread = f.read(&dmabuf[0], 128);
+			bytesread = f.read(&dmabuf[0], BlkSZ);
 			if (bytesread) {
-				for (i = 0; i < 128; ++i)
+				for (i = 0; i < BlkSZ; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
@@ -222,7 +241,7 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 		f = SD.open((char*)filename, O_RDWR);
 	if (f) {
 		if (f.seek(fpos)) {
-			if (f.write(_RamSysAddr(dmaAddr), 128))
+			if (f.write(_RamSysAddr(dmaAddr), BlkSZ))
 				result = 0x00;
 		} else {
 			result = 0x01;
@@ -239,24 +258,34 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 	uint8 bytesread;
-	uint8 dmabuf[128];
+	uint8 dmabuf[BlkSZ];
 	uint8 i;
+	long extSize;
 
 	digitalWrite(LED, HIGH^LEDinv);
-	if (_sys_extendfile((char*)filename, fpos))
-		f = SD.open((char*)filename, O_READ);
+	f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
-			for (i = 0; i < 128; ++i)
+			for (i = 0; i < BlkSZ; ++i)
 				dmabuf[i] = 0x1a;
-			bytesread = f.read(&dmabuf[0], 128);
+			bytesread = f.read(&dmabuf[0], BlkSZ);
 			if (bytesread) {
-				for (i = 0; i < 128; ++i)
+				for (i = 0; i < BlkSZ; ++i)
 					_RamWrite(dmaAddr + i, dmabuf[i]);
 			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
-			result = 0x06;
+		   if (fpos >= 65536L * BlkSZ) {
+		   	result = 0x06;	// seek past 8MB (largest file size in CP/M)
+			} else {
+				extSize = f.size();
+				// round file size up to next full logical extent
+				extSize = ExtSZ * ((extSize / ExtSZ) + ((extSize % ExtSZ) ? 1 : 0));
+				if (fpos < extSize)
+					result = 0x01;	// reading unwritten data
+				else
+					result = 0x04; // seek to unwritten extent
+			}
 		}
 		f.close();
 	} else {
@@ -276,7 +305,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	}
 	if (f) {
 		if (f.seek(fpos)) {
-			if (f.write(_RamSysAddr(dmaAddr), 128))
+			if (f.write(_RamSysAddr(dmaAddr), BlkSZ))
 				result = 0x00;
 		} else {
 			result = 0x06;
@@ -289,29 +318,103 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	return(result);
 }
 
+static uint8 findNextDirName[13];
+static uint16 fileRecords = 0;
+static uint16 fileExtents = 0;
+static uint16 fileExtentsUsed = 0;
+static uint16 firstFreeAllocBlock;
+
+void _mockupDirEntry() {
+	CPM_DIRENTRY *DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
+	uint8 blocks;
+
+	for (uint8 i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
+		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
+	}
+	_HostnameToFCB(dmaAddr, findNextDirName);
+
+	if (allUsers) {
+		DE->dr = currFindUser; // set user code for return
+	} else {
+		DE->dr = userCode;
+	}
+	// does file fit in a single directory entry?
+	if (fileExtents <= extentsPerDirEntry) {
+		if (fileExtents) {
+			DE->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
+			DE->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
+			DE->rc = fileRecords - (BlkEX * (fileExtents - 1));
+		}
+		blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
+		fileRecords = 0;
+		fileExtents = 0;
+		fileExtentsUsed = 0;
+	} else { // no, max out the directory entry
+		DE->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
+		DE->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
+		DE->rc = BlkEX;
+		blocks = numAllocBlocks<256 ? 16 : 8;
+		// update remaining records and extents for next call
+		fileRecords -= BlkEX * extentsPerDirEntry;
+		fileExtents -= extentsPerDirEntry;
+		fileExtentsUsed += extentsPerDirEntry;
+	}
+	// phoney up an appropriate number of allocation blocks
+	if (numAllocBlocks < 256) {
+		for (uint8 i = 0; i < blocks; ++i) {
+			DE->al[i] = firstFreeAllocBlock++;
+		}
+	} else {
+		for (uint8 i = 0; i < 2 * blocks; i += 2) {
+			DE->al[i] = lowByte(firstFreeAllocBlock);
+			DE->al[i+1] = highByte(firstFreeAllocBlock);
+			++firstFreeAllocBlock;
+		}
+	}
+}
+
 uint8 _findnext(uint8 isdir) {
 	File f;
 	uint8 result = 0xff;
-	uint8 dirname[13];
 	bool isfile;
+	uint32 bytes;
 
 	digitalWrite(LED, HIGH^LEDinv);
-	while (f = root.openNextFile()) {
-    f.getName((char*)&dirname[0], 13);
-		isfile = !f.isDirectory();
-		f.close();
-		if (!isfile)
-			continue;
-		_HostnameToFCBname(dirname, fcbname);
-		if (match(fcbname, pattern)) {
-			if (isdir) {
-				_HostnameToFCB(dmaAddr, dirname);
-				_RamWrite(dmaAddr, 0x00);
+	if( allExtents && fileRecords ) {
+		_mockupDirEntry();
+		result = 0;
+	} else {
+		while (f = userdir.openNextFile()) {
+			f.getName((char*)&findNextDirName[0], 13);
+			isfile = !f.isDirectory();
+			bytes = f.size();
+			f.dirEntry(&fileDirEntry);
+			f.close();
+			if (!isfile)
+				continue;
+			_HostnameToFCBname(findNextDirName, fcbname);
+			if (match(fcbname, pattern)) {
+				if (isdir) {
+					// account for host files that aren't multiples of the block size
+					// by rounding their bytes up to the next multiple of blocks
+					if (bytes & (BlkSZ-1)) {
+						bytes = (bytes & ~(BlkSZ-1)) + BlkSZ;
+					}
+					fileRecords = bytes/BlkSZ;
+					fileExtents = fileRecords/BlkEX + ((fileRecords & (BlkEX-1)) ? 1 : 0);
+					firstFreeAllocBlock = firstBlockAfterDir;
+					_mockupDirEntry();
+				} else {
+					fileRecords = 0;
+					fileExtents = 0;
+					fileExtentsUsed = 0;
+					firstFreeAllocBlock = firstBlockAfterDir;
+				}
+				_RamWrite(tmpFCB, filename[0] - '@');
+				_HostnameToFCB(tmpFCB, findNextDirName);
+				result = 0x00;
+				break;
 			}
-			_RamWrite(tmpFCB, filename[0] - '@');
-			_HostnameToFCB(tmpFCB, dirname);
-			result = 0x00;
-			break;
 		}
 	}
 	digitalWrite(LED, LOW^LEDinv);
@@ -322,11 +425,66 @@ uint8 _findfirst(uint8 isdir) {
 	uint8 path[4] = { '?', FOLDERCHAR, '?', 0 };
 	path[0] = filename[0];
 	path[2] = filename[2];
-	if (root)
-		root.close();
-	root = SD.open((char *)path); // Set directory search to start from the first position
+	if (userdir)
+		userdir.close();
+	userdir = SD.open((char *)path); // Set directory search to start from the first position
 	_HostnameToFCBname(filename, pattern);
+	fileRecords = 0;
+	fileExtents = 0;
+	fileExtentsUsed = 0;
 	return(_findnext(isdir));
+}
+
+uint8 _findnextallusers(uint8 isdir) {
+	uint8 result = 0xFF;
+	char dirname[13];
+	bool done = false;
+
+	while (!done) {
+		while (!userdir) {
+			userdir = rootdir.openNextFile();
+			if (!userdir) {
+				done = true;
+				break;
+			}
+			userdir.getName(dirname,sizeof dirname);
+			if (userdir.isDirectory() && strlen(dirname)==1 && isxdigit(dirname[0])) {
+				currFindUser = dirname[0]<='9' ? dirname[0]-'0' : toupper(dirname[0])-'A'+10;
+				break;
+			}
+			userdir.close();
+		}
+		if (userdir) {
+			result = _findnext(isdir);
+			if (result) {
+				userdir.close();
+			} else {
+				done = true;
+			}
+		} else {
+			result = 0xFF;
+			done = true;
+		}
+	}
+	return result;
+}
+
+uint8 _findfirstallusers(uint8 isdir) {
+	uint8 path[2] = { '?', 0 };
+
+	path[0] = filename[0];
+	if (rootdir)
+		rootdir.close();
+	if (userdir)
+		userdir.close();
+	rootdir = SD.open((char *)path); // Set directory search to start from the first position
+	strcpy((char*)pattern,"???????????");
+	if (!rootdir)
+		return 0xFF;
+	fileRecords = 0;
+	fileExtents = 0;
+	fileExtentsUsed = 0;
+	return(_findnextallusers(isdir));
 }
 
 uint8 _Truncate(char *filename, uint8 rc) {
@@ -336,7 +494,7 @@ uint8 _Truncate(char *filename, uint8 rc) {
   digitalWrite(LED, HIGH^LEDinv);
   f = SD.open((char *)filename, O_WRITE | O_APPEND);
   if (f) {
-    if (f.truncate(rc*128)) {
+    if (f.truncate(rc*BlkSZ)) {
       f.close();
       result = 1;
     }
