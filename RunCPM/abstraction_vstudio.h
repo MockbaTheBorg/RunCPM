@@ -238,6 +238,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 bytesread;
 	uint8 dmabuf[128];
 	uint8 i;
+	long extSize;
 
 	FILE *file = _sys_fopen_r(&filename[0]);
 	if (file != NULL) {
@@ -251,7 +252,18 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
-			result = 0x06;
+		   if (fpos >= 65536L * 128) {
+		   	result = 0x06;	// seek past 8MB (largest file size in CP/M)
+			} else {
+				_sys_fseek(file, 0, SEEK_END);
+				extSize = _sys_ftell(file);
+				// round file size up to next full logical extent
+				extSize = 16384 * ((extSize / 16384) + ((extSize % 16384) ? 1 : 0));
+				if (fpos < extSize)
+					result = 0x01;	// reading unwritten data
+				else
+					result = 0x04; // seek to unwritten extent
+			}
 		}
 		_sys_fclose(file);
 	} else {
