@@ -207,8 +207,7 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	uint8 i;
 
 	digitalWrite(LED, HIGH^LEDinv);
-	if (_sys_extendfile((char*)filename, fpos))
-		f = SD.open((char*)filename, O_READ);
+	f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
 			for (i = 0; i < BlkSZ; ++i)
