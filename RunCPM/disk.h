@@ -454,7 +454,8 @@ uint8 _ReadRand(uint16 fcbaddr) {
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		result = _sys_readrand(&filename[0], fpos);
-		if (!result) {	// Read succeeded, adjust FCB
+		if (result == 0 || result == 1 || result == 4) {
+			// adjust FCB unless error #6 (seek past 8MB - max CP/M file & disk size)
 			F->cr = record & 0x7F;
 			F->ex = (record >> 7) & 0x1f;
 			F->s2 = (record >> 12) & 0xff;
