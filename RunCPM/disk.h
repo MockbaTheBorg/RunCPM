@@ -19,17 +19,6 @@ Disk errors
 
 #define RW	(roVector & (1 << F->dr))
 
-/*
-FCB related numbers
-*/
-#define BlkSZ 128	// CP/M block size
-#define	BlkEX 128	// Number of blocks on an extension
-#define BlkS2 4096	// Number of blocks on a S2 (module)
-#define MaxCR 128	// Maximum value the CR field can take
-#define MaxRC 128	// Maximum value the RC field can take
-#define MaxEX 31	// Maximum value the EX field can take
-#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
-
 void _error(uint8 error) {
 	_puts("\r\nBdos Error on ");
 	_putcon('A' + cDrive);
@@ -73,9 +62,9 @@ int _SelectDisk(uint8 dr) {
 	return(result);
 }
 
-uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
+uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 	uint8 addDot = TRUE;
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 	uint8 unique = TRUE;
 	uint8 c;
@@ -128,8 +117,8 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *filename) {
 	return(unique);
 }
 
-void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+void _HostnameToFCB(uint16 fcbaddr, uint8* filename) {
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
 
 	++filename;
@@ -162,7 +151,7 @@ void _HostnameToFCB(uint16 fcbaddr, uint8 *filename) {
 	}
 }
 
-void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.TXT) to FCB name (AB      TXT)
+void _HostnameToFCBname(uint8* from, uint8* to) {	// Converts a string name (AB.TXT) to FCB name (AB      TXT)
 	int i = 0;
 
 	++from;
@@ -194,7 +183,56 @@ void _HostnameToFCBname(uint8 *from, uint8 *to) {	// Converts a string name (AB.
 	*to = 0;
 }
 
-uint8 match(uint8 *fcbname, uint8 *pattern) {
+void _mockupDirEntry(void) {
+	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
+	uint8 blocks;
+
+	for (uint8 i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
+		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
+	}
+	_HostnameToFCB(dmaAddr, (uint8*)findNextDirName);
+
+	if (allUsers) {
+		DE->dr = currFindUser; // set user code for return
+	} else {
+		DE->dr = userCode;
+	}
+	// does file fit in a single directory entry?
+	if (fileExtents <= extentsPerDirEntry) {
+		if (fileExtents) {
+			DE->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
+			DE->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
+			DE->rc = fileRecords - (BlkEX * (fileExtents - 1));
+		}
+		blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
+		fileRecords = 0;
+		fileExtents = 0;
+		fileExtentsUsed = 0;
+	} else { // no, max out the directory entry
+		DE->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
+		DE->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
+		DE->rc = BlkEX;
+		blocks = numAllocBlocks < 256 ? 16 : 8;
+		// update remaining records and extents for next call
+		fileRecords -= BlkEX * extentsPerDirEntry;
+		fileExtents -= extentsPerDirEntry;
+		fileExtentsUsed += extentsPerDirEntry;
+	}
+	// phoney up an appropriate number of allocation blocks
+	if (numAllocBlocks < 256) {
+		for (uint8 i = 0; i < blocks; ++i) {
+			DE->al[i] = (uint8)firstFreeAllocBlock++;
+		}
+	} else {
+		for (uint8 i = 0; i < 2 * blocks; i += 2) {
+			DE->al[i] = firstFreeAllocBlock & 0xFF;
+			DE->al[i + 1] = firstFreeAllocBlock >> 8;
+			++firstFreeAllocBlock;
+		}
+	}
+}
+
+uint8 match(uint8* fcbname, uint8* pattern) {
 	uint8 result = 1;
 	uint8 i;
 
@@ -211,7 +249,7 @@ uint8 match(uint8 *fcbname, uint8 *pattern) {
 }
 
 long _FileSize(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	long r, l = -1;
 
 	if (!_SelectDisk(F->dr)) {
@@ -225,7 +263,7 @@ long _FileSize(uint16 fcbaddr) {
 }
 
 uint8 _OpenFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	long len;
 	int32 i;
@@ -238,7 +276,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 
 			F->s1 = 0x00;
 			F->s2 = 0x00;
-	
+
 			F->rc = len > MaxRC ? MaxRC : (uint8)len;
 			for (i = 0; i < 16; ++i)	// Clean up AL
 				F->al[i] = 0x00;
@@ -250,7 +288,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 }
 
 uint8 _CloseFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -267,7 +305,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 }
 
 uint8 _MakeFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	uint8 i;
 
@@ -292,48 +330,40 @@ uint8 _MakeFile(uint16 fcbaddr) {
 }
 
 uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		allUsers = F->dr == '?';
 		allExtents = F->ex == '?';
-#ifndef NOF17
-		if( allUsers ) {
+		if (allUsers) {
 			result = _findfirstallusers(isdir);
 		} else {
 			result = _findfirst(isdir);
 		}
-#else
-		result = _findfirst(isdir);
-#endif
 	}
 	return(result);
 }
 
 uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(tmpFCB);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(tmpFCB);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
-#ifndef NOF17
-		if( allUsers ) {
+		if (allUsers) {
 			result = _findnextallusers(isdir);
 		} else {
 			result = _findnext(isdir);
 		}
-#else
-		result = _findnext(isdir);
-#endif
 	}
 	return(result);
 }
 
 uint8 _DeleteFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 #if defined(USE_PUN) || defined(USE_LST)
-	CPM_FCB *T = (CPM_FCB*)_RamSysAddr(tmpFCB);
+	CPM_FCB* T = (CPM_FCB*)_RamSysAddr(tmpFCB);
 #endif
 	uint8 result = 0xff;
 	uint8 deleted = 0xff;
@@ -367,7 +397,7 @@ uint8 _DeleteFile(uint16 fcbaddr) {
 }
 
 uint8 _RenameFile(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	if (!_SelectDisk(F->dr)) {
@@ -385,12 +415,12 @@ uint8 _RenameFile(uint16 fcbaddr) {
 }
 
 uint8 _ReadSeq(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
-	long fpos =	((F->s2 & MaxS2) * BlkS2 * BlkSZ) + 
-				(F->ex * BlkEX * BlkSZ) + 
-				(F->cr * BlkSZ);
+	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+		(F->ex * BlkEX * BlkSZ) +
+		(F->cr * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
@@ -413,12 +443,12 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 }
 
 uint8 _WriteSeq(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
-	long fpos =	((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
-				(F->ex * BlkEX * BlkSZ) + 
-				(F->cr * BlkSZ);
+	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+		(F->ex * BlkEX * BlkSZ) +
+		(F->cr * BlkSZ);
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
@@ -445,7 +475,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 }
 
 uint8 _ReadRand(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
@@ -465,7 +495,7 @@ uint8 _ReadRand(uint16 fcbaddr) {
 }
 
 uint8 _WriteRand(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 
 	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
@@ -488,7 +518,7 @@ uint8 _WriteRand(uint16 fcbaddr) {
 }
 
 uint8 _GetFileSize(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
 	int32 count = _FileSize(DE) >> 7;
 
@@ -502,12 +532,12 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 }
 
 uint8 _SetRandom(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0x00;
 
 	int32 count = F->cr & 0x7f;
-		  count += (F->ex & 0x1f) << 7;
-		  count += F->s2 << 12;
+	count += (F->ex & 0x1f) << 7;
+	count += F->s2 << 12;
 
 	F->r0 = count & 0xff;
 	F->r1 = (count >> 8) & 0xff;
@@ -524,7 +554,7 @@ void _SetUser(uint8 user) {
 }
 
 uint8 _MakeDisk(uint16 fcbaddr) {
-	CPM_FCB *F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	return(_sys_makedisk(F->dr));
 }
 

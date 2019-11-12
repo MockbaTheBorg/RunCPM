@@ -26,7 +26,7 @@ static uint8 firstTime = TRUE;
 
 void _PatchCPM(void) {
 	uint16 i;
-   
+
 	//**********  Patch CP/M page zero into the memory  **********
 
 	/* BIOS entry point */
@@ -44,20 +44,20 @@ void _PatchCPM(void) {
 	_RamWrite(0x0005, JP);
 	_RamWrite16(0x0006, BDOSjmppage + 0x06);
 
-   if( firstTime ) {
-      //**********  Patch CP/M Version into the memory so the CCP can see it
-      _RamWrite16(BDOSjmppage, 0x1600);
-      _RamWrite16(BDOSjmppage + 2, 0x0000);
-      _RamWrite16(BDOSjmppage + 4, 0x0000);
+	if (firstTime) {
+		//**********  Patch CP/M Version into the memory so the CCP can see it
+		_RamWrite16(BDOSjmppage, 0x1600);
+		_RamWrite16(BDOSjmppage + 2, 0x0000);
+		_RamWrite16(BDOSjmppage + 4, 0x0000);
 
-      // Patches in the BDOS jump destination
-      _RamWrite(BDOSjmppage + 6, JP);
-      _RamWrite16(BDOSjmppage + 7, BDOSpage);
+		// Patches in the BDOS jump destination
+		_RamWrite(BDOSjmppage + 6, JP);
+		_RamWrite16(BDOSjmppage + 7, BDOSpage);
 
-      // Patches in the BDOS page content
-      _RamWrite(BDOSpage, INa);
-      _RamWrite(BDOSpage + 1, 0x00);
-      _RamWrite(BDOSpage + 2, RET);
+		// Patches in the BDOS page content
+		_RamWrite(BDOSpage, INa);
+		_RamWrite(BDOSpage + 1, 0x00);
+		_RamWrite(BDOSpage + 2, RET);
 
 		// Patches in the BIOS jump destinations
 		for (i = 0; i < 0x36; i = i + 3) {
@@ -72,49 +72,49 @@ void _PatchCPM(void) {
 			_RamWrite(BIOSpage + i + 2, RET);
 		}
 
-      //**********  Patch CP/M (fake) Disk Paramater Table after the BDOS call entry  **********
-      i = DPBaddr;
-      _RamWrite(i++, 64);  		/* spt - Sectors Per Track */
-      _RamWrite(i++, 0);
-      _RamWrite(i++, 5);   		/* bsh - Data allocation "Block Shift Factor" */
-      _RamWrite(i++, 0x1F);		/* blm - Data allocation Block Mask */
-      _RamWrite(i++, 1);   		/* exm - Extent Mask */
-      _RamWrite(i++, 0xFF);		/* dsm - Total storage capacity of the disk drive */
-      _RamWrite(i++, 0x07);
-      _RamWrite(i++, 255); 		/* drm - Number of the last directory entry */
-      _RamWrite(i++, 3);
-      _RamWrite(i++, 0xFF);		/* al0 */
-      _RamWrite(i++, 0x00);		/* al1 */
-      _RamWrite(i++, 0);   		/* cks - Check area Size */
-      _RamWrite(i++, 0);
-      _RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
-      _RamWrite(i++, 0x00);
-	  _RamWrite(i++, 0x20);		/* spt - Sectors Per Track */
-      blockShift = _RamRead(DPBaddr + 2);
-      blockMask = _RamRead(DPBaddr + 3);
-      extentMask = _RamRead(DPBaddr + 4);
-      numAllocBlocks = _RamRead16((DPBaddr + 5)) + 1;
-      extentsPerDirEntry = extentMask + 1;
+		//**********  Patch CP/M (fake) Disk Paramater Table after the BDOS call entry  **********
+		i = DPBaddr;
+		_RamWrite(i++, 64);  		/* spt - Sectors Per Track */
+		_RamWrite(i++, 0);
+		_RamWrite(i++, 5);   		/* bsh - Data allocation "Block Shift Factor" */
+		_RamWrite(i++, 0x1F);		/* blm - Data allocation Block Mask */
+		_RamWrite(i++, 1);   		/* exm - Extent Mask */
+		_RamWrite(i++, 0xFF);		/* dsm - Total storage capacity of the disk drive */
+		_RamWrite(i++, 0x07);
+		_RamWrite(i++, 255); 		/* drm - Number of the last directory entry */
+		_RamWrite(i++, 3);
+		_RamWrite(i++, 0xFF);		/* al0 */
+		_RamWrite(i++, 0x00);		/* al1 */
+		_RamWrite(i++, 0);   		/* cks - Check area Size */
+		_RamWrite(i++, 0);
+		_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
+		_RamWrite(i++, 0x00);
+		_RamWrite(i++, 0x20);		/* spt - Sectors Per Track */
+		blockShift = _RamRead(DPBaddr + 2);
+		blockMask = _RamRead(DPBaddr + 3);
+		extentMask = _RamRead(DPBaddr + 4);
+		numAllocBlocks = _RamRead16((DPBaddr + 5)) + 1;
+		extentsPerDirEntry = extentMask + 1;
 
-      // figure out the number of the first allocation block
-      // after the directory for the phoney allocation block
-      // list in _findnext()
-      firstBlockAfterDir = 0;
-      i = 0x80;
-      while (_RamRead(DPBaddr+9) & i) {
-         firstBlockAfterDir++;
-         i >>= 1;
-      }
-      if (_RamRead(DPBaddr+9) == 0xFF) {
-         i = 0x80;
-         while (_RamRead(DPBaddr+10) & i) {
-            firstBlockAfterDir++;
-            i >>= 1;
-         }
-      }
+		// figure out the number of the first allocation block
+		// after the directory for the phoney allocation block
+		// list in _findnext()
+		firstBlockAfterDir = 0;
+		i = 0x80;
+		while (_RamRead(DPBaddr + 9) & i) {
+			firstBlockAfterDir++;
+			i >>= 1;
+		}
+		if (_RamRead(DPBaddr + 9) == 0xFF) {
+			i = 0x80;
+			while (_RamRead(DPBaddr + 10) & i) {
+				firstBlockAfterDir++;
+				i >>= 1;
+			}
+		}
 		physicalExtentBytes = logicalExtentBytes * (extentMask + 1);
-      firstTime = FALSE;
-   }
+		firstTime = FALSE;
+	}
 }
 
 #ifdef DEBUGLOG
@@ -155,33 +155,33 @@ void _logMem(uint16 address, uint8 amount)	// Amount = number of 16 bytes lines,
 	}
 }
 
-void _logChar(char *txt, uint8 c) {
+void _logChar(char* txt, uint8 c) {
 	uint8 asc[2];
 
 	asc[0] = c > 31 && c < 127 ? c : '.';
 	asc[1] = 0;
-	sprintf((char *)LogBuffer, "        %s = %02xh:%3d (%s)\n", txt, c, c, asc);
+	sprintf((char*)LogBuffer, "        %s = %02xh:%3d (%s)\n", txt, c, c, asc);
 	_sys_logbuffer(LogBuffer);
 }
 
 void _logBiosIn(uint8 ch) {
-	static const char *BIOSCalls[18] =
+	static const char* BIOSCalls[18] =
 	{
 		"boot", "wboot", "const", "conin", "conout", "list", "punch/aux", "reader", "home", "seldsk", "settrk", "setsec", "setdma",
 		"read", "write", "listst", "sectran", "altwboot"
 	};
 	int index = ch / 3;
 	if (index < 18) {
-		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh (%s) IN:\n", ch, ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\nBios call: %3d/%02xh (%s) IN:\n", ch, ch, BIOSCalls[index]); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBios call: %3d/%02xh IN:\n", ch, ch); _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\nBios call: %3d/%02xh IN:\n", ch, ch); _sys_logbuffer(LogBuffer);
 	}
 
 	_logRegs();
 }
 
 void _logBiosOut(uint8 ch) {
-	sprintf((char *)LogBuffer, "               OUT:\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char*)LogBuffer, "               OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
@@ -189,7 +189,7 @@ void _logBdosIn(uint8 ch) {
 	uint16 address = 0;
 	uint8 size = 0;
 
-	static const char *CPMCalls[41] =
+	static const char* CPMCalls[41] =
 	{
 		"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
 		"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
@@ -199,9 +199,9 @@ void _logBdosIn(uint8 ch) {
 	};
 
 	if (ch < 41) {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh (%s) IN from 0x%04x:\n", ch, ch, CPMCalls[ch], _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\nBdos call: %3d/%02xh (%s) IN from 0x%04x:\n", ch, ch, CPMCalls[ch], _RamRead16(SP) - 3); _sys_logbuffer(LogBuffer);
 	} else {
-		sprintf((char *)LogBuffer, "\nBdos call: %3d/%02xh IN from 0x%04x:\n", ch, ch, _RamRead16(SP)-3); _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\nBdos call: %3d/%02xh IN from 0x%04x:\n", ch, ch, _RamRead16(SP) - 3); _sys_logbuffer(LogBuffer);
 	}
 	_logRegs();
 	switch (ch) {
@@ -230,7 +230,7 @@ void _logBdosIn(uint8 ch) {
 	case 34:
 	case 40:
 		address = DE; size = 3; _logMem(address, size);
-		sprintf((char *)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
 		address = dmaAddr; size = 8; break;
 	default:
 		break;
@@ -243,7 +243,7 @@ void _logBdosOut(uint8 ch) {
 	uint16 address = 0;
 	uint8 size = 0;
 
-	sprintf((char *)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
+	sprintf((char*)LogBuffer, "              OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 	switch (ch) {
 	case 1:
@@ -258,7 +258,7 @@ void _logBdosOut(uint8 ch) {
 	case 34:
 	case 40:
 		address = DE; size = 3; _logMem(address, size);
-		sprintf((char *)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
+		sprintf((char*)LogBuffer, "\n");  _sys_logbuffer(LogBuffer);
 		address = dmaAddr; size = 8; break;
 	case 26:
 		address = dmaAddr; size = 8; break;
@@ -511,7 +511,7 @@ void _Bdos(void) {
 				count--;
 				continue;
 			}
-			if (chr == 0x0A || chr == 0x0D)	{					// ^J and ^M
+			if (chr == 0x0A || chr == 0x0D) {					// ^J and ^M
 #ifdef PROFILE
 				time_start = millis();
 #endif
@@ -757,7 +757,7 @@ void _Bdos(void) {
 		C = 224 (E0h) : AnalogWrite
 		*/
 #ifndef ESP32
- 	case 224:
+	case 224:
 		analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 		break;
 #endif

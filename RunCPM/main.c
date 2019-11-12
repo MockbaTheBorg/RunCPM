@@ -27,22 +27,22 @@ shoud be kept the same.
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
-  #ifdef __DJGPP
-    #include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
-  #else
-    #include "abstraction_posix.h"
-  #endif
+#ifdef __DJGPP
+#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
+#else
+#include "abstraction_posix.h"
+#endif
 #endif
 
 // AUX: device configuration
 #ifdef USE_PUN
-FILE *pun_dev;
+FILE* pun_dev;
 int pun_open = FALSE;
 #endif
 
 // PRT: device configuration
 #ifdef USE_LST
-FILE *lst_dev;
+FILE* lst_dev;
 int lst_open = FALSE;
 #endif
 
@@ -56,7 +56,7 @@ int lst_open = FALSE;
 #include "ccp.h"		// ccp.h - Defines a simple internal CCP
 #endif
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
 #ifdef DEBUGLOG
 	_sys_deletefile((uint8*)LogName);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 #ifdef CCP_INTERNAL
 		_ccp();
 #else
-		if(!_sys_exists((uint8*)CCPname)) {
+		if (!_sys_exists((uint8*)CCPname)) {
 			_puts("Unable to load CP/M CCP.\r\nCPU halted.\r\n");
 			break;
 		}

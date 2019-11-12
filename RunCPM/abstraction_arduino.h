@@ -18,15 +18,9 @@
 #define HostOS 0x06
 #endif
 
-#define BlkSZ 128	// CP/M block size
-#define BlkEX 128	// Number of blocks on an extension
-#define ExtSZ (BlkSZ * BlkEX)
-#define MaxEX 31	// Maximum value the EX field can take
-#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
-
 /* Memory abstraction functions */
 /*===============================================================================*/
-bool _RamLoad(char *filename, uint16 address) {
+bool _RamLoad(char* filename, uint16 address) {
 	File f;
 	bool result = false;
 
@@ -41,10 +35,8 @@ bool _RamLoad(char *filename, uint16 address) {
 
 /* Filesystem (disk) abstraction fuctions */
 /*===============================================================================*/
-File rootdir,userdir;
+File rootdir, userdir;
 #define FOLDERCHAR '/'
-
-static dir_t   fileDirEntry;
 
 typedef struct {
 	uint8 dr;
@@ -63,110 +55,112 @@ typedef struct {
 	uint8 al[16];
 } CPM_DIRENTRY;
 
-File _sys_fopen_w(uint8 *filename) {
-	return(SD.open((char *)filename, O_CREAT | O_WRITE));
+static dir_t   fileDirEntry;
+
+File _sys_fopen_w(uint8* filename) {
+	return(SD.open((char*)filename, O_CREAT | O_WRITE));
 }
 
-int _sys_fputc(uint8 ch, File &f) {
+int _sys_fputc(uint8 ch, File& f) {
 	return(f.write(ch));
 }
 
-void _sys_fflush(File &f) {
+void _sys_fflush(File& f) {
 	f.flush();
 }
 
-void _sys_fclose(File &f) {
-  f.close();
+void _sys_fclose(File& f) {
+	f.close();
 }
 
-int _sys_select(uint8 *disk) {
+int _sys_select(uint8* disk) {
 	uint8 result = FALSE;
 	File f;
 
-	digitalWrite(LED, HIGH^LEDinv);
-	if (f = SD.open((char *)disk, O_READ)) {
+	digitalWrite(LED, HIGH ^ LEDinv);
+	if (f = SD.open((char*)disk, O_READ)) {
 		if (f.isDirectory())
 			result = TRUE;
 		f.close();
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-long _sys_filesize(uint8 *filename) {
+long _sys_filesize(uint8* filename) {
 	long l = -1;
 	File f;
 
-	digitalWrite(LED, HIGH^LEDinv);
-	if (f = SD.open((char *)filename, O_RDONLY)) {
+	digitalWrite(LED, HIGH ^ LEDinv);
+	if (f = SD.open((char*)filename, O_RDONLY)) {
 		l = f.size();
 		f.close();
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(l);
 }
 
-int _sys_openfile(uint8 *filename) {
+int _sys_openfile(uint8* filename) {
 	File f;
 	int result = 0;
 
-	digitalWrite(LED, HIGH^LEDinv);
-	f = SD.open((char *)filename, O_READ);
+	digitalWrite(LED, HIGH ^ LEDinv);
+	f = SD.open((char*)filename, O_READ);
 	if (f) {
 		f.dirEntry(&fileDirEntry);
 		f.close();
 		result = 1;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-int _sys_makefile(uint8 *filename) {
+int _sys_makefile(uint8* filename) {
 	File f;
 	int result = 0;
 
-	digitalWrite(LED, HIGH^LEDinv);
-	f = SD.open((char *)filename, O_CREAT | O_WRITE);
+	digitalWrite(LED, HIGH ^ LEDinv);
+	f = SD.open((char*)filename, O_CREAT | O_WRITE);
 	if (f) {
 		f.close();
 		result = 1;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-int _sys_deletefile(uint8 *filename) {
-	digitalWrite(LED, HIGH^LEDinv);
-	return(SD.remove((char *)filename));
-	digitalWrite(LED, LOW^LEDinv);
+int _sys_deletefile(uint8* filename) {
+	digitalWrite(LED, HIGH ^ LEDinv);
+	return(SD.remove((char*)filename));
+	digitalWrite(LED, LOW ^ LEDinv);
 }
 
-int _sys_renamefile(uint8 *filename, uint8 *newname) {
-  File f;
-  int result = 0;
+int _sys_renamefile(uint8* filename, uint8* newname) {
+	File f;
+	int result = 0;
 
-  digitalWrite(LED, HIGH^LEDinv);
-  f = SD.open((char *)filename, O_WRITE | O_APPEND);
-  if (f) {
-    if (f.rename(SD.vwd(), (char*)newname)) {
-      f.close();      
-      result = 1;
-    }
-  }
-  digitalWrite(LED, LOW^LEDinv);
-  return(result);
+	digitalWrite(LED, HIGH ^ LEDinv);
+	f = SD.open((char*)filename, O_WRITE | O_APPEND);
+	if (f) {
+		if (f.rename(SD.vwd(), (char*)newname)) {
+			f.close();
+			result = 1;
+		}
+	}
+	digitalWrite(LED, LOW ^ LEDinv);
+	return(result);
 }
 
 #ifdef DEBUGLOG
-void _sys_logbuffer(uint8 *buffer) {
+void _sys_logbuffer(uint8* buffer) {
 #ifdef CONSOLELOG
-	puts((char *)buffer);
+	puts((char*)buffer);
 #else
 	File f;
 	uint8 s = 0;
-	while (*(buffer+s))	// Computes buffer size
+	while (*(buffer + s))	// Computes buffer size
 		++s;
-	if(f = SD.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
+	if (f = SD.open(LogName, O_CREAT | O_APPEND | O_WRITE)) {
 		f.write(buffer, s);
 		f.flush();
 		f.close();
@@ -175,13 +169,13 @@ void _sys_logbuffer(uint8 *buffer) {
 }
 #endif
 
-bool _sys_extendfile(char *fn, unsigned long fpos)
+bool _sys_extendfile(char* fn, unsigned long fpos)
 {
 	uint8 result = true;
 	File f;
 	unsigned long i;
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	if (f = SD.open(fn, O_WRITE | O_APPEND)) {
 		if (fpos > f.size()) {
 			for (i = 0; i < f.size() - fpos; ++i) {
@@ -195,18 +189,18 @@ bool _sys_extendfile(char *fn, unsigned long fpos)
 	} else {
 		result = false;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-uint8 _sys_readseq(uint8 *filename, long fpos) {
+uint8 _sys_readseq(uint8* filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 	uint8 bytesread;
 	uint8 dmabuf[BlkSZ];
 	uint8 i;
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
@@ -225,15 +219,15 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-uint8 _sys_writeseq(uint8 *filename, long fpos) {
+uint8 _sys_writeseq(uint8* filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	if (_sys_extendfile((char*)filename, fpos))
 		f = SD.open((char*)filename, O_RDWR);
 	if (f) {
@@ -247,11 +241,11 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-uint8 _sys_readrand(uint8 *filename, long fpos) {
+uint8 _sys_readrand(uint8* filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 	uint8 bytesread;
@@ -259,7 +253,7 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	uint8 i;
 	long extSize;
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	f = SD.open((char*)filename, O_READ);
 	if (f) {
 		if (f.seek(fpos)) {
@@ -272,8 +266,8 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 			}
 			result = bytesread ? 0x00 : 0x01;
 		} else {
-		   if (fpos >= 65536L * BlkSZ) {
-		   	result = 0x06;	// seek past 8MB (largest file size in CP/M)
+			if (fpos >= 65536L * BlkSZ) {
+				result = 0x06;	// seek past 8MB (largest file size in CP/M)
 			} else {
 				extSize = f.size();
 				// round file size up to next full logical extent
@@ -288,15 +282,15 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
-uint8 _sys_writerand(uint8 *filename, long fpos) {
+uint8 _sys_writerand(uint8* filename, long fpos) {
 	uint8 result = 0xff;
 	File f;
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	if (_sys_extendfile((char*)filename, fpos)) {
 		f = SD.open((char*)filename, O_RDWR);
 	}
@@ -311,7 +305,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
 	} else {
 		result = 0x10;
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
@@ -321,63 +315,14 @@ static uint16 fileExtents = 0;
 static uint16 fileExtentsUsed = 0;
 static uint16 firstFreeAllocBlock;
 
-void _mockupDirEntry() {
-	CPM_DIRENTRY *DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
-	uint8 blocks;
-
-	for (uint8 i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
-		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	}
-	_HostnameToFCB(dmaAddr, findNextDirName);
-
-	if (allUsers) {
-		DE->dr = currFindUser; // set user code for return
-	} else {
-		DE->dr = userCode;
-	}
-	// does file fit in a single directory entry?
-	if (fileExtents <= extentsPerDirEntry) {
-		if (fileExtents) {
-			DE->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
-			DE->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
-			DE->rc = fileRecords - (BlkEX * (fileExtents - 1));
-		}
-		blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
-		fileRecords = 0;
-		fileExtents = 0;
-		fileExtentsUsed = 0;
-	} else { // no, max out the directory entry
-		DE->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
-		DE->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
-		DE->rc = BlkEX;
-		blocks = numAllocBlocks<256 ? 16 : 8;
-		// update remaining records and extents for next call
-		fileRecords -= BlkEX * extentsPerDirEntry;
-		fileExtents -= extentsPerDirEntry;
-		fileExtentsUsed += extentsPerDirEntry;
-	}
-	// phoney up an appropriate number of allocation blocks
-	if (numAllocBlocks < 256) {
-		for (uint8 i = 0; i < blocks; ++i) {
-			DE->al[i] = firstFreeAllocBlock++;
-		}
-	} else {
-		for (uint8 i = 0; i < 2 * blocks; i += 2) {
-			DE->al[i] = lowByte(firstFreeAllocBlock);
-			DE->al[i+1] = highByte(firstFreeAllocBlock);
-			++firstFreeAllocBlock;
-		}
-	}
-}
-
 uint8 _findnext(uint8 isdir) {
 	File f;
 	uint8 result = 0xff;
 	bool isfile;
 	uint32 bytes;
 
-	digitalWrite(LED, HIGH^LEDinv);
-	if( allExtents && fileRecords ) {
+	digitalWrite(LED, HIGH ^ LEDinv);
+	if (allExtents && fileRecords) {
 		_mockupDirEntry();
 		result = 0;
 	} else {
@@ -394,11 +339,11 @@ uint8 _findnext(uint8 isdir) {
 				if (isdir) {
 					// account for host files that aren't multiples of the block size
 					// by rounding their bytes up to the next multiple of blocks
-					if (bytes & (BlkSZ-1)) {
-						bytes = (bytes & ~(BlkSZ-1)) + BlkSZ;
+					if (bytes & (BlkSZ - 1)) {
+						bytes = (bytes & ~(BlkSZ - 1)) + BlkSZ;
 					}
-					fileRecords = bytes/BlkSZ;
-					fileExtents = fileRecords/BlkEX + ((fileRecords & (BlkEX-1)) ? 1 : 0);
+					fileRecords = bytes / BlkSZ;
+					fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
 					firstFreeAllocBlock = firstBlockAfterDir;
 					_mockupDirEntry();
 				} else {
@@ -414,7 +359,7 @@ uint8 _findnext(uint8 isdir) {
 			}
 		}
 	}
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 	return(result);
 }
 
@@ -424,7 +369,7 @@ uint8 _findfirst(uint8 isdir) {
 	path[2] = filename[2];
 	if (userdir)
 		userdir.close();
-	userdir = SD.open((char *)path); // Set directory search to start from the first position
+	userdir = SD.open((char*)path); // Set directory search to start from the first position
 	_HostnameToFCBname(filename, pattern);
 	fileRecords = 0;
 	fileExtents = 0;
@@ -444,9 +389,9 @@ uint8 _findnextallusers(uint8 isdir) {
 				done = true;
 				break;
 			}
-			userdir.getName(dirname,sizeof dirname);
-			if (userdir.isDirectory() && strlen(dirname)==1 && isxdigit(dirname[0])) {
-				currFindUser = dirname[0]<='9' ? dirname[0]-'0' : toupper(dirname[0])-'A'+10;
+			userdir.getName(dirname, sizeof dirname);
+			if (userdir.isDirectory() && strlen(dirname) == 1 && isxdigit(dirname[0])) {
+				currFindUser = dirname[0] <= '9' ? dirname[0] - '0' : toupper(dirname[0]) - 'A' + 10;
 				break;
 			}
 			userdir.close();
@@ -474,8 +419,8 @@ uint8 _findfirstallusers(uint8 isdir) {
 		rootdir.close();
 	if (userdir)
 		userdir.close();
-	rootdir = SD.open((char *)path); // Set directory search to start from the first position
-	strcpy((char*)pattern,"???????????");
+	rootdir = SD.open((char*)path); // Set directory search to start from the first position
+	strcpy((char*)pattern, "???????????");
 	if (!rootdir)
 		return 0xFF;
 	fileRecords = 0;
@@ -484,20 +429,20 @@ uint8 _findfirstallusers(uint8 isdir) {
 	return(_findnextallusers(isdir));
 }
 
-uint8 _Truncate(char *filename, uint8 rc) {
-  File f;
-  int result = 0;
+uint8 _Truncate(char* filename, uint8 rc) {
+	File f;
+	int result = 0;
 
-  digitalWrite(LED, HIGH^LEDinv);
-  f = SD.open((char *)filename, O_WRITE | O_APPEND);
-  if (f) {
-    if (f.truncate(rc*BlkSZ)) {
-      f.close();
-      result = 1;
-    }
-  }
-  digitalWrite(LED, LOW^LEDinv);
-  return(result);
+	digitalWrite(LED, HIGH ^ LEDinv);
+	f = SD.open((char*)filename, O_WRITE | O_APPEND);
+	if (f) {
+		if (f.truncate(rc * BlkSZ)) {
+			f.close();
+			result = 1;
+		}
+	}
+	digitalWrite(LED, LOW ^ LEDinv);
+	return(result);
 }
 
 void _MakeUserDir() {
@@ -506,9 +451,9 @@ void _MakeUserDir() {
 
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
 
-	digitalWrite(LED, HIGH^LEDinv);
+	digitalWrite(LED, HIGH ^ LEDinv);
 	SD.mkdir((char*)path);
-	digitalWrite(LED, LOW^LEDinv);
+	digitalWrite(LED, LOW ^ LEDinv);
 }
 
 uint8 _sys_makedisk(uint8 drive) {
@@ -518,14 +463,14 @@ uint8 _sys_makedisk(uint8 drive) {
 	} else {
 		uint8 dFolder = drive + '@';
 		uint8 disk[2] = { dFolder, 0 };
-		digitalWrite(LED, HIGH^LEDinv);
+		digitalWrite(LED, HIGH ^ LEDinv);
 		if (!SD.mkdir((char*)disk)) {
 			result = 0xfe;
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
 			SD.mkdir((char*)path);
 		}
-		digitalWrite(LED, LOW^LEDinv);
+		digitalWrite(LED, LOW ^ LEDinv);
 	}
 
 	return(result);

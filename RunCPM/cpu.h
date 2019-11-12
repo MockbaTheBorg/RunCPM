@@ -24,9 +24,9 @@ int32 Break = -1;
 int32 Step = -1;
 
 #ifdef iDEBUG
-FILE *iLogFile;
+FILE* iLogFile;
 char iLogBuffer[16];
-const char *iLogTxt;
+const char* iLogTxt;
 #endif
 
 /*
@@ -882,7 +882,7 @@ static const uint8 cpTable[256] = {
 };
 
 #if defined(DEBUG) || defined(iDEBUG)
-static const char *Mnemonics[256] =
+static const char* Mnemonics[256] =
 {
 	"NOP", "LD BC,#h", "LD (BC),A", "INC BC", "INC B", "DEC B", "LD B,*h", "RLCA",
 	"EX AF,AF'", "ADD HL,BC", "LD A,(BC)", "DEC BC", "INC C", "DEC C", "LD C,*h", "RRCA",
@@ -918,7 +918,7 @@ static const char *Mnemonics[256] =
 	"RET M", "LD SP,HL", "JP M,#h", "EI", "CALL M,#h", "PFX_FD", "CP *h", "RST 38h"
 };
 
-static const char *MnemonicsCB[256] =
+static const char* MnemonicsCB[256] =
 {
 	"RLC B", "RLC C", "RLC D", "RLC E", "RLC H", "RLC L", "RLC (HL)", "RLC A",
 	"RRC B", "RRC C", "RRC D", "RRC E", "RRC H", "RRC L", "RRC (HL)", "RRC A",
@@ -954,7 +954,7 @@ static const char *MnemonicsCB[256] =
 	"SET 7,B", "SET 7,C", "SET 7,D", "SET 7,E", "SET 7,H", "SET 7,L", "SET 7,(HL)", "SET 7,A"
 };
 
-static const char *MnemonicsED[256] =
+static const char* MnemonicsED[256] =
 {
 	"DB EDh,00h", "DB EDh,01h", "DB EDh,02h", "DB EDh,03h",
 	"DB EDh,04h", "DB EDh,05h", "DB EDh,06h", "DB EDh,07h",
@@ -1022,7 +1022,7 @@ static const char *MnemonicsED[256] =
 	"DB EDh,FCh", "DB EDh,FDh", "DB EDh,FEh", "DB EDh,FFh"
 };
 
-static const char *MnemonicsXX[256] =
+static const char* MnemonicsXX[256] =
 {
 	"NOP", "LD BC,#h", "LD (BC),A", "INC BC", "INC B", "DEC B", "LD B,*h", "RLCA",
 	"EX AF,AF'", "ADD I%,BC", "LD A,(BC)", "DEC BC", "INC C", "DEC C", "LD C,*h", "RRCA",
@@ -1058,7 +1058,7 @@ static const char *MnemonicsXX[256] =
 	"RET M", "LD SP,I%", "JP M,#h", "EI", "CALL M,#h", "PFX_FD", "CP *h", "RST 38h"
 };
 
-static const char *MnemonicsXCB[256] =
+static const char* MnemonicsXCB[256] =
 {
 	"RLC B", "RLC C", "RLC D", "RLC E", "RLC H", "RLC L", "RLC (I%@h)", "RLC A",
 	"RRC B", "RRC C", "RRC D", "RRC E", "RRC H", "RRC L", "RRC (I%@h)", "RRC A",
@@ -1094,7 +1094,7 @@ static const char *MnemonicsXCB[256] =
 	"SET 7,B", "SET 7,C", "SET 7,D", "SET 7,E", "SET 7,H", "SET 7,L", "SET 7,(I%@h)", "SET 7,A"
 };
 
-static const char *CPMCalls[41] =
+static const char* CPMCalls[41] =
 {
 	"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O", "Get IOByte",
 	"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
@@ -1217,7 +1217,7 @@ void memdump(uint16 pos) {
 }
 
 uint8 Disasm(uint16 pos) {
-	const char *txt;
+	const char* txt;
 	char jr;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 1;
@@ -1324,7 +1324,7 @@ void Z80debug(void) {
 		ch = _getch();
 		if (ch > 21 && ch < 127)
 			_putch(ch);
-		switch(ch) {
+		switch (ch) {
 		case 't':
 			loop = FALSE;
 			break;
@@ -2340,7 +2340,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa1:      /* AND C */
-			AF = andTable[((AF >> 8) & BC) & 0xff];
+			AF = andTable[((AF >> 8)& BC) & 0xff];
 			break;
 
 		case 0xa2:      /* AND D */
@@ -2348,7 +2348,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa3:      /* AND E */
-			AF = andTable[((AF >> 8) & DE) & 0xff];
+			AF = andTable[((AF >> 8)& DE) & 0xff];
 			break;
 
 		case 0xa4:      /* AND H */
@@ -2356,11 +2356,11 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa5:      /* AND L */
-			AF = andTable[((AF >> 8) & HL) & 0xff];
+			AF = andTable[((AF >> 8)& HL) & 0xff];
 			break;
 
 		case 0xa6:      /* AND (HL) */
-			AF = andTable[((AF >> 8) & GET_BYTE(HL)) & 0xff];
+			AF = andTable[((AF >> 8)& GET_BYTE(HL)) & 0xff];
 			break;
 
 		case 0xa7:      /* AND A */
@@ -3147,12 +3147,12 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa5:      /* AND IXL */
-				AF = andTable[((AF >> 8) & IX) & 0xff];
+				AF = andTable[((AF >> 8)& IX) & 0xff];
 				break;
 
 			case 0xa6:      /* AND (IX+dd) */
 				adr = IX + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8) & GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IXH */
@@ -3423,7 +3423,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xe6:      /* AND nn */
-			AF = andTable[((AF >> 8) & RAM_PP(PC)) & 0xff];
+			AF = andTable[((AF >> 8)& RAM_PP(PC)) & 0xff];
 			break;
 
 		case 0xe7:      /* RST 20H */
@@ -4384,12 +4384,12 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa5:      /* AND IYL */
-				AF = andTable[((AF >> 8) & IY) & 0xff];
+				AF = andTable[((AF >> 8)& IY) & 0xff];
 				break;
 
 			case 0xa6:      /* AND (IY+dd) */
 				adr = IY + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8) & GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IYH */
