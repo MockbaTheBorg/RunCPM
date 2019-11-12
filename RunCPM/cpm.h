@@ -89,7 +89,6 @@ void _PatchCPM(void) {
 		_RamWrite(i++, 0);
 		_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
 		_RamWrite(i++, 0x00);
-		_RamWrite(i++, 0x20);		/* spt - Sectors Per Track */
 		blockShift = _RamRead(DPBaddr + 2);
 		blockMask = _RamRead(DPBaddr + 3);
 		extentMask = _RamRead(DPBaddr + 4);
