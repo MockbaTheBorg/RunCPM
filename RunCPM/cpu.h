@@ -2340,7 +2340,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa1:      /* AND C */
-			AF = andTable[((AF >> 8)& BC) & 0xff];
+			AF = andTable[((AF >> 8) & BC) & 0xff];
 			break;
 
 		case 0xa2:      /* AND D */
@@ -2348,7 +2348,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa3:      /* AND E */
-			AF = andTable[((AF >> 8)& DE) & 0xff];
+			AF = andTable[((AF >> 8) & DE) & 0xff];
 			break;
 
 		case 0xa4:      /* AND H */
@@ -2356,11 +2356,11 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xa5:      /* AND L */
-			AF = andTable[((AF >> 8)& HL) & 0xff];
+			AF = andTable[((AF >> 8) & HL) & 0xff];
 			break;
 
 		case 0xa6:      /* AND (HL) */
-			AF = andTable[((AF >> 8)& GET_BYTE(HL)) & 0xff];
+			AF = andTable[((AF >> 8) & GET_BYTE(HL)) & 0xff];
 			break;
 
 		case 0xa7:      /* AND A */
@@ -3147,12 +3147,12 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa5:      /* AND IXL */
-				AF = andTable[((AF >> 8)& IX) & 0xff];
+				AF = andTable[((AF >> 8) & IX) & 0xff];
 				break;
 
 			case 0xa6:      /* AND (IX+dd) */
 				adr = IX + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8) & GET_BYTE(adr)) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IXH */
@@ -3423,7 +3423,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xe6:      /* AND nn */
-			AF = andTable[((AF >> 8)& RAM_PP(PC)) & 0xff];
+			AF = andTable[((AF >> 8) & RAM_PP(PC)) & 0xff];
 			break;
 
 		case 0xe7:      /* RST 20H */
@@ -4384,12 +4384,12 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa5:      /* AND IYL */
-				AF = andTable[((AF >> 8)& IY) & 0xff];
+				AF = andTable[((AF >> 8) & IY) & 0xff];
 				break;
 
 			case 0xa6:      /* AND (IY+dd) */
 				adr = IY + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8) & GET_BYTE(adr)) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IYH */
