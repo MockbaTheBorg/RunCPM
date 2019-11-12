@@ -26,8 +26,8 @@
 #define STR(x) STR_HELPER(x)
 
 /* Definition of which CCP to use (must define only one) */
-#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
-//#define CCP_DR
+//#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
+#define CCP_DR
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
@@ -116,6 +116,16 @@ typedef unsigned int    uint32;
 
 #define WORD16(x)	((x) & 0xffff)
 
+/* CP/M disk definitions */
+#define BlkSZ 128	// CP/M block size
+#define BlkEX 128	// Number of blocks on an extension
+#define ExtSZ (BlkSZ * BlkEX)
+#define BlkS2 4096	// Number of blocks on a S2 (module)
+#define MaxEX 31	// Maximum value the EX field can take
+#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
+#define MaxCR 128	// Maximum value the CR field can take
+#define MaxRC 128	// Maximum value the RC field can take
+
 /* CP/M memory definitions */
 #define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
 					// This saves about 2K on the Arduino code and should bring speed improvements
@@ -172,7 +182,7 @@ static uint16	numAllocBlocks;		// # of allocation blocks on disk
 static uint8	extentsPerDirEntry;	// # of logical (16K) extents in a directory entry
 #define logicalExtentBytes (16*1024UL)
 static uint16	physicalExtentBytes;	// # bytes described by 1 directory entry
-	
+
 #define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
@@ -189,11 +199,12 @@ extern "C"
 	extern void _Bdos(void);
 	extern void _Bios(void);
 
-	extern void _HostnameToFCB(uint16 fcbaddr, uint8 *filename);
-	extern void _HostnameToFCBname(uint8 *from, uint8 *to);
-	extern uint8 match(uint8 *fcbname, uint8 *pattern);
+	extern void _HostnameToFCB(uint16 fcbaddr, uint8* filename);
+	extern void _HostnameToFCBname(uint8* from, uint8* to);
+	extern void _mockupDirEntry(void);
+	extern uint8 match(uint8* fcbname, uint8* pattern);
 
-	extern void _puts(const char *str);
+	extern void _puts(const char* str);
 
 #ifdef __cplusplus
 }

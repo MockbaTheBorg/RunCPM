@@ -41,7 +41,7 @@ uint8 prompt[6] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;							// Actual size of the typed command line (size of the buffer)
 
-static const char *Commands[] =
+static const char* Commands[] =
 {
 	// Standard CP/M commands
 	"DIR",
@@ -66,7 +66,7 @@ uint16 _ccp_bdos(uint8 function, uint16 de) {
 }
 
 // Compares two strings (Atmel doesn't like strcmp)
-uint8 _ccp_strcmp(char *stra, char *strb) {
+uint8 _ccp_strcmp(char* stra, char* strb) {
 	while (*stra && *strb && (*stra == *strb)) {
 		++stra; ++strb;
 	}
@@ -208,7 +208,7 @@ uint16 _ccp_fcbtonum() {
 	uint8 pos = ParFCB + 1;
 	while (TRUE) {
 		ch = _RamRead(pos++);
-		if (ch<'0' || ch>'9')
+		if (ch < '0' || ch > '9')
 			break;
 		n = (n * 10) + (ch - 0x30);
 	}

@@ -18,7 +18,7 @@ extern int32 IFF; /* Interrupt Flip Flop                          */
 extern int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
 
 // Lua "Trampoline" functions
-int luaBdosCall(lua_State *L) {
+int luaBdosCall(lua_State* L) {
 	uint8 function = (uint8)luaL_checkinteger(L, 1);
 	uint16 de = (uint16)luaL_checkinteger(L, 2);
 
@@ -31,7 +31,7 @@ int luaBdosCall(lua_State *L) {
 	return(1);
 }
 
-int luaRamRead(lua_State *L) {
+int luaRamRead(lua_State* L) {
 	uint16 addr = (uint16)luaL_checkinteger(L, 1);
 
 	uint8 result = _RamRead(addr);
@@ -39,7 +39,7 @@ int luaRamRead(lua_State *L) {
 	return(1);
 }
 
-int luaRamWrite(lua_State *L) {
+int luaRamWrite(lua_State* L) {
 	uint16 addr = (uint16)luaL_checkinteger(L, 1);
 	uint8 value = (uint8)luaL_checkinteger(L, 2);
 
@@ -47,7 +47,7 @@ int luaRamWrite(lua_State *L) {
 	return(0);
 }
 
-int luaRamRead16(lua_State *L) {
+int luaRamRead16(lua_State* L) {
 	uint16 addr = (uint16)luaL_checkinteger(L, 1);
 
 	uint16 result = _RamRead16(addr);
@@ -55,7 +55,7 @@ int luaRamRead16(lua_State *L) {
 	return(1);
 }
 
-int luaRamWrite16(lua_State *L) {
+int luaRamWrite16(lua_State* L) {
 	uint16 addr = (uint16)luaL_checkinteger(L, 1);
 	uint16 value = (uint8)luaL_checkinteger(L, 2);
 
@@ -63,7 +63,7 @@ int luaRamWrite16(lua_State *L) {
 	return(0);
 }
 
-int luaReadReg(lua_State *L) {
+int luaReadReg(lua_State* L) {
 	uint8 reg = (uint8)luaL_checkinteger(L, 1);
 	uint16 result;
 
@@ -106,7 +106,7 @@ int luaReadReg(lua_State *L) {
 	return(1);
 }
 
-int luaWriteReg(lua_State *L) {
+int luaWriteReg(lua_State* L) {
 	uint8 reg = (uint8)luaL_checkinteger(L, 1);
 	uint16 value = (uint8)luaL_checkinteger(L, 2);
 
