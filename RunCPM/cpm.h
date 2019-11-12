@@ -22,8 +22,6 @@ unsigned long time_start = 0;
 unsigned long time_now = 0;
 #endif
 
-static uint8 firstTime = TRUE;
-
 void _PatchCPM(void) {
 	uint16 i;
 
@@ -44,77 +42,73 @@ void _PatchCPM(void) {
 	_RamWrite(0x0005, JP);
 	_RamWrite16(0x0006, BDOSjmppage + 0x06);
 
-	if (firstTime) {
-		//**********  Patch CP/M Version into the memory so the CCP can see it
-		_RamWrite16(BDOSjmppage, 0x1600);
-		_RamWrite16(BDOSjmppage + 2, 0x0000);
-		_RamWrite16(BDOSjmppage + 4, 0x0000);
+	//**********  Patch CP/M Version into the memory so the CCP can see it
+	_RamWrite16(BDOSjmppage, 0x1600);
+	_RamWrite16(BDOSjmppage + 2, 0x0000);
+	_RamWrite16(BDOSjmppage + 4, 0x0000);
 
-		// Patches in the BDOS jump destination
-		_RamWrite(BDOSjmppage + 6, JP);
-		_RamWrite16(BDOSjmppage + 7, BDOSpage);
+	// Patches in the BDOS jump destination
+	_RamWrite(BDOSjmppage + 6, JP);
+	_RamWrite16(BDOSjmppage + 7, BDOSpage);
 
-		// Patches in the BDOS page content
-		_RamWrite(BDOSpage, INa);
-		_RamWrite(BDOSpage + 1, 0x00);
-		_RamWrite(BDOSpage + 2, RET);
+	// Patches in the BDOS page content
+	_RamWrite(BDOSpage, INa);
+	_RamWrite(BDOSpage + 1, 0x00);
+	_RamWrite(BDOSpage + 2, RET);
 
-		// Patches in the BIOS jump destinations
-		for (i = 0; i < 0x36; i = i + 3) {
-			_RamWrite(BIOSjmppage + i, JP);
-			_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
-		}
+	// Patches in the BIOS jump destinations
+	for (i = 0; i < 0x36; i = i + 3) {
+		_RamWrite(BIOSjmppage + i, JP);
+		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
+	}
 
-		// Patches in the BIOS page content
-		for (i = 0; i < 0x36; i = i + 3) {
-			_RamWrite(BIOSpage + i, OUTa);
-			_RamWrite(BIOSpage + i + 1, i & 0xff);
-			_RamWrite(BIOSpage + i + 2, RET);
-		}
+	// Patches in the BIOS page content
+	for (i = 0; i < 0x36; i = i + 3) {
+		_RamWrite(BIOSpage + i, OUTa);
+		_RamWrite(BIOSpage + i + 1, i & 0xff);
+		_RamWrite(BIOSpage + i + 2, RET);
+	}
 
-		//**********  Patch CP/M (fake) Disk Paramater Table after the BDOS call entry  **********
-		i = DPBaddr;
-		_RamWrite(i++, 64);  		/* spt - Sectors Per Track */
-		_RamWrite(i++, 0);
-		_RamWrite(i++, 5);   		/* bsh - Data allocation "Block Shift Factor" */
-		_RamWrite(i++, 0x1F);		/* blm - Data allocation Block Mask */
-		_RamWrite(i++, 1);   		/* exm - Extent Mask */
-		_RamWrite(i++, 0xFF);		/* dsm - Total storage capacity of the disk drive */
-		_RamWrite(i++, 0x07);
-		_RamWrite(i++, 255); 		/* drm - Number of the last directory entry */
-		_RamWrite(i++, 3);
-		_RamWrite(i++, 0xFF);		/* al0 */
-		_RamWrite(i++, 0x00);		/* al1 */
-		_RamWrite(i++, 0);   		/* cks - Check area Size */
-		_RamWrite(i++, 0);
-		_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
-		_RamWrite(i++, 0x00);
-		_RamWrite(i++, 0x20);		/* spt - Sectors Per Track */
-		blockShift = _RamRead(DPBaddr + 2);
-		blockMask = _RamRead(DPBaddr + 3);
-		extentMask = _RamRead(DPBaddr + 4);
-		numAllocBlocks = _RamRead16((DPBaddr + 5)) + 1;
-		extentsPerDirEntry = extentMask + 1;
+	//**********  Patch CP/M (fake) Disk Paramater Table after the BDOS call entry  **********
+	i = DPBaddr;
+	_RamWrite(i++, 64);  		/* spt - Sectors Per Track */
+	_RamWrite(i++, 0);
+	_RamWrite(i++, 5);   		/* bsh - Data allocation "Block Shift Factor" */
+	_RamWrite(i++, 0x1F);		/* blm - Data allocation Block Mask */
+	_RamWrite(i++, 1);   		/* exm - Extent Mask */
+	_RamWrite(i++, 0xFF);		/* dsm - Total storage capacity of the disk drive */
+	_RamWrite(i++, 0x07);
+	_RamWrite(i++, 255); 		/* drm - Number of the last directory entry */
+	_RamWrite(i++, 3);
+	_RamWrite(i++, 0xFF);		/* al0 */
+	_RamWrite(i++, 0x00);		/* al1 */
+	_RamWrite(i++, 0);   		/* cks - Check area Size */
+	_RamWrite(i++, 0);
+	_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
+	_RamWrite(i++, 0x00);
+	blockShift = _RamRead(DPBaddr + 2);
+	blockMask = _RamRead(DPBaddr + 3);
+	extentMask = _RamRead(DPBaddr + 4);
+	numAllocBlocks = _RamRead16((DPBaddr + 5)) + 1;
+	extentsPerDirEntry = extentMask + 1;
 
-		// figure out the number of the first allocation block
-		// after the directory for the phoney allocation block
-		// list in _findnext()
-		firstBlockAfterDir = 0;
+	// figure out the number of the first allocation block
+	// after the directory for the phoney allocation block
+	// list in _findnext()
+	firstBlockAfterDir = 0;
+	i = 0x80;
+	while (_RamRead(DPBaddr + 9) & i) {
+		firstBlockAfterDir++;
+		i >>= 1;
+	}
+	if (_RamRead(DPBaddr + 9) == 0xFF) {
 		i = 0x80;
-		while (_RamRead(DPBaddr + 9) & i) {
+		while (_RamRead(DPBaddr + 10) & i) {
 			firstBlockAfterDir++;
 			i >>= 1;
 		}
-		if (_RamRead(DPBaddr + 9) == 0xFF) {
-			i = 0x80;
-			while (_RamRead(DPBaddr + 10) & i) {
-				firstBlockAfterDir++;
-				i >>= 1;
-			}
-		}
-		physicalExtentBytes = logicalExtentBytes * (extentMask + 1);
-		firstTime = FALSE;
 	}
+	physicalExtentBytes = logicalExtentBytes * (extentMask + 1);
 }
 
 #ifdef DEBUGLOG
