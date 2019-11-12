@@ -38,9 +38,17 @@ uint8 _findnext(uint8 isdir) {
 	uint32 bytes;
 
 	if (allExtents && fileRecords) {
+		// _SearchFirst was called with '?' in the FCB's EX field, so
+		// we need to return all file extents.
+		// The last found file was large enough that in CP/M it would
+		// have another directory entry, so mock up the next entry
+		// for the file.
 		_mockupDirEntry();
 		result = 0;
 	} else {
+		// Either we're only interested in the first directory entry
+		// for each file, or the previously found file has had the
+		// required number of dierctory entries returned already.
 		dir[0] = filename[0];
 		if (allUsers)
 			dir[2] = '?';
@@ -66,6 +74,11 @@ uint8 _findnext(uint8 isdir) {
 						if (bytes & (BlkSZ - 1)) {
 							bytes = (bytes & ~(BlkSZ - 1)) + BlkSZ;
 						}
+						// calculate the number of 128 byte records and 16K
+						// extents for this file. _mockupDirEntry will use
+						// these values to populate the returned directory
+						// entry, and decrement the # of records and extents
+						// left to process in the file.
 						fileRecords = bytes / BlkSZ;
 						fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
 						firstFreeAllocBlock = firstBlockAfterDir;
