@@ -221,6 +221,7 @@ The STM32 build uses the slower SPI mode for accessing the SD card.<br>
 I dedicate this software to:<br>
 * *Krzysztof Kliś* -  For writing the Arduino hardware interface and helping with debugging/testing.<br>
 * *Yeti* - For being an awesome agitator since RunCPM went on GitHub.<br>
+* *Wayne Hortensius* - For going deep into the code and bringing even more CP/M 2.2 compatibility to disk routines.<br>
 * All the other folks who are actively helping with finding/fixing bugs and issues on Github - thanks guys.<br>
 
 I dedicate it also to the memory of some awesome people who unfortunately are not among us anymore:<br>
