@@ -302,52 +302,58 @@ uint8 _findnext(uint8 isdir) {
 	uint8 more = 1;
 	uint32 bytes;
 
-	if (dirPos == 0) {
-		hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
+	if (allExtents && fileRecords) {
+		_mockupDirEntry();
+		result = 0;
 	} else {
-		more = FindNextFile(hFind, &FindFileData);
-	}
 
-	while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
-		if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		if (dirPos == 0) {
+			hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
+		} else {
 			more = FindNextFile(hFind, &FindFileData);
-			continue;
 		}
-		if (FindFileData.cAlternateFileName[0] != 0) {
-			if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
-			{
+
+		while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
+			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				more = FindNextFile(hFind, &FindFileData);
 				continue;
 			}
-		}
-		++found; ++dirPos;
-		break;
-	}
-	if (found) {
-		if (isdir) {
-			for (int i = 0; i < 13; i++)
-				findNextDirName[i] = FindFileData.cFileName[i];
-			// account for host files that aren't multiples of the block size
-			// by rounding their bytes up to the next multiple of blocks
-			bytes = FindFileData.nFileSizeLow;
-			if (bytes & (BlkSZ - 1)) {
-				bytes = (bytes & ~(BlkSZ - 1)) + BlkSZ;
+			if (FindFileData.cAlternateFileName[0] != 0) {
+				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
+				{
+					more = FindNextFile(hFind, &FindFileData);
+					continue;
+				}
 			}
-			fileRecords = bytes / BlkSZ;
-			fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
-			firstFreeAllocBlock = firstBlockAfterDir;
-			_mockupDirEntry();
-		} else {
-			fileRecords = 0;
-			fileExtents = 0;
-			fileExtentsUsed = 0;
-			firstFreeAllocBlock = firstBlockAfterDir;
+			++found; ++dirPos;
+			break;
 		}
-		_RamWrite(tmpFCB, filename[0] - '@');							// Set the requested drive onto the tmp FCB
-		_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
-		result = 0x00;
-	} else {
-		FindClose(hFind);
+		if (found) {
+			if (isdir) {
+				for (int i = 0; i < 13; i++)
+					findNextDirName[i] = FindFileData.cFileName[i];
+				// account for host files that aren't multiples of the block size
+				// by rounding their bytes up to the next multiple of blocks
+				bytes = FindFileData.nFileSizeLow;
+				if (bytes & (BlkSZ - 1)) {
+					bytes = (bytes & ~(BlkSZ - 1)) + BlkSZ;
+				}
+				fileRecords = bytes / BlkSZ;
+				fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
+				firstFreeAllocBlock = firstBlockAfterDir;
+				_mockupDirEntry();
+			} else {
+				fileRecords = 0;
+				fileExtents = 0;
+				fileExtentsUsed = 0;
+				firstFreeAllocBlock = firstBlockAfterDir;
+			}
+			_RamWrite(tmpFCB, filename[0] - '@');							// Set the requested drive onto the tmp FCB
+			_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
+			result = 0x00;
+		} else {
+			FindClose(hFind);
+		}
 	}
 	return(result);
 }
