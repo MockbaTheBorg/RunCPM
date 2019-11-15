@@ -19,6 +19,7 @@ Disk errors
 
 #define RW	(roVector & (1 << F->dr))
 
+// Prints out a BDOS error
 void _error(uint8 error) {
 	_puts("\r\nBdos Error on ");
 	_putcon('A' + cDrive);
@@ -41,6 +42,7 @@ void _error(uint8 error) {
 	Status = 2;
 }
 
+// Selects the disk to be used by the next disk function
 int _SelectDisk(uint8 dr) {
 	uint8 result = 0xff;
 	uint8 disk[2] = { 'A', 0 };
@@ -62,6 +64,7 @@ int _SelectDisk(uint8 dr) {
 	return(result);
 }
 
+// Converts a FCB entry onto a host OS filename string
 uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 	uint8 addDot = TRUE;
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
@@ -117,6 +120,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 	return(unique);
 }
 
+// Convers a host OS filename string onto a FCB entry
 void _HostnameToFCB(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
@@ -151,7 +155,8 @@ void _HostnameToFCB(uint16 fcbaddr, uint8* filename) {
 	}
 }
 
-void _HostnameToFCBname(uint8* from, uint8* to) {	// Converts a string name (AB.TXT) to FCB name (AB      TXT)
+// Converts a string name (AB.TXT) onto FCB name (AB      TXT)
+void _HostnameToFCBname(uint8* from, uint8* to) {
 	int i = 0;
 
 	++from;
@@ -183,6 +188,7 @@ void _HostnameToFCBname(uint8* from, uint8* to) {	// Converts a string name (AB.
 	*to = 0;
 }
 
+// Creates a fake directory entry for the current dmaAddr FCB
 void _mockupDirEntry(void) {
 	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
 	uint8 blocks;
@@ -232,6 +238,7 @@ void _mockupDirEntry(void) {
 	}
 }
 
+// Matches a FCB name to a search pattern
 uint8 match(uint8* fcbname, uint8* pattern) {
 	uint8 result = 1;
 	uint8 i;
@@ -248,6 +255,7 @@ uint8 match(uint8* fcbname, uint8* pattern) {
 	return(result);
 }
 
+// Returns the size of a file
 long _FileSize(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	long r, l = -1;
@@ -262,6 +270,7 @@ long _FileSize(uint16 fcbaddr) {
 	return(l);
 }
 
+// Opens a file
 uint8 _OpenFile(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -287,6 +296,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 	return(result);
 }
 
+// Closes a file
 uint8 _CloseFile(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -304,6 +314,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 	return(result);
 }
 
+// Creates a file
 uint8 _MakeFile(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -329,6 +340,7 @@ uint8 _MakeFile(uint16 fcbaddr) {
 	return(result);
 }
 
+// Searches for the first directory file
 uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -346,6 +358,7 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 	return(result);
 }
 
+// Searches for the next directory file
 uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(tmpFCB);
 	uint8 result = 0xff;
@@ -360,6 +373,7 @@ uint8 _SearchNext(uint16 fcbaddr, uint8 isdir) {
 	return(result);
 }
 
+// Deletes a file
 uint8 _DeleteFile(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 #if defined(USE_PUN) || defined(USE_LST)
@@ -396,6 +410,7 @@ uint8 _DeleteFile(uint16 fcbaddr) {
 	return(deleted);
 }
 
+// Renames a file
 uint8 _RenameFile(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -414,6 +429,7 @@ uint8 _RenameFile(uint16 fcbaddr) {
 	return(result);
 }
 
+// Sequential read
 uint8 _ReadSeq(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -442,6 +458,7 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 	return(result);
 }
 
+// Sequential write
 uint8 _WriteSeq(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -474,6 +491,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 	return(result);
 }
 
+// Random read
 uint8 _ReadRand(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -494,6 +512,7 @@ uint8 _ReadRand(uint16 fcbaddr) {
 	return(result);
 }
 
+// Random write
 uint8 _WriteRand(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -517,6 +536,7 @@ uint8 _WriteRand(uint16 fcbaddr) {
 	return(result);
 }
 
+// Returns the size of a CP/M file
 uint8 _GetFileSize(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0xff;
@@ -531,6 +551,7 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 	return(result);
 }
 
+// Set the next random record
 uint8 _SetRandom(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 result = 0x00;
@@ -546,6 +567,7 @@ uint8 _SetRandom(uint16 fcbaddr) {
 	return(result);
 }
 
+// Sets the current user area
 void _SetUser(uint8 user) {
 	userCode = user & 0x1f;	// BDOS unoficially allows user areas 0-31
 							// this may create folders from G-V if this function is called from an user program
@@ -553,11 +575,13 @@ void _SetUser(uint8 user) {
 	_MakeUserDir();			// Creates the user dir (0-F[G-V]) if needed
 }
 
+// Creates a disk directory folder
 uint8 _MakeDisk(uint16 fcbaddr) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	return(_sys_makedisk(F->dr));
 }
 
+// Checks if there's a temp submit file present
 uint8 _CheckSUB(void) {
 	uint8 result;
 	uint8 oCode = userCode;							// Saves the current user code (original BDOS does not do this)
@@ -574,6 +598,7 @@ uint8 _CheckSUB(void) {
 }
 
 #ifdef HASLUA
+// Executes a Lua script
 uint8 _RunLua(uint16 fcbaddr) {
 	uint8 luascript[17];
 	uint8 result = 0xff;

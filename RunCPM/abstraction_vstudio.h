@@ -296,6 +296,15 @@ static uint16 fileExtents = 0;
 static uint16 fileExtentsUsed = 0;
 static uint16 firstFreeAllocBlock;
 
+// Selects next user area
+void NextUserArea() {
+	FindClose(hFind);
+	filename[2]++; // This needs to be improved to it doesn't stop searching once there's an user area gap
+	if (filename[2] == ':')
+		filename[2] = 'A';
+	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
+}
+
 uint8 _findnext(uint8 isdir) {
 	uint8 result = 0xff;
 	uint8 found = 0;
@@ -306,22 +315,33 @@ uint8 _findnext(uint8 isdir) {
 		_mockupDirEntry();
 		result = 0;
 	} else {
-
 		if (dirPos == 0) {
 			hFind = FindFirstFile((LPCSTR)filename, &FindFileData);
 		} else {
 			more = FindNextFile(hFind, &FindFileData);
+			if (allUsers && !more) {
+				NextUserArea();
+				more++;
+			}
 		}
 
 		while (hFind != INVALID_HANDLE_VALUE && more) {	// Skips folders and long file names
 			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				more = FindNextFile(hFind, &FindFileData);
+				if (allUsers && !more) {
+					NextUserArea();
+					more++;
+				}
 				continue;
 			}
 			if (FindFileData.cAlternateFileName[0] != 0) {
 				if (FindFileData.cFileName[0] != '.')	// Keeps files that are extension only
 				{
 					more = FindNextFile(hFind, &FindFileData);
+					if (allUsers && !more) {
+						NextUserArea();
+						more++;
+					}
 					continue;
 				}
 			}
@@ -374,6 +394,8 @@ uint8 _findnextallusers(uint8 isdir) {
 uint8 _findfirstallusers(uint8 isdir) {
 	dirPos = 0;
 	strcpy((char*)pattern, "???????????");
+	_HostnameToFCBname(filename, pattern);
+	filename[2] = '0';
 	fileRecords = 0;
 	fileExtents = 0;
 	fileExtentsUsed = 0;
