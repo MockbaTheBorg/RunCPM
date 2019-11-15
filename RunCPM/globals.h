@@ -19,8 +19,8 @@
 //#define iDEBUG		// Instruction debugger (PC only, for development)
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.8"
-#define VersionBCD 0x38
+#define VERSION	"3.9"
+#define VersionBCD 0x39
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
