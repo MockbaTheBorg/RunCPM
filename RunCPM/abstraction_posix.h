@@ -81,6 +81,7 @@ uint8 _findnext(uint8 isdir) {
 						// left to process in the file.
 						fileRecords = bytes / BlkSZ;
 						fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
+						fileExtentsUsed = 0;
 						firstFreeAllocBlock = firstBlockAfterDir;
 						_mockupDirEntry();
 					} else {
