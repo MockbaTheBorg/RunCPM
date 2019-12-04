@@ -129,7 +129,7 @@ The possible values for **reg** on those functions are:<br>
 ```
  0: PCX - External view of PC
  1: AF
- 2: CC
+ 2: BC
  3: DE
  4: HL
  5: IX
