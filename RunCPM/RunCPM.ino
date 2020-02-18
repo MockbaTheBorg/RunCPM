@@ -10,7 +10,7 @@
 //     #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
 //
 
-// Board definitions go into the "hsrdware" folder
+// Board definitions go into the "hardware" folder
 // Choose/change a file from there
 #include "hardware/teensy.h"
 
