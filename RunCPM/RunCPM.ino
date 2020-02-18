@@ -9,51 +9,16 @@
 //     #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)
 //     #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
 //
-#if defined _STM32_DEF_ // STM32 boards
-  SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
-  #define SDINIT PC11 // CS
-  #define LED PD13
-  #define LEDinv 0 // 0=normal 1=inverted
-  #define BOARD "STM32F407DISC1"
-#elif defined ESP32 // ESP32 boards
-  SdFatSoftSpiEX<2, 15, 14> SD; // MISO, MOSI, SCK Some boards use 2,15,14,13, other 12,14,27,26
-  #define SDINIT 13 // CS
-  #define LED 22 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led
-  #define LEDinv 0
-  #define BOARD "TTGO_T1"
-#elif defined CORE_TEENSY // Teensy 3.5 and 3.6
-  SdFatSdio SD;
-  #define SDINIT
-  #define LED 13
-  #define LEDinv 0
-  #define BOARD "TEENSY 3.5"
-#elif defined ADAFRUIT_GRAND_CENTRAL_M4
-  #define USE_SDIO 0
-  SdFat SD;
-  #define SDINIT SDCARD_SS_PIN
-  #define LED 13
-  #define LEDinv 0
-  #define BOARD "ADAFRUIT GRAND CENTRAL M4"
-#else // Arduino DUE
-  SdFatEX SD;
-  #define SDINIT 4
-  #define LED 13
-  #define LEDinv 0
-  #define BOARD "ARDUINO DUE"
-#endif
+
+// Board definitions go into the "hsrdware" folder
+// Choose/change a file from there
+#include "hardware/teensy.h"
 
 // Delays for LED blinking
 #define sDELAY 50
 #define DELAY 100
 
 #include "abstraction_arduino.h"
-
-#ifdef ESP32        // ESP32 specific CP/M BDOS call routines
-  #include "esp32.h"
-#endif
-#ifdef _STM32_DEF_  // STM32 specific CP/M BDOS call routines
-  #include "stm32.h"
-#endif
 
 // Serial port speed
 #define SERIALSPD 9600
@@ -106,15 +71,19 @@ void setup(void) {
   _puts(BOARD);
   _puts("\r\n");
 
-  _puts("Initializing SD card.\r\n");
-#if defined ADAFRUIT_GRAND_CENTRAL_M4
+#if defined board_agcm4
+  _puts("Initializing Grand Central SD card.\r\n");
   if (SD.cardBegin(SDINIT, SD_SCK_MHZ(50))) {
 
     if (!SD.fsBegin()) {
       _puts("\nFile System initialization failed.\n");
       return;
     }
+#elif defined board_teensy40 
+  _puts("Initializing Teensy 4.0 SD card.\r\n");
+  if (SD.begin(SDINIT, SD_SCK_MHZ(25))) {
 #else
+  _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
 #endif
     if (VersionCCP >= 0x10 || SD.exists(CCPname)) {
