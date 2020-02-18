@@ -19,8 +19,8 @@
 //#define iDEBUG		// Instruction debugger (PC only, for development)
 
 /* RunCPM version for the greeting header */
-#define VERSION	"3.9"
-#define VersionBCD 0x39
+#define VERSION	"4.0"
+#define VersionBCD 0x40
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -37,7 +37,7 @@
 //
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL v1.5"			// Will use the CCP from ccp.h
-#define VersionCCP	0x15              // 0x10 and above reserved for Internal CCP
+#define VersionCCP	0x15					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
