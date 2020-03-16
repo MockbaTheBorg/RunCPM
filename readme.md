@@ -166,7 +166,7 @@ Some applications, like hi-tech C for example, will try to access user areas hig
 
 ## Online contact/support
 
-https://discord.gg/7aQAGG - I have created this discord channel to be able to (eventually) meet people in real time and talk about RunCPM. Feel free to join.
+https://discord.gg/WTTWVZ6 - I have created this discord channel to be able to (eventually) meet people in real time and talk about RunCPM. Feel free to join.
 
 ## References
 
