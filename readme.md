@@ -195,7 +195,8 @@ https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SP
 https://www.adafruit.com/product/4064<br>
 https://github.com/SmartArduino/SZDOITWiKi/wiki/ESP8266---ESPduino-32<br>
 
-I have seen comments of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
+I have seen reports of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
+It was also successfully built and ran on the Kindle Keyboard 3G.
 
 ## Extra software needed
 
