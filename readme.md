@@ -155,6 +155,8 @@ They are still provided on the master disk A.ZIP just to maintain compatibility 
 
 Other CP/M flavors like CP/M 3 or CP/M Plus are not supported as of yet, as the emulated BDOS of RunCPM is specific for CP/M 2.2.
 
+The IN/OUT instructions are used to implement the communication between the soft CPU BIOS and BDOS and the equivalent RunCPM functions, therefore these instructions are unusable for any other purpose.
+
 The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.<br>
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
