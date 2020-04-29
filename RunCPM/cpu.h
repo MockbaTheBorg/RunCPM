@@ -25,7 +25,7 @@ int32 Step = -1;
 
 #ifdef iDEBUG
 FILE* iLogFile;
-char iLogBuffer[16];
+char iLogBuffer[256];
 const char* iLogTxt;
 #endif
 
@@ -1221,7 +1221,7 @@ uint8 Disasm(uint16 pos) {
 	char jr;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 1;
-	uint8 C;
+	uint8 C = 0;
 
 	switch (ch) {
 	case 0xCB: ++pos; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
@@ -1286,6 +1286,7 @@ void Z80debug(void) {
 	uint8 J, I;
 	unsigned int bpoint;
 	uint8 loop = TRUE;
+	uint8 res = 0;
 
 	while (loop) {
 		pos = PC;
@@ -1363,11 +1364,13 @@ void Z80debug(void) {
 			break;
 		case 'B':
 			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			Break = bpoint;
-			_puts("Breakpoint set to ");
-			_puthex16(Break);
-			_puts("\r\n");
+			res=scanf("%04x", &bpoint);
+			if (res) {
+				Break = bpoint;
+				_puts("Breakpoint set to ");
+				_puthex16(Break);
+				_puts("\r\n");
+			}
 			break;
 		case 'C':
 			Break = -1;
@@ -1375,20 +1378,23 @@ void Z80debug(void) {
 			break;
 		case 'D':
 			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			memdump(bpoint);
+			res=scanf("%04x", &bpoint);
+			if(res)
+				memdump(bpoint);
 			break;
 		case 'L':
 			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			I = 16;
-			l = bpoint;
-			while (I > 0) {
-				_puthex16(l);
-				_puts(" : ");
-				l += Disasm(l);
-				_puts("\r\n");
-				--I;
+			res=scanf("%04x", &bpoint);
+			if (res) {
+				I = 16;
+				l = bpoint;
+				while (I > 0) {
+					_puthex16(l);
+					_puts(" : ");
+					l += Disasm(l);
+					_puts("\r\n");
+					--I;
+				}
 			}
 			break;
 		case 'T':
@@ -1399,11 +1405,13 @@ void Z80debug(void) {
 			break;
 		case 'W':
 			_puts(" Addr: ");
-			scanf("%04x", &bpoint);
-			Watch = bpoint;
-			_puts("Watch set to ");
-			_puthex16(Watch);
-			_puts("\r\n");
+			res=scanf("%04x", &bpoint);
+			if (res) {
+				Watch = bpoint;
+				_puts("Watch set to ");
+				_puthex16(Watch);
+				_puts("\r\n");
+			}
 			break;
 		case '?':
 			_puts("\r\n");
@@ -1465,14 +1473,14 @@ static inline void Z80run(void) {
 #ifdef iDEBUG
 		iLogFile = fopen("iDump.log", "a");
 		switch (RAM[PCX & 0xffff]) {
-		case 0xCB: iLogTxt = MnemonicsCB[RAM[PCX & 0xffff + 1]]; break;
-		case 0xED: iLogTxt = MnemonicsED[RAM[PCX & 0xffff + 1]]; break;
+		case 0xCB: iLogTxt = MnemonicsCB[RAM[(PCX & 0xffff) + 1]]; break;
+		case 0xED: iLogTxt = MnemonicsED[RAM[(PCX & 0xffff) + 1]]; break;
 		case 0xDD:
 		case 0xFD:
 			if (RAM[PCX & 0xffff] == 0xCB) {
-				iLogTxt = MnemonicsXCB[RAM[PCX & 0xffff + 1]]; break;
+				iLogTxt = MnemonicsXCB[RAM[(PCX & 0xffff) + 1]]; break;
 			} else {
-				iLogTxt = MnemonicsXX[RAM[PCX & 0xffff + 1]]; break;
+				iLogTxt = MnemonicsXX[RAM[(PCX & 0xffff) + 1]]; break;
 			}
 		default: iLogTxt = Mnemonics[RAM[PCX & 0xffff]];
 		}
