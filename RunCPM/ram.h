@@ -4,7 +4,7 @@
 /* see main.c for definition */
 
 #ifndef RAM_FAST
-static uint8 RAM[RAMSIZE];			// Definition of the emulated RAM
+static uint8 RAM[MEMSIZE];			// Definition of the emulated RAM
 
 uint8* _RamSysAddr(uint16 address) {
 	return(&RAM[address]);
@@ -12,6 +12,10 @@ uint8* _RamSysAddr(uint16 address) {
 
 uint8 _RamRead(uint16 address) {
 	return(RAM[address]);
+}
+
+uint16 _RamRead16(uint16 address) {
+	return(RAM[address] + (RAM[address + 1] << 8));
 }
 
 void _RamWrite(uint16 address, uint8 value) {

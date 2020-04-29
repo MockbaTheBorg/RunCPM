@@ -11,16 +11,16 @@
 #define USE_LST
 
 /* Definitions for file/console based debugging */
-//#define DEBUG
+//#define DEBUG			// Enables the internal debugger (enabled by default on debug builds)
+//#define iDEBUG		// Enables instruction logging onto a file (for development only)
 //#define DEBUGLOG		// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG	// Writes debug information to console instead of file
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
 #define LogName "RunCPM.log"
-//#define iDEBUG		// Instruction debugger (PC only, for development)
 
 /* RunCPM version for the greeting header */
-#define VERSION	"4.0"
-#define VersionBCD 0x40
+#define VERSION	"4.1"
+#define VersionBCD 0x41
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -137,12 +137,12 @@ typedef unsigned int    uint32;
 #define MEMSIZE 64 * 1024	// RAM(plus ROM) needs to be 64K to avoid compatibility issues
 
 #ifdef RAM_FAST		// Makes all function calls to memory access into direct RAM access (less calls / less code)
-static uint8 RAM[MEMSIZE];
-#define _RamSysAddr(a)		&RAM[a]
-#define _RamRead(a)			RAM[a]
-#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
-#define _RamWrite(a, v)		RAM[a] = v
-#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
+	static uint8 RAM[MEMSIZE];
+	#define _RamSysAddr(a)		&RAM[a]
+	#define _RamRead(a)			RAM[a]
+	#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
+	#define _RamWrite(a, v)		RAM[a] = v
+	#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
 #endif
 
 //// Size of the allocated pages (Minimum size = 1 page = 256 bytes)
