@@ -19,8 +19,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"4.1"
-#define VersionBCD 0x41
+#define VERSION	"4.2"
+#define VersionBCD 0x42
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
