@@ -191,9 +191,9 @@ void _HostnameToFCBname(uint8* from, uint8* to) {
 // Creates a fake directory entry for the current dmaAddr FCB
 void _mockupDirEntry(void) {
 	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
-	uint8 blocks;
+	uint8 blocks, i;
 
-	for (uint8 i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
+	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
 	}
 	_HostnameToFCB(dmaAddr, (uint8*)findNextDirName);
@@ -226,11 +226,11 @@ void _mockupDirEntry(void) {
 	}
 	// phoney up an appropriate number of allocation blocks
 	if (numAllocBlocks < 256) {
-		for (uint8 i = 0; i < blocks; ++i) {
+		for (i = 0; i < blocks; ++i) {
 			DE->al[i] = (uint8)firstFreeAllocBlock++;
 		}
 	} else {
-		for (uint8 i = 0; i < 2 * blocks; i += 2) {
+		for (i = 0; i < 2 * blocks; i += 2) {
 			DE->al[i] = firstFreeAllocBlock & 0xFF;
 			DE->al[i + 1] = firstFreeAllocBlock >> 8;
 			++firstFreeAllocBlock;

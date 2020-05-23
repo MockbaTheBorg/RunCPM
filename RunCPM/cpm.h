@@ -667,7 +667,12 @@ void _Bdos(void) {
 	case 29:
 		HL = roVector;
 		break;
-		/********** (todo) Function 30: Set file attributes **********/
+		/*
+		C = 30 (1Eh) : Set file attributes (does nothing)
+		*/
+	case 30:
+		HL = 0;
+		break;
 		/*
 		C = 31 (1Fh) : Get ADDR(Disk Parms)
 		*/
