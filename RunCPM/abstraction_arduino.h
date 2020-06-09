@@ -55,7 +55,7 @@ typedef struct {
 	uint8 al[16];
 } CPM_DIRENTRY;
 
-static dir_t   fileDirEntry;
+static DirFat_t   fileDirEntry;
 
 File _sys_fopen_w(uint8* filename) {
 	return(SD.open((char*)filename, O_CREAT | O_WRITE));
@@ -142,7 +142,7 @@ int _sys_renamefile(uint8* filename, uint8* newname) {
 	digitalWrite(LED, HIGH ^ LEDinv);
 	f = SD.open((char*)filename, O_WRITE | O_APPEND);
 	if (f) {
-		if (f.rename(SD.vwd(), (char*)newname)) {
+		if (f.rename((char*)newname)) {
 			f.close();
 			result = 1;
 		}

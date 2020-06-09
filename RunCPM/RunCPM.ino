@@ -1,7 +1,11 @@
 #include "globals.h"
 
 #include <SPI.h>
+#ifdef ARDUINO_TEENSY41
+#include <SdFat-beta.h>
+#else
 #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
+#endif
 
 // SDCard/LED related definitions
 //
@@ -82,6 +86,9 @@ void setup(void) {
 #elif defined board_teensy40 
   _puts("Initializing Teensy 4.0 SD card.\r\n");
   if (SD.begin(SDINIT, SD_SCK_MHZ(25))) {
+#elif defined board_teensy41
+  _puts("Initializing Teensy 4.1 SDIO card.\r\n");
+  if (SD.begin(SDINIT)) {
 #else
   _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
