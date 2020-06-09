@@ -1,14 +1,12 @@
 #include "globals.h"
 
 #include <SPI.h>
-#include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
-// SDCard/LED related definitions
-//
-//   SdFatSoftSpiEX and SdFatEX require changes to the following lines on SdFatConfig.h:
-//     #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)
-//     #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
-//
+#ifdef ARDUINO_TEENSY41
+  #include <SdFat-beta.h>
+#else
+  #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
+#endif
 
 // Board definitions go into the "hardware" folder
 // Choose/change a file from there
