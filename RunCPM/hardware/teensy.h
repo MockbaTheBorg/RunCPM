@@ -33,7 +33,7 @@
   #define SDINIT SdioConfig(FIFO_SDIO)
   #define LED 13
   #define LEDinv 0
-  #define BOARD "TEENSY 4.0"
+  #define BOARD "TEENSY 4.1"
   #define board_teensy41
   #define board_analog_io
   #define board_digital_io
