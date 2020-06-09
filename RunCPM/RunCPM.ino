@@ -1,18 +1,12 @@
 #include "globals.h"
 
 #include <SPI.h>
-#ifdef ARDUINO_TEENSY41
-#include <SdFat-beta.h>
-#else
-#include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
-#endif
 
-// SDCard/LED related definitions
-//
-//   SdFatSoftSpiEX and SdFatEX require changes to the following lines on SdFatConfig.h:
-//     #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)
-//     #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
-//
+#ifdef ARDUINO_TEENSY41
+  #include <SdFat-beta.h>
+#else
+  #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
+#endif
 
 // Board definitions go into the "hardware" folder
 // Choose/change a file from there
@@ -86,9 +80,6 @@ void setup(void) {
 #elif defined board_teensy40 
   _puts("Initializing Teensy 4.0 SD card.\r\n");
   if (SD.begin(SDINIT, SD_SCK_MHZ(25))) {
-#elif defined board_teensy41
-  _puts("Initializing Teensy 4.1 SDIO card.\r\n");
-  if (SD.begin(SDINIT)) {
 #else
   _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
