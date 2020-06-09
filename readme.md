@@ -25,7 +25,12 @@ LED blink codes: Arduino/Teensy/ESP32/STM32 user LED will blink fast when RunCPM
 RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
-When using Arduino boards, the serial speed as well as other parameters, like LED pin and SD Card pins may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.
+When using Arduino boards, the serial speed as well as other parameters, may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.<br>
+There are also board definition files under the "hardware" folder which need to be reviewed before building.
+
+Usage of SdFatSoftSpiEX and SdFatEX will require changes to the following SdFat lines on SdFatConfig.h:<br>
+    #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)<br>
+    #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
 
 If building for the Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
 
@@ -208,6 +213,12 @@ For the ESP32 follow the instructions from here: https://randomnerdtutorials.com
 For the STM32 follow the instructions from here: https://github.com/stm32duino/Arduino_Core_STM32<br>
 All boards now use the SdFat library, from here: https://github.com/greiman/SdFat/<br>
 All Arduino libraries can be found here: https://www.arduinolibraries.info/
+
+## Teensy 4.1
+Building for the Teensy 4.1 requires using Greiman's SdFat-beta library, as it is not supported (yet) by the regular SdFat.<br>
+In order to build for the Teensy 4.1 download the SdFat-beta library and extract it inside the Arduino's Library Folder, on a subfolder named SdFat-beta, then make the following changes to it:<br>
+* rename src/SdFat.h to src/SdFat-beta.h<br>
+* in the library.properties file, change name=SdFat to name=SdFat-beta<br>
 
 ## ESP32 Limitations
 
