@@ -284,7 +284,7 @@ uint8 _OpenFile(uint16 fcbaddr) {
 			len = _FileSize(fcbaddr) / BlkSZ;	// Compute the len on the file in blocks
 
 			F->s1 = 0x00;
-			F->s2 = 0x80;	// set unmodified flag
+			F->s2 |= 0x80;	// set unmodified flag
 
 
 			F->rc = len > MaxRC ? MaxRC : (uint8)len;
@@ -312,6 +312,8 @@ uint8 _CloseFile(uint16 fcbaddr) {
 			} else {
 				_error(errWRITEPROT);
 			}
+		} else {
+			result = 0x00;
 		}
 	}
 	return(result);
