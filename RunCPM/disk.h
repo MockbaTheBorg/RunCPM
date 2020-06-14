@@ -312,6 +312,8 @@ uint8 _CloseFile(uint16 fcbaddr) {
 			} else {
 				_error(errWRITEPROT);
 			}
+		} else {
+			result = 0x00;
 		}
 	}
 	return(result);
