@@ -43,7 +43,7 @@ Altera/Intel DE1 Cyclone II FPGA (NiosII).
 
 RunCPM builds natively on Visual Studio.
 
-For building on other systems run "make yyy", where "yyy" is:
+For building on other systems run `make yyy build`, where "yyy" is:
 
 * **dos** - when building with DJGPP under MS-DOS,
 * **macosx** - Mac OS X
@@ -247,3 +247,4 @@ May the computers in heaven be all 8-bit.<br>
 
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
+
