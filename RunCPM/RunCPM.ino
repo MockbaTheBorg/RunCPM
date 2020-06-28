@@ -10,7 +10,7 @@
 
 // Board definitions go into the "hardware" folder
 // Choose/change a file from there
-#include "hardware/teensy.h"
+#include "hardware/esp32.h"
 
 // Delays for LED blinking
 #define sDELAY 50
@@ -80,6 +80,10 @@ void setup(void) {
 #elif defined board_teensy40 
   _puts("Initializing Teensy 4.0 SD card.\r\n");
   if (SD.begin(SDINIT, SD_SCK_MHZ(25))) {
+#elif defined board_esp32
+  _puts("Initializing ESP32 SD card.\r\n");
+  SPI.begin(SDINIT);
+  if (SD.begin(SS, SD_SCK_MHZ(SDMHZ))) {
 #else
   _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
