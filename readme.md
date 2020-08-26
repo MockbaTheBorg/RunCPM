@@ -171,6 +171,13 @@ Lua scripting is not supported on platforms other than Windows, Linux and MacOS.
 
 Some applications, like hi-tech C for example, will try to access user areas higher than 15 to verify if they are running on a different CP/M flavor than 2.2. This causes the generation of user areas with letters higher than F. This is an expected behavior and won't be "fixed".
 
+## CP/M Software
+
+I have shared my entire CP/M software library [here!](https://drive.google.com/drive/folders/11WIu8rD_7pIDaET7dqTeA73CvX0jkxz2?usp=sharing)<br>
+Please, if you have newer/cleaner (closer to the original distribution) versions of the software found here, please consider sending it over so I can update.<br>
+Same goes for user guides and other useful documentation.<br>
+My intent is to keep here clean copies of useful software which has been tested and proven to work fine with RunCPM.
+
 ## Online contact/support
 
 https://discord.gg/WTTWVZ6 - I have created this discord channel to be able to (eventually) meet people in real time and talk about RunCPM. Feel free to join.
@@ -205,7 +212,7 @@ https://github.com/SmartArduino/SZDOITWiKi/wiki/ESP8266---ESPduino-32<br>
 I have seen reports of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
 It was also successfully built and ran on the Kindle Keyboard 3G.
 
-## Extra software needed
+## Building dependencies
 
 For the Arduino DUE, support for it needs to be added through the board manager.<br>
 For the Teensy follow the instructions from here: https://www.pjrc.com/teensy/td_download.html<br>
@@ -245,6 +252,10 @@ I dedicate it also to the memory of some awesome people who unfortunately are no
 * *Mr. Tom L. Burnett* - For helping me with testing/debugging many different CP/M 2.2 applications on RunCPM.<br>
 May the computers in heaven be all 8-bit.<br>
 
+## Donations
+
+Last but not least, if you feel like make a donation to help the project moving forward, feel free to do so by clicking [here!](http://paypal.me/MockbaTheBorg)<br>
+These will help me source more hardware and other things that assist on the RunCPM development.
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
 
