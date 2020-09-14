@@ -171,6 +171,13 @@ Lua scripting is not supported on platforms other than Windows, Linux and MacOS.
 
 Some applications, like hi-tech C for example, will try to access user areas higher than 15 to verify if they are running on a different CP/M flavor than 2.2. This causes the generation of user areas with letters higher than F. This is an expected behavior and won't be "fixed".
 
+There is a hardware-design-error on some Clones and some Revisions of the original
+Arduino Due which prevents the correct use of the RX0-Pin (serial TTL-Port Receive-Pin)
+while not using the USB-Programming-Port for accessing RunCPM on the Arduino Due.
+The solution is to use the serial port 1 = RX1 and TX1
+For that you have to replace all occurrences of "Serial." with "Serial1."
+https://github.com/MockbaTheBorg/RunCPM/issues/117 - @Guidol70
+
 ## CP/M Software
 
 I have shared my entire CP/M software library [here!](https://drive.google.com/drive/folders/11WIu8rD_7pIDaET7dqTeA73CvX0jkxz2?usp=sharing)<br>
