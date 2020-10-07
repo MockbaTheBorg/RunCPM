@@ -46,7 +46,7 @@ RunCPM builds natively on Visual Studio.
 For building on other systems run `make yyy build`, where "yyy" is:
 
 * **dos** - when building with DJGPP under MS-DOS (deprecated),
-* **macosx** - Mac OS X
+* **macosx** - Mac OS X,
 * **mingw** - when building with MinGW under Windows,
 * **posix** - when building under Linux, FreeBSD etc,
 * **tdm** - when building with TDM-GCC under Windows.
