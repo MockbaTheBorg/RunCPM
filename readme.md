@@ -224,6 +224,14 @@ For the STM32 follow the instructions from here: https://github.com/stm32duino/A
 All boards now use the SdFat 2.x library, from here: https://github.com/greiman/SdFat/<br>
 All Arduino libraries can be found here: https://www.arduinolibraries.info/
 
+## SdFat library change
+
+A modification is needed on the SdFatConfig.h file (line 78 as if version 2.0.2) changing:<br>
+#define SDFAT_FILE_TYPE 3<br>
+to
+#define SDFAT_FILE_TYPE 1<br>
+As file type 1 is required for most of the RunCPM ports.
+
 ## ESP32 Limitations
 
 The ESP32 build doesn't yet support the analogWrite BDOS call.<br>
@@ -232,7 +240,7 @@ The ESP32 build uses the slower SPI mode for accessing the SD card.<br>
 
 ## STM32 Limitations
 
-The STM32 has not been yet migrated to SdFat 2.x, it might not be functional until updated/tedted.<br>
+The STM32 builds but is not tested yet. Your mileage may vary.<br>
 
 ## Dedications
 
