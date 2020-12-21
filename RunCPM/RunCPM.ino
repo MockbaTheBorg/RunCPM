@@ -2,15 +2,11 @@
 
 #include <SPI.h>
 
-#ifdef ARDUINO_TEENSY41
-  #include <SdFat-beta.h>
-#else
-  #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
-#endif
+#include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
 // Board definitions go into the "hardware" folder
 // Choose/change a file from there
-#include "hardware/esp32.h"
+#include "hardware/due.h"
 
 // Delays for LED blinking
 #define sDELAY 50
@@ -77,9 +73,6 @@ void setup(void) {
       _puts("\nFile System initialization failed.\n");
       return;
     }
-#elif defined board_teensy40 
-  _puts("Initializing Teensy 4.0 SD card.\r\n");
-  if (SD.begin(SDINIT, SD_SCK_MHZ(25))) {
 #elif defined board_esp32
   _puts("Initializing ESP32 SD card.\r\n");
   SPI.begin(SDINIT);

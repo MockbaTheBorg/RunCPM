@@ -28,10 +28,6 @@ It is theoretically possible to run it on an Arduino which has enough Flash (at 
 When using Arduino boards, the serial speed as well as other parameters, may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.<br>
 There are also board definition files under the "hardware" folder which need to be reviewed before building.
 
-Usage of SdFatSoftSpiEX and SdFatEX will require changes to the following SdFat lines on SdFatConfig.h:<br>
-    #define ENABLE_EXTENDED_TRANSFER_CLASS (from 0 to 1 - around line 71)<br>
-    #define ENABLE_SOFTWARE_SPI_CLASS (from 0 to 1 - around line 87)
-
 If building for the Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
 
 ## Experimental Platforms
@@ -225,14 +221,8 @@ For the Arduino DUE, support for it needs to be added through the board manager.
 For the Teensy follow the instructions from here: https://www.pjrc.com/teensy/td_download.html<br>
 For the ESP32 follow the instructions from here: https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/<br>
 For the STM32 follow the instructions from here: https://github.com/stm32duino/Arduino_Core_STM32<br>
-All boards now use the SdFat library, from here: https://github.com/greiman/SdFat/<br>
+All boards now use the SdFat 2.x library, from here: https://github.com/greiman/SdFat/<br>
 All Arduino libraries can be found here: https://www.arduinolibraries.info/
-
-## Teensy 4.1
-Building for the Teensy 4.1 requires using Greiman's SdFat-beta library, as it is not supported (yet) by the regular SdFat.<br>
-In order to build for the Teensy 4.1 download the SdFat-beta library and extract it inside the Arduino's Library Folder, on a subfolder named SdFat-beta, then make the following changes to it:<br>
-* rename src/SdFat.h to src/SdFat-beta.h<br>
-* in the library.properties file, change name=SdFat to name=SdFat-beta<br>
 
 ## ESP32 Limitations
 
@@ -242,7 +232,7 @@ The ESP32 build uses the slower SPI mode for accessing the SD card.<br>
 
 ## STM32 Limitations
 
-The STM32 build uses the slower SPI mode for accessing the SD card.<br>
+The STM32 has not been yet migrated to SdFat 2.x, it might not be functional until updated/tedted.<br>
 
 ## Dedications
 

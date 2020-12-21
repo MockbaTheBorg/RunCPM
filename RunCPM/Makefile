@@ -4,7 +4,7 @@
 #	To build:	make <platform> build
 #	To clean:	make <platform> clean	
 
-PLATS = dos macosx mingw msys2 posix tdm
+PLATS = macosx mingw msys2 posix tdm
 
 all:	none
 
