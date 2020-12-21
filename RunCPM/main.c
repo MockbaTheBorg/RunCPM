@@ -27,11 +27,7 @@ shoud be kept the same.
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
-#ifdef __DJGPP
-#include "abstract.h"	// DOS (DJGPP) needs 8.3 naming convention
-#else
 #include "abstraction_posix.h"
-#endif
 #endif
 
 // AUX: device configuration
