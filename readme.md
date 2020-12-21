@@ -226,7 +226,7 @@ All Arduino libraries can be found here: https://www.arduinolibraries.info/
 
 ## SdFat library change
 
-A modification is needed on the SdFatConfig.h file (line 78 as if version 2.0.2) changing:<br>
+A modification is needed on the SdFatConfig.h file (line 78 as of version 2.0.2) changing:<br>
 ```#define SDFAT_FILE_TYPE 3```<br>
 to<br>
 ```#define SDFAT_FILE_TYPE 1```<br>
