@@ -61,7 +61,7 @@ void setup(void) {
   _clrscr();
   _puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
   _puts("Arduino read/write support by Krzysztof Klis\r\n");
-  _puts("      Build " __DATE__ " - " __TIME__ "\r\n");
+  _puts("      Built " __DATE__ " - " __TIME__ "\r\n");
   _puts("--------------------------------------------\r\n");
   _puts("CCP: " CCPname "    CCP Address: 0x");
   _puthex16(CCPaddr);

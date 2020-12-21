@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 	_console_init();
 	_clrscr();
 	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
-	_puts("      Build " __DATE__ " - " __TIME__ "\r\n");
+	_puts("      Built " __DATE__ " - " __TIME__ "\r\n");
 #ifdef HASLUA
 	_puts("       with Lua scripting support\r\n");
 #endif
