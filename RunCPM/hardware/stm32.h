@@ -1,7 +1,8 @@
 #ifndef ESP32_H
 #define ESP32_H
 
-SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
+//SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
+SdFat SD;
 #define SDINIT PC11 // CS
 #define LED PD5
 #define LEDinv 1 // 0=normal 1=inverted
