@@ -3,8 +3,8 @@
 
 SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
 #define SDINIT PC11 // CS
-#define LED PD13
-#define LEDinv 0 // 0=normal 1=inverted
+#define LED PD5
+#define LEDinv 1 // 0=normal 1=inverted
 #define BOARD "STM32F407DISC1"
 #define board_stm32
 

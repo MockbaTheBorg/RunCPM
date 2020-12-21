@@ -2,7 +2,7 @@
 #define ESP32_H
 
 SdFat SD;
-#define SDINIT 14,2,15,13 // TTGO_T1,LOLIN32_Pro
+#define SDINIT 14,2,15,13 // TTGO_T1,LOLIN32_Pro (sck, miso, mosi, cs)
 //#define SDINIT 18,19,23,5 // ePaper,ESP32_DevKit
 #define SDMHZ 25 // TTGO_T1,LOLIN32_Pro=25 ePaper,ESP32_DevKit=20
 #define LED 5 // TTGO_T1=22 LOLIN32_Pro=5(inverted) DOIT_Esp32=2 ESP32-PICO-KIT=no led

@@ -55,11 +55,7 @@ typedef struct {
 	uint8 al[16];
 } CPM_DIRENTRY;
 
-#if defined board_teensy41
-  static DirFat_t fileDirEntry;
-#else
-  static dir_t    fileDirEntry;
-#endif
+static DirFat_t fileDirEntry;
 
 File _sys_fopen_w(uint8* filename) {
 	return(SD.open((char*)filename, O_CREAT | O_WRITE));
