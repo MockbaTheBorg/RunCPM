@@ -1,6 +1,6 @@
 # RunCPM - Z80 CP/M 2.2 emulator
 
-RunCPM is an application which can execute vintage CP/M 8 bits programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, MS-DOS, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
+RunCPM is an application which can execute vintage CP/M 8 bits programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
 
 If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
@@ -10,7 +10,7 @@ RunCPM was written to serve as a test environment when I was restoring the only 
 Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulator via a disk image every time I moved a bit forward on the restoration was becoming too time consuming. So I decided to write something that would allow me to run the executable right away after making any modifications.<br>
 RunCPM then evolved as more and more CP/M applications were added to its compatibility list.
 
-RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE and even on DJGPP for DOS. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
+RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
 ## Arduino / Teensy / ESP32 / STM32
 
@@ -45,7 +45,6 @@ RunCPM builds natively on Visual Studio.
 
 For building on other systems run `make yyy build`, where "yyy" is:
 
-* **dos** - when building with DJGPP under MS-DOS (deprecated),
 * **macosx** - Mac OS X,
 * **mingw** - when building with MinGW under Windows,
 * **posix** - when building under Linux, FreeBSD etc,
@@ -79,7 +78,7 @@ All the letters for folders/subfolders and file names should be kept in uppercas
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
 **Available CCPs :**<br>
-RunCPM can run on its internal CCP (beta) or using binary CCPs from real CP/M computers. A few CCPs are provided:
+RunCPM can run on its internal CCP or using binary CCPs from real CP/M computers. A few CCPs are provided:
 
 * **CCP-DR** - Is the original CCP from Digital Research.<br>
 * **CCP-CCPZ** - Is the Z80 CCP from RLC and others.<br>
