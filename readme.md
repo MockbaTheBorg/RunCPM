@@ -204,6 +204,8 @@ https://www.instructables.com/Retro-CPM-Stand-Alone-Emulator/<br>
 https://store.arduino.cc/usa/arduino-due<br>
 https://www.pjrc.com/store/teensy35.html<br>
 https://www.pjrc.com/store/teensy36.html<br>
+https://www.pjrc.com/store/teensy40.html - With TEENSY4_AUDIO board<br>
+https://www.pjrc.com/store/teensy41.html<br>
 https://github.com/LilyGO/ESP32-TTGO-T1 - LED on pin 22<br>
 https://wiki.wemos.cc/products:lolin32:lolin32_pro - LED on pin 5 (inverted)<br>
 https://docs.zerynth.com/latest/official/board.zerynth.doit_esp32/docs/index.html - LED on pin 2<br>
@@ -226,10 +228,10 @@ All Arduino libraries can be found here: https://www.arduinolibraries.info/
 
 ## SdFat library change
 
-A modification is needed on the SdFatConfig.h file (line 78 as if version 2.0.2) changing:<br>
-#define SDFAT_FILE_TYPE 3<br>
-to
-#define SDFAT_FILE_TYPE 1<br>
+A modification is needed on the SdFatConfig.h file (line 78 as of version 2.0.2) changing:<br>
+```#define SDFAT_FILE_TYPE 3```<br>
+to<br>
+```#define SDFAT_FILE_TYPE 1```<br>
 As file type 1 is required for most of the RunCPM ports.
 
 ## ESP32 Limitations
