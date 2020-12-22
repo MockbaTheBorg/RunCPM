@@ -2,7 +2,8 @@
 #define DUE_H
 
 SdFat SD;
-#define SDINIT 4
+#define SDINIT 4, SD_SCK_MHZ(SDMHZ)
+#define SDMHZ 50
 #define LED 13
 #define LEDinv 0
 #define BOARD "ARDUINO DUE"

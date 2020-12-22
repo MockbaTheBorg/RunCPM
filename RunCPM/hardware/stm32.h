@@ -1,9 +1,16 @@
-#ifndef ESP32_H
-#define ESP32_H
+#ifndef STM32_H
+#define STM32_H
 
-//SdFatSoftSpiEX<PC8, PD2, PC12> SD; // MISO, MOSI, SCK
+// SPI_DRIVER_SELECT must be set to 2 in SdFat/SdFatConfig.h
+
 SdFat SD;
-#define SDINIT PC11 // CS
+const uint8_t SD_CS_PIN = PC11;
+const uint8_t SOFT_MISO_PIN = PC8;
+const uint8_t SOFT_MOSI_PIN = PD2;
+const uint8_t SOFT_SCK_PIN  = PC12;
+SoftSpiDriver<SOFT_MISO_PIN, SOFT_MOSI_PIN, SOFT_SCK_PIN> softSpi;
+#define SDINIT SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SD_SCK_MHZ(SDMHZ), &softSpi)
+#define SDMHZ 50
 #define LED PD5
 #define LEDinv 1 // 0=normal 1=inverted
 #define BOARD "STM32F407DISC1"

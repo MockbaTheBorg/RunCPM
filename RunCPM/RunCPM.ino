@@ -65,22 +65,12 @@ void setup(void) {
   _puts(BOARD);
   _puts("\r\n");
 
-#if defined board_agcm4
-  _puts("Initializing Grand Central SD card.\r\n");
-  if (SD.cardBegin(SDINIT, SD_SCK_MHZ(50))) {
-
-    if (!SD.fsBegin()) {
-      _puts("\nFile System initialization failed.\n");
-      return;
-    }
-#elif defined board_esp32
-  _puts("Initializing ESP32 SD card.\r\n");
-  SPI.begin(SDINIT);
-  if (SD.begin(SS, SD_SCK_MHZ(SDMHZ))) {
-#else
+#if defined board_esp32
+  _puts("Initializing SPI.\r\n");
+  SPI.begin(SPIINIT);
+#endif
   _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
-#endif
     if (VersionCCP >= 0x10 || SD.exists(CCPname)) {
       while (true) {
         _puts(CCPHEAD);
