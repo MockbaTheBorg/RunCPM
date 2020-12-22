@@ -238,11 +238,11 @@ As file type 1 is required for most of the RunCPM ports.
 
 The ESP32 build doesn't yet support the analogWrite BDOS call.<br>
 The ESP32 build may require additional changes to the code to support different ESP32 boards.<br>
-The ESP32 build uses the slower SPI mode for accessing the SD card.<br>
+The ESP32 build uses SPI mode for accessing the SD card.<br>
 
 ## STM32 Limitations
 
-The STM32 builds but is not tested yet. Your mileage may vary.<br>
+The ESP32 build uses Soft SPI mode for accessing the SD card.<br>
 
 ## Dedications
 
