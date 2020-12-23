@@ -26,8 +26,8 @@
 #define STR(x) STR_HELPER(x)
 
 /* Definition of which CCP to use (must define only one) */
-//#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
-#define CCP_DR
+#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
+//#define CCP_DR
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
@@ -75,6 +75,10 @@
 #define VersionCCP	0x04
 #define BatchFCB	(CCPaddr + 0x79E)		// Position of the $$$.SUB fcb on this CCP
 #define CCPaddr		(BDOSjmppage-0x0800)
+#endif
+//
+#ifndef CCPname
+#error No CCP defined
 #endif
 //
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(TPASIZE) "K)\r\n"
