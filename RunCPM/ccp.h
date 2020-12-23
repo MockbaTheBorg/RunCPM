@@ -36,7 +36,8 @@
 uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
 uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 curUser;	// 0 -> 15			.. Current user area to access
-uint8 sFlag;	//					.. Submit Flag
+uint8 sFlag;						// Submit Flag
+uint8 sRecs = 0;					// Number of records on the Submit file
 uint8 prompt[6] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;							// Actual size of the typed command line (size of the buffer)
@@ -494,27 +495,25 @@ void _ccp_cmdError() {
 // Reads input, either from the $$$.SUB or console
 void _ccp_readInput(void) {
 	uint8 i;
-	uint8 recs = 0;
 	uint8 chars;
 
 	if (sFlag) {									// Are we running a submit?
-		if (!_ccp_bdos(F_OPEN, BatchFCB)) {			// Open batch file
-			recs = _RamRead(BatchFCB + 15);			// Gets its record count
-			if (recs) {
-				--recs;								// Counts one less
-				_RamWrite(BatchFCB + 32, recs);		// And sets to be the next read
-				_ccp_bdos(F_DMAOFF, defDMA);		// Reset current DMA
-				_ccp_bdos(F_READ, BatchFCB);		// And reads the last sector
-				chars = _RamRead(defDMA);			// Then moves it to the input buffer
-				for (i = 0; i <= chars; ++i)
-					_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
-				_RamWrite(inBuf + i + 1, 0);
-				_puts((char*)_RamSysAddr(inBuf + 2));
-				_RamWrite(BatchFCB + 15, recs);		// Prepare the file to be truncated
-				_ccp_bdos(F_CLOSE, BatchFCB);		// And truncates it
-			}
+		if (!sRecs) {								// Are we already counting?
+			_ccp_bdos(F_OPEN, BatchFCB);			// Open the batch file
+			sRecs = _RamRead(BatchFCB + 15);		// Gets its record count
 		}
-		if (!recs) {
+		--sRecs;									// Counts one less
+		_RamWrite(BatchFCB + 32, sRecs);			// And sets to be the next read
+		_ccp_bdos(F_DMAOFF, defDMA);				// Reset current DMA
+		_ccp_bdos(F_READ, BatchFCB);				// And reads the last sector
+		chars = _RamRead(defDMA);					// Then moves it to the input buffer
+		for (i = 0; i <= chars; ++i)
+			_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
+		_RamWrite(inBuf + i + 1, 0);
+		_puts((char*)_RamSysAddr(inBuf + 2));
+		_RamWrite(BatchFCB + 15, sRecs);			// Prepare the file to be truncated
+		_ccp_bdos(F_CLOSE, BatchFCB);				// And truncates it
+		if (!sRecs) {
 			_ccp_bdos(F_DELETE, BatchFCB);			// Or else just deletes it
 			sFlag = 0;								// and clears the submit flag
 		}
