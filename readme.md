@@ -242,7 +242,7 @@ The ESP32 build uses SPI mode for accessing the SD card.<br>
 
 ## STM32 Limitations
 
-The ESP32 build uses Soft SPI mode for accessing the SD card.<br>
+The STM32 build uses Soft SPI mode for accessing the SD card.<br>
 
 ## Dedications
 
