@@ -4,9 +4,9 @@
 
 #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
-// Board definitions go into the "hardware" folder
-// Choose/change a file from there
-#include "hardware/gc.h"
+// Board definitions go into the "hardware" folder, if you use a board different than the
+// Arduino DUE, choose/change a file from there and replace due.h here
+#include "hardware/due.h"
 
 // Delays for LED blinking
 #define sDELAY 50

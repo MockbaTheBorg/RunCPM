@@ -511,11 +511,10 @@ void _ccp_readInput(void) {
 			_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
 		_RamWrite(inBuf + i + 1, 0);
 		_puts((char*)_RamSysAddr(inBuf + 2));
-		_RamWrite(BatchFCB + 15, sRecs);			// Prepare the file to be truncated
-		_ccp_bdos(F_CLOSE, BatchFCB);				// And truncates it
 		if (!sRecs) {
-			_ccp_bdos(F_DELETE, BatchFCB);			// Or else just deletes it
+			_ccp_bdos(F_DELETE, BatchFCB);			// Deletes the submit file
 			sFlag = 0;								// and clears the submit flag
+			prompt[4] = '>';
 		}
 	} else {
 		_ccp_bdos(C_READSTR, inBuf);				// Reads the command line from console
@@ -528,6 +527,8 @@ void _ccp(void) {
 	uint8 i;
 
 	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
+	if (sFlag)
+		prompt[4] = '$';
 	_ccp_bdos(DRV_SET, curDrive);
 
 	for (i = 0; i < 36; ++i)

@@ -19,8 +19,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"4.6"
-#define VersionBCD 0x46
+#define VERSION	"4.7"
+#define VersionBCD 0x47
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -88,6 +88,9 @@
 
 //#define PROFILE		// For measuring time taken to run a CP/M command
 						// This should be enabled only for debugging purposes when trying to improve emulation speed
+
+#define NOHIGHUSER		// Prevents the creation of user folders above 'F' (15) by programs
+						// Original CP/M BDOS allows it, but I prefer to keep the folders clean
 
 /* Definition for CP/M 2.2 user number support */
 
