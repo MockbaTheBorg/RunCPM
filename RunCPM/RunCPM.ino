@@ -6,7 +6,7 @@
 
 // Board definitions go into the "hardware" folder
 // Choose/change a file from there
-#include "hardware/due.h"
+#include "hardware/gc.h"
 
 // Delays for LED blinking
 #define sDELAY 50

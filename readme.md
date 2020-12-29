@@ -26,9 +26,18 @@ RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT 
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
 When using Arduino boards, the serial speed as well as other parameters, may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.<br>
-There are also board definition files under the "hardware" folder which need to be reviewed before building.
 
 If building for the Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
+
+You will also need to set the correct board definition. To do this, look at line 9 in RunCPM.ino: `#include "hardware/due.h"`
+
+In the Hardware folder, you will find additional board defintions. If your board is not listed, copy the board that's closest to yours
+and update the SDINIT macro with your SD card reader's CS pin. If your reader will not operate at 50MHz (many won't), you can change SDMHZ
+to the correct speed for your card. 25 has been known to work with SD card readers on the Due, and you may need to set this slower for 
+certain cards or readers.
+
+Also, read **SdFat library change** below.
+
 
 ## Experimental Platforms
 
@@ -233,6 +242,11 @@ If you get a <b>'File' has no member named 'dirEntry'</b> error, then a modifica
 to<br>
 ```#define SDFAT_FILE_TYPE 1```<br>
 As file type 1 is required for most of the RunCPM ports.
+
+To find your libraries folder, open the Preferences in Arduino IDE and look at the Sketchbook location field. 
+
+On Windows systems, SdFatConfig.h will be in Documents\Arduino\libraries\SdFat\src
+
 
 ## ESP32 Limitations
 
