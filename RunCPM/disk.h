@@ -582,6 +582,9 @@ void _SetUser(uint8 user) {
 	userCode = user & 0x1f;	// BDOS unoficially allows user areas 0-31
 							// this may create folders from G-V if this function is called from an user program
 							// It is an unwanted behavior, but kept as BDOS does it
+#ifdef NOHIGHUSER
+	if(userCode < 16)
+#endif
 	_MakeUserDir();			// Creates the user dir (0-F[G-V]) if needed
 }
 
