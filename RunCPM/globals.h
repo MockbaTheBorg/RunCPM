@@ -11,16 +11,16 @@
 #define USE_LST
 
 /* Definitions for file/console based debugging */
-//#define DEBUG			// Enables the internal debugger (enabled by default on debug builds)
-//#define iDEBUG		// Enables instruction logging onto a file (for development only)
+//#define DEBUG			// Enables the internal debugger (enabled by default on vstudio debug builds)
+//#define iDEBUG		// Enables instruction logging onto a file (for development debug only)
 //#define DEBUGLOG		// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG	// Writes debug information to console instead of file
-//#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function
+//#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function number
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"4.7"
-#define VersionBCD 0x47
+#define VERSION	"4.8"
+#define VersionBCD 0x48
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -36,8 +36,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.5"			// Will use the CCP from ccp.h
-#define VersionCCP	0x15					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v1.6"			// Will use the CCP from ccp.h
+#define VersionCCP	0x16					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -113,10 +113,10 @@ typedef unsigned char   uint8;
 typedef unsigned short  uint16;
 typedef unsigned int    uint32;
 
-#define LOW_DIGIT(x)            ((x) & 0xf)
-#define HIGH_DIGIT(x)           (((x) >> 4) & 0xf)
-#define LOW_REGISTER(x)         ((x) & 0xff)
-#define HIGH_REGISTER(x)        (((x) >> 8) & 0xff)
+#define LOW_DIGIT(x)     ((x) & 0xf)
+#define HIGH_DIGIT(x)    (((x) >> 4) & 0xf)
+#define LOW_REGISTER(x)  ((x) & 0xff)
+#define HIGH_REGISTER(x) (((x) >> 8) & 0xff)
 
 #define SET_LOW_REGISTER(x, v)  x = (((x) & 0xff00) | ((v) & 0xff))
 #define SET_HIGH_REGISTER(x, v) x = (((x) & 0xff) | (((v) & 0xff) << 8))
