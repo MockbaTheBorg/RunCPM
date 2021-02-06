@@ -19,8 +19,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"4.8"
-#define VersionBCD 0x48
+#define VERSION	"4.9"
+#define VersionBCD 0x49
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
@@ -162,7 +162,8 @@ typedef unsigned int    uint32;
 #define BDOSpage (TPASIZE * 1024) - 768
 #define BDOSjmppage	(BDOSpage - 256)
 
-#define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameters Block (Hardcoded in BIOS)
+#define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameter Block (Hardcoded in BIOS)
+#define DPHaddr (DPBaddr + 15)	// Address of the Disk Parameter Header 
 
 #define SCBaddr (BDOSpage + 16)	// Address of the System Control Block
 #define tmpFCB  (BDOSpage + 64)	// Address of the temporary FCB

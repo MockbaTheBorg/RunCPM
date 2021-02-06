@@ -8,13 +8,13 @@
 #if defined ARDUINO_SAM_DUE || defined ADAFRUIT_GRAND_CENTRAL_M4
 #define HostOS 0x01
 #endif
-#ifdef CORE_TEENSY
+#if defined CORE_TEENSY
 #define HostOS 0x04
 #endif
-#ifdef ESP32
+#if defined ESP32
 #define HostOS 0x05
 #endif
-#ifdef _STM32_DEF_
+#if defined _STM32_DEF_
 #define HostOS 0x06
 #endif
 
