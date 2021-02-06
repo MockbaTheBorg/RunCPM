@@ -257,10 +257,7 @@ uint8 _sys_readrand(uint8* filename, long fpos) {
 				extSize = _sys_ftell(file);
 				// round file size up to next full logical extent
 				extSize = 16384 * ((extSize / 16384) + ((extSize % 16384) ? 1 : 0));
-				if (fpos < extSize)
-					result = 0x01;	// reading unwritten data
-				else
-					result = 0x04; // seek to unwritten extent
+				result = fpos < extSize ? 0x01 : 0x04;
 			}
 		}
 		_sys_fclose(file);
@@ -299,7 +296,7 @@ static uint16 firstFreeAllocBlock;
 // Selects next user area
 void NextUserArea() {
 	FindClose(hFind);
-	filename[2]++; // This needs to be improved to it doesn't stop searching once there's an user area gap
+	filename[2]++; // This needs to be improved so it doesn't stop searching once there's an user area gap
 	if (filename[2] == ':')
 		filename[2] = 'A';
 	hFind = FindFirstFile((LPCSTR)filename, &FindFileData);

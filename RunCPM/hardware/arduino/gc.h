@@ -1,6 +1,6 @@
 // ADAFruit Grand Central
-#ifndef DUE_H
-#define DUE_H
+#ifndef GC_H
+#define GC_H
 
 SdFat SD;
 // The GC uses SPI1. CS pin is SDCARD_SS_PIN

@@ -188,7 +188,6 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="abstract.h" />
     <ClInclude Include="abstraction_arduino.h" />
     <ClInclude Include="abstraction_posix.h" />
     <ClInclude Include="abstraction_vstudio.h" />

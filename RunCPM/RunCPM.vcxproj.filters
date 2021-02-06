@@ -152,9 +152,6 @@
     <ClInclude Include="abstraction_posix.h">
       <Filter>Other Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstract.h">
-      <Filter>Other Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ccp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
