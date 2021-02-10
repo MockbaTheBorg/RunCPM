@@ -597,8 +597,16 @@ void _Bdos(void) {
 		oDrive = cDrive;
 		cDrive = LOW_REGISTER(DE);
 		HL = _SelectDisk(LOW_REGISTER(DE) + 1);	// +1 here is to allow SelectDisk to be used directly by disk.h as well
-		if (!HL)
+		if (!HL) {
 			oDrive = cDrive;
+		} else {
+			if ((_RamRead(0x0004) & 0x0f) == cDrive) {
+				cDrive = oDrive = 0;
+				_RamWrite(0x0004, _RamRead(0x0004) & 0xf0);
+			} else {
+				cDrive = oDrive;
+			}
+		}
 		break;
 		/*
 		C = 15 (0Fh) : Open file
@@ -741,6 +749,7 @@ void _Bdos(void) {
 		C = 37 (25h) : Reset drive
 		*/
 	case 37:
+		roVector = roVector & ~DE;
 		break;
 		/********** Function 38: Not supported by CP/M 2.2 **********/
 		/********** Function 39: Not supported by CP/M 2.2 **********/

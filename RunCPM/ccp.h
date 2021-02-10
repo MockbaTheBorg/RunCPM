@@ -573,7 +573,8 @@ void _ccp(void) {
 			}
 
 			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
-				_ccp_bdos(DRV_SET, _RamRead(CmdFCB) - 1);
+				_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (_RamRead(CmdFCB) - 1));
+				_ccp_bdos(DRV_SET, _RamRead(0x0004));
 				continue;
 			}
 
