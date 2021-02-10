@@ -17,13 +17,13 @@ Disk errors
 #define errWRITEPROT 1
 #define errSELECT 2
 
-#define RW	(roVector & (1 << F->dr))
+#define RW	(roVector & (1 << cDrive))
 
 // Prints out a BDOS error
 void _error(uint8 error) {
-	_puts("\r\nBdos Error on ");
+	_puts("\r\nBdos Err on ");
 	_putcon('A' + cDrive);
-	_puts(" : ");
+	_puts(": ");
 	switch (error) {
 	case errWRITEPROT:
 		_puts("R/O");
@@ -37,8 +37,6 @@ void _error(uint8 error) {
 	}
 	Status = _getch();
 	_puts("\r\n");
-	cDrive = oDrive;
-	_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | oDrive);
 	Status = 2;
 }
 
@@ -53,6 +51,7 @@ int _SelectDisk(uint8 dr) {
 		--dr;			// Called from BDOS, set dr back to 0=A: format
 	}
 
+	cDrive = dr;
 	disk[0] += dr;
 	if (_sys_select(&disk[0])) {
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
