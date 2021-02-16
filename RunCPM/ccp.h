@@ -33,9 +33,9 @@
 #define pgSize	24					// for TYPE
 
 // CCP global variables
-uint8 curDrive;	// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004]
-uint8 parDrive;	// 0 -> 15 = A -> P .. Drive for the first file parameter
-uint8 curUser;	// 0 -> 15			.. Current user area to access
+uint8 curDrive = 0;					// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004])
+uint8 parDrive = 0;					// 0 -> 15 = A -> P .. Drive for the first file parameter
+uint8 curUser = 0;					// 0 -> 15			.. Current user area to access
 uint8 sFlag;						// Submit Flag
 uint8 sRecs = 0;					// Number of records on the Submit file
 uint8 prompt[6] = "\r\n  >";
@@ -390,17 +390,18 @@ uint8 _ccp_lua(void) {
 		_ccp_bdos(F_RUNLUA, CmdFCB);
 
 		if (user) {								// If a user was selected
-			user = 0;
 			_ccp_bdos(F_USERNUM, curUser);		// Set it back
-			_RamWrite(CmdFCB, 0x00);
+			user = 0;
 		}
+		_RamWrite(CmdFCB, drive);				// Set the command FCB drive back to what it was
+		cDrive = oDrive;						// And restore cDrive
 		error = FALSE;
 	}
 
 	if (user) {									// If a user was selected
 		_ccp_bdos(F_USERNUM, curUser);			// Set it back
-		_RamWrite(CmdFCB, 0x00);
 	}
+	_RamWrite(CmdFCB, drive);					// Set the command FCB drive back to what it was
 
 	return(error);
 }
@@ -448,10 +449,11 @@ uint8 _ccp_ext(void) {
 		_ccp_bdos(F_DMAOFF, defDMA);				// Points the DMA offset back to the default
 
 		if (user) {									// If a user was selected
-			user = 0;
 			_ccp_bdos(F_USERNUM, curUser);			// Set it back
+			user = 0;
 		}
-		_RamWrite(CmdFCB, drive);
+		_RamWrite(CmdFCB, drive);					// Set the command FCB drive back to what it was
+		cDrive = oDrive;							// And restore cDrive
 
 		// Place a trampoline to call the external command
 		// as it may return using RET instead of JP 0000h
@@ -573,8 +575,9 @@ void _ccp(void) {
 			}
 
 			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
-				_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | (_RamRead(CmdFCB) - 1));
-				_ccp_bdos(DRV_SET, _RamRead(0x0004));
+				cDrive = oDrive = _RamRead(CmdFCB) - 1;
+				_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | cDrive);
+				_ccp_bdos(DRV_SET, cDrive);
 				continue;
 			}
 
@@ -625,6 +628,7 @@ void _ccp(void) {
 			default:
 				i = TRUE;			break;
 			}
+			cDrive = oDrive;	// Restore cDrive
 			if (i)
 				_ccp_cmdError();
 		}
