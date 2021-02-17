@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 		}
 		_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
 		Z80reset();			// Resets the Z80 CPU
-		SET_LOW_REGISTER(BC, _RamRead(0x0004));	// Sets C to the current drive/user
+		SET_LOW_REGISTER(BC, _RamRead(DSKByte));	// Sets C to the current drive/user
 		PC = CCPaddr;		// Sets CP/M application jump point
 		Z80run();			// Starts simulation
 #endif

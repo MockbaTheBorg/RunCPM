@@ -33,9 +33,9 @@ void _PatchCPM(void) {
 
 	if (Status != 2) {
 		/* IOBYTE - Points to Console */
-		_RamWrite(0x0003, 0x3D);
+		_RamWrite(IOByte, 0x3D);
 		/* Current drive/user - A:/0 */
-		_RamWrite(0x0004, 0x00);
+		_RamWrite(DSKByte, 0x00);
 	}
 
 	/* BDOS entry point (0x0005) */
@@ -600,9 +600,9 @@ void _Bdos(void) {
 		if (!HL) {
 			oDrive = cDrive;
 		} else {
-			if ((_RamRead(0x0004) & 0x0f) == cDrive) {
+			if ((_RamRead(DSKByte) & 0x0f) == cDrive) {
 				cDrive = oDrive = 0;
-				_RamWrite(0x0004, _RamRead(0x0004) & 0xf0);
+				_RamWrite(DSKByte, _RamRead(DSKByte) & 0xf0);
 			} else {
 				cDrive = oDrive;
 			}

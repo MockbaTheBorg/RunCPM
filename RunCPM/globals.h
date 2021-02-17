@@ -19,8 +19,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"5.0"
-#define VersionBCD 0x50
+#define VERSION	"5.1"
+#define VersionBCD 0x51
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
@@ -33,8 +33,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.9"			// Will use the CCP from ccp.h
-#define VersionCCP	0x19					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v2.0"			// Will use the CCP from ccp.h
+#define VersionCCP	0x20					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -121,6 +121,10 @@ typedef unsigned int    uint32;
 #define SET_HIGH_REGISTER(x, v) x = (((x) & 0xff) | (((v) & 0xff) << 8))
 
 #define WORD16(x)	((x) & 0xffff)
+
+/* CP/M Page 0 definitions */
+#define IOByte 0x03
+#define DSKByte 0x04
 
 /* CP/M disk definitions */
 #define BlkSZ 128	// CP/M block size

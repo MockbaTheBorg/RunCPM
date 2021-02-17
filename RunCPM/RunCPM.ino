@@ -82,7 +82,7 @@ void setup(void) {
           break;
         }
         Z80reset();
-        SET_LOW_REGISTER(BC, _RamRead(0x0004));
+        SET_LOW_REGISTER(BC, _RamRead(DSKByte));
         PC = CCPaddr;
         Z80run();
 #else

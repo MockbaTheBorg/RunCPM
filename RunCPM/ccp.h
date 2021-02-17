@@ -33,7 +33,7 @@
 #define pgSize	24					// for TYPE
 
 // CCP global variables
-uint8 curDrive = 0;					// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[0x0004])
+uint8 curDrive = 0;					// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[DSKByte])
 uint8 parDrive = 0;					// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 curUser = 0;					// 0 -> 15			.. Current user area to access
 uint8 sFlag;						// Submit Flag
@@ -464,7 +464,7 @@ uint8 _ccp_ext(void) {
 		_RamWrite16(loadAddr + 4, BIOSjmppage + 0x33);
 
 		Z80reset();									// Resets the Z80 CPU
-		SET_LOW_REGISTER(BC, _RamRead(0x0004));		// Sets C to the current drive/user
+		SET_LOW_REGISTER(BC, _RamRead(DSKByte));		// Sets C to the current drive/user
 		PC = loadAddr;								// Sets CP/M application jump point
 		SP = BDOSjmppage;							// Sets the stack to the top of the TPA
 
@@ -539,7 +539,7 @@ void _ccp(void) {
 	while (TRUE) {
 		curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);	// Get current drive
 		curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);	// Get current user
-		_RamWrite(0x0004, (curUser << 4) + curDrive);	// Set user/drive on addr 0x0004
+		_RamWrite(DSKByte, (curUser << 4) + curDrive);	// Set user/drive on addr DSKByte
 
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
 
@@ -555,6 +555,7 @@ void _ccp(void) {
 		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
 
 		if (blen) {
+			_RamWrite(inBuf + 2 + blen, 0);				// "Closes" the read buffer with a \0
 			pbuf = inBuf + 2;							// Points pbuf to the first command character
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
@@ -575,7 +576,7 @@ void _ccp(void) {
 
 			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
 				cDrive = oDrive = _RamRead(CmdFCB) - 1;
-				_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | cDrive);
+				_RamWrite(DSKByte, (_RamRead(DSKByte) & 0xf0) | cDrive);
 				_ccp_bdos(DRV_SET, cDrive);
 				if (!Status)
 					continue;
