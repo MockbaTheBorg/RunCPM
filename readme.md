@@ -71,13 +71,10 @@ The CCP binaries are named with their file name extensions matching the amount o
 **IMPORTANT NOTE** - Starting on version 3.4, regardless of the amount of memory allocated to the CP/M system, RunCPM will still allocate 64K of RAM on the host so the BIOS is always at the same starting position. This favors the porting of even more different CCP codes to RunCPM. This also requires that, starting on version 3.4, new copies of the master disk A.ZIP, ZCPR2 CCP and ZCPR3 CCP (all provided here) are used.
 
 **Preparing the CP/M virtual drives :**<br>
-**VERY IMPORTANT NOTE** - Starting on RunCPM version 3.7 user areas are now mandatory. The support of non-user-area disk folders has been dropped between versions 3.5 and 3.6, so if you are running on a version up to 3.5, please consider moving to 3.7 or higher but not before updating your disk folders structure to match the support of user areas (see below).<br><br>
+**VERY IMPORTANT NOTE** - Starting on RunCPM version 3.7 user areas are now mandatory. The support of non-user-area disk folders has been dropped between versions 3.5 and 3.6, so if you are running on a version up to 3.5, please consider moving to 3.7 or higher but not before updating your disk folders structure to match the support of user areas.<br><br>
 
 RunCPM emulates the CP/M disks and user areas by means of subfolders under the RunCPM executable location, to prepare a folder or SD card for running RunCPM use the following procedures:<br>
-* **when using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. Switching to another user area inside CP/M will automatically create the respective user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the user areas 10 to 15 are created as letters "A" to "F".
-* **when not using user areas** - Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and only user area 0 is available. Switching to other user areas will be ignored. Extract the contents of the A.ZIP package into the "A" subfolder itself.
-
-The support for user areas is the default, and it is mandatory from version 3.7 on, as this is the standard CP/M 2.2 behavior.
+Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. Switching to another user area inside CP/M will automatically create the respective user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the user areas 10 to 15 are created as letters "A" to "F".
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
@@ -96,6 +93,8 @@ SUBMIT (.SUB) files are provided to allow for rebuilding the CCPs and some of th
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
 
 The default setting for CCP is the Digital Research one, changing it requires rebuilding the code.
+
+**IMPORTANT NOTE** - CCP-Z80 expects the $$$.SUB to be created on the currently logged drive/user, so when using it, use SUBMITD.COM instead of SUBMIT.COM when starting SUBMIT jobs.
 
 **Contents of the "master" disk (A.ZIP) :**<br>
 The master disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
