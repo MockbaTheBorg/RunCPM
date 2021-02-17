@@ -223,7 +223,6 @@
     <ClInclude Include="lua\lundump.h" />
     <ClInclude Include="lua\lvm.h" />
     <ClInclude Include="lua\lzio.h" />
-    <ClInclude Include="posix.h" />
     <ClInclude Include="ram.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

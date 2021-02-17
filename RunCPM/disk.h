@@ -37,6 +37,7 @@ void _error(uint8 error) {
 	}
 	Status = _getch();
 	_puts("\r\n");
+	cDrive = oDrive = _RamRead(DSKByte) & 0x0f;
 	Status = 2;
 }
 
@@ -51,7 +52,6 @@ int _SelectDisk(uint8 dr) {
 		--dr;			// Called from BDOS, set dr back to 0=A: format
 	}
 
-	cDrive = dr;
 	disk[0] += dr;
 	if (_sys_select(&disk[0])) {
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
