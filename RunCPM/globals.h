@@ -22,9 +22,6 @@
 #define VERSION	"5.0"
 #define VersionBCD 0x50
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL	// If this is defined, an internal CCP will emulated
 //#define CCP_DR
@@ -36,8 +33,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v1.8"			// Will use the CCP from ccp.h
-#define VersionCCP	0x18					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v1.9"			// Will use the CCP from ccp.h
+#define VersionCCP	0x19					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -81,6 +78,8 @@
 #error No CCP defined
 #endif
 //
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 #define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(TPASIZE) "K)\r\n"
 
 //#define HASLUA		// Will enable Lua scripting (BDOS call 254)
@@ -162,11 +161,11 @@ typedef unsigned int    uint32;
 #define BDOSpage (TPASIZE * 1024) - 768
 #define BDOSjmppage	(BDOSpage - 256)
 
-#define DPBaddr (BIOSpage + 64)	// Address of the Disk Parameter Block (Hardcoded in BIOS)
-#define DPHaddr (DPBaddr + 15)	// Address of the Disk Parameter Header 
+#define DPBaddr (BIOSpage + 64)		// Address of the Disk Parameter Block (Hardcoded in BIOS)
+#define DPHaddr (DPBaddr + 15)		// Address of the Disk Parameter Header 
 
-#define SCBaddr (BDOSpage + 16)	// Address of the System Control Block
-#define tmpFCB  (BDOSpage + 64)	// Address of the temporary FCB
+#define SCBaddr (BDOSpage + 16)		// Address of the System Control Block
+#define tmpFCB  (BDOSpage + 64)		// Address of the temporary FCB
 
 /* Definition of global variables */
 static uint8	filename[17];		// Current filename in host filesystem format
