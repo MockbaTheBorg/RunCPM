@@ -555,7 +555,6 @@ void _ccp(void) {
 		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
 
 		if (blen) {
-			_RamWrite(inBuf + 2 + blen, 0);				// "Closes" the read buffer with a \0
 			pbuf = inBuf + 2;							// Points pbuf to the first command character
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
@@ -578,14 +577,18 @@ void _ccp(void) {
 				cDrive = oDrive = _RamRead(CmdFCB) - 1;
 				_RamWrite(0x0004, (_RamRead(0x0004) & 0xf0) | cDrive);
 				_ccp_bdos(DRV_SET, cDrive);
-				continue;
+				if (!Status)
+					continue;
+				curDrive = 0;
+				break;
 			}
 
 			_RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
 			for (i = 0; i < blen; ++i) {
 				_RamWrite(defDMA + i + 1, _RamRead(pbuf + i));
 			}
-			_RamWrite(defDMA + i + 1, 0);
+			while (i++ < 126)							// "Zero" the rest of the DMA buffer
+				_RamWrite(defDMA + i, 0);
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
 				++pbuf; --blen;
@@ -628,7 +631,7 @@ void _ccp(void) {
 			default:
 				i = TRUE;			break;
 			}
-			cDrive = oDrive;	// Restore cDrive
+			cDrive = oDrive = curDrive;	// Restore cDrive and oDrive
 			if (i)
 				_ccp_cmdError();
 		}
