@@ -474,6 +474,13 @@ uint8 _RunLuaScript(char* filename) {
 }
 #endif
 
+/* Host initialization functions */
+/*===============================================================================*/
+
+void _host_init(int argc, char* argv[]) {
+
+}
+
 /* Console abstraction functions */
 /*===============================================================================*/
 DWORD cOutMode; // Stores initial console mode for the std output

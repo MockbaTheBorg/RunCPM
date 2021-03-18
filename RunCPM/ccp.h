@@ -30,9 +30,9 @@
 #define defDMA	0x0080				// Default DMA address
 #define defLoad	0x0100				// Default load address
 
-#define pgSize	24					// for TYPE
 
 // CCP global variables
+uint8 pgSize = 22;					// for TYPE
 uint8 curDrive = 0;					// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[DSKByte])
 uint8 parDrive = 0;					// 0 -> 15 = A -> P .. Drive for the first file parameter
 uint8 curUser = 0;					// 0 -> 15			.. Current user area to access
@@ -55,6 +55,7 @@ static const char* Commands[] =
 	"CLS",
 	"DEL",
 	"EXIT",
+	"PAGE",
 	NULL
 };
 
@@ -276,7 +277,7 @@ uint8 _ccp_type(void) {
 				_ccp_bdos(C_WRITE, c);
 				if (c == 0x0a) {
 					++l;
-					if (l == pgSize) {
+					if (pgSize && l == pgSize) {
 						l = 0;
 						p = _ccp_bdos(C_READ, 0x0000);
 						if (p == 3)
@@ -350,6 +351,17 @@ uint8 _ccp_user(void) {
 	curUser = (uint8)_ccp_fcbtonum();
 	if (curUser < 16) {
 		_ccp_bdos(F_USERNUM, curUser);
+		error = FALSE;
+	}
+	return(error);
+}
+
+// PAGE command
+uint8 _ccp_page(void) {
+	uint8 error = TRUE;
+	uint16 r = _ccp_fcbtonum();
+	if (r < 256) {
+		pgSize = (uint8)r;
 		error = FALSE;
 	}
 	return(error);
@@ -622,6 +634,8 @@ void _ccp(void) {
 				_puts("Terminating RunCPM.\r\n");
 				_puts("CPU Halted.\r\n");
 				Status = 1;			break;
+			case 9:		// PAGE
+				i = _ccp_page();	break;
 			case 255:	// It is an external command
 				i = _ccp_ext();
 #ifdef HASLUA

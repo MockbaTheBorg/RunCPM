@@ -92,7 +92,22 @@ These CCPs are provided with their source code on the A.ZIP package, and can be 
 SUBMIT (.SUB) files are provided to allow for rebuilding the CCPs and some of the RunCPM utilities.<br>
 Other CCPs may be adapted to work, and if succeeding, please share it so we can add it to here.
 
-The default setting for CCP is the Digital Research one, changing it requires rebuilding the code.
+The default choice for CCP is the internal one in RunCPM. If you want to use a different CCP, you must do two things:<br>
+**1 -** Change the selected CCP in globals.h (in the RunCPM folder). Find the lines that show:
+ 
+> /* Definition of which CCP to use (must define only one) */<br> 
+> \#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated<br>
+> //#define CCP\_DR<br>
+> //#define CCP\_CCPZ<br> 
+> //#define CCP\_ZCPR2<br> 
+> //#define CCP\_ZCPR3<br> 
+> //#define CCP\_Z80<br>
+
+Comment out the CCP_INTERNAL line by inserting two slashes at the line's beginning. Then remove the two slashes at the start of the line containing the name of the CCP you intened to use. Save the file.<br>
+
+**2 -** Copy a matching CCP from the CCP folder to the folder that holds your A folder. Each CCP selection will have two external CCP's, one for 60K and another for 64K. If you have already built the executable, you will need to do it again.
+
+Anytime you wish to change the CCP, you must repeat these steps and rebuild.
 
 **IMPORTANT NOTE** - CCP-Z80 expects the $$$.SUB to be created on the currently logged drive/user, so when using it, use SUBMITD.COM instead of SUBMIT.COM when starting SUBMIT jobs.
 
