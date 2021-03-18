@@ -6,7 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <ncurses.h>
+#include <poll.h>
+#include <termios.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <string.h>
 #ifdef PROFILE
 #include <time.h>
@@ -462,13 +466,16 @@ uint8 _findfirstallusers(uint8 isdir) {
 	return(_findnextallusers(isdir));
 }
 
-/* Console abstraction functions */
+
+/* Host initialization functions */
 /*===============================================================================*/
 
-#include <ncurses.h>
-#include <poll.h>
-#include <termios.h>
-#include <unistd.h>
+void _host_init(int argc, char* argv[]) {
+	chdir(dirname(argv[0]));
+}
+
+/* Console abstraction functions */
+/*===============================================================================*/
 
 static struct termios _old_term, _new_term;
 
