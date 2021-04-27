@@ -84,6 +84,10 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 	if (F->dr != '?') {
 		while (i < 8) {
 			c = F->fn[i] & 0x7F;
+#ifdef NOSLASH
+			if (c == '/')
+				c = '_';
+#endif
 			if (c > 32)
 				*(filename++) = toupper(c);
 			if (c == '?')
@@ -98,6 +102,10 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 					addDot = FALSE;
 					*(filename++) = '.';  // Only add the dot if there's an extension
 				}
+#ifdef NOSLASH
+				if (c == '/')
+					c = '_';
+#endif
 				*(filename++) = toupper(c);
 			}
 			if (c == '?')
