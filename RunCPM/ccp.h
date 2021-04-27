@@ -130,11 +130,10 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 void _ccp_initFCB(uint16 address) {
 	uint8 i;
 
-	for (i = 0; i < 36; ++i)
+	for (i = 0; i < 18; ++i)
 		_RamWrite(address + i, 0x00);
 	for (i = 0; i < 11; ++i) {
 		_RamWrite(address + 1 + i, 0x20);
-		_RamWrite(address + 17 + i, 0x20);
 	}
 }
 
@@ -600,15 +599,22 @@ void _ccp(void) {
 			for (i = 0; i < blen; ++i) {
 				_RamWrite(defDMA + i + 1, _RamRead(pbuf + i));
 			}
-			while (i++ < 126)							// "Zero" the rest of the DMA buffer
+			while (i++ < 127)							// "Zero" the rest of the DMA buffer
 				_RamWrite(defDMA + i, 0);
+
+			_ccp_initFCB(ParFCB);						// Initializes the parameter FCB
+			_ccp_initFCB(SecFCB);						// Initializes the secondary FCB
 
 			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
 				++pbuf; --blen;
 			}
-
-			_ccp_initFCB(ParFCB);						// Initializes the parameter FCB
 			_ccp_nameToFCB(ParFCB);						// Loads the next file parameter onto the parameter FCB
+
+			while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
+				++pbuf; --blen;
+			}
+			_ccp_nameToFCB(SecFCB);						// Loads the next file parameter onto the secondary FCB
+
 
 			i = FALSE;									// Checks if the command is valid and executes
 			switch (_ccp_cnum()) {
