@@ -41,9 +41,10 @@ void cpu_out(const uint32 Port, const uint32 Value) {
 }
 
 uint32 cpu_in(const uint32 Port) {
-	uint32 Result = 0;
+	uint32 Result;
 	if (Port == 0xFF) {
 		_Bdos();
+		Result = HIGH_REGISTER(AF);
 	} else {
 		Result = _HardwareIn(Port);
 	}

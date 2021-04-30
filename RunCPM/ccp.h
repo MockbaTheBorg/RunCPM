@@ -130,7 +130,7 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
 void _ccp_initFCB(uint16 address) {
 	uint8 i;
 
-	for (i = 0; i < 18; ++i)
+	for (i = 0; i < 36; ++i)
 		_RamWrite(address + i, 0x00);
 	for (i = 0; i < 11; ++i) {
 		_RamWrite(address + 1 + i, 0x20);
@@ -475,7 +475,7 @@ uint8 _ccp_ext(void) {
 		_RamWrite16(loadAddr + 4, BIOSjmppage + 0x33);
 
 		Z80reset();									// Resets the Z80 CPU
-		SET_LOW_REGISTER(BC, _RamRead(DSKByte));		// Sets C to the current drive/user
+		SET_LOW_REGISTER(BC, _RamRead(DSKByte));	// Sets C to the current drive/user
 		PC = loadAddr;								// Sets CP/M application jump point
 		SP = BDOSjmppage;							// Sets the stack to the top of the TPA
 
