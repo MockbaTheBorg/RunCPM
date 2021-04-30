@@ -474,6 +474,16 @@ uint8 _RunLuaScript(char* filename) {
 }
 #endif
 
+/* Hardware abstraction functions */
+/*===============================================================================*/
+void _HardwareOut(const uint32 Port, const uint32 Value) {
+
+}
+
+uint32 _HardwareIn(const uint32 Port) {
+	return 0;
+}
+
 /* Host initialization functions */
 /*===============================================================================*/
 

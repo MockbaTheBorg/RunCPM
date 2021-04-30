@@ -53,7 +53,7 @@ void _PatchCPM(void) {
 
 	// Patches in the BDOS page content
 	_RamWrite(BDOSpage, INa);
-	_RamWrite(BDOSpage + 1, 0x00);
+	_RamWrite(BDOSpage + 1, 0xFF);
 	_RamWrite(BDOSpage + 2, RET);
 
 	// Patches in the BIOS jump destinations
@@ -65,7 +65,7 @@ void _PatchCPM(void) {
 	// Patches in the BIOS page content
 	for (i = 0; i < 0x36; i = i + 3) {
 		_RamWrite(BIOSpage + i, OUTa);
-		_RamWrite(BIOSpage + i + 1, i & 0xff);
+		_RamWrite(BIOSpage + i + 1, 0xFF);
 		_RamWrite(BIOSpage + i + 2, RET);
 	}
 

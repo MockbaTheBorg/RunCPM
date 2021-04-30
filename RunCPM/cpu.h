@@ -33,12 +33,21 @@ const char* iLogTxt;
 	Functions needed by the soft CPU implementation
 */
 void cpu_out(const uint32 Port, const uint32 Value) {
-	_Bios();
+	if (Port == 0xFF) {
+		_Bios();
+	} else {
+		_HardwareOut(Port, Value);
+	}
 }
 
 uint32 cpu_in(const uint32 Port) {
-	_Bdos();
-	return(HIGH_REGISTER(AF));
+	uint32 Result = 0;
+	if (Port == 0xFF) {
+		_Bdos();
+	} else {
+		Result = _HardwareIn(Port);
+	}
+	return(Result);
 }
 
 /* Z80 Custom soft core */
