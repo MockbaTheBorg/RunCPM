@@ -466,6 +466,15 @@ uint8 _findfirstallusers(uint8 isdir) {
 	return(_findnextallusers(isdir));
 }
 
+/* Hardware abstraction functions */
+/*===============================================================================*/
+void _HardwareOut(const uint32 Port, const uint32 Value) {
+
+}
+
+uint32 _HardwareIn(const uint32 Port) {
+	return 0;
+}
 
 /* Host initialization functions */
 /*===============================================================================*/
