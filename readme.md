@@ -6,16 +6,18 @@ RunCPM is fully written in C and in a modular way, so porting to other platforms
 If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M 2.2 from Digital Research as close as possible, the only difference being that it uses regular folders on the host instead of disk images.
 
+RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
+
+## Why RunCPM?
+
 RunCPM was written to serve as a test environment when I was restoring the only copy of Z80 MicroMumps v4.06 which exists online (https://github.com/MockbaTheBorg/MicroMumps).<br>
 Making changes, recompiling MicroMumps and loading it onto a regular CP/M emulator via a disk image every time I moved a bit forward on the restoration was becoming too time consuming. So I decided to write something that would allow me to run the executable right away after making any modifications.<br>
 RunCPM then evolved as more and more CP/M applications were added to its compatibility list.
 
-RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
-
 ## Arduino / Teensy / ESP32 / STM32
 
 RunCPM builds on Arduino IDE 1.8.7 or later.<br>
-RunCPM so far runs on the Arduino DUE, on the Teensy 3.5, 3.6 and 4.0, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
+RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and up, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
 If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter. Some ESP32 and STM32 boards may need external SD card adapters.
 
 Arduino digital and analog read/write support was added by Krzysztof Kliś via extra non-standard BDOS calls (see the bottom of cpm.h file for details).
