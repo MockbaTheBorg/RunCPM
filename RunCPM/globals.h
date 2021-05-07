@@ -12,7 +12,7 @@
 
 /* Definitions for file/console based debugging */
 //#define DEBUG			// Enables the internal debugger (enabled by default on vstudio debug builds)
-//#define iDEBUG		// Enables instruction logging onto a file (for development debug only)
+//#define iDEBUG		// Enables instruction logging onto iDebug.log (for development debug only)
 //#define DEBUGLOG		// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG	// Writes debug information to console instead of file
 //#define LOGONLY 22	// If defined will log only this BDOS (or BIOS) function number
@@ -33,8 +33,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v2.2"			// Will use the CCP from ccp.h
-#define VersionCCP	0x22					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v2.3"			// Will use the CCP from ccp.h
+#define VersionCCP	0x23					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -199,7 +199,7 @@ static uint16	physicalExtentBytes;	// # bytes described by 1 directory entry
 #define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
 /* Definition of externs to prevent precedence compilation errors */
-#ifdef __cplusplus
+#ifdef __cplusplus // If building on Arduino
 extern "C"
 {
 #endif
@@ -219,7 +219,7 @@ extern "C"
 
 	extern void _puts(const char* str);
 
-#ifdef __cplusplus
+#ifdef __cplusplus // If building on Arduino
 }
 #endif
 
