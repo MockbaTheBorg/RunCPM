@@ -9,6 +9,8 @@
 		Best operating system ever by Gary Kildall, 40 years ago
 		I was 9 at that time and had no idea what a computer was
 */
+
+// Only build this code if not on Arduino
 #ifndef ARDUINO
 
 /* globals.h must be the first file included - it defines the bare essentials */
@@ -105,4 +107,4 @@ int main(int argc, char* argv[]) {
 	return(0);
 }
 
-#endif
+#endif ARDUINO

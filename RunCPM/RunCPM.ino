@@ -6,7 +6,7 @@
 
 // Board definitions go into the "hardware" folder, if you use a board different than the
 // Arduino DUE, choose/change a file from there and replace arduino/due.h here
-#include "hardware/arduino/due.h"
+#include "hardware/arduino/due_sd_tf.h"
 
 // Delays for LED blinking
 #define sDELAY 50

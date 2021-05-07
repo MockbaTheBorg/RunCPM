@@ -162,7 +162,7 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 			++pbuf; --blen;
 			if (ch == '*')
 				pad = '?';
-			if (pad == '?' || ch == '?') {
+			if (pad == '?') {
 				ch = pad;
 				n = n | 0x80;	// Name is not unique
 			}
@@ -187,7 +187,7 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 			++pbuf; --blen;
 			if (ch == '*')
 				pad = '?';
-			if (pad == '?' || ch == '?') {
+			if (pad == '?') {
 				ch = pad;
 				n = n | 0x80;	// Name is not unique
 			}
@@ -597,7 +597,7 @@ void _ccp(void) {
 
 			_RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
 			for (i = 0; i < blen; ++i) {
-				_RamWrite(defDMA + i + 1, _RamRead(pbuf + i));
+				_RamWrite(defDMA + i + 1, toupper(_RamRead(pbuf + i)));
 			}
 			while (i++ < 127)							// "Zero" the rest of the DMA buffer
 				_RamWrite(defDMA + i, 0);
@@ -642,6 +642,7 @@ void _ccp(void) {
 				Status = 1;			break;
 			case 9:		// PAGE
 				i = _ccp_page();	break;
+				// External/Lua commands
 			case 255:	// It is an external command
 				i = _ccp_ext();
 #ifdef HASLUA
