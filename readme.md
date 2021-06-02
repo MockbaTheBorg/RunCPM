@@ -105,7 +105,7 @@ The default choice for CCP is the internal one in RunCPM. If you want to use a d
 > //#define CCP\_ZCPR3<br> 
 > //#define CCP\_Z80<br>
 
-Comment out the CCP_INTERNAL line by inserting two slashes at the line's beginning. Then remove the two slashes at the start of the line containing the name of the CCP you intened to use. Save the file.<br>
+Comment out the CCP_INTERNAL line by inserting two slashes at the line's beginning. Then remove the two slashes at the start of the line containing the name of the CCP you intend to use. Save the file.<br>
 
 **2 -** Copy a matching CCP from the CCP folder to the folder that holds your A folder. Each CCP selection will have two external CCP's, one for 60K and another for 64K. If you have already built the executable, you will need to do it again.
 
