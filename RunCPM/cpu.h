@@ -29,8 +29,12 @@ char iLogBuffer[256];
 const char* iLogTxt;
 #endif
 
-/* increase R by val (to correctly implement refresh counter) */
+/* increase R by val (to correctly implement refresh counter) if enabled */
+#ifdef DO_INCR
 #define INCR(val) IR = (IR & ~0x7f) | ((IR + (val)) & 0x7f)
+#else
+#define INCR(val) ;
+#endif
 
 /*
 	Functions needed by the soft CPU implementation
