@@ -31,7 +31,7 @@ const char* iLogTxt;
 
 /* increase R by val (to correctly implement refresh counter) if enabled */
 #ifdef DO_INCR
-#define INCR(val) IR = (IR & ~0x7f) | ((IR + (val)) & 0x7f)
+#define INCR(val) IR = (IR & ~0x3f) | ((IR + (val)) & 0x3f)
 #else
 #define INCR(val) ;
 #endif
