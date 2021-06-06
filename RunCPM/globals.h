@@ -6,6 +6,9 @@
 #include <ctype.h>
 #endif
 
+/* Definition for enabling incrementing the R register for each M1 cycle */
+#define DO_INCR
+
 /* Definitions for enabling PUN: and LST: devices */
 #define USE_PUN	// The pun.txt and lst.txt files will appear on drive A: user 0
 #define USE_LST
