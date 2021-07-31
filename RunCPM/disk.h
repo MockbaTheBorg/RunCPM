@@ -624,7 +624,7 @@ uint8 _RunLua(uint16 fcbaddr) {
 	uint8 result = 0xff;
 
 	if (_FCBtoHostname(fcbaddr, &luascript[0])) {	// Script name must be unique
-		if (!_SearchFirst(fcbaddr, FALSE)) {			// and must exist
+		if (!_SearchFirst(fcbaddr, FALSE)) {		// and must exist
 			result = _RunLuaScript((char*)&luascript[0]);
 		}
 	}
