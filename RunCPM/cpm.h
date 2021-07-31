@@ -71,20 +71,20 @@ void _PatchCPM(void) {
 
 	//**********  Patch CP/M (fake) Disk Paramater Block after the BDOS call entry  **********
 	i = DPBaddr;
-	_RamWrite(i++, 64);  		/* spt - Sectors Per Track */
+	_RamWrite(i++, 64);  	// spt - Sectors Per Track
 	_RamWrite(i++, 0);
-	_RamWrite(i++, 5);   		/* bsh - Data allocation "Block Shift Factor" */
-	_RamWrite(i++, 0x1F);		/* blm - Data allocation Block Mask */
-	_RamWrite(i++, 1);   		/* exm - Extent Mask */
-	_RamWrite(i++, 0xFF);		/* dsm - Total storage capacity of the disk drive */
+	_RamWrite(i++, 5);   	// bsh - Data allocation "Block Shift Factor"
+	_RamWrite(i++, 0x1F);	// blm - Data allocation Block Mask
+	_RamWrite(i++, 1);   	// exm - Extent Mask
+	_RamWrite(i++, 0xFF);	// dsm - Total storage capacity of the disk drive
 	_RamWrite(i++, 0x07);
-	_RamWrite(i++, 255); 		/* drm - Number of the last directory entry */
+	_RamWrite(i++, 255); 	// drm - Number of the last directory entry
 	_RamWrite(i++, 3);
-	_RamWrite(i++, 0xFF);		/* al0 */
-	_RamWrite(i++, 0x00);		/* al1 */
-	_RamWrite(i++, 0);   		/* cks - Check area Size */
+	_RamWrite(i++, 0xFF);	// al0
+	_RamWrite(i++, 0x00);	// al1
+	_RamWrite(i++, 0);   	// cks - Check area Size
 	_RamWrite(i++, 0);
-	_RamWrite(i++, 0x02);		/* off - Number of system reserved tracks at the beginning of the ( logical ) disk */
+	_RamWrite(i++, 0x02);	// off - Number of system reserved tracks at the beginning of the ( logical ) disk
 	_RamWrite(i++, 0x00);
 	blockShift = _RamRead(DPBaddr + 2);
 	blockMask = _RamRead(DPBaddr + 3);
@@ -177,6 +177,14 @@ void _logChar(char* txt, uint8 c) {
 }
 
 void _logBiosIn(uint8 ch) {
+#ifdef LOGBIOS_NOT
+	if (ch == LOGBIOS_NOT)
+		return;
+#endif
+#ifdef LOGBIOS_ONLY
+	if (ch != LOGBIOS_ONLY)
+		return;
+#endif
 	static const char* BIOSCalls[18] =
 	{
 		"boot", "wboot", "const", "conin", "conout", "list", "punch/aux", "reader", "home", "seldsk", "settrk", "setsec", "setdma",
@@ -193,11 +201,27 @@ void _logBiosIn(uint8 ch) {
 }
 
 void _logBiosOut(uint8 ch) {
+#ifdef LOGBIOS_NOT
+	if (ch == LOGBIOS_NOT)
+		return;
+#endif
+#ifdef LOGBIOS_ONLY
+	if (ch != LOGBIOS_ONLY)
+		return;
+#endif
 	sprintf((char*)LogBuffer, "               OUT:\n"); _sys_logbuffer(LogBuffer);
 	_logRegs();
 }
 
 void _logBdosIn(uint8 ch) {
+#ifdef LOGBDOS_NOT
+	if (ch == LOGBDOS_NOT)
+		return;
+#endif
+#ifdef LOGBDOS_ONLY
+	if (ch != LOGBDOS_ONLY)
+		return;
+#endif
 	uint16 address = 0;
 	uint8 size = 0;
 
@@ -252,6 +276,14 @@ void _logBdosIn(uint8 ch) {
 }
 
 void _logBdosOut(uint8 ch) {
+#ifdef LOGBDOS_NOT
+	if (ch == LOGBDOS_NOT)
+		return;
+#endif
+#ifdef LOGBDOS_ONLY
+	if (ch != LOGBDOS_ONLY)
+		return;
+#endif
 	uint16 address = 0;
 	uint8 size = 0;
 
@@ -290,10 +322,7 @@ void _Bios(void) {
 	uint8 disk[2] = { 'A', 0 };
 
 #ifdef DEBUGLOG
-#ifdef LOGONLY
-	if (ch == LOGONLY)
-#endif
-		_logBiosIn(ch);
+	_logBiosIn(ch);
 #endif
 
 	switch (ch) {
@@ -366,10 +395,7 @@ void _Bios(void) {
 		break;
 	}
 #ifdef DEBUGLOG
-#ifdef LOGONLY
-	if (ch == LOGONLY)
-#endif
-		_logBiosOut(ch);
+	_logBiosOut(ch);
 #endif
 
 }
@@ -379,10 +405,7 @@ void _Bdos(void) {
 	uint8	j, count, chr, c, ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
-#ifdef LOGONLY
-	if (ch == LOGONLY)
-#endif
-		_logBdosIn(ch);
+	_logBdosIn(ch);
 #endif
 
 	HL = 0x0000;	// HL is reset by the BDOS
@@ -879,10 +902,7 @@ void _Bdos(void) {
 	SET_HIGH_REGISTER(AF, LOW_REGISTER(HL));
 
 #ifdef DEBUGLOG
-#ifdef LOGONLY
-	if (ch == LOGONLY)
-#endif
-		_logBdosOut(ch);
+	_logBdosOut(ch);
 #endif
 
 }

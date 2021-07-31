@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
 	while (TRUE) {
 		_puts(CCPHEAD);
-		_PatchCPM();	// Patches the CP/M entry points and other things in
+		_PatchCPM();		// Patches the CP/M entry points and other things in
 		Status = 0;
 #ifdef CCP_INTERNAL
 		_ccp();

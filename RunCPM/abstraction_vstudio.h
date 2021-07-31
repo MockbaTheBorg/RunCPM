@@ -366,7 +366,7 @@ uint8 _findnext(uint8 isdir) {
 				fileExtentsUsed = 0;
 				firstFreeAllocBlock = firstBlockAfterDir;
 			}
-			_RamWrite(tmpFCB, filename[0] - '@');							// Set the requested drive onto the tmp FCB
+			_RamWrite(tmpFCB, filename[0] - '@');						// Set the requested drive onto the tmp FCB
 			_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
 			result = 0x00;
 		} else {
