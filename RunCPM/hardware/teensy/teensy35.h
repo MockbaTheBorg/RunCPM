@@ -6,7 +6,7 @@
 #define LEDinv 0
 #define board_analog_io
 #define board_digital_io
-SdFat32 SD;
+SdFat SD;
 typedef File32 File;
 #define SDINIT SdioConfig(FIFO_SDIO)
 #define BOARD "Teensy 3.5"
