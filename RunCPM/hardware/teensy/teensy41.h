@@ -7,6 +7,7 @@
 #define board_analog_io
 #define board_digital_io
 SdFat SD;
+typedef File32 File;
 #define SDINIT SdioConfig(FIFO_SDIO)
 #define BOARD "Teensy 4.1"
 #define board_teensy41
