@@ -1,7 +1,7 @@
 #ifndef STM32_H
 #define STM32_H
 
-// SPI_DRIVER_SELECT must be set to 2 in SdFat/SdFatConfig.h
+// SPI_DRIVER_SELECT must be set to 2 in SdFat/SdFatConfig.h (default is 0)
 
 SdFat SD;
 const uint8_t SD_CS_PIN = PC11;

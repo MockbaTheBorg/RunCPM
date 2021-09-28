@@ -2,10 +2,12 @@
 
 #include <SPI.h>
 
+#define SDFAT_FILE_TYPE 1 // Uncomment for Due and Teensy
+
 #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
 // Board definitions go into the "hardware" folder, if you use a board different than the
-// Arduino DUE, choose/change a file from there and replace arduino/due.h here
+// Arduino DUE, choose/change a file from there and reference that file here
 #include "hardware/arduino/due_sd_tf.h"
 
 // Delays for LED blinking

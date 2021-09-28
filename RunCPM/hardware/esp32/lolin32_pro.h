@@ -1,7 +1,7 @@
 #ifndef ESP32_H
 #define ESP32_H
 
-// SPI_DRIVER_SELECT must be set to 0 in SdFat/SdFatConfig.h
+// SPI_DRIVER_SELECT must be set to 0 in SdFat/SdFatConfig.h (default is 0)
 
 SdFat SD;
 #define SPIINIT 14,2,15,13 // sck, miso, mosi, cs
