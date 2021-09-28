@@ -1,8 +1,14 @@
 #ifndef STM32_H
 #define STM32_H
 
+
+
 SdFat SD;
 const uint8_t SD_CS_PIN = PB6;
+
+
+
+
 #define SDMHZ 25
 #define SDINIT SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SD_SCK_MHZ(SDMHZ), &SPI)
 #define LED PC13

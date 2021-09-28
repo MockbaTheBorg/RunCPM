@@ -563,7 +563,6 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 		F->r0 = count & 0xff;
 		F->r1 = (count >> 8) & 0xff;
 		F->r2 = (count >> 16) & 0xff;
-		result = 0x00;
 	}
 	return(result);
 }
