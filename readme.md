@@ -59,7 +59,9 @@ For building on other systems run `make yyy build`, where "yyy" is:
 
 For Linux and FreeBSD the "ncurses.h" header file (and library) is required. The name of the package providing it depends on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
 On Mac OS X, install it using "brew install ncurses".<br>
-The "readline.h" header file is also required on Linux/FreeBSD. On some linuxes it is called "libreadline-dev".
+The "readline.h" header file is also required on Linux/FreeBSD. On some linuxes it is called "libreadline-dev".<br>
+
+Anyone having issues building with homebrew 'binutils' on Mac should check this issue: https://github.com/MockbaTheBorg/RunCPM/issues/136<br>
 
 ## Getting Started
 
