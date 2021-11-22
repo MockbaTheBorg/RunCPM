@@ -33,7 +33,7 @@ If building for the Teensy, ESP32 and STM32, please read the entire document, as
 
 You will also need to set the correct board definition. To do this, look at line 9 in RunCPM.ino: `#include "hardware/due.h"`
 
-In the Hardware folder, you will find additional board defintions. If your board is not listed, copy the board that's closest to yours
+In the Hardware folder, you will find additional board definitions. If your board is not listed, copy the board that's closest to yours
 and update the SDINIT macro with your SD card reader's CS pin. If your reader will not operate at 50MHz (many won't), you can change SDMHZ
 to the correct speed for your card. 25 has been known to work with SD card readers on the Due, and you may need to set this slower for 
 certain cards or readers.
