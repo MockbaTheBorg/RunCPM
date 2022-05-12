@@ -304,11 +304,11 @@ uint8 _ccp_save(void) {
 		while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
 			++pbuf; --blen;
 		}
-		_ccp_nameToFCB(ParFCB);						// Loads file name onto the ParFCB
-		if (_ccp_bdos(F_MAKE, ParFCB)) {
+		_ccp_nameToFCB(SecFCB);						// Loads file name onto the ParFCB
+		if (_ccp_bdos(F_MAKE, SecFCB)) {
 			_puts("Err: create");
 		} else {
-			if (_ccp_bdos(F_OPEN, ParFCB)) {
+			if (_ccp_bdos(F_OPEN, SecFCB)) {
 				_puts("Err: open");
 			} else {
 				pages *= 2;							// Calculates the number of CP/M blocks to write
@@ -316,11 +316,11 @@ uint8 _ccp_save(void) {
 				_puts("\r\n");
 				for (i = 0; i < pages; i++) {
 					_ccp_bdos(F_DMAOFF, dma);
-					_ccp_bdos(F_WRITE, ParFCB);
+					_ccp_bdos(F_WRITE, SecFCB);
 					dma += 128;
 					_ccp_bdos(C_WRITE, '.');
 				}
-				_ccp_bdos(F_CLOSE, ParFCB);
+				_ccp_bdos(F_CLOSE, SecFCB);
 			}
 		}
 	}
