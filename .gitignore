@@ -49,6 +49,7 @@ Temporary Items
 
 # RunCPM targets and intermediate files
 x64
+CPM
 release
 RunCPM/*.o
 RunCPM/*.exe
