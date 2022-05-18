@@ -1,5 +1,7 @@
 # RunCPM - Z80 CP/M 2.2 emulator
 
+(It is important to read this documentation fully before attempting to build RunCPM)
+
 RunCPM is an application which can execute vintage CP/M 8 bits programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
 
@@ -57,7 +59,7 @@ For building on other systems run `make yyy build`, where "yyy" is:
 * **posix** - when building under Linux, FreeBSD etc,
 * **tdm** - when building with TDM-GCC under Windows.
 
-For Linux and FreeBSD the "ncurses.h" header file (and library) is required. The name of the package providing it depends on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
+For Linux and FreeBSD the "ncurses.h" header file (and library) is required and needs to be installed prior to building RunCPM. The name of the package varies depending on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
 On Mac OS X, install it using "brew install ncurses".<br>
 The "readline.h" header file is also required on Linux/FreeBSD. On some linuxes it is called "libreadline-dev".<br>
 
