@@ -389,7 +389,8 @@ uint8 _ccp_vol(void) {
 			if (_sys_exists(filename)) {
 				FILE* file = _sys_fopen_r(filename);
 				bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
-				dmabuf[bytesread] = 0;
+				if(bytesread<128)
+					dmabuf[bytesread] = 0;
 				for (j = 0; j < 128; ++j) {
 					if (dmabuf[j] < 32 || dmabuf[j] > 126)
 						break;
