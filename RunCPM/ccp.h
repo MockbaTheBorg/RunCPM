@@ -372,7 +372,7 @@ uint8 _ccp_vol(void) {
 	uint8 error = FALSE;
 	uint8 letter = _RamRead(ParFCB) ? '@' + _RamRead(ParFCB) : 'A' + curDrive;
 	uint8 folder[7] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 0 };
-	uint8 filename[14] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 'V','O','L','.','T','X','T', 0 };
+	uint8 filename[15] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 'I', 'N','F','O','.','T','X','T', 0 };
 	uint8 bytesread;
 	uint8 dmabuf[128];
 	uint8 i, j;
