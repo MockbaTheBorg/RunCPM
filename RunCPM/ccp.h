@@ -19,28 +19,28 @@
 #define F_USERNUM		32
 #define F_RUNLUA		254
 
-#define CmdFCB	(BatchFCB + 36)		// FCB for use by internal commands
-#define ParFCB	0x005C				// FCB for use by line parameters
-#define SecFCB	0x006C				// Secondary part of FCB for renaming files
-#define Trampoline (CmdFCB + 36)	// Trampoline for running external commands
+#define CmdFCB	(BatchFCB + 36)							// FCB for use by internal commands
+#define ParFCB	0x005C									// FCB for use by line parameters
+#define SecFCB	0x006C									// Secondary part of FCB for renaming files
+#define Trampoline (CmdFCB + 36)						// Trampoline for running external commands
 
-#define inBuf	(BDOSjmppage - 256)	// Input buffer location
-#define cmdLen	125					// Maximum size of a command line (sz+rd+cmd+\0)
+#define inBuf	(BDOSjmppage - 256)						// Input buffer location
+#define cmdLen	125										// Maximum size of a command line (sz+rd+cmd+\0)
 
-#define defDMA	0x0080				// Default DMA address
-#define defLoad	0x0100				// Default load address
+#define defDMA	0x0080									// Default DMA address
+#define defLoad	0x0100									// Default load address
 
 
 // CCP global variables
-uint8 pgSize = 22;					// for TYPE
-uint8 curDrive = 0;					// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[DSKByte])
-uint8 parDrive = 0;					// 0 -> 15 = A -> P .. Drive for the first file parameter
-uint8 curUser = 0;					// 0 -> 15			.. Current user area to access
-uint8 sFlag;						// Submit Flag
-uint8 sRecs = 0;					// Number of records on the Submit file
+uint8 pgSize = 22;										// for TYPE
+uint8 curDrive = 0;										// 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[DSKByte])
+uint8 parDrive = 0;										// 0 -> 15 = A -> P .. Drive for the first file parameter
+uint8 curUser = 0;										// 0 -> 15			.. Current user area to access
+uint8 sFlag;											// Submit Flag
+uint8 sRecs = 0;										// Number of records on the Submit file
 uint8 prompt[6] = "\r\n  >";
 uint16 pbuf, perr;
-uint8 blen;							// Actual size of the typed command line (size of the buffer)
+uint8 blen;												// Actual size of the typed command line (size of the buffer)
 
 static const char* Commands[] =
 {
@@ -56,6 +56,7 @@ static const char* Commands[] =
 	"DEL",
 	"EXIT",
 	"PAGE",
+	"VOL",
 	NULL
 };
 
@@ -81,7 +82,7 @@ uint8 _ccp_cnum(void) {
 	uint8 command[9];
 	uint8 i = 0;
 
-	if (!_RamRead(CmdFCB)) {	// If a drive was set, then the command is external
+	if (!_RamRead(CmdFCB)) {							// If a drive was set, then the command is external
 		while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
 			command[i] = _RamRead(CmdFCB + i + 1);
 			++i;
@@ -144,8 +145,8 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 	// Checks for a drive and places it on the Command FCB
 	if (_RamRead(pbuf + 1) == ':') {
 		ch = toupper(_RamRead(pbuf++));
-		_RamWrite(fcb, ch - '@');		// Makes the drive 0x1-0xF for A-P
-		++pbuf;							// Points pbuf past the :
+		_RamWrite(fcb, ch - '@');						// Makes the drive 0x1-0xF for A-P
+		++pbuf;											// Points pbuf past the :
 		blen -= 2;
 	}
 
@@ -164,7 +165,7 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 				pad = '?';
 			if (pad == '?') {
 				ch = pad;
-				n = n | 0x80;	// Name is not unique
+				n = n | 0x80;							// Name is not unique
 			}
 			--plen; ++n;
 			_RamWrite(fcb++, ch);
@@ -189,7 +190,7 @@ uint8 _ccp_nameToFCB(uint16 fcb) {
 				pad = '?';
 			if (pad == '?') {
 				ch = pad;
-				n = n | 0x80;	// Name is not unique
+				n = n | 0x80;							// Name is not unique
 			}
 			--plen; ++n;
 			_RamWrite(fcb++, ch);
@@ -301,17 +302,17 @@ uint8 _ccp_save(void) {
 
 	if (pages < 256) {
 		error = FALSE;
-		while (_RamRead(pbuf) == ' ' && blen) {		// Skips any leading spaces
+		while (_RamRead(pbuf) == ' ' && blen) {			// Skips any leading spaces
 			++pbuf; --blen;
 		}
-		_ccp_nameToFCB(SecFCB);						// Loads file name onto the ParFCB
+		_ccp_nameToFCB(SecFCB);							// Loads file name onto the ParFCB
 		if (_ccp_bdos(F_MAKE, SecFCB)) {
 			_puts("Err: create");
 		} else {
 			if (_ccp_bdos(F_OPEN, SecFCB)) {
 				_puts("Err: open");
 			} else {
-				pages *= 2;							// Calculates the number of CP/M blocks to write
+				pages *= 2;								// Calculates the number of CP/M blocks to write
 				dma = defLoad;
 				_puts("\r\n");
 				for (i = 0; i < pages; i++) {
@@ -333,7 +334,7 @@ void _ccp_ren(void) {
 	++pbuf;
 
 	_ccp_nameToFCB(SecFCB);
-	for (i = 0; i < 12; ++i) {	// Swap the filenames on the fcb
+	for (i = 0; i < 12; ++i) {							// Swap the filenames on the fcb
 		ch = _RamRead(ParFCB + i);
 		_RamWrite(ParFCB + i, _RamRead(SecFCB + i));
 		_RamWrite(SecFCB + i, ch);
@@ -362,6 +363,41 @@ uint8 _ccp_page(void) {
 	if (r < 256) {
 		pgSize = (uint8)r;
 		error = FALSE;
+	}
+	return(error);
+}
+
+// VOL command
+uint8 _ccp_vol(void) {
+	uint8 error = FALSE;
+	uint8 letter = _RamRead(ParFCB) ? '@' + _RamRead(ParFCB) : 'A' + curDrive;
+	uint8 folder[7] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 0 };
+	uint8 filename[14] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 'V','O','L','.','T','X','T', 0 };
+	uint8 bytesread;
+	uint8 dmabuf[128];
+	uint8 i, j;
+	_puts("\r\nVolumes on ");
+	_putcon(folder[2]);
+	_puts(":\r\n");
+	for (i = 0; i < 16; ++i) {
+		folder[4] = i < 10 ? i + 48 : i + 65;
+		if (_sys_exists(folder)) {
+			_putcon(' ');
+			_putcon(folder[4]);
+			_puts(": ");
+			filename[4] = i < 10 ? i + 48 : i + 65;
+			if (_sys_exists(filename)) {
+				FILE* file = _sys_fopen_r(filename);
+				bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
+				dmabuf[bytesread] = 0;
+				for (j = 0; j < 128; ++j) {
+					if (dmabuf[j] < 32 || dmabuf[j] > 126)
+						break;
+					_putcon(dmabuf[j]);
+				}
+			}
+			_puts("\r\n");
+		}
 	}
 	return(error);
 }
@@ -400,19 +436,19 @@ uint8 _ccp_lua(void) {
 
 		_ccp_bdos(F_RUNLUA, CmdFCB);
 
-		if (user) {								// If a user was selected
-			_ccp_bdos(F_USERNUM, curUser);		// Set it back
+		if (user) {										// If a user was selected
+			_ccp_bdos(F_USERNUM, curUser);				// Set it back
 			user = 0;
 		}
-		_RamWrite(CmdFCB, drive);				// Set the command FCB drive back to what it was
-		cDrive = oDrive;						// And restore cDrive
+		_RamWrite(CmdFCB, drive);						// Set the command FCB drive back to what it was
+		cDrive = oDrive;								// And restore cDrive
 		error = FALSE;
 	}
 
-	if (user) {									// If a user was selected
-		_ccp_bdos(F_USERNUM, curUser);			// Set it back
+	if (user) {											// If a user was selected
+		_ccp_bdos(F_USERNUM, curUser);					// Set it back
 	}
-	_RamWrite(CmdFCB, drive);					// Set the command FCB drive back to what it was
+	_RamWrite(CmdFCB, drive);							// Set the command FCB drive back to what it was
 
 	return(error);
 }
@@ -446,48 +482,48 @@ uint8 _ccp_ext(void) {
 			}
 		}
 	}
-	if (found) {									// Program was found somewhere
+	if (found) {										// Program was found somewhere
 		_puts("\r\n");
-		_ccp_bdos(F_DMAOFF, loadAddr);				// Sets the DMA address for the loading
-		while (!_ccp_bdos(F_READ, CmdFCB)) {		// Loads the program into memory
+		_ccp_bdos(F_DMAOFF, loadAddr);					// Sets the DMA address for the loading
+		while (!_ccp_bdos(F_READ, CmdFCB)) {			// Loads the program into memory
 			loadAddr += 128;
-			if (loadAddr == BDOSjmppage) {			// Breaks if it reaches the end of TPA
+			if (loadAddr == BDOSjmppage) {				// Breaks if it reaches the end of TPA
 				_puts("\r\nNo Memory");
 				break;
 			}
-			_ccp_bdos(F_DMAOFF, loadAddr);			// Points the DMA offset to the next loadAddr
+			_ccp_bdos(F_DMAOFF, loadAddr);				// Points the DMA offset to the next loadAddr
 		}
-		_ccp_bdos(F_DMAOFF, defDMA);				// Points the DMA offset back to the default
+		_ccp_bdos(F_DMAOFF, defDMA);					// Points the DMA offset back to the default
 
-		if (user) {									// If a user was selected
-			_ccp_bdos(F_USERNUM, curUser);			// Set it back
+		if (user) {										// If a user was selected
+			_ccp_bdos(F_USERNUM, curUser);				// Set it back
 			user = 0;
 		}
-		_RamWrite(CmdFCB, drive);					// Set the command FCB drive back to what it was
-		cDrive = oDrive;							// And restore cDrive
+		_RamWrite(CmdFCB, drive);						// Set the command FCB drive back to what it was
+		cDrive = oDrive;								// And restore cDrive
 
 		// Place a trampoline to call the external command
 		// as it may return using RET instead of JP 0000h
 		loadAddr = Trampoline;
-		_RamWrite(loadAddr, CALL);					// CALL 0100h
+		_RamWrite(loadAddr, CALL);						// CALL 0100h
 		_RamWrite16(loadAddr + 1, defLoad);
-		_RamWrite(loadAddr + 3, JP);				// JP RETTOCCP
+		_RamWrite(loadAddr + 3, JP);					// JP RETTOCCP
 		_RamWrite16(loadAddr + 4, BIOSjmppage + 0x33);
 
-		Z80reset();									// Resets the Z80 CPU
-		SET_LOW_REGISTER(BC, _RamRead(DSKByte));	// Sets C to the current drive/user
-		PC = loadAddr;								// Sets CP/M application jump point
-		SP = BDOSjmppage;							// Sets the stack to the top of the TPA
+		Z80reset();										// Resets the Z80 CPU
+		SET_LOW_REGISTER(BC, _RamRead(DSKByte));		// Sets C to the current drive/user
+		PC = loadAddr;									// Sets CP/M application jump point
+		SP = BDOSjmppage;								// Sets the stack to the top of the TPA
 
-		Z80run();									// Starts Z80 simulation
+		Z80run();										// Starts Z80 simulation
 
 		error = FALSE;
 	}
 
-	if (user) {										// If a user was selected
-		_ccp_bdos(F_USERNUM, curUser);				// Set it back
+	if (user) {											// If a user was selected
+		_ccp_bdos(F_USERNUM, curUser);					// Set it back
 	}
-	_RamWrite(CmdFCB, drive);						// Set the command FCB drive back to what it was
+	_RamWrite(CmdFCB, drive);							// Set the command FCB drive back to what it was
 
 	return(error);
 }
@@ -510,27 +546,27 @@ void _ccp_readInput(void) {
 	uint8 i;
 	uint8 chars;
 
-	if (sFlag) {									// Are we running a submit?
-		if (!sRecs) {								// Are we already counting?
-			_ccp_bdos(F_OPEN, BatchFCB);			// Open the batch file
-			sRecs = _RamRead(BatchFCB + 15);		// Gets its record count
+	if (sFlag) {										// Are we running a submit?
+		if (!sRecs) {									// Are we already counting?
+			_ccp_bdos(F_OPEN, BatchFCB);				// Open the batch file
+			sRecs = _RamRead(BatchFCB + 15);			// Gets its record count
 		}
-		--sRecs;									// Counts one less
-		_RamWrite(BatchFCB + 32, sRecs);			// And sets to be the next read
-		_ccp_bdos(F_DMAOFF, defDMA);				// Reset current DMA
-		_ccp_bdos(F_READ, BatchFCB);				// And reads the last sector
-		chars = _RamRead(defDMA);					// Then moves it to the input buffer
+		--sRecs;										// Counts one less
+		_RamWrite(BatchFCB + 32, sRecs);				// And sets to be the next read
+		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
+		_ccp_bdos(F_READ, BatchFCB);					// And reads the last sector
+		chars = _RamRead(defDMA);						// Then moves it to the input buffer
 		for (i = 0; i <= chars; ++i)
 			_RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
 		_RamWrite(inBuf + i + 1, 0);
 		_puts((char*)_RamSysAddr(inBuf + 2));
 		if (!sRecs) {
-			_ccp_bdos(F_DELETE, BatchFCB);			// Deletes the submit file
-			sFlag = 0;								// and clears the submit flag
+			_ccp_bdos(F_DELETE, BatchFCB);				// Deletes the submit file
+			sFlag = 0;									// and clears the submit flag
 			prompt[4] = '>';
 		}
 	} else {
-		_ccp_bdos(C_READSTR, inBuf);				// Reads the command line from console
+		_ccp_bdos(C_READSTR, inBuf);					// Reads the command line from console
 	}
 }
 
@@ -619,31 +655,33 @@ void _ccp(void) {
 			i = FALSE;									// Checks if the command is valid and executes
 			switch (_ccp_cnum()) {
 				// Standard CP/M commands
-			case 0:		// DIR
+			case 0:										// DIR
 				_ccp_dir();			break;
-			case 1:		// ERA
+			case 1:										// ERA
 				_ccp_era();			break;
-			case 2:		// TYPE
+			case 2:										// TYPE
 				i = _ccp_type();	break;
-			case 3:		// SAVE
+			case 3:										// SAVE
 				i = _ccp_save();	break;
-			case 4:		// REN
+			case 4:										// REN
 				_ccp_ren();			break;
-			case 5:		// USER
+			case 5:										// USER
 				i = _ccp_user();	break;
 				// Extra CCP commands
-			case 6:		// CLS
+			case 6:										// CLS
 				_clrscr();			break;
-			case 7:		// DEL is an alias to ERA
+			case 7:										// DEL is an alias to ERA
 				_ccp_era();			break;
-			case 8:		// EXIT
+			case 8:										// EXIT
 				_puts("Terminating RunCPM.\r\n");
 				_puts("CPU Halted.\r\n");
 				Status = 1;			break;
-			case 9:		// PAGE
+			case 9:										// PAGE
 				i = _ccp_page();	break;
+			case 10:									// VOL
+				i = _ccp_vol();		break;
 				// External/Lua commands
-			case 255:	// It is an external command
+			case 255:									// It is an external command
 				i = _ccp_ext();
 #ifdef HASLUA
 				if (i)
@@ -653,7 +691,7 @@ void _ccp(void) {
 			default:
 				i = TRUE;			break;
 			}
-			cDrive = oDrive = curDrive;	// Restore cDrive and oDrive
+			cDrive = oDrive = curDrive;					// Restore cDrive and oDrive
 			if (i)
 				_ccp_cmdError();
 		}
