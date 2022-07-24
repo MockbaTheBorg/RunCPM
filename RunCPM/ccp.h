@@ -374,27 +374,23 @@ uint8 _ccp_vol(void) {
 	uint8 folder[7] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 0 };
 	uint8 filename[15] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 'I', 'N','F','O','.','T','X','T', 0 };
 	uint8 bytesread;
-	uint8 dmabuf[128];
 	uint8 i, j;
 	_puts("\r\nVolumes on ");
 	_putcon(folder[2]);
 	_puts(":\r\n");
 	for (i = 0; i < 16; ++i) {
-		folder[4] = i < 10 ? i + 48 : i + 65;
+		folder[4] = i < 10 ? i + 48 : i + 55;
 		if (_sys_exists(folder)) {
 			_putcon(' ');
 			_putcon(folder[4]);
 			_puts(": ");
-			filename[4] = i < 10 ? i + 48 : i + 65;
-			if (_sys_exists(filename)) {
-				FILE* file = _sys_fopen_r(filename);
-				bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
-				if(bytesread<128)
-					dmabuf[bytesread] = 0;
+			filename[4] = i < 10 ? i + 48 : i + 55;
+			bytesread = (uint8)_sys_readseq(filename, 0);
+			if(!bytesread) {
 				for (j = 0; j < 128; ++j) {
-					if (dmabuf[j] < 32 || dmabuf[j] > 126)
+					if (_RamRead(dmaAddr + j) < 32 || _RamRead(dmaAddr + j) > 126)
 						break;
-					_putcon(dmabuf[j]);
+					_putcon(_RamRead(dmaAddr + j));
 				}
 			}
 			_puts("\r\n");

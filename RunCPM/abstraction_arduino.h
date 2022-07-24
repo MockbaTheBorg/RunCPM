@@ -57,6 +57,10 @@ typedef struct {
 
 static DirFat_t fileDirEntry;
 
+bool _sys_exists(uint8* filename) {
+	return(SD.exists((const char *)filename));
+}
+
 File _sys_fopen_w(uint8* filename) {
 	return(SD.open((char*)filename, O_CREAT | O_WRITE));
 }
