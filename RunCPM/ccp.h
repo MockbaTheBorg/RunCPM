@@ -371,20 +371,20 @@ uint8 _ccp_page(void) {
 uint8 _ccp_vol(void) {
 	uint8 error = FALSE;
 	uint8 letter = _RamRead(ParFCB) ? '@' + _RamRead(ParFCB) : 'A' + curDrive;
-	uint8 folder[7] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 0 };
-	uint8 filename[15] = { '.', FOLDERCHAR, letter, FOLDERCHAR, '0', FOLDERCHAR, 'I', 'N','F','O','.','T','X','T', 0 };
+	uint8 folder[5] = { letter, FOLDERCHAR, '0', FOLDERCHAR, 0 };
+	uint8 filename[13] = { letter, FOLDERCHAR, '0', FOLDERCHAR, 'I', 'N','F','O','.','T','X','T', 0 };
 	uint8 bytesread;
 	uint8 i, j;
 	_puts("\r\nVolumes on ");
-	_putcon(folder[2]);
+	_putcon(folder[0]);
 	_puts(":\r\n");
 	for (i = 0; i < 16; ++i) {
-		folder[4] = i < 10 ? i + 48 : i + 55;
+		folder[2] = i < 10 ? i + 48 : i + 55;
 		if (_sys_exists(folder)) {
 			_putcon(' ');
-			_putcon(folder[4]);
+			_putcon(folder[0]);
 			_puts(": ");
-			filename[4] = i < 10 ? i + 48 : i + 55;
+			filename[2] = i < 10 ? i + 48 : i + 55;
 			bytesread = (uint8)_sys_readseq(filename, 0);
 			if(!bytesread) {
 				for (j = 0; j < 128; ++j) {
