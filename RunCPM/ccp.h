@@ -382,7 +382,7 @@ uint8 _ccp_vol(void) {
 		folder[2] = i < 10 ? i + 48 : i + 55;
 		if (_sys_exists(folder)) {
 			_putcon(' ');
-			_putcon(folder[0]);
+			_putcon(folder[2]);
 			_puts(": ");
 			filename[2] = i < 10 ? i + 48 : i + 55;
 			bytesread = (uint8)_sys_readseq(filename, 0);
