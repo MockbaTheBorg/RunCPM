@@ -381,8 +381,8 @@ uint8 _ccp_vol(void) {
 	for (i = 0; i < 16; ++i) {
 		folder[2] = i < 10 ? i + 48 : i + 55;
 		if (_sys_exists(folder)) {
-			_putcon(' ');
-			_putcon(folder[2]);
+			_putcon(i<10?' ':'1');
+			_putcon(i<10?folder[2]:38+i);
 			_puts(": ");
 			filename[2] = i < 10 ? i + 48 : i + 55;
 			bytesread = (uint8)_sys_readseq(filename, 0);
@@ -573,8 +573,11 @@ void _ccp(void) {
 	uint8 i;
 
 	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
-	if (sFlag)
+	if (sFlag) {
 		prompt[4] = '$';
+	} else {
+		prompt[4] = '>';
+	}
 	_ccp_bdos(DRV_SET, curDrive);
 
 	for (i = 0; i < 36; ++i)
