@@ -38,7 +38,7 @@ uint8 parDrive = 0;										// 0 -> 15 = A -> P .. Drive for the first file par
 uint8 curUser = 0;										// 0 -> 15			.. Current user area to access
 uint8 sFlag;											// Submit Flag
 uint8 sRecs = 0;										// Number of records on the Submit file
-uint8 prompt[6] = "\r\n  >";
+uint8 prompt[7] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;												// Actual size of the typed command line (size of the buffer)
 
@@ -212,7 +212,7 @@ uint16 _ccp_fcbtonum() {
 		ch = _RamRead(pos++);
 		if (ch < '0' || ch > '9')
 			break;
-		n = (n * 10) + (ch - 0x30);
+		n = (n * 10) + (ch - '0');
 	}
 	return(n);
 }
@@ -560,7 +560,6 @@ void _ccp_readInput(void) {
 		if (!sRecs) {
 			_ccp_bdos(F_DELETE, BatchFCB);				// Deletes the submit file
 			sFlag = 0;									// and clears the submit flag
-			prompt[4] = '>';
 		}
 	} else {
 		_ccp_bdos(C_READSTR, inBuf);					// Reads the command line from console
@@ -573,11 +572,6 @@ void _ccp(void) {
 	uint8 i;
 
 	sFlag = (uint8)_ccp_bdos(DRV_ALLRESET, 0x0000);
-	if (sFlag) {
-		prompt[4] = '$';
-	} else {
-		prompt[4] = '>';
-	}
 	_ccp_bdos(DRV_SET, curDrive);
 
 	for (i = 0; i < 36; ++i)
@@ -590,8 +584,7 @@ void _ccp(void) {
 
 		parDrive = curDrive;							// Initially the parameter drive is the same as the current drive
 
-		prompt[2] = 'A' + curDrive;						// Shows the prompt
-		prompt[3] = (curUser < 10) ? '0' + curUser : 'W' + curUser;
+        sprintf((char*) prompt, "\r\n%c%u%c", 'A' + curDrive, curUser, sFlag ? '$' : '>');
 		_puts((char*)prompt);
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
@@ -613,25 +606,61 @@ void _ccp(void) {
 			if (_RamRead(pbuf) == ';')					// Found a comment line
 				continue;
 
-			_ccp_initFCB(CmdFCB, 36);					// Initializes the command FCB
+            //parse for DU: command line shortcut
+            bool errorFlag = FALSE, continueFlag = FALSE;
+            uint8 ch, tDrive = 0, tUser = curUser, u = 0;
+            for (i = 0; i < blen; i++) {
+                ch = toupper(_RamRead(pbuf + i));
+                if ((ch >= 'A') && (ch <= 'P')) {
+                    if (tDrive) {           //if we've already specified a new drive
+                        break;              //not a DU: command
+                    } else {
+                        tDrive = ch - '@';
+                    }
+                } else if ((ch >= '0') && (ch <= '9')) {
+                    tUser = u = (u * 10) + (ch - '0');
+                } else if (ch == ':') {
+                    if (i == blen - 1) {    //if we at the end of the command line
+                        if (tUser >= 16) {  //if invalid user
+                            errorFlag = TRUE;
+                            break;
+                        }
+                        if (tDrive != cDrive) {
+                            cDrive = oDrive = tDrive - 1;
+                            _RamWrite(DSKByte, (_RamRead(DSKByte) & 0xf0) | cDrive);
+                            _ccp_bdos(DRV_SET, cDrive);
+                            if (Status) {
+                                curDrive = 0;
+                            }
+                        }
+                        if (tUser != curUser) {
+                            curUser = tUser;
+                            _ccp_bdos(F_USERNUM, curUser);
+                        }
+                        continueFlag = TRUE;
+                    }
+                    break;
+                } else {      //invalid character
+                    break;     //don't error; may be valid (non-DU:) command
+                }
+            }
+            if (errorFlag) {
+                _ccp_cmdError();    //print command error
+                continue;
+            }
+            if (continueFlag) {
+                continue;
+            }
 
-			perr = pbuf;								// Saves the pointer in case there's an error
-			if (_ccp_nameToFCB(CmdFCB) > 8) {			// Extracts the command from the buffer
-				_ccp_cmdError();						// Command name cannot be non-unique or have an extension
-				continue;
-			}
+            _ccp_initFCB(CmdFCB, 36);                    // Initializes the command FCB
 
-			if (_RamRead(CmdFCB) && _RamRead(CmdFCB + 1) == ' ') {	// Command was a simple drive select
-				cDrive = oDrive = _RamRead(CmdFCB) - 1;
-				_RamWrite(DSKByte, (_RamRead(DSKByte) & 0xf0) | cDrive);
-				_ccp_bdos(DRV_SET, cDrive);
-				if (!Status)
-					continue;
-				curDrive = 0;
-				break;
-			}
+            perr = pbuf;                                // Saves the pointer in case there's an error
+            if (_ccp_nameToFCB(CmdFCB) > 8) {            // Extracts the command from the buffer
+                _ccp_cmdError();                        // Command name cannot be non-unique or have an extension
+                continue;
+            }
 
-			_RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
+            _RamWrite(defDMA, blen);					// Move the command line at this point to 0x0080
 			for (i = 0; i < blen; ++i) {
 				_RamWrite(defDMA + i + 1, toupper(_RamRead(pbuf + i)));
 			}
