@@ -488,14 +488,14 @@ uint8 _ccp_ext(void) {
             //copy FCB's
             for (int i = 0; i < 18; i++) {
                 //copy ParFCB to SecFCB
-                _RamWrite(SecFCB + i, _RamRead(ParFCB + j));
+                _RamWrite(SecFCB + i, _RamRead(ParFCB + i));
                 //copy CmdFCB to ParFCB
-                _RamWrite(ParFCB + i, _RamRead(CmdFCB + j));
+                _RamWrite(ParFCB + i, _RamRead(CmdFCB + i));
             }
             _ccp_initFCB(CmdFCB, 36);                    // (Re)Initialize the command FCB
 
-            uint8 str = 'SUBMIT ';
-            int s = strlen(str);
+            uint8 *str = (uint8 *) "SUBMIT ";
+            int s = strlen((char*) str);
             //make room for string to insert
             for (int i = cmdLen - s, j = cmdLen; i > 0; i--, j--) {
                 _RamWrite(defDMA + i, _RamRead(defDMA + j));
@@ -507,7 +507,8 @@ uint8 _ccp_ext(void) {
                 //put SUBMIT in CmdFCB
                 _RamWrite(CmdFCB + i, str[i]);
             }
-            return(error);
+            s += _RamRead(defDMA);
+            _RamWrite(defDMA, s <= cmdLen ? s : cmdLen);
         }
     }
 #endif
