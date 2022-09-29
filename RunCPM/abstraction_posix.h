@@ -489,6 +489,7 @@ void _host_init(int argc, char* argv[]) {
 static struct termios _old_term, _new_term;
 
 void _console_init(void) {
+	(void)initscr();
 	tcgetattr(0, &_old_term);
 
 	_new_term = _old_term;
