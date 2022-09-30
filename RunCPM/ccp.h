@@ -458,8 +458,7 @@ uint8 _ccp_ext(void) {
 	uint16 loadAddr = defLoad;
 
     //look for a .SUB file first
-    //if (!sFlag)   //don't look for submit file while running a submit file
-    {
+    if (!sFlag) {	//don't auto-submit while executing a submit file
         _RamWrite(CmdFCB + 9, 'S');
         _RamWrite(CmdFCB + 10, 'U');
         _RamWrite(CmdFCB + 11, 'B');
