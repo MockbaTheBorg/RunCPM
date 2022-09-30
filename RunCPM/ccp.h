@@ -2,26 +2,7 @@
 #define CCP_H
 
 // CP/M BDOS calls
-#if 1
 #include "cpm.h"
-#else
-#define C_READ			1
-#define C_WRITE			2
-#define C_READSTR		10
-#define DRV_ALLRESET	13
-#define DRV_SET			14
-#define F_OPEN			15
-#define F_CLOSE			16
-#define F_DELETE		19
-#define F_READ			20
-#define F_WRITE			21
-#define F_MAKE			22
-#define F_RENAME		23
-#define DRV_GET			25
-#define F_DMAOFF		26
-#define F_USERNUM		32
-#define F_RUNLUA		254
-#endif
 
 #define CmdFCB	(BatchFCB + 36)							// FCB for use by internal commands
 #define ParFCB	0x005C									// FCB for use by line parameters
@@ -600,9 +581,17 @@ void _ccp(void) {
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
 		_ccp_readInput();
+#if 1
+        {
+            printf("\n\r iBuf: %0X", inBuf);
+            for (int j = 0; j < 18; j++) {
+                printf("\n\r iBuf[%u]: %0.2x", j, _RamRead((inBuf + j) & 0xFFFF));
+            }
+        }
+#endif
 
-		blen = _RamRead(inBuf + 1);						// Obtains the number of bytes read
-
+		blen = _RamRead((inBuf + 1) & 0xFFFF);          // Obtains the number of bytes read
+        printf("\nblen: %u", blen);
 		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
 
 		if (blen) {
