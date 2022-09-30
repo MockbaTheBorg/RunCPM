@@ -2,6 +2,9 @@
 #define CCP_H
 
 // CP/M BDOS calls
+#if 1
+#include "cpm.h"
+#else
 #define C_READ			1
 #define C_WRITE			2
 #define C_READSTR		10
@@ -18,6 +21,7 @@
 #define F_DMAOFF		26
 #define F_USERNUM		32
 #define F_RUNLUA		254
+#endif
 
 #define CmdFCB	(BatchFCB + 36)							// FCB for use by internal commands
 #define ParFCB	0x005C									// FCB for use by line parameters

@@ -1,6 +1,49 @@
 #ifndef CPM_H
 #define CPM_H
 
+enum eBDOSFunc {
+    F_BOOT = 0,
+    C_READ = 1,
+    C_WRITE = 2,
+    READER_IN = 3,
+    PUNCH_OUT = 4,
+    PRINT_OUT = 5,
+    DIRECT_IO = 6,
+    GET_IOBYTE = 7,
+    SET_IOBYTE = 8,
+    OUT_STRING = 9,
+    C_READSTR = 10,
+    C_STAT = 11,
+    GET_VERSION = 12,
+    DRV_ALLRESET = 13,
+    DRV_SET = 14,
+    F_OPEN = 15,
+    F_CLOSE = 16,
+    F_SEARCH_FIRST = 17,
+    F_SEARCH_NEXT = 18,
+    F_DELETE = 19,
+    F_READ = 20,
+    F_WRITE = 21,
+    F_MAKE = 22,
+    F_RENAME = 23,
+    DRV_LOGINVECTOR = 24,
+    DRV_GET = 25,
+    F_DMAOFF = 26,
+    DRV_GETADDRALLOC = 27,
+    DRV_WRITEPROTECT = 28,
+    DRV_GETROVECTOR = 29,
+    F_SETATTRIBUTES = 30,
+    DRV_GETDPB = 31,
+    F_USERNUM = 32,
+    F_READRANDOM = 33,
+    F_WRITERANDOM = 34,
+    F_COMPUTESIZE = 35,
+    F_SETRANDOM = 36,
+    DRV_RESET = 37,
+    F_WRITERANDOMZERO = 40,
+    F_RUNLUA = 254
+};
+
 /* see main.c for definition */
 
 #define JP		0xc3
@@ -416,7 +459,7 @@ void _Bdos(void) {
 		C = 0 : System reset
 		Doesn't return. Reloads CP/M
 		*/
-	case 0:
+	case F_BOOT:
 		Status = 2;	// Same as call to "BOOT"
 		break;
 		/*
@@ -424,7 +467,7 @@ void _Bdos(void) {
 		Gets a char from the console
 		Returns: A=Char
 		*/
-	case 1:
+	case C_READ:
 		HL = _getche();
 #ifdef DEBUG
 		if (HL == 4)
@@ -436,20 +479,20 @@ void _Bdos(void) {
 		E = Char
 		Sends the char in E to the console
 		*/
-	case 2:
+	case C_WRITE:
 		_putcon(LOW_REGISTER(DE));
 		break;
 		/*
 		C = 3 : Auxiliary (Reader) input
 		Returns: A=Char
 		*/
-	case 3:
+	case READER_IN:
 		HL = 0x1a;
 		break;
 		/*
 		C = 4 : Auxiliary (Punch) output
 		*/
-	case 4:
+	case PUNCH_OUT:
 #ifdef USE_PUN
 		if (!pun_open) {
 			pun_dev = _sys_fopen_w((uint8*)pun_file);
@@ -462,7 +505,7 @@ void _Bdos(void) {
 		/*
 		C = 5 : Printer output
 		*/
-	case 5:
+	case PRINT_OUT:
 #ifdef USE_LST
 		if (!lst_open) {
 			lst_dev = _sys_fopen_w((uint8*)lst_file);
@@ -478,7 +521,7 @@ void _Bdos(void) {
 		E = char : Outputs char (write)
 		Returns: A=Char or 0x00 (on read)
 		*/
-	case 6:
+	case DIRECT_IO:
 		if (LOW_REGISTER(DE) == 0xff) {
 			HL = _getchNB();
 #ifdef DEBUG
@@ -494,7 +537,7 @@ void _Bdos(void) {
 		Gets the system IOBYTE
 		Returns: A = IOBYTE
 		*/
-	case 7:
+	case GET_IOBYTE:
 		HL = _RamRead(0x0003);
 		break;
 		/*
@@ -502,7 +545,7 @@ void _Bdos(void) {
 		E = IOBYTE
 		Sets the system IOBYTE to E
 		*/
-	case 8:
+	case SET_IOBYTE:
 		_RamWrite(0x0003, LOW_REGISTER(DE));
 		break;
 		/*
@@ -510,7 +553,7 @@ void _Bdos(void) {
 		DE = Address of string
 		Sends the $ terminated string pointed by (DE) to the screen
 		*/
-	case 9:
+	case OUT_STRING:
 		while ((ch = _RamRead(DE++)) != '$')
 			_putcon(ch);
 		break;
@@ -521,7 +564,7 @@ void _Bdos(void) {
 		Returns: A = Number os chars read
 		DE) = First char
 		*/
-	case 10:
+	case C_READSTR:
 #ifdef PROFILE
 		if (time_start != 0) {
 			time_now = millis();
@@ -592,20 +635,20 @@ void _Bdos(void) {
 		C = 11 (0Bh) : Get console status
 		Returns: A=0x00 or 0xFF
 		*/
-	case 11:
+	case C_STAT:
 		HL = _chready();
 		break;
 		/*
 		C = 12 (0Ch) : Get version number
 		Returns: B=H=system type, A=L=version number
 		*/
-	case 12:
+	case GET_VERSION:
 		HL = 0x22;
 		break;
 		/*
 		C = 13 (0Dh) : Reset disk system
 		*/
-	case 13:
+	case DRV_ALLRESET:
 		roVector = 0;		// Make all drives R/W
 		loginVector = 0;
 		dmaAddr = 0x0080;
@@ -616,7 +659,7 @@ void _Bdos(void) {
 		C = 14 (0Eh) : Select Disk
 		Returns: A=0x00 or 0xFF
 		*/
-	case 14:
+	case DRV_SET:
 		oDrive = cDrive;
 		cDrive = LOW_REGISTER(DE);
 		HL = _SelectDisk(LOW_REGISTER(DE) + 1);	// +1 here is to allow SelectDisk to be used directly by disk.h as well
@@ -635,109 +678,109 @@ void _Bdos(void) {
 		C = 15 (0Fh) : Open file
 		Returns: A=0x00 or 0xFF
 		*/
-	case 15:
+	case F_OPEN:
 		HL = _OpenFile(DE);
 		break;
 		/*
 		C = 16 (10h) : Close file
 		*/
-	case 16:
+	case F_CLOSE:
 		HL = _CloseFile(DE);
 		break;
 		/*
 		C = 17 (11h) : Search for first
 		*/
-	case 17:
+	case F_SEARCH_FIRST:
 		HL = _SearchFirst(DE, TRUE);	// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 18 (12h) : Search for next
 		*/
-	case 18:
+	case F_SEARCH_NEXT:
 		HL = _SearchNext(DE, TRUE);		// TRUE = Creates a fake dir entry when finding the file
 		break;
 		/*
 		C = 19 (13h) : Delete file
 		*/
-	case 19:
+	case F_DELETE:
 		HL = _DeleteFile(DE);
 		break;
 		/*
 		C = 20 (14h) : Read sequential
 		*/
-	case 20:
+	case F_READ:
 		HL = _ReadSeq(DE);
 		break;
 		/*
 		C = 21 (15h) : Write sequential
 		*/
-	case 21:
+	case F_WRITE:
 		HL = _WriteSeq(DE);
 		break;
 		/*
 		C = 22 (16h) : Make file
 		*/
-	case 22:
+	case F_MAKE:
 		HL = _MakeFile(DE);
 		break;
 		/*
 		C = 23 (17h) : Rename file
 		*/
-	case 23:
+	case F_RENAME:
 		HL = _RenameFile(DE);
 		break;
 		/*
 		C = 24 (18h) : Return log-in vector (active drive map)
 		*/
-	case 24:
+	case DRV_LOGINVECTOR:
 		HL = loginVector;	// (todo) improve this
 		break;
 		/*
 		C = 25 (19h) : Return current disk
 		*/
-	case 25:
+	case DRV_GET:
 		HL = cDrive;
 		break;
 		/*
 		C = 26 (1Ah) : Set DMA address
 		*/
-	case 26:
+	case F_DMAOFF:
 		dmaAddr = DE;
 		break;
 		/*
 		C = 27 (1Bh) : Get ADDR(Alloc)
 		*/
-	case 27:
+	case DRV_GETADDRALLOC:
 		HL = SCBaddr;
 		break;
 		/*
 		C = 28 (1Ch) : Write protect current disk
 		*/
-	case 28:
+	case DRV_WRITEPROTECT:
 		roVector = roVector | (1 << cDrive);
 		break;
 		/*
 		C = 29 (1Dh) : Get R/O vector
 		*/
-	case 29:
+	case DRV_GETROVECTOR:
 		HL = roVector;
 		break;
 		/*
 		C = 30 (1Eh) : Set file attributes (does nothing)
 		*/
-	case 30:
+	case F_SETATTRIBUTES:
 		HL = 0;
 		break;
 		/*
 		C = 31 (1Fh) : Get ADDR(Disk Parms)
 		*/
-	case 31:
+	case DRV_GETDPB:
 		HL = DPBaddr;
 		break;
 		/*
 		C = 32 (20h) : Get/Set user code
 		*/
-	case 32:
+	case F_USERNUM:
 		if (LOW_REGISTER(DE) == 0xFF) {
 			HL = userCode;
 		} else {
@@ -747,31 +790,31 @@ void _Bdos(void) {
 		/*
 		C = 33 (21h) : Read random
 		*/
-	case 33:
+	case F_READRANDOM:
 		HL = _ReadRand(DE);
 		break;
 		/*
 		C = 34 (22h) : Write random
 		*/
-	case 34:
+	case F_WRITERANDOM:
 		HL = _WriteRand(DE);
 		break;
 		/*
 		C = 35 (23h) : Compute file size
 		*/
-	case 35:
+	case F_COMPUTESIZE:
 		HL = _GetFileSize(DE);
 		break;
 		/*
 		C = 36 (24h) : Set random record
 		*/
-	case 36:
+	case F_SETRANDOM:
 		HL = _SetRandom(DE);
 		break;
 		/*
 		C = 37 (25h) : Reset drive
 		*/
-	case 37:
+	case DRV_RESET:
 		roVector = roVector & ~DE;
 		break;
 		/********** Function 38: Not supported by CP/M 2.2 **********/
@@ -780,7 +823,7 @@ void _Bdos(void) {
 		/*
 		C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
 		*/
-	case 40:
+	case F_WRITERANDOMZERO:
 		HL = _WriteRand(DE);
 		break;
 #if defined board_digital_io
