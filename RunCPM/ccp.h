@@ -513,6 +513,7 @@ uint8 _ccp_ext(void) {
                     _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
                     found = !_ccp_bdos(F_OPEN, CmdFCB);    // and try again
                     if (!found) {
+                        _RamWrite(CmdFCB, drive);       // restore previous drive
                         _ccp_bdos(F_USERNUM, curUser);  // restore to previous user
                     }
                 }
@@ -522,7 +523,7 @@ uint8 _ccp_ext(void) {
     
     //if .COM not found then look for a .SUB file
     if (!found && !sFlag) {    //don't auto-submit while executing a submit file
-                               //_puts(".COM file NOT found!\n");
+        //_puts(".COM file NOT found!\n");
         
         _RamWrite(CmdFCB + 9, 'S');
         _RamWrite(CmdFCB + 10, 'U');
@@ -543,6 +544,7 @@ uint8 _ccp_ext(void) {
                         _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
                         found = !_ccp_bdos(F_OPEN, CmdFCB);    // and try again
                         if (!found) {
+                            _RamWrite(CmdFCB, drive);       // restore previous drive
                             _ccp_bdos(F_USERNUM, curUser);  // restore to previous user
                         }
                     }
