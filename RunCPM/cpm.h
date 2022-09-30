@@ -705,9 +705,9 @@ void _Bdos(void) {
 		   DE) = First char
 		 */
 		case C_READSTR: {
-            uint8 mcIdx = WORD16(DE);   //index to max number of characters
-            uint8 ncIdx = (mcIdx + 1) & 0xFFFF;    //index to number of characters read
-            printf("\n\r mcIdx: %0X, ncIdx: %0X", mcIdx, ncIdx);
+            uint16 mcIdx = WORD16(DE);   //index to max number of characters
+            uint16 ncIdx = (mcIdx + 1) & 0xFFFF;    //index to number of characters read
+            //printf("\n\r mcIdx: %0X, ncIdx: %0X", mcIdx, ncIdx);
 
             static uint8 last[256];
 
@@ -776,7 +776,7 @@ void _Bdos(void) {
                                 _putcon(last[j]);
                             }
                         }
-                        printf("\n\r ^W mc: %u, nc: %u", mc, nc);
+                        //printf("\n\r ^W mc: %u, nc: %u", mc, nc);
                     }
                 }
 				if (chr == 24) {    // ^X
@@ -802,7 +802,7 @@ void _Bdos(void) {
             for (j = 0; j < nc + 2; j++) {
                 last[j] = _RamRead((mcIdx + j) & 0xFFFF);
             }
-#if 1
+#if 0
             printf("\n\r mcIdx: %0X, mc: %u, nc: %u", mcIdx, mc, nc);
             for (j = 0; j < nc + 2; j++) {
                 printf("\n\r mcIdx[%u]: %0.2x", j, last[j]);

@@ -10,7 +10,8 @@ CC = gcc
 
 # Flags to pass to the compiler - add "-g" to include debug information
 CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -DHASLUA
-#CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
+#uncomment next line to include debug symbols
+CFLAGS+=-ggdb
 
 # Flags to pass to the linker
 LDFLAGS = -lncurses -lm -ldl

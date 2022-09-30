@@ -581,18 +581,10 @@ void _ccp(void) {
 
 		_RamWrite(inBuf, cmdLen);						// Sets the buffer size to read the command line
 		_ccp_readInput();
-#if 1
-        {
-            printf("\n\r iBuf: %0X", inBuf);
-            for (int j = 0; j < 18; j++) {
-                printf("\n\r iBuf[%u]: %0.2x", j, _RamRead((inBuf + j) & 0xFFFF));
-            }
-        }
-#endif
 
-		blen = _RamRead((inBuf + 1) & 0xFFFF);          // Obtains the number of bytes read
-        printf("\nblen: %u", blen);
-		_ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
+        blen = _RamRead((inBuf + 1) & 0xFFFF);          // Obtains the number of bytes read
+
+        _ccp_bdos(F_DMAOFF, defDMA);					// Reset current DMA
 
 		if (blen) {
 			_RamWrite(inBuf + 2 + blen, 0);				// "Closes" the read buffer with a \0
