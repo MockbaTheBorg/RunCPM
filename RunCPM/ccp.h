@@ -456,9 +456,10 @@ uint8 _ccp_ext(void) {
 	bool error = TRUE, found;
 	uint8 drive, user = 0;
 	uint16 loadAddr = defLoad;
-#if 1
-    //if (!sFlag)
-    {   //don't look for a submit file while running a submit file
+
+    //look for a .SUB file first
+    //if (!sFlag)   //don't look for submit file while running a submit file
+    {
         _RamWrite(CmdFCB + 9, 'S');
         _RamWrite(CmdFCB + 10, 'U');
         _RamWrite(CmdFCB + 11, 'B');
@@ -484,34 +485,28 @@ uint8 _ccp_ext(void) {
                 }
             }
         }
+
         if (found) {
+            //_puts("SUBMIT file found!\n");
+
+            uint8 *str = (uint8 *) "SUBMIT";
+            int s = strlen((char*) str);
+
             //copy FCB's
             for (int i = 0; i < 18; i++) {
-                //copy ParFCB to SecFCB
+                //ParFCB to SecFCB
                 _RamWrite(SecFCB + i, _RamRead(ParFCB + i));
-                //copy CmdFCB to ParFCB
+                //CmdFCB to ParFCB
                 _RamWrite(ParFCB + i, _RamRead(CmdFCB + i));
             }
             _ccp_initFCB(CmdFCB, 36);                    // (Re)Initialize the command FCB
 
-            uint8 *str = (uint8 *) "SUBMIT ";
-            int s = strlen((char*) str);
-            //make room for string to insert
-            for (int i = cmdLen - s, j = cmdLen; i > 0; i--, j--) {
-                _RamWrite(defDMA + i, _RamRead(defDMA + j));
-            }
-
+            //put SUBMIT in CmdFCB
             for (int i = 0; i < s; i++) {
-                //put SUBMIT in defDMA
-                _RamWrite(defDMA + i, str[i]);
-                //put SUBMIT in CmdFCB
-                _RamWrite(CmdFCB + i, str[i]);
+                _RamWrite(CmdFCB + i + 1, str[i]);
             }
-            s += _RamRead(defDMA);
-            _RamWrite(defDMA, s <= cmdLen ? s : cmdLen);
         }
     }
-#endif
 
     _RamWrite(CmdFCB + 9, 'C');
     _RamWrite(CmdFCB + 10, 'O');
