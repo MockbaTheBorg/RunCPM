@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <conio.h>
+#include <stdbool.h>
 #ifdef PROFILE
 #include <time.h>
 #define millis() clock()
