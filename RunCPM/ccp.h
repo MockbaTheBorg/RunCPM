@@ -2,33 +2,18 @@
 #define CCP_H
 
 // CP/M BDOS calls
-#define C_READ 1
-#define C_WRITE 2
-#define C_READSTR 10
-#define DRV_ALLRESET 13
-#define DRV_SET 14
-#define F_OPEN 15
-#define F_CLOSE 16
-#define F_DELETE 19
-#define F_READ 20
-#define F_WRITE 21
-#define F_MAKE 22
-#define F_RENAME 23
-#define DRV_GET 25
-#define F_DMAOFF 26
-#define F_USERNUM 32
-#define F_RUNLUA 254
+#include "cpm.h"
 
-#define CmdFCB (BatchFCB + 36)      // FCB for use by internal commands
-#define ParFCB 0x005C               // FCB for use by line parameters
-#define SecFCB 0x006C               // Secondary part of FCB for renaming files
-#define Trampoline (CmdFCB + 36)    // Trampoline for running external commands
+#define CmdFCB	(BatchFCB + 36)							// FCB for use by internal commands
+#define ParFCB	0x005C									// FCB for use by line parameters
+#define SecFCB	0x006C									// Secondary part of FCB for renaming files
+#define Trampoline (CmdFCB + 36)						// Trampoline for running external commands
 
-#define inBuf (BDOSjmppage - 256)   // Input buffer location
-#define cmdLen 125                  // Maximum size of a command line (sz+rd+cmd+\0)
+#define inBuf	(BDOSjmppage - 256)						// Input buffer location
+#define cmdLen	125										// Maximum size of a command line (sz+rd+cmd+\0)
 
-#define defDMA 0x0080   // Default DMA address
-#define defLoad 0x0100  // Default load address
+#define defDMA	0x0080									// Default DMA address
+#define defLoad	0x0100									// Default load address
 
 // CCP global variables
 uint8 pgSize = 22;  // for TYPE
