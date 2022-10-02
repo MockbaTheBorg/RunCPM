@@ -705,12 +705,15 @@ void _Bdos(void) {
 		   DE) = First char
 		 */
 		case C_READSTR: {
-            uint16 maxChrsIdx = WORD16(DE);                 //index to max number of characters
-            uint16 numChrsIdx = (maxChrsIdx + 1) & 0xFFFF;  //index to number of characters read
-            uint16 chrsIdx = (numChrsIdx + 1) & 0xFFFF;     //index to characters
-            //printf("\n\r maxChrsIdx: %0X, numChrsIdx: %0X", maxChrsIdx, numChrsIdx);
+            uint16 chrsMaxIdx = WORD16(DE);                 //index to max number of characters
+            uint16 chrsCntIdx = (chrsMaxIdx + 1) & 0xFFFF;  //index to number of characters read
+            uint16 chrsIdx = (chrsCntIdx + 1) & 0xFFFF;     //index to characters
+            //printf("\n\r chrsMaxIdx: %0X, chrsCntIdx: %0X", chrsMaxIdx, chrsCntIdx);
 
-            static uint8 last[256];
+            static uint8 *last = 0;
+            if (!last) {
+                last = calloc(1, 256);    //allocate one (for now!)
+            }
 
 #ifdef PROFILE
 			if (time_start != 0) {
@@ -719,243 +722,218 @@ void _Bdos(void) {
 				time_start = 0;
 			}
 #endif // ifdef PROFILE
-            uint8 maxChrs = _RamRead(maxChrsIdx); // Gets the max number of characters that can be read
-            uint8 numChrs = 0;               // this is the number of characters read
+            uint8 chrsMax = _RamRead(chrsMaxIdx);   // Gets the max number of characters that can be read
+            uint8 chrsCnt = 0;                      // this is the number of characters read
+            uint8 curCol = 0;                       //this is the cursor column (relative to where it started)
 
-			uint8 phyCol = 0, logCol = 0;
+            while (chrsMax) {
+                // pre-backspace, retype & post backspace counts
+                uint8 preBS = 0, reType = 0, postBS = 0;
 
-			while (maxChrs) {
-				chr = _getch();
+                chr = _getch(); //input a character
 
-                if (chr == 1) {                             // ^A
-                    if (logCol > 0) {
-                        logCol--;
+                if (chr == 1) {                             // ^A - Move cursor one character to the left
+                    if (curCol > 0) {
+                        preBS++;            //backspace one
                     } else {
-                        _putcon('\007');  //ring the bell
+                        _putcon('\007');    //ring the bell
                     }
                 }
 
-                if (chr == 2) {                             // ^B
-                    logCol = logCol ? 0 : numChrs;
+                if (chr == 2) {                             // ^B - Toggle between beginning & end of line
+                    if (curCol) {
+                        preBS = curCol;             //move to beginning
+                    } else {
+                        reType = chrsCnt - curCol;  //move to EOL
+                    }
                 }
 
-                if ((chr == 3) && (numChrs == 0)) {         // ^C
-					_puts("^C");
-					Status = 2;
-					break;
-				}
-				if (chr == 4) { // ^D
+                if ((chr == 3) && (chrsCnt == 0)) {         // ^C - Abort string input
+                    _puts("^C");
+                    Status = 2;
+                    break;
+                }
+
 #ifdef DEBUG
-					Debug = 1
-#elif 1
-                    printf("\r\n phyCol: %u, numChrs: %u, maxChrs: %u", phyCol, numChrs, maxChrs);
-                    _puts("#\r\n  ");
-                    for (i = 0; i < numChrs; i++) {
-                        ch = _RamRead(((chrsIdx + i) & 0xFFFF));
-                        _putcon(ch);
-                    }
-                    _puts(" \r  ");
-                    for (i = 0; i < phyCol; i++) {
-                        ch = _RamRead(((chrsIdx + i) & 0xFFFF));
-                        _putcon(ch);
-                    }
-#endif // ifdef DEBUG
-				}
-				if (chr == 5) {                             // ^E
-					_puts("\r\n");
-				}
+                if (chr == 4) {                             // ^D - DEBUG
+                    Debug = 1
 
-                if (chr == 6) {                             // ^F
-                    if (logCol < numChrs) {
-                        logCol++;
+                    printf("\r\n curCol: %u, chrsCnt: %u, chrsMax: %u", curCol, chrsCnt, chrsMax);
+                    _puts("#\r\n  ");
+                    reType = chrsCnt;
+                    postBS = chrsCnt - curCol;
+                }
+#endif // ifdef DEBUG
+
+                if (chr == 5) {                             // ^E - goto beginning of next line
+                    _puts("\n");
+                    preBS = curCol;
+                    reType = postBS = chrsCnt;
+                }
+
+                if (chr == 6) {                             // ^F - Move the cursor one character forward
+                    if (curCol < chrsCnt) {
+                        reType++;
                     } else {
                         _putcon('\007');  //ring the bell
                     }
                 }
 
-                if (chr == 7) {                     // ^G
-                    if (phyCol < numChrs) {
-                        for (i = phyCol, j = i + 1; j < numChrs; i++, j++) {
+                if (chr == 7) {                             // ^G - Delete character at cursor
+                    if (curCol < chrsCnt) {
+                        //delete this character from buffer
+                        for (i = curCol, j = i + 1; j < chrsCnt; i++, j++) {
                             ch = _RamRead(((chrsIdx + j) & 0xFFFF));
                             _RamWrite((chrsIdx + i) & 0xFFFF, ch);
-                            _putcon(ch);
                         }
-                        _puts(" \b");   //erase next character
-                        for (i = phyCol + 1; i < numChrs; i++) {
-                            _putcon('\b');    //backup one character
-                        }
-                        numChrs--;
+                        reType = postBS = chrsCnt - curCol;
+                        chrsCnt--;
                     } else {
                         _putcon('\007');  //ring the bell
                     }
                 }
 
-				if (((chr == 0x08) || (chr == 0x7F))) {  // ^H and DEL
-                    if ((numChrs > 0) && (phyCol > 0)) {
-                        if (phyCol < numChrs) {
-                            logCol--;
-                            _putcon('\b');    //backup one character
-                            //output rest of buffer
-                            for (i = logCol, j = i + 1; j < numChrs; i++, j++) {
-                                ch = _RamRead(((chrsIdx + j) & 0xFFFF));
-                                _RamWrite((chrsIdx + i) & 0xFFFF, ch);
-                                _putcon(ch);
+                if (((chr == 0x08) || (chr == 0x7F))) {     // ^H and DEL - Delete one character to left of cursor
+                    if (curCol > 0) {   //not at BOL
+                        if (curCol < chrsCnt) { //not at EOL
+                            //delete previous character from buffer
+                            for (i = curCol, j = i - 1; i < chrsCnt; i++, j++) {
+                                ch = _RamRead(((chrsIdx + i) & 0xFFFF));
+                                _RamWrite((chrsIdx + j) & 0xFFFF, ch);
                             }
-                            _puts(" ");   //erase next character
-                            //backup to edit point
-                            for (i = numChrs; i > logCol; i--) {
-                                _putcon('\b');
-                            }
-                            phyCol = logCol;
+                            preBS++;    //pre-backspace one
+                            //note: does one extra to erase EOL
+                            reType = postBS = chrsCnt - curCol + 1;
                         } else {
-                            _puts("\b \b");
+                            preBS = reType = postBS = 1;
                         }
-                        numChrs--;
+                        chrsCnt--;
                     } else {
                         _putcon('\007');  //ring the bell
                     }
-					continue;
-				}
+                }
 
-                if ((chr == 0x0A) || (chr == 0x0D)) {   // ^J and ^M
+                if ((chr == 0x0A) || (chr == 0x0D)) {   // ^J and ^M - Ends editing
 #ifdef PROFILE
-					time_start = millis();
+                    time_start = millis();
 #endif
-					break;
-				}
-                if (chr == 0x0B) {    // ^K
-                    if (phyCol < numChrs) {
-                        for (i = phyCol; i < numChrs; i++) {
-                            _putcon(' ');
-                        }
-                        _puts(" \b");   //erase next character
-                        for (i = phyCol; i < numChrs; i++) {
-                            _putcon('\b');    //backup one character
-                        }
-                        numChrs = phyCol;
+                    break;
+                }
+
+                if (chr == 0x0B) {                      // ^K - Delete to EOL from cursor
+                    if (curCol < chrsCnt) {
+                        reType = postBS = chrsCnt - curCol;
+                        chrsCnt = curCol;   //truncate buffer to here
                     } else {
                         _putcon('\007');  //ring the bell
                     }
                 }
 
-				if (chr == 18) {    // ^R
-                    _puts("#\r\n  ");
+                if (chr == 18) {                        // ^R - Retype the command line
+                    _puts("#\b\n");
+                    preBS = curCol;             //backspace to BOL
+                    reType = chrsCnt;           //retype everything
+                    postBS = chrsCnt - curCol;  //backspace to cursor column
+                }
 
-					for (j = 0; j < numChrs; ++j) {
-                        ch = _RamRead(((chrsIdx + j) & 0xFFFF));
-                        _putcon(ch);
-					}
-                    logCol = phyCol = numChrs;
-				}
-				if (chr == 21) {    // ^U
-                    _puts("#\r\n  ");
-                    maxChrs = _RamRead(maxChrsIdx);
-                    numChrs = 0;
-				}
-                if (chr == 23) {    // ^W
-                    if (!numChrs) {
-                        //restore last command
-                        _puts("#\r\n  ");
-                        maxChrs = last[0];
-                        logCol = phyCol = numChrs = last[1];
-                        for (j = 0; j < numChrs + 2; j++) {
-                            _RamWrite((maxChrsIdx + j) & 0xFFFF, last[j]);
-                            if (j >= 2) {
-                                _putcon(last[j]);
+                if (chr == 21) {                        // ^U - delete all characters
+                    _puts("#\b\n");
+                    preBS = curCol; //backspace to BOL
+                    chrsCnt = 0;
+                }
+
+                if (chr == 23) {                        // ^W - recall last command
+                    if (!curCol) {      //if at beginning of command line
+                        if (last[0]) {  //and there's a last command
+                            //restore last command
+                            for (j = 0; j <= chrsCnt; j++) {
+                                _RamWrite((chrsCntIdx + j) & 0xFFFF, last[j]);
                             }
+                            //retype & backspace to greater of chrsCnt & last[0]
+                            reType = postBS = (chrsCnt > last[0]) ? chrsCnt : last[0];
+                            chrsCnt = last[0];
+                        } else {
+                            _putcon('\007');  //ring the bell
                         }
-                        //printf("\n\r ^W maxChrs: %u, numChrs: %u", maxChrs, numChrs);
+                    } else if (curCol < chrsCnt) {  //if not at EOL
+                        reType = chrsCnt - curCol;  //move to EOL
                     }
                 }
-				if (chr == 24) {    // ^X
-                    if (phyCol > 0) {
-                        //backup to beginning of line
-                        for (i = phyCol; i > 0; i--) {
-                            _putcon('\b');    //backup one character
-                        }
-                        //copy & output rest of line
-                        for (i = 0, j = phyCol; j < numChrs;i++, j++) {
+
+                if (chr == 24) {                        // ^X - delete all character left of the cursor
+                    if (curCol > 0) {
+                        //move rest of line to beginning of line
+                        for (i = 0, j = curCol; j < chrsCnt;i++, j++) {
                             ch = _RamRead(((chrsIdx + j) & 0xFFFF));
                             _RamWrite((chrsIdx +i) & 0xFFFF, ch);
-                            _putcon(ch);
                         }
-                        //erase rest of line
-                        for (; i < numChrs; i++) {
-                            _putcon(' ');
-                        }
-
-                        _puts(" \b");   //erase one more
-
-                        //backup to beginning of line
-                        for (i = 0; i < numChrs; i++) {
-                            _putcon('\b');    //backup one character
-                        }
-                        numChrs -= phyCol;
-                        phyCol = logCol = 0;
+                        preBS = curCol;
+                        reType = chrsCnt;
+                        postBS = chrsCnt;
+                        chrsCnt -= curCol;
                     } else {
                         _putcon('\007');  //ring the bell
                     }
-				}
+                }
 
-                while (logCol < phyCol) {
+                if ((chr >= 0x20) && (chr <= 0x7E)) { //valid character
+                    if (curCol < chrsCnt) {
+                        //move rest of buffer one character right
+                        for (i = chrsCnt, j = i - 1; i > curCol; i--, j--) {
+                            ch = _RamRead(((chrsIdx + j) & 0xFFFF));
+                            _RamWrite((chrsIdx + i) & 0xFFFF, ch);
+                        }
+                    }
+                    //put the new character in the buffer
+                    _RamWrite((chrsIdx + curCol) & 0xffff, chr);
+
+                    chrsCnt++;
+                    reType = chrsCnt - curCol;
+                    postBS = reType - 1;
+                }
+
+                //pre-backspace
+                for (i = 0; i < preBS; i++) {
                     _putcon('\b');
-                    phyCol--;
+                    curCol--;
                 }
 
-                while (phyCol < logCol) {
-                    ch = _RamRead(((chrsIdx + phyCol) & 0xFFFF));
+                //retype
+                for (i = 0; i < reType; i++) {
+                    if (curCol < chrsCnt) {
+                        ch = _RamRead(((chrsIdx + curCol) & 0xFFFF));
+                    } else {
+                        ch = ' ';
+                    }
                     _putcon(ch);
-                    phyCol++;
+                    curCol++;
                 }
 
-                if ((chr < 0x20) || (chr > 0x7E)) { // Invalid character
-					continue;
-				}
-
-                _putcon(chr);
-
-                if (phyCol < numChrs) {
-                    //output the rest of the characters
-                    for (i = phyCol; i < numChrs; i++) {
-                        ch = _RamRead(((chrsIdx + i) & 0xFFFF));
-                        _putcon(ch);
-                    }
-                    _puts(" \b");   //erase next character
-                    //and an equal number of backspaces
-                    for (i = phyCol; i < numChrs; i++) {
-                        _putcon('\b');
-                    }
-
-                    //move rest of buffer one character right
-                    for (i = numChrs, j = i - 1; j >= phyCol; i--, j--) {
-                        ch = _RamRead(((chrsIdx + j) & 0xFFFF));
-                        _RamWrite((chrsIdx + i) & 0xFFFF, ch);
-                    }
+                //post-backspace
+                for (i = 0; i < postBS; i++) {
+                    _putcon('\b');
+                    curCol--;
                 }
 
-                numChrs++;
-                _RamWrite((chrsIdx + phyCol) & 0xffff, chr);
-                logCol = ++phyCol;
-
-				if (numChrs == maxChrs) {   // Reached the maximum count
-					break;
-				}
-			}
+                if (chrsCnt == chrsMax) {   // Reached the maximum count
+                    break;
+                }
+            }   // while (chrsMax)
 
             // Save the number of characters read
-            _RamWrite(numChrsIdx, numChrs);
+            _RamWrite(chrsCntIdx, chrsCnt);
 
             //if there are characters...
-            if (numChrs) {
+            if (chrsCnt) {
                 //... then save this as last command
-                for (j = 0; j < numChrs + 2; j++) {
-                    last[j] = _RamRead((maxChrsIdx + j) & 0xFFFF);
+                for (j = 0; j <= chrsCnt; j++) {
+                    last[j] = _RamRead((chrsCntIdx + j) & 0xFFFF);
                 }
             }
 #if 0
-            printf("\n\r maxChrsIdx: %0X, maxChrs: %u, numChrs: %u", maxChrsIdx, maxChrs, numChrs);
-            for (j = 0; j < numChrs + 2; j++) {
-                printf("\n\r maxChrsIdx[%u]: %0.2x", j, last[j]);
+            printf("\n\r chrsMaxIdx: %0X, chrsMax: %u, chrsCnt: %u", chrsMaxIdx, chrsMax, chrsCnt);
+            for (j = 0; j < chrsCnt + 2; j++) {
+                printf("\n\r chrsMaxIdx[%u]: %0.2x", j, last[j]);
             }
 #endif
             _putcon('\r');          // Gives a visual feedback that read ended
