@@ -489,41 +489,52 @@ uint8 _ccp_lua(void) {
 
 // External (.COM) command
 uint8 _ccp_ext(void) {
-    bool error = TRUE, found;
+    bool error = TRUE, found = FALSE;
     uint8 drive, user = 0;
     uint16 loadAddr = defLoad;
-    
-    //first look for a .COM file
-    _RamWrite(CmdFCB + 9, 'C');
-    _RamWrite(CmdFCB + 10, 'O');
-    _RamWrite(CmdFCB + 11, 'M');
-    
-    drive = _RamRead(CmdFCB);                           // Get the drive from the command FCB
-    found = !_ccp_bdos(F_OPEN, CmdFCB);                 // Look for the program on the FCB drive, current or specified
-    if (!found) {                                       // If not found
-        if (!drive) {                                   // and the search was on the default drive
-            _RamWrite(CmdFCB, 0x01);                    // Then look on drive A: user 0
-            if (curUser) {
-                user = curUser;                         // Save the current user
-                _ccp_bdos(F_USERNUM, 0x0000);           // then set it to 0
-            }
-            found = !_ccp_bdos(F_OPEN, CmdFCB);
-            if (!found) {                               // If still not found then
-                if (curUser) {                          // If current user not = 0
-                    _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
-                    found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
+
+    bool wasBlank = (_RamRead(CmdFCB + 9) == ' ');
+    //printf("\n\rwasBlank: %s", wasBlank ? "True" : "False");
+    bool wasSUB = ((_RamRead(CmdFCB + 9) == 'S') &&
+                   (_RamRead(CmdFCB + 10) == 'U') &&
+                   (_RamRead(CmdFCB + 11) == 'B'));
+    //printf("\r\nwasSUB: %s", wasSUB ? "True" : "False");
+
+    if (!wasSUB) {
+        if (wasBlank) {
+            //first look for a .COM file
+            _RamWrite(CmdFCB + 9, 'C');
+            _RamWrite(CmdFCB + 10, 'O');
+            _RamWrite(CmdFCB + 11, 'M');
+        }
+
+        drive = _RamRead(CmdFCB);                           // Get the drive from the command FCB
+        found = !_ccp_bdos(F_OPEN, CmdFCB);                 // Look for the program on the FCB drive, current or specified
+        if (!found) {                                       // If not found
+            if (!drive) {                                   // and the search was on the default drive
+                _RamWrite(CmdFCB, 0x01);                    // Then look on drive A: user 0
+                if (curUser) {
+                    user = curUser;                         // Save the current user
+                    _ccp_bdos(F_USERNUM, 0x0000);           // then set it to 0
+                }
+                found = !_ccp_bdos(F_OPEN, CmdFCB);
+                if (!found) {                               // If still not found then
+                    if (curUser) {                          // If current user not = 0
+                        _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
+                        found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
+                    }
                 }
             }
         }
-    }
-    if (!found) {
-        _RamWrite(CmdFCB, drive);       // restore previous drive
-        _ccp_bdos(F_USERNUM, curUser);  // restore to previous user
+        if (!found) {
+            _RamWrite(CmdFCB, drive);       // restore previous drive
+            _ccp_bdos(F_USERNUM, curUser);  // restore to previous user
+        }
     }
 
     //if .COM not found then look for a .SUB file
-    if (!found && !sFlag) {    //don't auto-submit while executing a submit file
-        //_puts(".COM file NOT found!\n");
+    if ((wasBlank || wasSUB) && !found && !sFlag) {    //don't auto-submit while executing a submit file
+        //_puts("\n\rLooking for .SUB file");
         
         _RamWrite(CmdFCB + 9, 'S');
         _RamWrite(CmdFCB + 10, 'U');
@@ -746,7 +757,7 @@ void _ccp(void) {
                             errorFlag = TRUE;
                             break;
                         }
-                        if (tDrive != cDrive) {
+                        if (tDrive != 0) {
                             cDrive = oDrive = tDrive - 1;
                             _RamWrite(DSKByte, (_RamRead(DSKByte) & 0xf0) | cDrive);
                             _ccp_bdos(DRV_SET, cDrive);
