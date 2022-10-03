@@ -550,9 +550,10 @@ uint8 _ccp_ext(void) {
 
         if (found) {
             //_puts(".SUB file found!\n");
-            
+            int i, j;
+
             //move FCB's (CmdFCB --> ParFCB --> SecFCB)
-            for (int i = 0; i < 16; i++) {
+            for (i = 0; i < 16; i++) {
                 //ParFCB to SecFCB
                 _RamWrite(SecFCB + i, _RamRead(ParFCB + i));
                 //CmdFCB to ParFCB
@@ -564,7 +565,7 @@ uint8 _ccp_ext(void) {
             //put 'SUBMIT.COM' in CmdFCB
             char *str = "SUBMIT  COM";
             int s = (int)strlen(str);
-            for (int i = 0; i < s; i++) {
+            for (i = 0; i < s; i++) {
                 _RamWrite(CmdFCB + i + 1, str[i]);
             }
             
@@ -585,6 +586,44 @@ uint8 _ccp_ext(void) {
                         }
                     }
                 }
+            }
+            if (found) {
+#if 0
+                    blen = _RamRead(defDMA);
+                    printf("\n\r before[0:%.2u]:'", blen);
+                    for (i = 1; i <= blen; i++) {
+                        _putcon(_RamRead(defDMA + i));
+                    }
+                    printf("'.");
+#endif
+                //insert "@" into command buffer
+                //note: this is so the rest will be parsed correctly
+                char *str = "@";
+                uint8 cnt = strlen(str);
+                blen = _RamRead(defDMA);
+
+                if (blen + cnt > cmdLen) {
+                    blen = cmdLen - cnt;
+                }
+                //save the new length
+                _RamWrite(defDMA, blen + cnt);
+
+                //now move everything up cnt bytes
+                for (i = blen, j = i + cnt; j >= cnt; i--, j--) {
+                    _RamWrite(defDMA + 1 + j, _RamRead(defDMA + 1 + i));
+                }
+                //and put our string into the buffer
+                for (i = 0; i < cnt; i++) {
+                    _RamWrite(defDMA + 1 + i, str[i]);
+                }
+#if 0
+                    blen = _RamRead(defDMA);
+                    printf("\n\r  after[0:%.2u]:'", blen);
+                    for (i = 1; i <= blen; i++) {
+                        _putcon(_RamRead(defDMA + i));
+                    }
+                    printf("'.");
+#endif
             }
         }
     }
