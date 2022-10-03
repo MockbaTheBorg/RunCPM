@@ -563,7 +563,7 @@ uint8 _ccp_ext(void) {
             
             //put 'SUBMIT.COM' in CmdFCB
             char *str = "SUBMIT  COM";
-            int s = strlen(str);
+            int s = (int)strlen(str);
             for (int i = 0; i < s; i++) {
                 _RamWrite(CmdFCB + i + 1, str[i]);
             }

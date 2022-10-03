@@ -560,7 +560,7 @@ void _Bios(void) {
 
 void _Bdos(void) {
 	uint16 i;
-	uint8 j, chr, c, ch = LOW_REGISTER(BC);
+	uint8 j, chr, ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
 	_logBdosIn(ch);
