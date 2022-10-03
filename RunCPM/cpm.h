@@ -849,9 +849,10 @@ void _Bdos(void) {
                             for (j = 0; j <= chrsCnt; j++) {
                                 _RamWrite((chrsCntIdx + j) & 0xFFFF, last[j]);
                             }
-                            //retype & backspace to greater of chrsCnt & last[0]
+                            //retype to greater of chrsCnt & last[0]
                             reType = (chrsCnt > last[0]) ? chrsCnt : last[0];
-                            chrsCnt = last[0];
+                            chrsCnt = last[0];  //this is the restored length
+                            //backspace to end of restored command
                             postBS = reType - chrsCnt;
                         } else {
                             _putcon('\007');  //ring the bell
