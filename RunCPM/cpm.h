@@ -850,8 +850,9 @@ void _Bdos(void) {
                                 _RamWrite((chrsCntIdx + j) & 0xFFFF, last[j]);
                             }
                             //retype & backspace to greater of chrsCnt & last[0]
-                            reType = postBS = (chrsCnt > last[0]) ? chrsCnt : last[0];
+                            reType = (chrsCnt > last[0]) ? chrsCnt : last[0];
                             chrsCnt = last[0];
+                            postBS = reType - chrsCnt;
                         } else {
                             _putcon('\007');  //ring the bell
                         }
