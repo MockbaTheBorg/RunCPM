@@ -545,8 +545,8 @@ void _Bios(void) {
 
 		default: {
 #ifdef DEBUG    // Show unimplemented BIOS calls only when debugging
-			_puts(	"\r\nUnimplemented BIOS call.\r\n");
-			_puts(	"C = 0x");
+			_puts("\r\nUnimplemented BIOS call.\r\n");
+			_puts("C = 0x");
 			_puthex8(ch);
 			_puts("\r\n");
 #endif // ifdef DEBUG
@@ -756,17 +756,17 @@ void _Bdos(void) {
 
 #ifdef DEBUG
                 if (chr == 4) {                             // ^D - DEBUG
-                    Debug = 1
+                    Debug = 1;
 
                     printf("\r\n curCol: %u, chrsCnt: %u, chrsMax: %u", curCol, chrsCnt, chrsMax);
                     _puts("#\r\n  ");
-                    reType = chrsCnt;
-                    postBS = chrsCnt - curCol;
+                    curCol = 0;
+                    reType = postBS = chrsCnt;
                 }
 #endif // ifdef DEBUG
 
                 if (chr == 5) {                             // ^E - goto beginning of next line
-                    _puts("\n");
+                    _putcon('\n');
                     preBS = curCol;
                     reType = postBS = chrsCnt;
                 }
@@ -844,14 +844,15 @@ void _Bdos(void) {
 
                 if (chr == 23) {                        // ^W - recall last command
                     if (!curCol) {      //if at beginning of command line
-                        if (last[0]) {  //and there's a last command
+                        uint8 lastCnt = last[0];
+                        if (lastCnt) {  //and there's a last command
                             //restore last command
-                            for (j = 0; j <= chrsCnt; j++) {
+                            for (j = 0; j <= lastCnt; j++) {
                                 _RamWrite((chrsCntIdx + j) & 0xFFFF, last[j]);
                             }
-                            //retype to greater of chrsCnt & last[0]
-                            reType = (chrsCnt > last[0]) ? chrsCnt : last[0];
-                            chrsCnt = last[0];  //this is the restored length
+                            //retype to greater of chrsCnt & lastCnt
+                            reType = (chrsCnt > lastCnt) ? chrsCnt : lastCnt;
+                            chrsCnt = lastCnt;  //this is the restored length
                             //backspace to end of restored command
                             postBS = reType - chrsCnt;
                         } else {
@@ -1337,8 +1338,8 @@ void _Bdos(void) {
 		 */
 		default: {
 #ifdef DEBUG    // Show unimplemented BDOS calls only when debugging
-			_puts(	"\r\nUnimplemented BDOS call.\r\n");
-			_puts(	"C = 0x");
+			_puts("\r\nUnimplemented BDOS call.\r\n");
+			_puts("C = 0x");
 			_puthex8(ch);
 			_puts("\r\n");
 #endif // ifdef DEBUG
