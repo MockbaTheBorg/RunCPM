@@ -599,7 +599,7 @@ uint8 _ccp_ext(void) {
                 //insert "@" into command buffer
                 //note: this is so the rest will be parsed correctly
                 char *str = "@";
-                uint8 cnt = strlen(str);
+                uint8 cnt = (uint8)strlen(str);
                 blen = _RamRead(defDMA);
 
                 if (blen + cnt > cmdLen) {
