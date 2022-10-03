@@ -86,7 +86,7 @@ uint32 cpu_in(const uint32 Port) {
 #define SET_PV2(x)  ((temp == (x)) << 2)
 
 #define POP(x)  {                               \
-    register uint32 y = RAM_PP(SP);             \
+    uint32 y = RAM_PP(SP);             \
     x = y + (RAM_PP(SP) << 8);                  \
 }
 
@@ -100,7 +100,7 @@ uint32 cpu_in(const uint32 Port) {
 
 #define CALLC(cond) {                           \
     if (cond) {                                 \
-        register uint32 adrr = GET_WORD(PC);    \
+        uint32 adrr = GET_WORD(PC);    \
         PUSH(PC + 2);                           \
         PC = adrr;                              \
     } else {                                    \
@@ -1124,19 +1124,19 @@ int32 Watch = -1;
 #endif
 
 /* Memory management    */
-static uint8 GET_BYTE(register uint32 Addr) {
+static uint8 GET_BYTE(uint32 Addr) {
 	return _RamRead(Addr & ADDRMASK);
 }
 
-static void PUT_BYTE(register uint32 Addr, register uint32 Value) {
+static void PUT_BYTE(uint32 Addr, uint32 Value) {
 	_RamWrite(Addr & ADDRMASK, Value);
 }
 
-static uint16 GET_WORD(register uint32 a) {
+static uint16 GET_WORD(uint32 a) {
 	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
 }
 
-static void PUT_WORD(register uint32 Addr, register uint32 Value) {
+static void PUT_WORD(uint32 Addr, uint32 Value) {
 	_RamWrite(Addr, Value);
 	_RamWrite(++Addr, Value >> 8);
 }
@@ -1460,12 +1460,12 @@ void Z80debug(void) {
 #endif
 
 static inline void Z80run(void) {
-	register uint32 temp = 0;
-	register uint32 acu;
-	register uint32 sum;
-	register uint32 cbits;
-	register uint32 op;
-	register uint32 adr;
+	uint32 temp = 0;
+	uint32 acu;
+	uint32 sum;
+	uint32 cbits;
+	uint32 op;
+	uint32 adr;
 
 	/* main instruction fetch/decode loop */
 	while (!Status) {	/* loop until Status != 0 */
