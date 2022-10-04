@@ -563,7 +563,7 @@ uint8 _ccp_ext(void) {
             _ccp_initFCB(CmdFCB, 36);
             
             //put 'SUBMIT.COM' in CmdFCB
-            char *str = "SUBMIT  COM";
+            const char *str = "SUBMIT  COM";
             int s = (int)strlen(str);
             for (i = 0; i < s; i++) {
                 _RamWrite(CmdFCB + i + 1, str[i]);
@@ -603,7 +603,7 @@ uint8 _ccp_ext(void) {
                     blen++;
                     _RamWrite(defDMA, blen);
                 }
-                uint8 lc = '@';
+                const uint8 lc = '@';
                 for (i = 0; i < blen; i++) {
                     uint8 nc = _RamRead(defDMA + 1 + i);
                     _RamWrite(defDMA + 1 + i, lc);
