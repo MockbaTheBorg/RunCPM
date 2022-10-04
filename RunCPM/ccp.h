@@ -598,23 +598,16 @@ uint8 _ccp_ext(void) {
 #endif
                 //insert "@" into command buffer
                 //note: this is so the rest will be parsed correctly
-                char *str = "@";
-                uint8 cnt = (uint8)strlen(str);
                 blen = _RamRead(defDMA);
-
-                if (blen + cnt > cmdLen) {
-                    blen = cmdLen - cnt;
+                if (blen < cmdLen) {
+                    blen++;
+                    _RamWrite(defDMA, blen);
                 }
-                //save the new length
-                _RamWrite(defDMA, blen + cnt);
-
-                //now move everything up cnt bytes
-                for (i = blen, j = i + cnt; j >= cnt; i--, j--) {
-                    _RamWrite(defDMA + 1 + j, _RamRead(defDMA + 1 + i));
-                }
-                //and put our string into the buffer
-                for (i = 0; i < cnt; i++) {
-                    _RamWrite(defDMA + 1 + i, str[i]);
+                uint8 lc = '@';
+                for (i = 0; i < blen; i++) {
+                    uint8 nc = _RamRead(defDMA + 1 + i);
+                    _RamWrite(defDMA + 1 + i, lc);
+                    lc = nc;
                 }
 #if 0
                     blen = _RamRead(defDMA);
