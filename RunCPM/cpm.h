@@ -712,7 +712,7 @@ void _Bdos(void) {
 
             static uint8 *last = 0;
             if (!last) {
-                last = calloc(1, 256);    //allocate one (for now!)
+                last = (uint8*)calloc(1,256);    //allocate one (for now!)
             }
 
 #ifdef PROFILE
