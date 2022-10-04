@@ -550,7 +550,7 @@ uint8 _ccp_ext(void) {
 
         if (found) {
             //_puts(".SUB file found!\n");
-            int i, j;
+            int i;
 
             //move FCB's (CmdFCB --> ParFCB --> SecFCB)
             for (i = 0; i < 16; i++) {
