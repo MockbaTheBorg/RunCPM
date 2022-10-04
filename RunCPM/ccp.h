@@ -603,7 +603,7 @@ uint8 _ccp_ext(void) {
                     blen++;
                     _RamWrite(defDMA, blen);
                 }
-                const uint8 lc = '@';
+                uint8 lc = '@';
                 for (i = 0; i < blen; i++) {
                     uint8 nc = _RamRead(defDMA + 1 + i);
                     _RamWrite(defDMA + 1 + i, lc);
