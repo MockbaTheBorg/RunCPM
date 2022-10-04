@@ -563,7 +563,7 @@ uint8 _ccp_ext(void) {
             _ccp_initFCB(CmdFCB, 36);
             
             //put 'SUBMIT.COM' in CmdFCB
-            char *str = "SUBMIT  COM";
+            const char *str = "SUBMIT  COM";
             int s = (int)strlen(str);
             for (i = 0; i < s; i++) {
                 _RamWrite(CmdFCB + i + 1, str[i]);
@@ -598,7 +598,7 @@ uint8 _ccp_ext(void) {
 #endif
                 //insert "@" into command buffer
                 //note: this is so the rest will be parsed correctly
-                char *str = "@";
+                const char *str = "@";
                 uint8 cnt = (uint8)strlen(str);
                 blen = _RamRead(defDMA);
 
