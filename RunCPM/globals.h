@@ -25,22 +25,22 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"5.8"
-#define VersionBCD 0x58
+#define VERSION	"6.0"
+#define VersionBCD 0x60
 
 /* Definition of which CCP to use (must define only one) */
-#define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
+//#define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
 //#define CCP_DR
 //#define CCP_CCPZ
 //#define CCP_ZCPR2
 //#define CCP_ZCPR3
-//#define CCP_Z80
+#define CCP_Z80
 
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v2.6"			// Will use the CCP from ccp.h
-#define VersionCCP	0x26					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v3.0"			// Will use the CCP from ccp.h
+#define VersionCCP	0x30					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 36)
 #define CCPaddr		(BDOSjmppage-0x0800)
 #endif
@@ -86,25 +86,25 @@
 //
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M 2.2 " STR(TPASIZE) "K)\r\n"
+#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M " STR(TPASIZE) "K)\r\n"
 
-#define NOSLASH			// Will translate '/' to '_' on filenames to prevent directory errors
+#define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
-//#define HASLUA		// Will enable Lua scripting (BDOS call 254)
-						// Should be passed externally per-platform with -DHASLUA
+//#define HASLUA					// Will enable Lua scripting (BDOS call 254)
+									// Should be passed externally per-platform with -DHASLUA
 
-//#define PROFILE		// For measuring time taken to run a CP/M command
-						// This should be enabled only for debugging purposes when trying to improve emulation speed
+//#define PROFILE					// For measuring time taken to run a CP/M command
+									// This should be enabled only for debugging purposes when trying to improve emulation speed
 
-#define NOHIGHUSER		// Prevents the creation of user folders above 'F' (15) by programs
-						// Original CP/M BDOS allows it, but I prefer to keep the folders clean
+#define NOHIGHUSER					// Prevents the creation of user folders above 'F' (15) by programs
+									// Original CP/M BDOS allows it, but I prefer to keep the folders clean
 
 /* Definition for CP/M 2.2 user number support */
 
-#define BATCHA			// If this is defined, the $$$.SUB will be looked for on drive A:
-//#define BATCH0		// If this is defined, the $$$.SUB will be looked for on user area 0
-						// The default behavior of DRI's CP/M 2.2 was to have $$$.SUB created on the current drive/user while looking for it
-						// on drive A: current user, which made it complicated to run SUBMITs when not logged to drive A: user 0
+#define BATCHA						// If this is defined, the $$$.SUB will be looked for on drive A:
+//#define BATCH0					// If this is defined, the $$$.SUB will be looked for on user area 0
+									// The default behavior of DRI's CP/M 2.2 was to have $$$.SUB created on the current drive/user while looking for it
+									// on drive A: current user, which made it complicated to run SUBMITs when not logged to drive A: user 0
 
 /* Some environment and type definitions */
 
@@ -135,38 +135,43 @@ typedef unsigned int    uint32;
 #define DSKByte 0x04
 
 /* CP/M disk definitions */
-#define BlkSZ 128	// CP/M block size
-#define BlkEX 128	// Number of blocks on an extension
+#define BlkSZ 128					// CP/M block size
+#define BlkEX 128					// Number of blocks on an extension
 #define ExtSZ (BlkSZ * BlkEX)
-#define BlkS2 4096	// Number of blocks on a S2 (module)
-#define MaxEX 31	// Maximum value the EX field can take
-#define MaxS2 15	// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
-#define MaxCR 128	// Maximum value the CR field can take
-#define MaxRC 128	// Maximum value the RC field can take
+#define BlkS2 4096					// Number of blocks on a S2 (module)
+#define MaxEX 31					// Maximum value the EX field can take
+#define MaxS2 15					// Maximum value the S2 (modules) field can take - Can be set to 63 to emulate CP/M Plus
+#define MaxCR 128					// Maximum value the CR field can take
+#define MaxRC 128					// Maximum value the RC field can take
 
 /* CP/M memory definitions */
-#define RAM_FAST	// If this is defined, all RAM function calls become direct access (see below)
-					// This saves about 2K on the Arduino code and should bring speed improvements
+#define RAM_FAST					// If this is defined, all RAM function calls become direct access (see below)
+									// This saves about 2K on the Arduino code and should bring speed improvements
 
-#define TPASIZE 60	// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
-					// Values other than 60 or 64 would require rebuilding the CCP
-					// For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
+#define TPASIZE 60					// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+									// Values other than 60 or 64 would require rebuilding the CCP
+									// For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
-#define MEMSIZE 64 * 1024	// RAM(plus ROM) needs to be 64K to avoid compatibility issues
+#define BANKS 1						// Number of memory banks available
+static uint8 curBank = 1;			// Number of the current RAM bank in use (1-x, not 0-x)
+static uint8 isXmove = FALSE;		// Used by BIOS
 
-#ifdef RAM_FAST		// Makes all function calls to memory access into direct RAM access (less calls / less code)
+#define PAGESIZE 64 * 1024			// RAM(plus ROM) needs to be 64K to avoid compatibility issues
+#define MEMSIZE PAGESIZE * BANKS	// Total RAM size
+
+#ifdef RAM_FAST						// Makes all function calls to memory access into direct RAM access (less calls / less code)
 	static uint8 RAM[MEMSIZE];
-	#define _RamSysAddr(a)		&RAM[a]
-	#define _RamRead(a)			RAM[a]
-	#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
-	#define _RamWrite(a, v)		RAM[a] = v
-	#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[a + 1] = (v) >> 8
+	#define _RamSysAddr(a)		&RAM[(a) * curBank]
+	#define _RamRead(a)			RAM[(a) * curBank]
+	#define _RamRead16(a)		((RAM[((a) * curBank & 0xffff) + 1] << 8) | RAM[(a) * curBank & 0xffff])
+	#define _RamWrite(a, v)		RAM[(a) * curBank] = v
+	#define _RamWrite16(a, v)	RAM[(a) * curBank] = (v) & 0xff; RAM[((a) * curBank) + 1] = (v) >> 8
 #endif
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 
 // BIOS Pages (always on the top of memory)
-#define BIOSpage	(MEMSIZE - 256)
+#define BIOSpage	(PAGESIZE - 256)
 #define BIOSjmppage	(BIOSpage - 256)
 
 // BDOS Pages (depend on TPASIZE)

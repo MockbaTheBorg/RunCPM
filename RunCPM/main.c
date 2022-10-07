@@ -63,15 +63,21 @@ int main(int argc, char* argv[]) {
 	_host_init(argc, &argv[0]);
 	_console_init();
 	_clrscr();
-	_puts("CP/M 2.2 Emulator v" VERSION " by Marcelo Dantas\r\n");
+	_puts("  CP/M Emulator v" VERSION " by Marcelo Dantas\r\n");
 	_puts("      Built " __DATE__ " - " __TIME__ "\r\n");
 #ifdef HASLUA
 	_puts("       with Lua scripting support\r\n");
 #endif
 	_puts("-----------------------------------------\r\n");
-	_puts("CCP : " CCPname "   CCP Address: 0x");
+	_puts("CCP File     : " CCPname "\r\n");
+	_puts("CCP Address  : 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
+#if BANKS > 1
+	_puts("Banked Memory: ");
+	_puthex8(BANKS);
+	_puts(" banks\r\n");
+#endif
 
 	while (TRUE) {
 		_puts(CCPHEAD);

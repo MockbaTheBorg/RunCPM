@@ -1,46 +1,115 @@
 #ifndef CPM_H
 #define CPM_H
 
+enum eBIOSFunc {
+// CP/M 2.2 Stuff
+	B_BOOT = 0,
+	B_WBOOT = 3,
+	B_CONST = 6,
+	B_CONIN = 9,
+	B_CONOUT = 12,
+	B_LIST = 15,
+	B_AUXOUT = 18,
+	B_READER = 21,
+	B_HOME = 24,
+	B_SELDSK = 27,
+	B_SETTRK = 30,
+	B_SETSEC = 33,
+	B_SETDMA = 36,
+	B_READ = 39,
+	B_WRITE = 42,
+	B_LISTST = 45,
+	B_SECTRAN = 48,
+// CP/M 3.0 Stuff
+	B_CONOST = 51,
+	B_AUXIST = 54,
+	B_AUXOST = 57,
+	B_DEVTBL = 60,
+	B_DEVINI = 63,
+	B_DRVTBL = 66,
+	B_MULTIO = 69,
+	B_FLUSH = 72,
+	B_MOVE = 75,
+	B_TIME = 78,
+	B_SELMEM = 81,
+	B_SETBNK = 84,
+	B_XMOVE = 87,
+	B_USERF = 90,	// Used by internal CCP to return to prompt
+	B_RESERV1 = 93,
+	B_RESERV2 = 96
+};
+
 enum eBDOSFunc {
-	F_BOOT = 0,
+// CP/M 2.2 Stuff
+	P_TERMCPM = 0,
 	C_READ = 1,
 	C_WRITE = 2,
-	READER_IN = 3,
-	PUNCH_OUT = 4,
-	PRINT_OUT = 5,
-	DIRECT_IO = 6,
-	GET_IOBYTE = 7,
-	SET_IOBYTE = 8,
-	OUT_STRING = 9,
+	A_READ = 3,
+	A_WRITE = 4,
+	L_WRITE = 5,
+	C_RAWIO = 6,
+	A_STATIN = 7,
+	A_STATOUT = 8,
+	C_WRITESTR = 9,
 	C_READSTR = 10,
 	C_STAT = 11,
-	GET_VERSION = 12,
+	S_BDOSVER = 12,
 	DRV_ALLRESET = 13,
 	DRV_SET = 14,
 	F_OPEN = 15,
 	F_CLOSE = 16,
-	F_SEARCH_FIRST = 17,
-	F_SEARCH_NEXT = 18,
+	F_SFIRST = 17,
+	F_SNEXT = 18,
 	F_DELETE = 19,
 	F_READ = 20,
 	F_WRITE = 21,
 	F_MAKE = 22,
 	F_RENAME = 23,
-	DRV_LOGINVECTOR = 24,
+	DRV_LOGINVEC = 24,
 	DRV_GET = 25,
 	F_DMAOFF = 26,
-	DRV_GETADDRALLOC = 27,
-	DRV_WRITEPROTECT = 28,
-	DRV_GETROVECTOR = 29,
-	F_SETATTRIBUTES = 30,
-	DRV_GETDPB = 31,
+	DRV_ALLOCVEC = 27,
+	DRV_SETRO = 28,
+	DRV_ROVEC = 29,
+	F_ATTRIB = 30,
+	DRV_PDB = 31,
 	F_USERNUM = 32,
-	F_READRANDOM = 33,
-	F_WRITERANDOM = 34,
-	F_COMPUTESIZE = 35,
-	F_SETRANDOM = 36,
+	F_READRAND = 33,
+	F_WRITERAND = 34,
+	F_SIZE = 35,
+	F_RANDREC = 36,
 	DRV_RESET = 37,
-	F_WRITERANDOMZERO = 40,
+	F_WRITEZF = 40,
+// CP/M 3.0 Stuff
+	F_TESTWRITE = 41,
+	F_LOCK = 42,
+	F_UNLOCK = 43,
+	F_MULTISEC = 44,
+	F_ERRMODE = 45,
+	DRV_SPACE = 46,
+	P_CHAIN = 47,
+	DRV_FLUSH = 48,
+	S_SCB = 49,
+	S_BIOS = 50,
+	P_LOAD = 59,
+	S_RSX = 60,
+	F_CLEANUP = 98,
+	F_TRUNCATE = 99,
+	DRV_SETLABEL = 100,
+	DRV_GETLABEL = 101,
+	F_TIMEDATE = 102,
+	F_WRITEXFCB = 103,
+	T_SET = 104,
+	T_GET = 105,
+	F_PASSWD = 106,
+	S_SERIAL = 107,
+	P_CODE = 108,
+	C_MODE = 109,
+	C_DELIMIT = 110,
+	C_WRITEBLK = 111,
+	L_WRITEBLK = 112,
+	F_PARSE = 152,
+// RunCPM Stuff
 	F_RUNLUA = 254
 };
 
@@ -74,7 +143,7 @@ void _PatchCPM(void) {
 	// **********  Patch CP/M page zero into the memory  **********
 
 	/* BIOS entry point */
-	_RamWrite(0x0000, JP);  /* JP BIOS+3 (warm boot) */
+	_RamWrite(0x0000,   JP);  /* JP BIOS+3 (warm boot) */
 	_RamWrite16(0x0001, BIOSjmppage + 3);
 	if (Status != 2) {
 		/* IOBYTE - Points to Console */
@@ -84,8 +153,8 @@ void _PatchCPM(void) {
 		_RamWrite(	DSKByte,	0x00);
 	}
 	/* BDOS entry point (0x0005) */
-	_RamWrite(0x0005, JP);
-	_RamWrite16(0x0006,				BDOSjmppage + 0x06);
+	_RamWrite(0x0005,   JP);
+	_RamWrite16(0x0006,	BDOSjmppage + 0x06);
 
 	// **********  Patch CP/M Version into the memory so the CCP can see it
 	_RamWrite16(BDOSjmppage,		0x1600);
@@ -93,7 +162,7 @@ void _PatchCPM(void) {
 	_RamWrite16(BDOSjmppage + 4,	0x0000);
 
 	// Patches in the BDOS jump destination
-	_RamWrite(BDOSjmppage + 6, JP);
+	_RamWrite(  BDOSjmppage + 6, JP);
 	_RamWrite16(BDOSjmppage + 7, BDOSpage);
 
 	// Patches in the BDOS page content
@@ -102,13 +171,13 @@ void _PatchCPM(void) {
 	_RamWrite(	BDOSpage + 2,	RET);
 
 	// Patches in the BIOS jump destinations
-	for (i = 0; i < 0x36; i = i + 3) {
-		_RamWrite(BIOSjmppage + i, JP);
+	for (i = 0; i < 99; i = i + 3) {
+		_RamWrite(  BIOSjmppage + i,	 JP);
 		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
 	}
 
 	// Patches in the BIOS page content
-	for (i = 0; i < 0x36; i = i + 3) {
+	for (i = 0; i < 99; i = i + 3) {
 		_RamWrite(	BIOSpage + i,		OUTa);
 		_RamWrite(	BIOSpage + i + 1,	0xFF);
 		_RamWrite(	BIOSpage + i + 2,	RET);
@@ -133,7 +202,7 @@ void _PatchCPM(void) {
 	blockShift = _RamRead(DPBaddr + 2);
 	blockMask = _RamRead(DPBaddr + 3);
 	extentMask = _RamRead(DPBaddr + 4);
-	numAllocBlocks = _RamRead16((DPBaddr + 5)) + 1;
+	numAllocBlocks = _RamRead16(DPBaddr + 5) + 1;
 	extentsPerDirEntry = extentMask + 1;
 
 	// **********  Patch CP/M (fake) Disk Parameter Header after the Disk Parameter Block  **********
@@ -244,10 +313,11 @@ void _logBiosIn(uint8 ch) {
 		return;
 	}
 #endif // ifdef LOGBIOS_ONLY
-	static const char *BIOSCalls[18] =
+	static const char *BIOSCalls[33] =
 	{
 		"boot", "wboot", "const", "conin", "conout", "list", "punch/aux", "reader", "home", "seldsk", "settrk", "setsec", "setdma",
-		"read", "write", "listst", "sectran", "altwboot"
+		"read", "write", "listst", "sectran", "conost", "auxist", "auxost", "devtbl", "devini", "drvtbl", "multio", "flush", "move",
+		"time", "selmem", "setbnk", "xmove", "userf", "reserv1", "reserv2"
 	};
 	int index = ch / 3;
 
@@ -294,13 +364,11 @@ void _logBdosIn(uint8 ch) {
 	static const char *CPMCalls[41] =
 	{
 		"System Reset", "Console Input", "Console Output", "Reader Input", "Punch Output", "List Output", "Direct I/O",
-		"Get IOByte",
-		"Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk", "Select Disk", "Open File",
-		"Close File", "Search First", "Search Next", "Delete File", "Read Sequential", "Write Sequential", "Make File",
-		"Rename File",
-		"Get Login Vector", "Get Current Disk", "Set DMA Address", "Get Alloc", "Write Protect Disk", "Get R/O Vector",
-		"Set File Attr", "Get Disk Params",
-		"Get/Set User", "Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A",
+		"Get IOByte", "Set IOByte", "Print String", "Read Buffered", "Console Status", "Get Version", "Reset Disk",
+		"Select Disk", "Open File", "Close File", "Search First", "Search Next", "Delete File", "Read Sequential",
+		"Write Sequential", "Make File", "Rename File", "Get Login Vector", "Get Current Disk", "Set DMA Address",
+		"Get Alloc", "Write Protect Disk", "Get R/O Vector", "Set File Attr", "Get Disk Params", "Get/Set User",
+		"Read Random", "Write Random", "Get File Size", "Set Random Record", "Reset Drive", "N/A", "N/A",
 		"Write Random 0 fill"
 	};
 
@@ -447,22 +515,19 @@ void _Bios(void) {
 #endif
 
 	switch (ch) {
-		case 0x00: {
-			Status = 1; // 0 - BOOT - Ends RunCPM
+		case B_BOOT: {
+			Status = 1;		// 0 - Ends RunCPM
 			break;
 		}
-
-		case 0x03: {
-			Status = 2; // 1 - WBOOT - Back to CCP
+		case B_WBOOT: {
+			Status = 2;		// 1 - Back to CCP
 			break;
 		}
-
-		case 0x06: {    // 2 - CONST - Console status
+		case B_CONST: {		// 2 - Console status
 			SET_HIGH_REGISTER(AF, _chready());
 			break;
 		}
-
-		case 0x09: {    // 3 - CONIN - Console input
+		case B_CONIN: {		// 3 - Console input
 			SET_HIGH_REGISTER(AF, _getch());
 #ifdef DEBUG
 			if (HIGH_REGISTER(AF) == 4) {
@@ -471,30 +536,24 @@ void _Bios(void) {
 #endif // ifdef DEBUG
 			break;
 		}
-
-		case 0x0C: {    // 4 - CONOUT - Console output
+		case B_CONOUT: {	// 4 - Console output
 			_putcon(LOW_REGISTER(BC));
 			break;
 		}
-
-		case 0x0F: {    // 5 - LIST - List output
+		case B_LIST: {		// 5 - List output
 			break;
 		}
-
-		case 0x12: {    // 6 - PUNCH/AUXOUT - Punch output
+		case B_AUXOUT: {    // 6 - Aux/Punch output
 			break;
 		}
-
-		case 0x15: {    // 7 - READER - Reader input (0x1a = device not implemented)
+		case B_READER: {    // 7 - Reader input (returns 0x1a = device not implemented)
 			SET_HIGH_REGISTER(AF, 0x1a);
 			break;
 		}
-
-		case 0x18: {    // 8 - HOME - Home disk head
+		case B_HOME: {		// 8 - Home disk head
 			break;
 		}
-
-		case 0x1B: {    // 9 - SELDSK - Select disk drive
+		case B_SELDSK: {    // 9 - Select disk drive
 			disk[0] += LOW_REGISTER(BC);
 			if (_sys_select(&disk[0])) {
 				HL = DPHaddr;
@@ -503,46 +562,38 @@ void _Bios(void) {
 			}
 			break;
 		}
-
-		case 0x1E: {    // 10 - SETTRK - Set track number
+		case B_SETTRK: {    // 10 - Set track number
 			break;
 		}
-
-		case 0x21: {    // 11 - SETSEC - Set sector number
+		case B_SETSEC: {    // 11 - Set sector number
 			break;
 		}
-
-		case 0x24: {    // 12 - SETDMA - Set DMA address
+		case B_SETDMA: {    // 12 - Set DMA address
 			HL = BC;
 			dmaAddr = BC;
 			break;
 		}
-
-		case 0x27: {    // 13 - READ - Read selected sector
+		case B_READ: {		// 13 - Read selected sector
 			SET_HIGH_REGISTER(AF, 0x00);
 			break;
 		}
-
-		case 0x2A: {    // 14 - WRITE - Write selected sector
+		case B_WRITE: {		// 14 - Write selected sector
 			SET_HIGH_REGISTER(AF, 0x00);
 			break;
 		}
-
-		case 0x2D: {    // 15 - LISTST - Get list device status
+		case B_LISTST: {    // 15 - Get list device status
 			SET_HIGH_REGISTER(AF, 0x0ff);
 			break;
 		}
-
-		case 0x30: {    // 16 - SECTRAN - Sector translate
-			HL = BC;    // HL=BC=No translation (1:1)
+		case B_SECTRAN: {   // 16 - Sector translate
+			HL = BC;		// HL=BC=No translation (1:1)
 			break;
 		}
-
-		case 0x33: {    // 17 - RETTOCCP - This allows programs ending in RET return to internal CCP
+//      ...
+		case B_USERF: {		// 30 - This allows programs ending in RET return to internal CCP
 			Status = 3;
 			break;
 		}
-
 		default: {
 #ifdef DEBUG    // Show unimplemented BIOS calls only when debugging
 			_puts("\r\nUnimplemented BIOS call.\r\n");
@@ -574,7 +625,7 @@ void _Bdos(void) {
 		   C = 0 : System reset
 		   Doesn't return. Reloads CP/M
 		 */
-		case F_BOOT: {
+		case P_TERMCPM: {
 			Status = 2; // Same as call to "BOOT"
 			break;
 		}
@@ -608,7 +659,7 @@ void _Bdos(void) {
 		   C = 3 : Auxiliary (Reader) input
 		   Returns: A=Char
 		 */
-		case READER_IN: {
+		case A_READ: {
 			HL = 0x1a;
 			break;
 		}
@@ -616,7 +667,7 @@ void _Bdos(void) {
 		/*
 		   C = 4 : Auxiliary (Punch) output
 		 */
-		case PUNCH_OUT: {
+		case A_WRITE: {
 #ifdef USE_PUN
 			if (!pun_open) {
 				pun_dev = _sys_fopen_w((uint8 *)pun_file);
@@ -632,7 +683,7 @@ void _Bdos(void) {
 		/*
 		   C = 5 : Printer output
 		 */
-		case PRINT_OUT: {
+		case L_WRITE: {
 #ifdef USE_LST
 			if (!lst_open) {
 				lst_dev = _sys_fopen_w((uint8 *)lst_file);
@@ -651,7 +702,7 @@ void _Bdos(void) {
 		   E = char : Outputs char (write)
 		   Returns: A=Char or 0x00 (on read)
 		 */
-		case DIRECT_IO: {
+		case C_RAWIO: {
 			if (LOW_REGISTER(DE) == 0xff) {
 				HL = _getchNB();
 #ifdef DEBUG
@@ -670,7 +721,7 @@ void _Bdos(void) {
 		   Gets the system IOBYTE
 		   Returns: A = IOBYTE
 		 */
-		case GET_IOBYTE: {
+		case A_STATIN: {
 			HL = _RamRead(0x0003);
 			break;
 		}
@@ -680,7 +731,7 @@ void _Bdos(void) {
 		   E = IOBYTE
 		   Sets the system IOBYTE to E
 		 */
-		case SET_IOBYTE: {
+		case A_STATOUT: {
 			_RamWrite(0x0003, LOW_REGISTER(DE));
 			break;
 		}
@@ -690,7 +741,7 @@ void _Bdos(void) {
 		   DE = Address of string
 		   Sends the $ terminated string pointed by (DE) to the screen
 		 */
-		case OUT_STRING: {
+		case C_WRITESTR: {
 			while ((ch = _RamRead(DE++)) != '$') {
 				_putcon(ch);
 			}
@@ -956,7 +1007,7 @@ void _Bdos(void) {
 		   C = 12 (0Ch) : Get version number
 		   Returns: B=H=system type, A=L=version number
 		 */
-		case GET_VERSION: {
+		case S_BDOSVER: {
 			HL = 0x22;
 			break;
 		}
@@ -1014,7 +1065,7 @@ void _Bdos(void) {
 		/*
 		   C = 17 (11h) : Search for first
 		 */
-		case F_SEARCH_FIRST: {
+		case F_SFIRST: {
 			HL = _SearchFirst(DE, TRUE);    // TRUE = Creates a fake dir entry when finding the file
 			break;
 		}
@@ -1022,7 +1073,7 @@ void _Bdos(void) {
 		/*
 		   C = 18 (12h) : Search for next
 		 */
-		case F_SEARCH_NEXT: {
+		case F_SNEXT: {
 			HL = _SearchNext(DE, TRUE); // TRUE = Creates a fake dir entry when finding the file
 			break;
 		}
@@ -1070,7 +1121,7 @@ void _Bdos(void) {
 		/*
 		   C = 24 (18h) : Return log-in vector (active drive map)
 		 */
-		case DRV_LOGINVECTOR: {
+		case DRV_LOGINVEC: {
 			HL = loginVector;   // (todo) improve this
 			break;
 		}
@@ -1094,7 +1145,7 @@ void _Bdos(void) {
 		/*
 		   C = 27 (1Bh) : Get ADDR(Alloc)
 		 */
-		case DRV_GETADDRALLOC: {
+		case DRV_ALLOCVEC: {
 			HL = SCBaddr;
 			break;
 		}
@@ -1102,7 +1153,7 @@ void _Bdos(void) {
 		/*
 		   C = 28 (1Ch) : Write protect current disk
 		 */
-		case DRV_WRITEPROTECT: {
+		case DRV_SETRO: {
 			roVector = roVector | (1 << cDrive);
 			break;
 		}
@@ -1110,7 +1161,7 @@ void _Bdos(void) {
 		/*
 		   C = 29 (1Dh) : Get R/O vector
 		 */
-		case DRV_GETROVECTOR: {
+		case DRV_ROVEC: {
 			HL = roVector;
 			break;
 		}
@@ -1118,7 +1169,7 @@ void _Bdos(void) {
 		/*
 		   C = 30 (1Eh) : Set file attributes (does nothing)
 		 */
-		case F_SETATTRIBUTES: {
+		case F_ATTRIB: {
 			HL = 0;
 			break;
 		}
@@ -1126,7 +1177,7 @@ void _Bdos(void) {
 		/*
 		   C = 31 (1Fh) : Get ADDR(Disk Parms)
 		 */
-		case DRV_GETDPB: {
+		case DRV_PDB: {
 			HL = DPBaddr;
 			break;
 		}
@@ -1146,7 +1197,7 @@ void _Bdos(void) {
 		/*
 		   C = 33 (21h) : Read random
 		 */
-		case F_READRANDOM: {
+		case F_READRAND: {
 			HL = _ReadRand(DE);
 			break;
 		}
@@ -1154,7 +1205,7 @@ void _Bdos(void) {
 		/*
 		   C = 34 (22h) : Write random
 		 */
-		case F_WRITERANDOM: {
+		case F_WRITERAND: {
 			HL = _WriteRand(DE);
 			break;
 		}
@@ -1162,7 +1213,7 @@ void _Bdos(void) {
 		/*
 		   C = 35 (23h) : Compute file size
 		 */
-		case F_COMPUTESIZE: {
+		case F_SIZE: {
 			HL = _GetFileSize(DE);
 			break;
 		}
@@ -1170,7 +1221,7 @@ void _Bdos(void) {
 		/*
 		   C = 36 (24h) : Set random record
 		 */
-		case F_SETRANDOM: {
+		case F_RANDREC: {
 			HL = _SetRandom(DE);
 			break;
 		}
@@ -1191,7 +1242,7 @@ void _Bdos(void) {
 		/*
 		   C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
 		 */
-		case F_WRITERANDOMZERO: {
+		case F_WRITEZF: {
 			HL = _WriteRand(DE);
 			break;
 		}

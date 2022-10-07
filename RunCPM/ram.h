@@ -7,19 +7,19 @@
 static uint8 RAM[MEMSIZE];			// Definition of the emulated RAM
 
 uint8* _RamSysAddr(uint16 address) {
-	return(&RAM[address]);
+	return(&RAM[address * curBank]);
 }
 
 uint8 _RamRead(uint16 address) {
-	return(RAM[address]);
+	return(RAM[address * curBank]);
 }
 
 uint16 _RamRead16(uint16 address) {
-	return(RAM[address] + (RAM[address + 1] << 8));
+	return(RAM[address * curBank] + (RAM[(address * curBank) + 1] << 8));
 }
 
 void _RamWrite(uint16 address, uint8 value) {
-	RAM[address] = value;
+	RAM[address * curBank] = value;
 }
 
 void _RamWrite16(uint16 address, uint16 value) {
