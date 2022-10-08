@@ -530,9 +530,8 @@ void _Bios(void) {
 		case B_CONIN: {		// 3 - Console input
 			SET_HIGH_REGISTER(AF, _getch());
 #ifdef DEBUG
-			if (HIGH_REGISTER(AF) == 4) {
+			if (HIGH_REGISTER(AF) == 4)
 				Debug = 1;
-			}
 #endif // ifdef DEBUG
 			break;
 		}
@@ -638,9 +637,8 @@ void _Bdos(void) {
 		case C_READ: {
 			HL = _getche();
 #ifdef DEBUG
-			if (HL == 4) {
+			if (HL == 4)
 				Debug = 1;
-			}
 #endif // ifdef DEBUG
 			break;
 		}
@@ -706,9 +704,8 @@ void _Bdos(void) {
 			if (LOW_REGISTER(DE) == 0xff) {
 				HL = _getchNB();
 #ifdef DEBUG
-				if (HL == 4) {
+				if (HL == 4)
 					Debug = 1;
-				}
 #endif // ifdef DEBUG
 			} else {
 				_putcon(LOW_REGISTER(DE));
@@ -808,11 +805,11 @@ void _Bdos(void) {
 #ifdef DEBUG
                 if (chr == 4) {                             // ^D - DEBUG
                     Debug = 1;
-
-                    printf("\r\n curCol: %u, chrsCnt: %u, chrsMax: %u", curCol, chrsCnt, chrsMax);
-                    _puts("#\r\n  ");
-                    curCol = 0;
-                    reType = postBS = chrsCnt;
+					break;
+//                    printf("\r\n curCol: %u, chrsCnt: %u, chrsMax: %u", curCol, chrsCnt, chrsMax);
+//                    _puts("#\r\n  ");
+//                    curCol = 0;
+//                    reType = postBS = chrsCnt;
                 }
 #endif // ifdef DEBUG
 
