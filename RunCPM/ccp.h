@@ -22,7 +22,7 @@ uint8 parDrive = 0;             // 0 -> 15 = A -> P .. Drive for the first file 
 uint8 curUser = 0;              // 0 -> 15			.. Current user area to access
 bool sFlag = FALSE;             // Submit Flag
 uint8 sRecs = 0;                // Number of records on the Submit file
-uint8 prompt[7] = "\r\n  >";
+uint8 prompt[8] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen;                     // Actual size of the typed command line (size of the buffer)
 
@@ -475,7 +475,7 @@ uint8 _ccp_lua(void) {
 // External (.COM) command
 uint8 _ccp_ext(void) {
     bool error = TRUE, found = FALSE;
-    uint8 drive, user = 0;
+    uint8 drive = 0, user = 0;
     uint16 loadAddr = defLoad;
 
     bool wasBlank = (_RamRead(CmdFCB + 9) == ' ');

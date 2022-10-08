@@ -480,7 +480,7 @@ uint32 _HardwareIn(const uint32 Port) {
 /*===============================================================================*/
 
 void _host_init(int argc, char* argv[]) {
-	chdir(dirname(argv[0]));
+	int x = chdir(dirname(argv[0]));
 }
 
 /* Console abstraction functions */

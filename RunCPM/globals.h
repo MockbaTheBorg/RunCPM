@@ -165,7 +165,7 @@ static uint8 isXmove = FALSE;		// Used by BIOS
 	static uint8 RAM[MEMSIZE];
 	#define _RamSysAddr(a)		&RAM[a]
 	#define _RamRead(a)			RAM[a]
-	#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
+	#define _RamRead16(a)		((RAM[((a) & 0xffff) + 1] << 8) | RAM[(a) & 0xffff])
 	#define _RamWrite(a, v)		RAM[a] = v
 	#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[(a) + 1] = (v) >> 8
 #endif
