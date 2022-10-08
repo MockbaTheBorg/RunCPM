@@ -506,6 +506,7 @@ void _console_init(void) {
 
 void _console_reset(void) {
 	tcsetattr(0, TCSANOW, &_old_term);
+	(void)endwin();
 }
 
 int _kbhit(void) {
