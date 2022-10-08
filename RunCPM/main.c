@@ -69,8 +69,13 @@ int main(int argc, char* argv[]) {
 	_puts("       with Lua scripting support\r\n");
 #endif
 	_puts("-----------------------------------------\r\n");
-	_puts("CCP File     : " CCPname "\r\n");
-	_puts("CCP Address  : 0x");
+	_puts("BIOS at 0x");
+	_puthex16(BIOSjmppage);
+	_puts(" - ");
+	_puts("BDOS at 0x");
+	_puthex16(BDOSjmppage);
+	_puts("\r\n");
+	_puts("CCP " CCPname " at 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
 #if BANKS > 1

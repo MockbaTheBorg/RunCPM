@@ -145,9 +145,6 @@ typedef unsigned int    uint32;
 #define MaxRC 128					// Maximum value the RC field can take
 
 /* CP/M memory definitions */
-#define RAM_FAST					// If this is defined, all RAM function calls become direct access (see below)
-									// This saves about 2K on the Arduino code and should bring speed improvements
-
 #define TPASIZE 60					// Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
 									// Values other than 60 or 64 would require rebuilding the CCP
 									// For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
@@ -159,13 +156,18 @@ static uint8 isXmove = FALSE;		// Used by BIOS
 #define PAGESIZE 64 * 1024			// RAM(plus ROM) needs to be 64K to avoid compatibility issues
 #define MEMSIZE PAGESIZE * BANKS	// Total RAM size
 
+#if BANKS==1
+#define RAM_FAST					// If this is defined, all RAM function calls become direct access (see below)
+									// This saves about 2K on the Arduino code and should bring speed improvements
+#endif
+
 #ifdef RAM_FAST						// Makes all function calls to memory access into direct RAM access (less calls / less code)
 	static uint8 RAM[MEMSIZE];
-	#define _RamSysAddr(a)		&RAM[(a) * curBank]
-	#define _RamRead(a)			RAM[(a) * curBank]
-	#define _RamRead16(a)		((RAM[((a) * curBank & 0xffff) + 1] << 8) | RAM[(a) * curBank & 0xffff])
-	#define _RamWrite(a, v)		RAM[(a) * curBank] = v
-	#define _RamWrite16(a, v)	RAM[(a) * curBank] = (v) & 0xff; RAM[((a) * curBank) + 1] = (v) >> 8
+	#define _RamSysAddr(a)		&RAM[a]
+	#define _RamRead(a)			RAM[a]
+	#define _RamRead16(a)		((RAM[(a & 0xffff) + 1] << 8) | RAM[a & 0xffff])
+	#define _RamWrite(a, v)		RAM[a] = v
+	#define _RamWrite16(a, v)	RAM[a] = (v) & 0xff; RAM[(a) + 1] = (v) >> 8
 #endif
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
