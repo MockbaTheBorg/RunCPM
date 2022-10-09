@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h> 
 #include <sys/stat.h>
 #include <ncurses.h>
 #include <poll.h>
