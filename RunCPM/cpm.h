@@ -589,6 +589,26 @@ void _Bios(void) {
 			break;
 		}
 //      ...
+		case B_MOVE: {		// 25 - Move a block of memory
+			if (!isXmove)
+				srcBank = dstBank = curBank;
+			while (BC--)
+				RAM[HL++ * dstBank] = RAM[DE++ * srcBank];
+			isXmove = FALSE;
+			break;
+		}
+//      ...
+		case B_SELMEM: {	// 27 - Select memory bank
+			curBank = HIGH_REGISTER(AF);
+			break;
+		}
+//      ...
+		case B_XMOVE: {		// 29 - Preload banks for MOVE
+			srcBank = LOW_REGISTER(BC);
+			dstBank = HIGH_REGISTER(BC);
+			isXmove = TRUE;
+			break;
+		}
 		case B_USERF: {		// 30 - This allows programs ending in RET return to internal CCP
 			Status = 3;
 			break;

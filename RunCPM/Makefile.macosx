@@ -14,7 +14,7 @@ CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -DHASLUA
 #CFLAGS+=-ggdb
 
 # Flags to pass to the linker
-LDFLAGS = -lncurses -lm -ldl
+LDFLAGS = -lm -ldl
 
 # Objects to build
 OBJS = main.o lua/liblua.a

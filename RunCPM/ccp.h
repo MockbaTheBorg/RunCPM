@@ -4,7 +4,7 @@
 // CP/M BDOS calls
 #include "cpm.h"
 
-#define CmdFCB	(BatchFCB + 36)			// FCB for use by internal commands
+#define CmdFCB	(BatchFCB + 48)			// FCB for use by internal commands
 #define ParFCB	0x005C					// FCB for use by line parameters
 #define SecFCB	0x006C					// Secondary part of FCB for renaming files
 #define Trampoline (CmdFCB + 36)		// Trampoline for running external commands

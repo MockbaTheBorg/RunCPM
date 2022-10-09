@@ -113,8 +113,8 @@ int main(int argc, char* argv[]) {
 #endif
 	}
 
-	_console_reset();
 	_puts("\r\n");
+	_console_reset();
 	return(0);
 }
 

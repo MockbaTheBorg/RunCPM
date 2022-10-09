@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdbool.h> 
 #include <sys/stat.h>
-#include <ncurses.h>
 #include <poll.h>
 #include <termios.h>
 #include <unistd.h>
@@ -490,7 +489,6 @@ void _host_init(int argc, char* argv[]) {
 static struct termios _old_term, _new_term;
 
 void _console_init(void) {
-	(void)initscr();
 	tcgetattr(0, &_old_term);
 
 	_new_term = _old_term;
@@ -507,7 +505,6 @@ void _console_init(void) {
 
 void _console_reset(void) {
 	tcsetattr(0, TCSANOW, &_old_term);
-	(void)endwin();
 }
 
 int _kbhit(void) {

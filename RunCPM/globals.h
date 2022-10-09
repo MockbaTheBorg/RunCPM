@@ -41,8 +41,8 @@
 #ifdef CCP_INTERNAL
 #define CCPname		"INTERNAL v3.0"			// Will use the CCP from ccp.h
 #define VersionCCP	0x30					// 0x10 and above reserved for Internal CCP
-#define BatchFCB	(tmpFCB + 36)
-#define CCPaddr		(BDOSjmppage-0x0800)
+#define BatchFCB	(tmpFCB + 48)
+#define CCPaddr		BDOSjmppage				// Internal CCP has size 0
 #endif
 //
 #ifdef CCP_DR
@@ -152,6 +152,8 @@ typedef unsigned int    uint32;
 #define BANKS 1						// Number of memory banks available
 static uint8 curBank = 1;			// Number of the current RAM bank in use (1-x, not 0-x)
 static uint8 isXmove = FALSE;		// Used by BIOS
+static uint8 srcBank = 1;			// Source bank for memory MOVE
+static uint8 dstBank = 1;			// Destination bank for memory MOVE
 
 #define PAGESIZE 64 * 1024			// RAM(plus ROM) needs to be 64K to avoid compatibility issues
 #define MEMSIZE PAGESIZE * BANKS	// Total RAM size
@@ -172,19 +174,24 @@ static uint8 isXmove = FALSE;		// Used by BIOS
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 
-// BIOS Pages (always on the top of memory)
-#define BIOSpage	(PAGESIZE - 256)
-#define BIOSjmppage	(BIOSpage - 256)
+// BIOS Pages (512 bytes from the top of memory)
+#define BIOSjmppage	(PAGESIZE - 512)
+#define BIOSpage	(BIOSjmppage + 256)
 
-// BDOS Pages (depend on TPASIZE)
-#define BDOSpage (TPASIZE * 1024) - 768
-#define BDOSjmppage	(BDOSpage - 256)
+// BDOS Pages (depends on TPASIZE for external CCPs)
+#if defined CCP_INTERNAL
+	#define BDOSjmppage (BIOSjmppage - 256)
+	#define BDOSpage (BDOSjmppage + 16)
+#else
+	#define BDOSjmppage (TPASIZE * 1024) - 1024
+	#define BDOSpage	(BDOSjmppage + 256)
+#endif
 
-#define DPBaddr (BIOSpage + 64)		// Address of the Disk Parameter Block (Hardcoded in BIOS)
+#define DPBaddr (BIOSpage + 128)	// Address of the Disk Parameter Block (Hardcoded in BIOS)
 #define DPHaddr (DPBaddr + 15)		// Address of the Disk Parameter Header 
 
-#define SCBaddr (BDOSpage + 16)		// Address of the System Control Block
-#define tmpFCB  (BDOSpage + 64)		// Address of the temporary FCB
+#define SCBaddr (BDOSpage + 3)		// Address of the System Control Block
+#define tmpFCB  (BDOSpage + 16)		// Address of the temporary FCB
 
 /* Definition of global variables */
 static uint8	filename[17];		// Current filename in host filesystem format
