@@ -154,6 +154,7 @@ static uint8 curBank = 1;			// Number of the current RAM bank in use (1-x, not 0
 static uint8 isXmove = FALSE;		// Used by BIOS
 static uint8 srcBank = 1;			// Source bank for memory MOVE
 static uint8 dstBank = 1;			// Destination bank for memory MOVE
+static uint8 ioBank = 1;			// Destination bank for sector IO
 
 #define PAGESIZE 64 * 1024			// RAM(plus ROM) needs to be 64K to avoid compatibility issues
 #define MEMSIZE PAGESIZE * BANKS	// Total RAM size

@@ -573,7 +573,36 @@ void _Bios(void) {
 			HL = BC;		// HL=BC=No translation (1:1)
 			break;
 		}
-//      ...
+		case B_CONOST: {	// 17 - Return status of current screen output device
+			SET_HIGH_REGISTER(AF, 0x0ff);
+			break;
+		}
+		case B_AUXIST: {	// 18 - Return status of current auxiliary input device
+			SET_HIGH_REGISTER(AF, 0x00);
+			break;
+		}
+		case B_AUXOST: {	// 19 - Return status of current auxiliary output device
+			SET_HIGH_REGISTER(AF, 0x00);
+			break;
+		}
+		case B_DEVTBL: {	// 20 - Return the address of the devices table, or 0 if not implemented
+			HL = 0x0000;
+			break;
+		}
+		case B_DEVINI: {	// 21 - Reinitialise character device number C
+			break;
+		}
+		case B_DRVTBL: {	// 22 - Return the address of the drive table
+			HL = 0x0FFFF;
+			break;
+		}
+		case B_MULTIO: {	// 23 - Notify the BIOS of multi sector transfer
+			break;
+		}
+		case B_FLUSH: {		// 24 - Write any pending data to disc
+			SET_HIGH_REGISTER(AF, 0x00);
+			break;
+		}
 		case B_MOVE: {		// 25 - Move a block of memory
 			if (!isXmove)
 				srcBank = dstBank = curBank;
@@ -582,12 +611,16 @@ void _Bios(void) {
 			isXmove = FALSE;
 			break;
 		}
-//      ...
+		case B_TIME: {		// 26 - Get/Set SCB time
+			break;
+		}
 		case B_SELMEM: {	// 27 - Select memory bank
 			curBank = HIGH_REGISTER(AF);
 			break;
 		}
-//      ...
+		case B_SETBNK: {	// 28 - Set the bank to be used for the next read/write sector operation
+			ioBank = HIGH_REGISTER(AF);
+		}
 		case B_XMOVE: {		// 29 - Preload banks for MOVE
 			srcBank = LOW_REGISTER(BC);
 			dstBank = HIGH_REGISTER(BC);
@@ -596,6 +629,10 @@ void _Bios(void) {
 		}
 		case B_USERF: {		// 30 - This allows programs ending in RET return to internal CCP
 			Status = 3;
+			break;
+		}
+		case B_RESERV1:
+		case B_RESERV2: {
 			break;
 		}
 		default: {
