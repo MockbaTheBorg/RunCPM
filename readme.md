@@ -1,4 +1,4 @@
-# RunCPM - Z80 CP/M 2.2 emulator
+# RunCPM - Z80 CP/M emulator
 
 (It is important to read this documentation fully before attempting to build RunCPM)
 
@@ -6,7 +6,7 @@ RunCPM is an application which can execute vintage CP/M 8 bits programs on many 
 RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
 
 If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
-RunCPM emulates CP/M 2.2 from Digital Research as close as possible, the only difference being that it uses regular folders on the host instead of disk images.
+RunCPM emulates CP/M from Digital Research as close as possible, the only difference being that it uses regular folders on the host instead of disk images.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
 
@@ -70,7 +70,7 @@ Anyone having issues building with homebrew 'binutils' on Mac should check this 
 **Preparing the RunCPM folder :**<br>
 Create a folder containing both the RunCPM executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
 If using a SD card, RunCPM and its CCPs need to be on the SD card's root folder.<br>
-The 64K version CCPs will provide the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M 2.2 computer.<br>
+The 64K version CCPs will provide the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
 The 60K version CCPs will provide a more realistic addressing space, by keeping the CCP entry point on the same loading address it would be on a physical CP/M computer.<br>
 Other amounts of memory can be used, but this would require rebuilding the CCP binaries (sources available on disk A.ZIP).
 The CCP binaries are named with their file name extensions matching the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly, depending on the amount of memory selected when it is built.<br>
@@ -178,11 +178,11 @@ Caveat: Lua scripts must have a comment (--) on their last line, to prevent issu
 
 ## Limitations / Misbehaviors
 
-The objective of RunCPM is **not** to emulate a Z80 CP/M 2.2 computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
+The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
 This will obviously prevent the accurate physical emulation of disk drives, so applications like **MOVCPM** and **STAT** will not be useful.<br>
-They are still provided on the master disk A.ZIP just to maintain compatibility with DRI's official CP/M 2.2 distribution.
+They are still provided on the master disk A.ZIP just to maintain compatibility with DRI's official CP/M distribution.
 
-Other CP/M flavors like CP/M 3 or CP/M Plus are not supported as of yet, as the emulated BDOS of RunCPM is specific for CP/M 2.2.
+At the moment only CP/M 2.2 is fully supported. Support for CP/M 3.0 is in the works.
 
 The IN/OUT instructions are used to implement the communication between the soft CPU BIOS and BDOS and the equivalent RunCPM functions, therefore these instructions are unusable for any other purpose.
 
