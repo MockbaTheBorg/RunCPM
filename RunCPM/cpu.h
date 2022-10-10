@@ -1682,8 +1682,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x22:      /* LD (nnnn),HL */
-			temp = GET_WORD(PC);
-			PUT_WORD(temp, HL);
+			PUT_WORD(GET_WORD(PC), HL);
 			PC += 2;
 			break;
 
@@ -1747,8 +1746,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x2a:      /* LD HL,(nnnn) */
-			temp = GET_WORD(PC);
-			HL = GET_WORD(temp);
+			HL = GET_WORD(GET_WORD(PC));
 			PC += 2;
 			break;
 
@@ -1789,8 +1787,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x32:      /* LD (nnnn),A */
-			temp = GET_WORD(PC);
-			PUT_BYTE(temp, HIGH_REGISTER(AF));
+			PUT_BYTE(GET_WORD(PC), HIGH_REGISTER(AF));
 			PC += 2;
 			break;
 
@@ -1834,8 +1831,7 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x3a:      /* LD A,(nnnn) */
-			temp = GET_WORD(PC);
-			SET_HIGH_REGISTER(AF, GET_BYTE(temp));
+			SET_HIGH_REGISTER(AF, GET_BYTE(GET_WORD(PC)));
 			PC += 2;
 			break;
 
@@ -2843,8 +2839,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x22:      /* LD (nnnn),IX */
-				temp = GET_WORD(PC);
-				PUT_WORD(temp, IX);
+				PUT_WORD(GET_WORD(PC), IX);
 				PC += 2;
 				break;
 
@@ -2874,8 +2869,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x2a:      /* LD IX,(nnnn) */
-				temp = GET_WORD(PC);
-				IX = GET_WORD(temp);
+				IX = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -2935,8 +2929,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x46:      /* LD B,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(BC, GET_BYTE(adr));
+				SET_HIGH_REGISTER(BC, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x4c:      /* LD C,IXH */
@@ -2948,8 +2941,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x4e:      /* LD C,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(BC, GET_BYTE(adr));
+				SET_LOW_REGISTER(BC, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x54:      /* LD D,IXH */
@@ -2961,8 +2953,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x56:      /* LD D,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(DE, GET_BYTE(adr));
+				SET_HIGH_REGISTER(DE, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x5c:      /* LD E,IXH */
@@ -2974,8 +2965,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x5e:      /* LD E,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(DE, GET_BYTE(adr));
+				SET_LOW_REGISTER(DE, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x60:      /* LD IXH,B */
@@ -3002,8 +2992,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x66:      /* LD H,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(HL, GET_BYTE(adr));
+				SET_HIGH_REGISTER(HL, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x67:      /* LD IXH,A */
@@ -3034,8 +3023,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x6e:      /* LD L,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(HL, GET_BYTE(adr));
+				SET_LOW_REGISTER(HL, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x6f:      /* LD IXL,A */
@@ -3043,38 +3031,31 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x70:      /* LD (IX+dd),B */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(BC));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), HIGH_REGISTER(BC));
 				break;
 
 			case 0x71:      /* LD (IX+dd),C */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(BC));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), LOW_REGISTER(BC));
 				break;
 
 			case 0x72:      /* LD (IX+dd),D */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(DE));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), HIGH_REGISTER(DE));
 				break;
 
 			case 0x73:      /* LD (IX+dd),E */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(DE));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), LOW_REGISTER(DE));
 				break;
 
 			case 0x74:      /* LD (IX+dd),H */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(HL));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), HIGH_REGISTER(HL));
 				break;
 
 			case 0x75:      /* LD (IX+dd),L */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(HL));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), LOW_REGISTER(HL));
 				break;
 
 			case 0x77:      /* LD (IX+dd),A */
-				adr = IX + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(AF));
+				PUT_BYTE(IX + (int8)RAM_PP(PC), HIGH_REGISTER(AF));
 				break;
 
 			case 0x7c:      /* LD A,IXH */
@@ -3086,8 +3067,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x7e:      /* LD A,(IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(AF, GET_BYTE(adr));
+				SET_HIGH_REGISTER(AF, GET_BYTE(IX + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x84:      /* ADD A,IXH */
@@ -3179,8 +3159,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa6:      /* AND (IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8)& GET_BYTE(IX + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IXH */
@@ -3192,8 +3171,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xae:      /* XOR (IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				AF = xororTable[((AF >> 8) ^ GET_BYTE(adr)) & 0xff];
+				AF = xororTable[((AF >> 8) ^ GET_BYTE(IX + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xb4:      /* OR IXH */
@@ -3205,8 +3183,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xb6:      /* OR (IX+dd) */
-				adr = IX + (int8)RAM_PP(PC);
-				AF = xororTable[((AF >> 8) | GET_BYTE(adr)) & 0xff];
+				AF = xororTable[((AF >> 8) | GET_BYTE(IX + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xbc:      /* CP IXH */
@@ -3506,8 +3483,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x43:      /* LD (nnnn),BC */
-				temp = GET_WORD(PC);
-				PUT_WORD(temp, BC);
+				PUT_WORD(GET_WORD(PC), BC);
 				PC += 2;
 				break;
 
@@ -3576,8 +3552,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x4b:      /* LD BC,(nnnn) */
-				temp = GET_WORD(PC);
-				BC = GET_WORD(temp);
+				BC = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -3610,8 +3585,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x53:      /* LD (nnnn),DE */
-				temp = GET_WORD(PC);
-				PUT_WORD(temp, DE);
+				PUT_WORD(GET_WORD(PC), DE);
 				PC += 2;
 				break;
 
@@ -3643,8 +3617,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x5b:      /* LD DE,(nnnn) */
-				temp = GET_WORD(PC);
-				DE = GET_WORD(temp);
+				DE = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -3676,8 +3649,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x63:      /* LD (nnnn),HL */
-				temp = GET_WORD(PC);
-				PUT_WORD(temp, HL);
+				PUT_WORD(GET_WORD(PC), HL);
 				PC += 2;
 				break;
 
@@ -3707,8 +3679,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x6b:      /* LD HL,(nnnn) */
-				temp = GET_WORD(PC);
-				HL = GET_WORD(temp);
+				HL = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -3739,8 +3710,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x73:      /* LD (nnnn),SP */
-				temp = GET_WORD(PC);
-				PUT_WORD(temp, SP);
+				PUT_WORD(GET_WORD(PC), SP);
 				PC += 2;
 				break;
 
@@ -3764,8 +3734,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x7b:      /* LD SP,(nnnn) */
-				temp = GET_WORD(PC);
-				SP = GET_WORD(temp);
+				SP = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -4121,8 +4090,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x2a:      /* LD IY,(nnnn) */
-				temp = GET_WORD(PC);
-				IY = GET_WORD(temp);
+				IY = GET_WORD(GET_WORD(PC));
 				PC += 2;
 				break;
 
@@ -4182,8 +4150,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x46:      /* LD B,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(BC, GET_BYTE(adr));
+				SET_HIGH_REGISTER(BC, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x4c:      /* LD C,IYH */
@@ -4195,8 +4162,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x4e:      /* LD C,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(BC, GET_BYTE(adr));
+				SET_LOW_REGISTER(BC, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x54:      /* LD D,IYH */
@@ -4208,8 +4174,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x56:      /* LD D,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(DE, GET_BYTE(adr));
+				SET_HIGH_REGISTER(DE, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x5c:      /* LD E,IYH */
@@ -4221,8 +4186,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x5e:      /* LD E,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(DE, GET_BYTE(adr));
+				SET_LOW_REGISTER(DE, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x60:      /* LD IYH,B */
@@ -4249,8 +4213,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x66:      /* LD H,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(HL, GET_BYTE(adr));
+				SET_HIGH_REGISTER(HL, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x67:      /* LD IYH,A */
@@ -4281,8 +4244,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x6e:      /* LD L,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_LOW_REGISTER(HL, GET_BYTE(adr));
+				SET_LOW_REGISTER(HL, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x6f:      /* LD IYL,A */
@@ -4290,38 +4252,31 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x70:      /* LD (IY+dd),B */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(BC));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), HIGH_REGISTER(BC));
 				break;
 
 			case 0x71:      /* LD (IY+dd),C */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(BC));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), LOW_REGISTER(BC));
 				break;
 
 			case 0x72:      /* LD (IY+dd),D */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(DE));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), HIGH_REGISTER(DE));
 				break;
 
 			case 0x73:      /* LD (IY+dd),E */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(DE));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), LOW_REGISTER(DE));
 				break;
 
 			case 0x74:      /* LD (IY+dd),H */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(HL));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), HIGH_REGISTER(HL));
 				break;
 
 			case 0x75:      /* LD (IY+dd),L */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, LOW_REGISTER(HL));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), LOW_REGISTER(HL));
 				break;
 
 			case 0x77:      /* LD (IY+dd),A */
-				adr = IY + (int8)RAM_PP(PC);
-				PUT_BYTE(adr, HIGH_REGISTER(AF));
+				PUT_BYTE(IY + (int8)RAM_PP(PC), HIGH_REGISTER(AF));
 				break;
 
 			case 0x7c:      /* LD A,IYH */
@@ -4333,8 +4288,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x7e:      /* LD A,(IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				SET_HIGH_REGISTER(AF, GET_BYTE(adr));
+				SET_HIGH_REGISTER(AF, GET_BYTE(IY + (int8)RAM_PP(PC)));
 				break;
 
 			case 0x84:      /* ADD A,IYH */
@@ -4426,8 +4380,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xa6:      /* AND (IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				AF = andTable[((AF >> 8)& GET_BYTE(adr)) & 0xff];
+				AF = andTable[((AF >> 8)& GET_BYTE(IY + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xac:      /* XOR IYH */
@@ -4439,8 +4392,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xae:      /* XOR (IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				AF = xororTable[((AF >> 8) ^ GET_BYTE(adr)) & 0xff];
+				AF = xororTable[((AF >> 8) ^ GET_BYTE(IY + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xb4:      /* OR IYH */
@@ -4452,8 +4404,7 @@ static inline void Z80run(void) {
 				break;
 
 			case 0xb6:      /* OR (IY+dd) */
-				adr = IY + (int8)RAM_PP(PC);
-				AF = xororTable[((AF >> 8) | GET_BYTE(adr)) & 0xff];
+				AF = xororTable[((AF >> 8) | GET_BYTE(IY + (int8)RAM_PP(PC))) & 0xff];
 				break;
 
 			case 0xbc:      /* CP IYH */

@@ -413,9 +413,8 @@ uint8 _findnext(uint8 isdir) {
 						// account for host files that aren't multiples of the block size
 						// by rounding their bytes up to the next multiple of blocks
 						bytes = st.st_size;
-						if (bytes & (BlkSZ - 1)) {
+						if (bytes & (BlkSZ - 1))
 							bytes = (bytes & ~(BlkSZ - 1)) + BlkSZ;
-						}
 						// calculate the number of 128 byte records and 16K
 						// extents for this file. _mockupDirEntry will use
 						// these values to populate the returned directory

@@ -113,13 +113,11 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 			++i;
 		}
 	} else {
-		for (i = 0; i < 8; ++i) {
+		for (i = 0; i < 8; ++i)
 			*(filename++) = '?';
-		}
 		*(filename++) = '.';
-		for (i = 0; i < 3; ++i) {
+		for (i = 0; i < 3; ++i)
 			*(filename++) = '?';
-		}
 		unique = FALSE;
 	}
 	*filename = 0x00;
@@ -200,9 +198,8 @@ void _mockupDirEntry(void) {
 	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
 	uint8 blocks, i;
 
-	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i) {
+	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	}
 	_HostnameToFCB(dmaAddr, (uint8*)findNextDirName);
 
 	if (allUsers) {
@@ -233,9 +230,8 @@ void _mockupDirEntry(void) {
 	}
 	// phoney up an appropriate number of allocation blocks
 	if (numAllocBlocks < 256) {
-		for (i = 0; i < blocks; ++i) {
+		for (i = 0; i < blocks; ++i)
 			DE->al[i] = (uint8)firstFreeAllocBlock++;
-		}
 	} else {
 		for (i = 0; i < 2 * blocks; i += 2) {
 			DE->al[i] = firstFreeAllocBlock & 0xFF;

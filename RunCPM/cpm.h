@@ -254,13 +254,11 @@ void _logRegs(void) {
 	uint8 Flags[9] = {'S', 'Z', '5', 'H', '3', 'P', 'N', 'C'};
 	uint8 c = HIGH_REGISTER(AF);
 
-	if ((c < 32) || (c > 126)) {
+	if ((c < 32) || (c > 126))
 		c = 46;
-	}
 
-	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) {
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1)
 		Flags[J] = I & 0x80 ? Flags[J] : '.';
-	}
 	sprintf((char *)LogBuffer, "  BC:%04x DE:%04x HL:%04x AF:%02x(%c)|%s| IX:%04x IY:%04x SP:%04x PC:%04x\n",
 			WORD16(BC), WORD16(DE), WORD16(HL), HIGH_REGISTER(AF), c, Flags, WORD16(IX), WORD16(IY), WORD16(SP), WORD16(PC));
 	_sys_logbuffer(LogBuffer);
@@ -274,9 +272,8 @@ void _logMem(uint16 address, uint8 amount) {    // Amount = number of 16 bytes l
 	for (i = 0; i < amount; ++i) {
 		pos = 0;
 
-		for (m = 0; m < head; ++m) {
+		for (m = 0; m < head; ++m)
 			LogBuffer[pos++] = ' ';
-		}
 		sprintf((char *)LogBuffer, "  %04x: ", address);
 
 		for (m = 0; m < 16; ++m) {
@@ -304,14 +301,12 @@ void _logChar(char *txt, uint8 c) {
 
 void _logBiosIn(uint8 ch) {
 #ifdef LOGBIOS_NOT
-	if (ch == LOGBIOS_NOT) {
+	if (ch == LOGBIOS_NOT)
 		return;
-	}
 #endif // ifdef LOGBIOS_NOT
 #ifdef LOGBIOS_ONLY
-	if (ch != LOGBIOS_ONLY) {
+	if (ch != LOGBIOS_ONLY)
 		return;
-	}
 #endif // ifdef LOGBIOS_ONLY
 	static const char *BIOSCalls[33] =
 	{
@@ -333,14 +328,12 @@ void _logBiosIn(uint8 ch) {
 
 void _logBiosOut(uint8 ch) {
 #ifdef LOGBIOS_NOT
-	if (ch == LOGBIOS_NOT) {
+	if (ch == LOGBIOS_NOT)
 		return;
-	}
 #endif // ifdef LOGBIOS_NOT
 #ifdef LOGBIOS_ONLY
-	if (ch != LOGBIOS_ONLY) {
+	if (ch != LOGBIOS_ONLY)
 		return;
-	}
 #endif // ifdef LOGBIOS_ONLY
 	sprintf((char *)LogBuffer, "               OUT:\n");
 	_sys_logbuffer(LogBuffer);
@@ -349,14 +342,12 @@ void _logBiosOut(uint8 ch) {
 
 void _logBdosIn(uint8 ch) {
 #ifdef LOGBDOS_NOT
-	if (ch == LOGBDOS_NOT) {
+	if (ch == LOGBDOS_NOT)
 		return;
-	}
 #endif // ifdef LOGBDOS_NOT
 #ifdef LOGBDOS_ONLY
-	if (ch != LOGBDOS_ONLY) {
+	if (ch != LOGBDOS_ONLY)
 		return;
-	}
 #endif // ifdef LOGBDOS_ONLY
 	uint16 address = 0;
 	uint8 size = 0;
@@ -431,21 +422,18 @@ void _logBdosIn(uint8 ch) {
 			break;
 		}
 	} // switch
-	if (size) {
+	if (size)
 		_logMem(address, size);
-	}
 } // _logBdosIn
 
 void _logBdosOut(uint8 ch) {
 #ifdef LOGBDOS_NOT
-	if (ch == LOGBDOS_NOT) {
+	if (ch == LOGBDOS_NOT)
 		return;
-	}
 #endif // ifdef LOGBDOS_NOT
 #ifdef LOGBDOS_ONLY
-	if (ch != LOGBDOS_ONLY) {
+	if (ch != LOGBDOS_ONLY)
 		return;
-	}
 #endif // ifdef LOGBDOS_ONLY
 	uint16 address = 0;
 	uint8 size = 0;
@@ -500,9 +488,8 @@ void _logBdosOut(uint8 ch) {
 			break;
 		}
 	} // switch
-	if (size) {
+	if (size)
 		_logMem(address, size);
-	}
 } // _logBdosOut
 #endif // ifdef DEBUGLOG
 
@@ -554,11 +541,9 @@ void _Bios(void) {
 		}
 		case B_SELDSK: {    // 9 - Select disk drive
 			disk[0] += LOW_REGISTER(BC);
-			if (_sys_select(&disk[0])) {
+			HL = 0x0000;
+			if (_sys_select(&disk[0]))
 				HL = DPHaddr;
-			} else {
-				HL = 0x0000;
-			}
 			break;
 		}
 		case B_SETTRK: {    // 10 - Set track number
@@ -707,9 +692,8 @@ void _Bdos(void) {
 				lst_dev = _sys_fopen_w((uint8 *)lst_file);
 				lst_open = TRUE;
 			}
-			if (lst_dev) {
+			if (lst_dev)
 				_sys_fputc(LOW_REGISTER(DE), lst_dev);
-			}
 #endif // ifdef USE_LST
 			break;
 		}
@@ -759,9 +743,8 @@ void _Bdos(void) {
 		   Sends the $ terminated string pointed by (DE) to the screen
 		 */
 		case C_WRITESTR: {
-			while ((ch = _RamRead(DE++)) != '$') {
+			while ((ch = _RamRead(DE++)) != '$')
 				_putcon(ch);
-			}
 			break;
 		}
 
@@ -779,9 +762,8 @@ void _Bdos(void) {
             //printf("\n\r chrsMaxIdx: %0X, chrsCntIdx: %0X", chrsMaxIdx, chrsCntIdx);
 
             static uint8 *last = 0;
-            if (!last) {
+            if (!last)
                 last = (uint8*)calloc(1,256);    //allocate one (for now!)
-            }
 
 #ifdef PROFILE
 			if (time_start != 0) {
@@ -986,9 +968,8 @@ void _Bdos(void) {
                     curCol--;
                 }
 
-                if (chrsCnt == chrsMax) {   // Reached the maximum count
+                if (chrsCnt == chrsMax)   // Reached the maximum count
                     break;
-                }
             }   // while (chrsMax)
 
             // Save the number of characters read
