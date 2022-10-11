@@ -845,10 +845,6 @@ void _Bdos(void) {
                 if (chr == 4) {                             // ^D - DEBUG
                     Debug = 1;
 					break;
-//                    printf("\r\n curCol: %u, chrsCnt: %u, chrsMax: %u", curCol, chrsCnt, chrsMax);
-//                    _puts("#\r\n  ");
-//                    curCol = 0;
-//                    reType = postBS = chrsCnt;
                 }
 #endif // ifdef DEBUG
 

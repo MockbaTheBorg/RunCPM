@@ -1305,6 +1305,8 @@ void Z80debug(void) {
 	uint8 loop = TRUE;
 	uint8 res = 0;
 
+	_puts("\r\nDebug Mode - Press '?' for help");
+
 	while (loop) {
 		pos = PC;
 		_puts("\r\n");
