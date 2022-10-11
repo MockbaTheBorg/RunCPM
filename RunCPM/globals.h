@@ -240,8 +240,6 @@ extern "C"
 
 	extern void _puts(const char* str);
 
-	extern void Z80debug(void);
-
 #ifdef __cplusplus // If building on Arduino
 }
 #endif
