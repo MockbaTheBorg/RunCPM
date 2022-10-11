@@ -90,7 +90,7 @@
 
 #define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
-//#define HASLUA					// Will enable Lua scripting (BDOS call 254)
+#define HASLUA					// Will enable Lua scripting (BDOS call 254)
 									// Should be passed externally per-platform with -DHASLUA
 
 //#define PROFILE					// For measuring time taken to run a CP/M command
@@ -239,6 +239,8 @@ extern "C"
 	extern uint8 match(uint8* fcbname, uint8* pattern);
 
 	extern void _puts(const char* str);
+
+	extern void Z80debug(void);
 
 #ifdef __cplusplus // If building on Arduino
 }
