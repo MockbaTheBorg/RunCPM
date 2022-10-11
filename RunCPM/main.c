@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 #ifdef HASLUA
 	_puts("       with Lua scripting support\r\n");
 #endif
-	_puts("-----------------------------------------\r\n");
+	_puts("----------------------------------------\r\n");
 	_puts("BIOS at 0x");
 	_puthex16(BIOSjmppage);
 	_puts(" - ");

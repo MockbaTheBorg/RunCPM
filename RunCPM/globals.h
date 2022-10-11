@@ -90,7 +90,7 @@
 
 #define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
-#define HASLUA					// Will enable Lua scripting (BDOS call 254)
+//#define HASLUA					// Will enable Lua scripting (BDOS call 254)
 									// Should be passed externally per-platform with -DHASLUA
 
 //#define PROFILE					// For measuring time taken to run a CP/M command
@@ -101,8 +101,8 @@
 
 /* Definition for CP/M 2.2 user number support */
 
-#define BATCHA						// If this is defined, the $$$.SUB will be looked for on drive A:
-//#define BATCH0					// If this is defined, the $$$.SUB will be looked for on user area 0
+#define BATCHA						// If this is defined, the $$$.SUB file will be looked for on drive A:
+//#define BATCH0					// If this is defined, the $$$.SUB file will be looked for on user area 0
 									// The default behavior of DRI's CP/M 2.2 was to have $$$.SUB created on the current drive/user while looking for it
 									// on drive A: current user, which made it complicated to run SUBMITs when not logged to drive A: user 0
 
