@@ -661,6 +661,8 @@ void _ccp_readInput(void) {
         }
     } else {
         _ccp_bdos(C_READSTR, inBuf);            // Reads the command line from console
+        if (Debug)
+            Z80debug();
     }
 } // _ccp_readInput
 
