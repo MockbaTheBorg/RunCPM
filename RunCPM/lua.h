@@ -17,6 +17,12 @@ extern int32 HL1; /* alternate HL register                        */
 extern int32 IFF; /* Interrupt Flip Flop                          */
 extern int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
 
+#if BANKS!=1
+	extern uint8 _RamRead(uint16 address);
+	extern uint16 _RamRead16(uint16 address);
+	extern void _RamWrite16(uint16 address, uint16 value);
+#endif
+
 // Lua "Trampoline" functions
 int luaBdosCall(lua_State* L) {
 	uint8 function = (uint8)luaL_checkinteger(L, 1);
