@@ -736,8 +736,11 @@ void _Bdos(void) {
 		}
 
 		/*
+
 		   C = 6 : Direct console IO
 		   E = 0xFF : Checks for char available and returns it, or 0x00 if none (read)
+		   ToDo E = 0xFE : Return console input status. Zero if no character is waiting, nonzero otherwise. (CPM3)
+		   ToDo E = 0xFD : Wait until a character is ready, return it without echoing. (CPM3)		   
 		   E = char : Outputs char (write)
 		   Returns: A=Char or 0x00 (on read)
 		 */
