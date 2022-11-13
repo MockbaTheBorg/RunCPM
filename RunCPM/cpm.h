@@ -757,9 +757,13 @@ void _Bdos(void) {
 		}
 
 		/*
-		   C = 7 : Get IOBYTE
+		   C = 7 : Get IOBYTE (CPM2)
 		   Gets the system IOBYTE
-		   Returns: A = IOBYTE
+		   Returns: A = IOBYTE (CPM2)
+		   ToDo REPLACE with
+		   C = 7 : Auxiliary Input status (CPM3)
+		   0FFh is returned if the Auxiliary Input device has a character ready; otherwise 0 is returned.
+		   Returns: A=0 or 0FFh (CPM3)
 		 */
 		case A_STATIN: {
 			HL = _RamRead(0x0003);
@@ -767,9 +771,13 @@ void _Bdos(void) {
 		}
 
 		/*
-		   C = 8 : Set IOBYTE
+		   C = 8 : Set IOBYTE (CPM2)
 		   E = IOBYTE
 		   Sets the system IOBYTE to E
+		   ToDo REPLACE with
+		   C = 8 : Auxiliary Output status (CPM3)
+		   0FFh is returned if the Auxiliary Output device is ready for characters; otherwise 0 is returned.
+		   Returns: A=0 or 0FFh (CPM3)
 		 */
 		case A_STATOUT: {
 			_RamWrite(0x0003, LOW_REGISTER(DE));
@@ -791,6 +799,7 @@ void _Bdos(void) {
 		   C = 10 (0Ah) : Buffered input
 		   DE = Address of buffer
 		   Reads (DE) bytes from the console
+		   ToDo 
 		   Returns: A = Number os chars read
 		   DE) = First char
 		 */
