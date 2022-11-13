@@ -798,8 +798,12 @@ void _Bdos(void) {
 		/*
 		   C = 10 (0Ah) : Buffered input
 		   DE = Address of buffer
+		   ToDo DE = 0 Use DMA address (CPM3) AND
+		   DE=address:			DE=0:
+			buffer: DEFB    size        buffer: DEFB    size
+			        DEFB    ?                   DEFB    len
+			        	bytes           	    bytes
 		   Reads (DE) bytes from the console
-		   ToDo 
 		   Returns: A = Number os chars read
 		   DE) = First char
 		 */
@@ -1130,6 +1134,9 @@ void _Bdos(void) {
 
 		/*
 		   C = 20 (14h) : Read sequential
+		   DE = address of FCB
+		   ToDo under CP/M 3 this can be a multiple of 128 bytes
+		   Returns: A=return code
 		 */
 		case F_READ: {
 			HL = _ReadSeq(DE);
@@ -1138,7 +1145,10 @@ void _Bdos(void) {
 
 		/*
 		   C = 21 (15h) : Write sequential
-		 */
+		   DE = address of FCB
+		   ToDo under CP/M 3 this can be a multiple of 128 bytes
+		   Returns: A=return code
+		   */
 		case F_WRITE: {
 			HL = _WriteSeq(DE);
 			break;
@@ -1238,6 +1248,7 @@ void _Bdos(void) {
 
 		/*
 		   C = 33 (21h) : Read random
+		   ToDo under CPM3, if A returns 0xFF, H returns hardware error 
 		 */
 		case F_READRAND: {
 			HL = _ReadRand(DE);
@@ -1246,7 +1257,8 @@ void _Bdos(void) {
 
 		/*
 		   C = 34 (22h) : Write random
-		 */
+		   ToDo under CPM3, if A returns 0xFF, H returns hardware error 
+		   */
 		case F_WRITERAND: {
 			HL = _WriteRand(DE);
 			break;
