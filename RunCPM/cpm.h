@@ -1387,6 +1387,67 @@ void _Bdos(void) {
 			break;
 		}
 
+		/* 
+		   ToDo: C = 47 (2Fh) : Chain to program (CPM3)
+		   E = Chain flag
+		   Returns: None
+		 */
+		case P_CHAIN: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 48 (30h) : Flush Bufers (CPM3)
+		   E = Purge flag
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case DRV_FLUSH: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 49 (31h) : Get/Set System Control (CPM3)
+		   DE = SCB PB Address
+		   Returns: A = Returned Byte
+		   	    HL = Returned Word
+		 */
+		case S_SCB: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 50 (32h) : Direct BIOS Calls (CPM3)
+		   DE = BIOS PB Address
+		   Returns:  BIOS Return
+		 */
+		case S_BIOS: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 59 (3Bh) : Load Overlay (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case P_LOAD: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 60 (3Ch) : Call Resident System Extension (RSX) (CPM3)
+		   DE =  RSX PB Address
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case S_RSX: {
+			break;
+		}
+
+
 #if defined board_digital_io
 
 		/*
