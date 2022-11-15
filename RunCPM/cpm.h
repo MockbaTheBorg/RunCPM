@@ -79,6 +79,8 @@ enum eBDOSFunc {
 	F_SIZE = 35,
 	F_RANDREC = 36,
 	DRV_RESET = 37,
+	DRV_ACCESS = 38,	// This is an MP/M function that is not supported under CP/M 3.
+	DRV_FREE  39,		// This is an MP/M function that is not supported under CP/M 3.
 	F_WRITEZF = 40,
 // CP/M 3.0 Stuff
 	F_TESTWRITE = 41,
@@ -1136,7 +1138,7 @@ void _Bdos(void) {
 		   C = 20 (14h) : Read sequential
 		   DE = address of FCB
 		   ToDo under CP/M 3 this can be a multiple of 128 bytes
-		   Returns: A=return code
+		   Returns: A = return code
 		 */
 		case F_READ: {
 			HL = _ReadSeq(DE);
@@ -1292,12 +1294,73 @@ void _Bdos(void) {
 		  ********* Function 39: Not supported by CP/M 2.2 *********
 		  ********* (todo) Function 40: Write random with zero fill *********
 		 */
+		
+		/*
+		  ToDo C = 38 (26h) : Access drives (CPM3)
+		    This is an MP/M function that is not supported under CP/M 3. If called, the file
+		     system returns a zero In register A indicating that the access request is successful.
+		 */		
+		case DRV_ACCESS: {
+			break;
+		}			
+
+		/*
+		  ToDo C = 39 (27h) : Free drives (CPM3)
+		    This is an MP/M function that is not supported under CP/M 3. If called, the file
+		     system returns a zero In register A indicating that the access request is successful.
+		 */		
+		case DRV_FREE: {
+			break;
+		}			
 
 		/*
 		   C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
 		 */
 		case F_WRITEZF: {
 			HL = _WriteRand(DE);
+			break;
+		}
+
+		/* 
+		   ToDo: C = 41 (29h) : Test and Write Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_TESTWRITE: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 42 (2Ah) : Lock Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_LOCK: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 43 (2Bh) : Unlock Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_UNLOCK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 44 (2Ch) : Set number of records to read/write at once (CPM3)
+		   E = Number of Sectors
+		   Returns: A = return code (Returns A=0 if E was valid, 0FFh otherwise)
+		 */
+		case F_MULTISEC: {
 			break;
 		}
 
