@@ -1364,6 +1364,29 @@ void _Bdos(void) {
 			break;
 		}
 
+		/* 
+		   ToDo: C = 45 (2Dh) : Set BDOS Error Mode (CPM3)
+		   E = BDOS Error Mode
+		   E < 254 Compatibility mode; program is terminated and an error message printed.
+		   E = 254 Error code is returned in H, error message is printed.
+		   E = 255 Error code is returned in H, no error message is printed.
+		   Returns: None
+		 */
+		case F_ERRMODE: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 46 (2Eh) : Get Free Disk Space (CPM3)
+		   E = Drive
+		   Returns: A = return code
+		   	    H = Physical Error
+			    Binary result in the first 3 bytes of current DMA buffer
+		 */
+		case DRV_SPACE: {
+			break;
+		}
+
 #if defined board_digital_io
 
 		/*
