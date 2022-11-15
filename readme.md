@@ -227,6 +227,7 @@ https://forum.armbian.com/topic/8569-runcpm-on-armbian-cpm-weekend-fun/<br>
 https://blog.hackster.io/z80-cp-m-emulator-runs-on-adafruits-new-grand-central-dev-board-6a28ad73dfbc<br>
 https://ht-deko.com/arduino/runcpm.html - in Japanese<br>
 https://www.instructables.com/Retro-CPM-Stand-Alone-Emulator/<br>
+https://www.hackster.io/news/kian-ryan-s-tiny-2040-build-could-be-the-smallest-cp-m-microcomputer-in-history-5d8eeab29d29<br>
 
 ## RunCPM compatible boards tested so far
 
@@ -242,6 +243,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/get-started/get-started-pi
 https://www.st.com/en/evaluation-tools/stm32f4discovery.html - SD on Software SPI mode (mounted on EB-STM32F4DISCOVERY-LCD)<br>
 https://www.adafruit.com/product/4064<br>
 https://github.com/SmartArduino/SZDOITWiKi/wiki/ESP8266---ESPduino-32<br>
+https://shop.pimoroni.com/products/tiny-2040?variant=39560012234835<br>
 
 I have seen reports of people being able to run it on the Nucleo F401re, Nucleo F411 and a japanese board called GR-SAKURA.
 It was also successfully built and ran on the Kindle Keyboard 3G.
