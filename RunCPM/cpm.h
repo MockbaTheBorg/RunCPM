@@ -1448,6 +1448,173 @@ void _Bdos(void) {
 		}
 
 
+		/* 
+		   ToDo: C = 98 (62h) : Free Blocks (CPM3)
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_CLEANUP: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 99 (63h) : Truncate File (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Extended or Physical Error
+		 */
+		case F_TRUNCATE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 100 (64h) : Set Directory Label (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Extended or Physical Error
+		 */
+		case DRV_SETLABEL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 101 (65h) : Return Directory Label Data (CPM3)
+		   E = Drive
+		   Returns: A = Directory Label Data Byte or 0xFF
+		   	    H = Physical Error
+		 */
+		case DRV_GETLABEL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 102 (66h) : Read File Date Stamps and Password Mode (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Physical Error
+		 */
+		case F_TIMEDATE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 103 (67h) : Write File XFCB (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Physical Error
+		 */
+		case F_WRITEXFCB: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 104 (68h) : Set Date and Time (CPM3)
+		   DE = Date and Time (DAT) Address
+		   Returns: None
+		 */
+		case T_SET: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 105 (69h) : Get Date and Time (CPM3)
+		   DE = Date and Time (DAT) Address
+		   Returns: Date and Time (DAT) set
+		   	    A = Seconds (in packed BCD format)
+		 */
+		case T_GET: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 106 (6Ah) : Set Default Password (CPM3)
+		   DE = Password Addresss
+		   Returns: None
+		 */
+		case F_PASSWD: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 107 (6Bh) : Return Serial Number (CPM3)
+		   DE = Serial Number Field
+		   Returns: Serial number field set
+		 */
+		case S_SERIAL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 108 (6Ch) : Get/Set Program Return Code (CPM3)
+		   DE =  0xFFFF (Get) or Program Return Code (Set)
+		   Returns: HL = Program Return Code or (none)
+		 */
+		case P_CODE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 109 (6Dh) : Get/Set Console Mode (CPM3)
+		   DE =  0xFFFF (Get) or Console Mode (Set)
+		   Returns: HL = Console Mode or (none)
+		 */
+		case C_MODE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 110 (6Eh) : Get/Set Output Delimiter (CPM3)
+		   DE =  0xFFFF (Get) or E = Delimiter (Set)
+		   Returns: A = Output Delimiter or (none)
+		 */
+		case C_DELIMIT: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 111 (6Fh) : Print Block (CPM3)
+		   DE =  address of CCB
+		   Returns: None
+		 */
+		case C_WRITEBLK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 112 (70h) : List Block (CPM3)
+		   DE =  address of CCB
+		   Returns: None
+		 */
+		case L_WRITEBLK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 152 (98h) : List Block (CPM3)
+		   DE =  address of PFCB
+		   Returns: HL = Return code
+		   	    Parsed file control block
+		 */
+		case F_PARSE: {
+			break;
+		}
+
+
 #if defined board_digital_io
 
 		/*
