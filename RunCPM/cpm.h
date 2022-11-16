@@ -79,6 +79,8 @@ enum eBDOSFunc {
 	F_SIZE = 35,
 	F_RANDREC = 36,
 	DRV_RESET = 37,
+	DRV_ACCESS = 38,	// This is an MP/M function that is not supported under CP/M 3.
+	DRV_FREE  39,		// This is an MP/M function that is not supported under CP/M 3.
 	F_WRITEZF = 40,
 // CP/M 3.0 Stuff
 	F_TESTWRITE = 41,
@@ -738,6 +740,8 @@ void _Bdos(void) {
 		/*
 		   C = 6 : Direct console IO
 		   E = 0xFF : Checks for char available and returns it, or 0x00 if none (read)
+		   ToDo E = 0xFE : Return console input status. Zero if no character is waiting, nonzero otherwise. (CPM3)
+		   ToDo E = 0xFD : Wait until a character is ready, return it without echoing. (CPM3)		   
 		   E = char : Outputs char (write)
 		   Returns: A=Char or 0x00 (on read)
 		 */
@@ -755,9 +759,13 @@ void _Bdos(void) {
 		}
 
 		/*
-		   C = 7 : Get IOBYTE
+		   C = 7 : Get IOBYTE (CPM2)
 		   Gets the system IOBYTE
-		   Returns: A = IOBYTE
+		   Returns: A = IOBYTE (CPM2)
+		   ToDo REPLACE with
+		   C = 7 : Auxiliary Input status (CPM3)
+		   0FFh is returned if the Auxiliary Input device has a character ready; otherwise 0 is returned.
+		   Returns: A=0 or 0FFh (CPM3)
 		 */
 		case A_STATIN: {
 			HL = _RamRead(0x0003);
@@ -765,9 +773,13 @@ void _Bdos(void) {
 		}
 
 		/*
-		   C = 8 : Set IOBYTE
+		   C = 8 : Set IOBYTE (CPM2)
 		   E = IOBYTE
 		   Sets the system IOBYTE to E
+		   ToDo REPLACE with
+		   C = 8 : Auxiliary Output status (CPM3)
+		   0FFh is returned if the Auxiliary Output device is ready for characters; otherwise 0 is returned.
+		   Returns: A=0 or 0FFh (CPM3)
 		 */
 		case A_STATOUT: {
 			_RamWrite(0x0003, LOW_REGISTER(DE));
@@ -788,6 +800,11 @@ void _Bdos(void) {
 		/*
 		   C = 10 (0Ah) : Buffered input
 		   DE = Address of buffer
+		   ToDo DE = 0 Use DMA address (CPM3) AND
+		   DE=address:			DE=0:
+			buffer: DEFB    size        buffer: DEFB    size
+			        DEFB    ?                   DEFB    len
+			        	bytes           	    bytes
 		   Reads (DE) bytes from the console
 		   Returns: A = Number os chars read
 		   DE) = First char
@@ -1119,6 +1136,9 @@ void _Bdos(void) {
 
 		/*
 		   C = 20 (14h) : Read sequential
+		   DE = address of FCB
+		   ToDo under CP/M 3 this can be a multiple of 128 bytes
+		   Returns: A = return code
 		 */
 		case F_READ: {
 			HL = _ReadSeq(DE);
@@ -1127,7 +1147,10 @@ void _Bdos(void) {
 
 		/*
 		   C = 21 (15h) : Write sequential
-		 */
+		   DE = address of FCB
+		   ToDo under CP/M 3 this can be a multiple of 128 bytes
+		   Returns: A=return code
+		   */
 		case F_WRITE: {
 			HL = _WriteSeq(DE);
 			break;
@@ -1227,6 +1250,7 @@ void _Bdos(void) {
 
 		/*
 		   C = 33 (21h) : Read random
+		   ToDo under CPM3, if A returns 0xFF, H returns hardware error 
 		 */
 		case F_READRAND: {
 			HL = _ReadRand(DE);
@@ -1235,7 +1259,8 @@ void _Bdos(void) {
 
 		/*
 		   C = 34 (22h) : Write random
-		 */
+		   ToDo under CPM3, if A returns 0xFF, H returns hardware error 
+		   */
 		case F_WRITERAND: {
 			HL = _WriteRand(DE);
 			break;
@@ -1269,14 +1294,326 @@ void _Bdos(void) {
 		  ********* Function 39: Not supported by CP/M 2.2 *********
 		  ********* (todo) Function 40: Write random with zero fill *********
 		 */
+		
+		/*
+		  ToDo C = 38 (26h) : Access drives (CPM3)
+		    This is an MP/M function that is not supported under CP/M 3. If called, the file
+		     system returns a zero In register A indicating that the access request is successful.
+		 */		
+		case DRV_ACCESS: {
+			break;
+		}			
+
+		/*
+		  ToDo C = 39 (27h) : Free drives (CPM3)
+		    This is an MP/M function that is not supported under CP/M 3. If called, the file
+		     system returns a zero In register A indicating that the access request is successful.
+		 */		
+		case DRV_FREE: {
+			break;
+		}			
 
 		/*
 		   C = 40 (28h) : Write random with zero fill (we have no disk blocks, so just write random)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
 		 */
 		case F_WRITEZF: {
 			HL = _WriteRand(DE);
 			break;
 		}
+
+		/* 
+		   ToDo: C = 41 (29h) : Test and Write Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_TESTWRITE: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 42 (2Ah) : Lock Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_LOCK: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 43 (2Bh) : Unlock Record (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_UNLOCK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 44 (2Ch) : Set number of records to read/write at once (CPM3)
+		   E = Number of Sectors
+		   Returns: A = return code (Returns A=0 if E was valid, 0FFh otherwise)
+		 */
+		case F_MULTISEC: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 45 (2Dh) : Set BDOS Error Mode (CPM3)
+		   E = BDOS Error Mode
+		   E < 254 Compatibility mode; program is terminated and an error message printed.
+		   E = 254 Error code is returned in H, error message is printed.
+		   E = 255 Error code is returned in H, no error message is printed.
+		   Returns: None
+		 */
+		case F_ERRMODE: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 46 (2Eh) : Get Free Disk Space (CPM3)
+		   E = Drive
+		   Returns: A = return code
+		   	    H = Physical Error
+			    Binary result in the first 3 bytes of current DMA buffer
+		 */
+		case DRV_SPACE: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 47 (2Fh) : Chain to program (CPM3)
+		   E = Chain flag
+		   Returns: None
+		 */
+		case P_CHAIN: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 48 (30h) : Flush Bufers (CPM3)
+		   E = Purge flag
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case DRV_FLUSH: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 49 (31h) : Get/Set System Control (CPM3)
+		   DE = SCB PB Address
+		   Returns: A = Returned Byte
+		   	    HL = Returned Word
+		 */
+		case S_SCB: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 50 (32h) : Direct BIOS Calls (CPM3)
+		   DE = BIOS PB Address
+		   Returns:  BIOS Return
+		 */
+		case S_BIOS: {
+			break;
+		}
+
+		/* 
+		   ToDo: C = 59 (3Bh) : Load Overlay (CPM3)
+		   DE = address of FCB
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case P_LOAD: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 60 (3Ch) : Call Resident System Extension (RSX) (CPM3)
+		   DE =  RSX PB Address
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case S_RSX: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 98 (62h) : Free Blocks (CPM3)
+		   Returns: A = return code
+		   	    H = Physical Error
+		 */
+		case F_CLEANUP: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 99 (63h) : Truncate File (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Extended or Physical Error
+		 */
+		case F_TRUNCATE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 100 (64h) : Set Directory Label (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Extended or Physical Error
+		 */
+		case DRV_SETLABEL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 101 (65h) : Return Directory Label Data (CPM3)
+		   E = Drive
+		   Returns: A = Directory Label Data Byte or 0xFF
+		   	    H = Physical Error
+		 */
+		case DRV_GETLABEL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 102 (66h) : Read File Date Stamps and Password Mode (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Physical Error
+		 */
+		case F_TIMEDATE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 103 (67h) : Write File XFCB (CPM3)
+		   DE = address of FCB
+		   Returns: A = Directory code
+		   	    H = Physical Error
+		 */
+		case F_WRITEXFCB: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 104 (68h) : Set Date and Time (CPM3)
+		   DE = Date and Time (DAT) Address
+		   Returns: None
+		 */
+		case T_SET: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 105 (69h) : Get Date and Time (CPM3)
+		   DE = Date and Time (DAT) Address
+		   Returns: Date and Time (DAT) set
+		   	    A = Seconds (in packed BCD format)
+		 */
+		case T_GET: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 106 (6Ah) : Set Default Password (CPM3)
+		   DE = Password Addresss
+		   Returns: None
+		 */
+		case F_PASSWD: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 107 (6Bh) : Return Serial Number (CPM3)
+		   DE = Serial Number Field
+		   Returns: Serial number field set
+		 */
+		case S_SERIAL: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 108 (6Ch) : Get/Set Program Return Code (CPM3)
+		   DE =  0xFFFF (Get) or Program Return Code (Set)
+		   Returns: HL = Program Return Code or (none)
+		 */
+		case P_CODE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 109 (6Dh) : Get/Set Console Mode (CPM3)
+		   DE =  0xFFFF (Get) or Console Mode (Set)
+		   Returns: HL = Console Mode or (none)
+		 */
+		case C_MODE: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 110 (6Eh) : Get/Set Output Delimiter (CPM3)
+		   DE =  0xFFFF (Get) or E = Delimiter (Set)
+		   Returns: A = Output Delimiter or (none)
+		 */
+		case C_DELIMIT: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 111 (6Fh) : Print Block (CPM3)
+		   DE =  address of CCB
+		   Returns: None
+		 */
+		case C_WRITEBLK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 112 (70h) : List Block (CPM3)
+		   DE =  address of CCB
+		   Returns: None
+		 */
+		case L_WRITEBLK: {
+			break;
+		}
+
+
+		/* 
+		   ToDo: C = 152 (98h) : List Block (CPM3)
+		   DE =  address of PFCB
+		   Returns: HL = Return code
+		   	    Parsed file control block
+		 */
+		case F_PARSE: {
+			break;
+		}
+
 
 #if defined board_digital_io
 
