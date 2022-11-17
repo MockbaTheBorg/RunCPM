@@ -42,6 +42,7 @@ static const char *Commands[] =
     "EXIT",
     "PAGE",
     "VOL",
+    "?",
     NULL
 };
 
@@ -399,6 +400,20 @@ uint8 _ccp_vol(void) {
     }
     return (error);
 } // _ccp_vol
+
+// ?/Help command
+uint8 _ccp_hlp(void) {
+    _puts("\r\nCCP Commands:\r\n");
+    _puts("\t? - Shows this list of commands\r\n");
+    _puts("\tCLS - Clears the screen\r\n");
+    _puts("\tDEL - Alias to ERA\r\n");
+    _puts("\tEXIT - Terminates RunCPM\r\n");
+    _puts("\tPAGE [<n>] - Sets the page size for TYPE\r\n");
+    _puts("\t    or disables paging if no parameter passed\r\n");
+    _puts("\tVOL [drive] - Shows the volume information\r\n");
+    _puts("\t    which comex from each volume's INFO.TXT");
+    return(FALSE);
+}
 
 #ifdef HASLUA
 
@@ -837,6 +852,11 @@ void _ccp(void) {
                     
                 case 10: {          // VOL
                     i = _ccp_vol();
+                    break;
+                }
+
+                case 11: {          // HELP
+                    i = _ccp_hlp();
                     break;
                 }
                     

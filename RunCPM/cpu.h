@@ -86,7 +86,7 @@ uint32 cpu_in(const uint32 Port) {
 #define SET_PV2(x)  ((temp == (x)) << 2)
 
 #define POP(x)  {                               \
-    uint32 y = RAM_PP(SP);             \
+    uint32 y = RAM_PP(SP);                      \
     x = y + (RAM_PP(SP) << 8);                  \
 }
 
@@ -94,17 +94,19 @@ uint32 cpu_in(const uint32 Port) {
     if (cond) {                                 \
         PC = GET_WORD(PC);                      \
     } else {                                    \
-        PC += 2;                                \
+		PC++;                                   \
+        PC++;                                   \
     }                                           \
 }
 
 #define CALLC(cond) {                           \
     if (cond) {                                 \
-        uint32 adrr = GET_WORD(PC);    \
+        uint32 addr = GET_WORD(PC);             \
         PUSH(PC + 2);                           \
-        PC = adrr;                              \
+        PC = addr;                              \
     } else {                                    \
-        PC += 2;                                \
+		PC++;                                   \
+        PC++;                                   \
     }                                           \
 }
 
@@ -1515,8 +1517,8 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x01:      /* LD BC,nnnn */
-			BC = GET_WORD(PC);
-			PC += 2;
+			BC = GET_WORD(PC++);
+			PC++;
 			break;
 
 		case 0x02:      /* LD (BC),A */
@@ -1598,8 +1600,8 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x11:      /* LD DE,nnnn */
-			DE = GET_WORD(PC);
-			PC += 2;
+			DE = GET_WORD(PC++);
+			PC++;
 			break;
 
 		case 0x12:      /* LD (DE),A */
@@ -1679,13 +1681,13 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x21:      /* LD HL,nnnn */
-			HL = GET_WORD(PC);
-			PC += 2;
+			HL = GET_WORD(PC++);
+			PC++;
 			break;
 
 		case 0x22:      /* LD (nnnn),HL */
-			PUT_WORD(GET_WORD(PC), HL);
-			PC += 2;
+			PUT_WORD(GET_WORD(PC++), HL);
+			PC++;
 			break;
 
 		case 0x23:      /* INC HL */
@@ -1748,8 +1750,8 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x2a:      /* LD HL,(nnnn) */
-			HL = GET_WORD(GET_WORD(PC));
-			PC += 2;
+			HL = GET_WORD(GET_WORD(PC++));
+			PC++;
 			break;
 
 		case 0x2b:      /* DEC HL */
@@ -1784,13 +1786,13 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x31:      /* LD SP,nnnn */
-			SP = GET_WORD(PC);
-			PC += 2;
+			SP = GET_WORD(PC++);
+			PC++;
 			break;
 
 		case 0x32:      /* LD (nnnn),A */
-			PUT_BYTE(GET_WORD(PC), HIGH_REGISTER(AF));
-			PC += 2;
+			PUT_BYTE(GET_WORD(PC++), HIGH_REGISTER(AF));
+			PC++;
 			break;
 
 		case 0x33:      /* INC SP */
@@ -1833,8 +1835,8 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x3a:      /* LD A,(nnnn) */
-			SET_HIGH_REGISTER(AF, GET_BYTE(GET_WORD(PC)));
-			PC += 2;
+			SET_HIGH_REGISTER(AF, GET_BYTE(GET_WORD(PC++)));
+			PC++;
 			break;
 
 		case 0x3b:      /* DEC SP */
@@ -2836,13 +2838,13 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x21:      /* LD IX,nnnn */
-				IX = GET_WORD(PC);
-				PC += 2;
+				IX = GET_WORD(PC++);
+				PC++;
 				break;
 
 			case 0x22:      /* LD (nnnn),IX */
-				PUT_WORD(GET_WORD(PC), IX);
-				PC += 2;
+				PUT_WORD(GET_WORD(PC++), IX);
+				PC++;
 				break;
 
 			case 0x23:      /* INC IX */
@@ -2871,8 +2873,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x2a:      /* LD IX,(nnnn) */
-				IX = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				IX = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0x2b:      /* DEC IX */
@@ -3485,8 +3487,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x43:      /* LD (nnnn),BC */
-				PUT_WORD(GET_WORD(PC), BC);
-				PC += 2;
+				PUT_WORD(GET_WORD(PC++), BC);
+				PC++;
 				break;
 
 			case 0x44:      /* NEG */
@@ -3554,8 +3556,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x4b:      /* LD BC,(nnnn) */
-				BC = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				BC = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0x4d:      /* RETI */
@@ -3587,8 +3589,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x53:      /* LD (nnnn),DE */
-				PUT_WORD(GET_WORD(PC), DE);
-				PC += 2;
+				PUT_WORD(GET_WORD(PC++), DE);
+				PC++;
 				break;
 
 			case 0x56:      /* IM 1 */
@@ -3619,8 +3621,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x5b:      /* LD DE,(nnnn) */
-				DE = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				DE = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0x5e:      /* IM 2 */
@@ -3651,8 +3653,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x63:      /* LD (nnnn),HL */
-				PUT_WORD(GET_WORD(PC), HL);
-				PC += 2;
+				PUT_WORD(GET_WORD(PC++), HL);
+				PC++;
 				break;
 
 			case 0x67:      /* RRD */
@@ -3681,8 +3683,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x6b:      /* LD HL,(nnnn) */
-				HL = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				HL = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0x6f:      /* RLD */
@@ -3712,8 +3714,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x73:      /* LD (nnnn),SP */
-				PUT_WORD(GET_WORD(PC), SP);
-				PC += 2;
+				PUT_WORD(GET_WORD(PC++), SP);
+				PC++;
 				break;
 
 			case 0x78:      /* IN A,(C) */
@@ -3736,8 +3738,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x7b:      /* LD SP,(nnnn) */
-				SP = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				SP = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0xa0:      /* LDI */
@@ -4056,14 +4058,14 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x21:      /* LD IY,nnnn */
-				IY = GET_WORD(PC);
-				PC += 2;
+				IY = GET_WORD(PC++);
+				PC++;
 				break;
 
 			case 0x22:      /* LD (nnnn),IY */
-				temp = GET_WORD(PC);
+				temp = GET_WORD(PC++);
 				PUT_WORD(temp, IY);
-				PC += 2;
+				PC++;
 				break;
 
 			case 0x23:      /* INC IY */
@@ -4092,8 +4094,8 @@ static inline void Z80run(void) {
 				break;
 
 			case 0x2a:      /* LD IY,(nnnn) */
-				IY = GET_WORD(GET_WORD(PC));
-				PC += 2;
+				IY = GET_WORD(GET_WORD(PC++));
+				PC++;
 				break;
 
 			case 0x2b:      /* DEC IY */
