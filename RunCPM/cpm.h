@@ -80,7 +80,7 @@ enum eBDOSFunc {
 	F_RANDREC = 36,
 	DRV_RESET = 37,
 	DRV_ACCESS = 38,	// This is an MP/M function that is not supported under CP/M 3.
-	DRV_FREE  39,		// This is an MP/M function that is not supported under CP/M 3.
+	DRV_FREE = 39,		// This is an MP/M function that is not supported under CP/M 3.
 	F_WRITEZF = 40,
 // CP/M 3.0 Stuff
 	F_TESTWRITE = 41,
@@ -1340,7 +1340,7 @@ void _Bdos(void) {
 		   Returns: A = return code
 		   	    H = Physical Error
 		 */
-		case F_LOCK: {
+		case F_LOCKFILE: {
 			break;
 		}
 
@@ -1350,7 +1350,7 @@ void _Bdos(void) {
 		   Returns: A = return code
 		   	    H = Physical Error
 		 */
-		case F_UNLOCK: {
+		case F_UNLOCKFILE: {
 			break;
 		}
 
