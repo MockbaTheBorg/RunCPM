@@ -79,8 +79,8 @@ enum eBDOSFunc {
 	F_SIZE = 35,
 	F_RANDREC = 36,
 	DRV_RESET = 37,
-	DRV_ACCESS = 38,	// This is an MP/M function that is not supported under CP/M 3.
-	DRV_FREE = 39,		// This is an MP/M function that is not supported under CP/M 3.
+	DRV_ACCESS_MPM = 38,	// This is an MP/M function that is not supported under CP/M 3.
+	DRV_FREE_MPM = 39,		// This is an MP/M function that is not supported under CP/M 3.
 	F_WRITEZF = 40,
 // CP/M 3.0 Stuff
 	F_TESTWRITE = 41,
@@ -1300,7 +1300,8 @@ void _Bdos(void) {
 		    This is an MP/M function that is not supported under CP/M 3. If called, the file
 		     system returns a zero In register A indicating that the access request is successful.
 		 */		
-		case DRV_ACCESS: {
+		case DRV_ACCESS_MPM: {
+			HL = 0x0000;
 			break;
 		}			
 
@@ -1309,7 +1310,8 @@ void _Bdos(void) {
 		    This is an MP/M function that is not supported under CP/M 3. If called, the file
 		     system returns a zero In register A indicating that the access request is successful.
 		 */		
-		case DRV_FREE: {
+		case DRV_FREE_MPM: {
+			HL = 0x0000;
 			break;
 		}			
 
