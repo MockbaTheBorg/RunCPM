@@ -61,3 +61,5 @@ RunCPM/lua/*.exe
 RunCPM/lua/*.a
 RunCPM/lua/lua
 RunCPM/lua/luac
+
+$$$.SUB
