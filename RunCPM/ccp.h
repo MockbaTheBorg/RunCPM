@@ -411,7 +411,7 @@ uint8 _ccp_hlp(void) {
     _puts("\tPAGE [<n>] - Sets the page size for TYPE\r\n");
     _puts("\t    or disables paging if no parameter passed\r\n");
     _puts("\tVOL [drive] - Shows the volume information\r\n");
-    _puts("\t    which comex from each volume's INFO.TXT");
+    _puts("\t    which comes from each volume's INFO.TXT");
     return(FALSE);
 }
 

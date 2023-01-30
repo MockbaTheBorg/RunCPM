@@ -806,7 +806,7 @@ void _Bdos(void) {
 			        DEFB    ?                   DEFB    len
 			        	bytes           	    bytes
 		   Reads (DE) bytes from the console
-		   Returns: A = Number os chars read
+		   Returns: A = Number of chars read
 		   DE) = First char
 		 */
 		case C_READSTR: {
