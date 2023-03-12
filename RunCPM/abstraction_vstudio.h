@@ -9,10 +9,8 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdbool.h>
-#ifdef PROFILE
 #include <time.h>
 #define millis() clock()
-#endif
 #endif
 
 // Lua scripting support
@@ -508,28 +506,9 @@ BOOL _signal_handler(DWORD signal) {
 }
 
 void _console_init(void) {
-	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
-
-	GetConsoleMode(hOutHandle, &cOutMode);
-	GetConsoleMode(hInHandle, &cInMode);
-
-	GetConsoleTitle(cTitle, MAX_PATH);
-
-	SetConsoleMode(hOutHandle, cOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
-	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
-	SetConsoleTitle("RunCPM v" VERSION);
-
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE);
 }
 
 void _console_reset(void) {
-	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
-
-	SetConsoleMode(hOutHandle, cOutMode);
-	SetConsoleMode(hInHandle, cInMode);
-	SetConsoleTitle(cTitle);
 }
 
 /* Implemented by conio.h

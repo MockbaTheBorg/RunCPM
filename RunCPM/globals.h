@@ -219,6 +219,8 @@ static uint16	physicalExtentBytes;// # bytes described by 1 directory entry
 
 #define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
 
+static uint32 timer;
+
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus // If building on Arduino
 extern "C"
