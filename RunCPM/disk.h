@@ -266,9 +266,11 @@ long _FileSize(uint16 fcbaddr) {
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		l = _sys_filesize(filename);
-		r = l % BlkSZ;
-		if (r)
-			l = l + BlkSZ - r;
+		if (l != -1) {
+			r = l % BlkSZ;
+			if (r)
+				l = l + BlkSZ - r;
+		}
 	}
 	return(l);
 }
@@ -559,6 +561,7 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 		F->r0 = count & 0xff;
 		F->r1 = (count >> 8) & 0xff;
 		F->r2 = (count >> 16) & 0xff;
+		result = 0x00;
 	}
 	return(result);
 }
