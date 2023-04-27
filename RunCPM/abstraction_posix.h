@@ -12,10 +12,8 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <string.h>
-#ifdef PROFILE
 #include <time.h>
 #define millis() clock()/1000
-#endif
 
 // Lua scripting support
 #ifdef HASLUA

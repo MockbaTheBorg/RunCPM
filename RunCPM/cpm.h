@@ -1699,6 +1699,18 @@ void _Bdos(void) {
 #endif // if defined board_stm32
 
 		/*
+		   C = 248 (F8h) : Milliseconds
+		   Returns the number of milliseconds (since the board started).
+		 */
+		case 248:
+		{
+			timer = millis();
+			HL = timer & 0xFFFF;
+			DE = (timer >> 16) & 0xFFFF;
+			break;
+		}
+
+		/*
 		   C = 249 (F9h) : MakeDisk
 		   Makes a disk directory if not existent.
 		 */
