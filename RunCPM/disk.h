@@ -492,6 +492,7 @@ uint8 _WriteSeq(uint16 fcbaddr) {
 					F->ex = 0;
 					++F->s2;
 				}
+				++F->rc;
 				if (F->s2 > MaxS2)
 					result = 0xfe;	// (todo) not sure what to do 
 			}
