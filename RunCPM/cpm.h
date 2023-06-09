@@ -479,6 +479,14 @@ void _logBdosOut(uint8 ch) {
 			break;
 		}
 
+		case 15:
+		case 16:
+		case 17:
+		case 18:
+		case 19:
+		case 22:
+		case 23:
+		case 30:
 		case 35:
 		case 36: {
 			address = DE;
