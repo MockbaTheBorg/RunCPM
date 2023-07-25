@@ -19,14 +19,14 @@
 //#define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG		// Writes debug information to console instead of file
 //#define LOGBIOS_NOT 01	// If defined will not log this BIOS function number
-//#define LOGBIOS_ONLY 02	// If defines will log only this BIOS function number
+//#define LOGBIOS_ONLY 02	// If defined will log only this BIOS function number
 //#define LOGBDOS_NOT 06	// If defined will not log this BDOS function number
-//#define LOGBDOS_ONLY 22	// If defines will log only this BDOS function number
+//#define LOGBDOS_ONLY 22	// If defined will log only this BDOS function number
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.0"
-#define VersionBCD 0x60
+#define VERSION	"6.1"
+#define VersionBCD 0x61
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL		// If this is defined, an internal CCP will emulated

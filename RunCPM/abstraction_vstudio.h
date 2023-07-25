@@ -10,8 +10,8 @@
 #include <conio.h>
 #include <stdbool.h>
 #include <time.h>
-#define millis() clock()
 #endif
+#define millis() clock()
 
 // Lua scripting support
 #ifdef HASLUA

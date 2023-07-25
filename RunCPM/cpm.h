@@ -112,6 +112,19 @@ enum eBDOSFunc {
 	L_WRITEBLK = 112,
 	F_PARSE = 152,
 // RunCPM Stuff
+	F_PINMODE = 220,
+	F_DREAD = 221,
+	F_DWRITE = 222,
+	F_AREAD = 223,
+	F_AWRITE = 224,
+	F_SETMASK = 230,
+	F_BDOSCALL = 231,
+	F_UPTIME = 248,
+	F_MAKEDISK = 249,
+	F_HOSTOS = 250,
+	F_VERSION = 251,
+	F_CCPVERSION = 252,
+	F_CCPADDR = 253,
 	F_RUNLUA = 254
 };
 
@@ -126,17 +139,15 @@ enum eBDOSFunc {
 /* set up full PUN and LST filenames to be on drive A: user 0 */
 #ifdef USE_PUN
 char pun_file[17] = {'A', FOLDERCHAR, '0', FOLDERCHAR, 'P', 'U', 'N', '.', 'T', 'X', 'T', 0};
-
 #endif // ifdef USE_PUN
+
 #ifdef USE_LST
 char lst_file[17] = {'A', FOLDERCHAR, '0', FOLDERCHAR, 'L', 'S', 'T', '.', 'T', 'X', 'T', 0};
-
 #endif // ifdef USE_LST
 
 #ifdef PROFILE
 unsigned long time_start = 0;
 unsigned long time_now = 0;
-
 #endif // ifdef PROFILE
 
 void _PatchCPM(void) {
@@ -479,6 +490,14 @@ void _logBdosOut(uint8 ch) {
 			break;
 		}
 
+		case 15:
+		case 16:
+		case 17:
+		case 18:
+		case 19:
+		case 22:
+		case 23:
+		case 30:
 		case 35:
 		case 36: {
 			address = DE;
@@ -822,7 +841,7 @@ void _Bdos(void) {
 #ifdef PROFILE
 			if (time_start != 0) {
 				time_now = millis();
-				printf(": %ld\n", time_now - time_start);
+				printf(" (%ld)\n", time_now - time_start);
 				time_start = 0;
 			}
 #endif // ifdef PROFILE
@@ -1622,7 +1641,7 @@ void _Bdos(void) {
 		/*
 		   C = 220 (DCh) : PinMode
 		 */
-		case 220: {
+		case F_PINMODE: {
 			pinMode(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 			break;
 		}
@@ -1630,7 +1649,7 @@ void _Bdos(void) {
 		/*
 		   C = 221 (DDh) : DigitalRead
 		 */
-		case 221: {
+		case F_DREAD: {
 			HL = digitalRead(HIGH_REGISTER(DE));
 			break;
 		}
@@ -1638,7 +1657,7 @@ void _Bdos(void) {
 		/*
 		   C = 222 (DEh) : DigitalWrite
 		 */
-		case 222: {
+		case F_DWRITE: {
 			digitalWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 			break;
 		}
@@ -1646,28 +1665,26 @@ void _Bdos(void) {
 		/*
 		   C = 223 (DFh) : AnalogRead
 		 */
-		case 223: {
+		case F_AREAD: {
 			HL = analogRead(HIGH_REGISTER(DE));
 			break;
 		}
-
 #endif // if defined board_digital_io
 #if defined board_analog_io
 
 		/*
 		   C = 224 (E0h) : AnalogWrite
 		 */
-		case 224: {
+		case F_AWRITE: {
 			analogWrite(HIGH_REGISTER(DE), LOW_REGISTER(DE));
 			break;
 		}
-
 #endif // if defined board_analog_io
 
 		/*
 		   C = 230 (E6h) : Set 8 bit masking
 		 */
-		case 230: {
+		case F_SETMASK: {
 			mask8bit = LOW_REGISTER(DE);
 			break;
 		}
@@ -1675,7 +1692,7 @@ void _Bdos(void) {
 		/*
 		   C = 231 (E7h) : Host specific BDOS call
 		 */
-		case 231: {
+		case F_BDOSCALL: {
 			HL = hostbdos(DE);
 			break;
 		}
@@ -1699,10 +1716,10 @@ void _Bdos(void) {
 #endif // if defined board_stm32
 
 		/*
-		   C = 248 (F8h) : Milliseconds
+		   C = 248 (F8h) : Milliseconds Uptime
 		   Returns the number of milliseconds (since the board started).
 		 */
-		case 248:
+		case F_UPTIME:
 		{
 			timer = millis();
 			HL = timer & 0xFFFF;
@@ -1714,7 +1731,7 @@ void _Bdos(void) {
 		   C = 249 (F9h) : MakeDisk
 		   Makes a disk directory if not existent.
 		 */
-		case 249: {
+		case F_MAKEDISK: {
 			HL = _MakeDisk(DE);
 			break;
 		}
@@ -1723,7 +1740,7 @@ void _Bdos(void) {
 		   C = 250 (FAh) : HostOS
 		   Returns: A = 0x00 - Windows / 0x01 - Arduino / 0x02 - Posix / 0x03 - Dos / 0x04 - Teensy / 0x05 - ESP32 / 0x06 - STM32
 		 */
-		case 250: {
+		case F_HOSTOS: {
 			HL = HostOS;
 			break;
 		}
@@ -1732,7 +1749,7 @@ void _Bdos(void) {
 		   C = 251 (FBh) : Version
 		   Returns: A = 0xVv - Version in BCD representation: V.v
 		 */
-		case 251: {
+		case F_VERSION: {
 			HL = VersionBCD;
 			break;
 		}
@@ -1741,7 +1758,7 @@ void _Bdos(void) {
 		   C = 252 (FCh) : CCP version
 		   Returns: A = 0x00-0x04 = DRI|CCPZ|ZCPR2|ZCPR3|Z80CCP / 0xVv = Internal version in BCD: V.v
 		 */
-		case 252: {
+		case F_CCPVERSION: {
 			HL = VersionCCP;
 			break;
 		}
@@ -1749,7 +1766,7 @@ void _Bdos(void) {
 		/*
 		   C = 253 (FDh) : CCP address
 		 */
-		case 253: {
+		case F_CCPADDR: {
 			HL = CCPaddr;
 			break;
 		}
@@ -1759,7 +1776,7 @@ void _Bdos(void) {
 		/*
 		   C = 254 (FEh) : Run Lua file
 		 */
-		case 254: {
+		case F_RUNLUA: {
 			HL = _RunLua(DE);
 			break;
 		}
