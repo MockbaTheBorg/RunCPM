@@ -33,7 +33,7 @@ bool _RamLoad(char* filename, uint16 address) {
 	return(result);
 }
 
-/* Filesystem (disk) abstraction fuctions */
+/* Filesystem (disk) abstraction functions */
 /*===============================================================================*/
 File rootdir, userdir;
 #define FOLDERCHAR '/'
