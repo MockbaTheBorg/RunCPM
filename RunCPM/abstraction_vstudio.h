@@ -46,7 +46,7 @@ void _RamLoad(uint8* filename, uint16 address) {
 	_sys_fclose(file);
 }
 
-/* Filesystem (disk) abstraction fuctions */
+/* Filesystem (disk) abstraction functions */
 /*===============================================================================*/
 WIN32_FIND_DATA FindFileData;
 HANDLE hFind;

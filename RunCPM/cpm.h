@@ -195,7 +195,7 @@ void _PatchCPM(void) {
 		_RamWrite(	BIOSpage + i + 1,	0xFF);
 		_RamWrite(	BIOSpage + i + 2,	RET);
 	}
-	// **********  Patch CP/M (fake) Disk Paramater Block after the BDOS call entry  **********
+	// **********  Patch CP/M (fake) Disk Parameter Block after the BDOS call entry  **********
 	i = DPBaddr;
 	_RamWrite(	i++,	64);    // spt - Sectors Per Track
 	_RamWrite(	i++,	0);
@@ -1418,7 +1418,7 @@ void _Bdos(void) {
 		}
 
 		/* 
-		   ToDo: C = 48 (30h) : Flush Bufers (CPM3)
+		   ToDo: C = 48 (30h) : Flush Buffers (CPM3)
 		   E = Purge flag
 		   Returns: A = return code
 		   	    H = Physical Error
@@ -1557,7 +1557,7 @@ void _Bdos(void) {
 
 		/* 
 		   ToDo: C = 106 (6Ah) : Set Default Password (CPM3)
-		   DE = Password Addresss
+		   DE = Password Address
 		   Returns: None
 		 */
 		case F_PASSWD: {

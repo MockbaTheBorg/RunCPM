@@ -23,7 +23,7 @@
 /*
 abstraction.h - Adds all system dependent calls and definitions needed by RunCPM
 This should be the only file modified for portability. Any other file
-shoud be kept the same.
+should be kept the same.
 */
 
 #ifdef _WIN32
