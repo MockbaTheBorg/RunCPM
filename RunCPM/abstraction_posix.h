@@ -1,6 +1,9 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#include <argp.h>
+#include <errno.h>
+#include <error.h>
 #include <glob.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -476,8 +479,52 @@ uint32 _HardwareIn(const uint32 Port) {
 /* Host initialization functions */
 /*===============================================================================*/
 
+#ifdef SCRIPTCONSOLE
+static struct argp_option options[] = {
+  {"input",    'i', "FILE", 0,  "File to read console input from"},
+  {"output",   'o', "FILE", 0,  "File to log console output to"},
+  {0}
+};
+
+static error_t parse_opt (int key, char *arg, struct argp_state *state)
+{
+  switch (key)
+    {
+    case 'i':
+      console_in = fopen(arg, "r");
+      if (NULL == console_in) {
+        error(EXIT_FAILURE, errno,
+            "error opening console input file %s", arg);
+      }
+      break;
+    case 'o':
+      console_log = fopen(arg, "w");
+      if (NULL == console_log) {
+        error(EXIT_FAILURE, errno,
+            "error opening console log output file %s", arg);
+      }
+      break;
+    case ARGP_KEY_ARG:
+    case ARGP_KEY_END:
+      break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+    }
+  return 0;
+}
+
+static struct argp argp = {options, parse_opt, NULL,
+    "RunCPM - an emulator to run CP/M programs on modern hosts"};
+#endif
+
 void _host_init(int argc, char* argv[]) {
-	int x = chdir(dirname(argv[0]));
+#ifdef SCRIPTCONSOLE
+  argp_parse(&argp, argc, argv, 0, NULL, NULL);
+#endif
+  if (chdir(dirname(argv[0]))) {
+    error(EXIT_FAILURE, errno, "error performing chdir(%s)",
+        dirname(argv[0]));
+  }
 }
 
 /* Console abstraction functions */

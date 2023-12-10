@@ -92,6 +92,9 @@
 
 //#define HASLUA					// Will enable Lua scripting (BDOS call 254)
 									// Should be passed externally per-platform with -DHASLUA
+//#define SCRIPTCONSOLE		// Will enable command line flags to read
+									// console input from file and to log console output to file
+									// Should be passed externally per-platform with -DSCRIPTCONSOLE
 
 //#define PROFILE					// For measuring time taken to run a CP/M command
 									// This should be enabled only for debugging purposes when trying to improve emulation speed

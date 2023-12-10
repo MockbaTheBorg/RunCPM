@@ -35,7 +35,7 @@ void _error(uint8 error) {
 		_puts("\r\nCP/M ERR");
 		break;
 	}
-	Status = _getch();
+	Status = _getcon();
 	_puts("\r\n");
 	cDrive = oDrive = _RamRead(DSKByte) & 0x0f;
 	Status = 2;

@@ -26,6 +26,12 @@ This should be the only file modified for portability. Any other file
 should be kept the same.
 */
 
+#ifdef SCRIPTCONSOLE
+#include <stdio.h>
+FILE *console_in = NULL;
+FILE *console_log = NULL;
+#endif
+
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
@@ -61,6 +67,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 	_host_init(argc, &argv[0]);
+#ifdef SCRIPTCONSOLE
+  _scriptConsoleInit();
+#endif
 	_console_init();
 	_clrscr();
 	_puts("  CP/M Emulator v" VERSION " by Marcelo Dantas\r\n");
@@ -115,6 +124,9 @@ int main(int argc, char* argv[]) {
 
 	_puts("\r\n");
 	_console_reset();
+#ifdef SCRIPTCONSOLE
+  if (console_log) fclose(console_log);
+#endif
 	return(0);
 }
 
