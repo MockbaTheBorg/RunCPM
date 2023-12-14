@@ -12,9 +12,11 @@ uint8 mask8bit = 0x7f;		// TO be used for masking 8 bit characters (XMODEM relat
 
 void _putcon(uint8 ch)		// Puts a character
 {
-	_putch(ch & mask8bit);
 #ifdef SCRIPTCONSOLE
+  if (console_log != stdout) _putch(ch & mask8bit);
   if (console_log) fputc(ch & mask8bit, console_log);
+#else
+	_putch(ch & mask8bit);
 #endif
 
 }

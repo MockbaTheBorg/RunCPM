@@ -483,6 +483,7 @@ uint32 _HardwareIn(const uint32 Port) {
 static struct argp_option options[] = {
   {"input",    'i', "FILE", 0,  "File to read console input from"},
   {"output",   'o', "FILE", 0,  "File to log console output to"},
+  {"stdio",    's', NULL,   0,  "Route console in/out to stdin/out"},
   {0}
 };
 
@@ -503,6 +504,10 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
         error(EXIT_FAILURE, errno,
             "error opening console log output file %s", arg);
       }
+      break;
+    case 's':
+      console_in = stdin;
+      console_log = stdout;
       break;
     case ARGP_KEY_ARG:
     case ARGP_KEY_END:
