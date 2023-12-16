@@ -228,9 +228,8 @@ static uint32 timer;
 #include <stdio.h>
 static FILE		*streamInFile = NULL;
 static FILE		*streamOutFile = NULL;
-static bool		streamInput = FALSE;
-static bool		streamOutput = FALSE;
-static bool		echoOutput = FALSE;
+static uint8	streamInActive = FALSE;
+static uint8	consoleOutActive = TRUE;
 #endif
 
 

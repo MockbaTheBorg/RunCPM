@@ -497,6 +497,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 		error(EXIT_FAILURE, errno,
 			"error opening console input file %s", arg);
 		}
+		streamInActive = TRUE;
 		break;
 	case 'o':
 		streamOutFile = fopen(arg, "w");
@@ -508,6 +509,8 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 	case 's':
 		streamInFile = stdin;
 		streamOutFile = stdout;
+		streamInActive = TRUE;
+		consoleOutActive = FALSE;
 		break;
 	case ARGP_KEY_ARG:
 	case ARGP_KEY_END:

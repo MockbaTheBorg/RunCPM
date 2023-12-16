@@ -13,7 +13,7 @@ uint8 mask8bit = 0x7f;		// TO be used for masking 8 bit characters (XMODEM relat
 void _putcon(uint8 ch)		// Puts a character
 {
 #ifdef STREAMIO
-	if (streamOutFile != stdout) _putch(ch & mask8bit);
+	if (consoleOutActive) _putch(ch & mask8bit);
 	if (streamOutFile) fputc(ch & mask8bit, streamOutFile);
 #else
 	_putch(ch & mask8bit);
@@ -42,34 +42,33 @@ void _puthex16(uint16 w)	// puts a HHHH hex string
 #ifdef STREAMIO
 int _nextStreamInChar;
 
-void _getNextConInChar(void)
+void _getNextStreamInChar(void)
 {
 	_nextStreamInChar = streamInFile ? fgetc(streamInFile) : EOF;
+	if (EOF == _nextStreamInChar) {
+		streamInActive = FALSE;
+	}
 }
 
-uint8 _conInCharReady(void)
-{
-	return EOF != _nextStreamInChar;
-}
-
-uint8 _getConInChar(void)
+uint8 _getStreamInChar(void)
 {
 	uint8 result = _nextStreamInChar;
-	_getNextConInChar();
+	_getNextStreamInChar();
+	// TODO: delegate to abstrction_posix.h
 	if (0x0a == result) result = 0x0d;
 	return result;
 }
 
-uint8 _getConInCharEcho()
+uint8 _getStreamInCharEcho()
 {
-	uint8 result = _getConInChar();
+	uint8 result = _getStreamInChar();
 	_putcon(result);
 	return result;
 }
 
 void _streamioInit(void)
 {
-	_getNextConInChar();
+	_getNextStreamInChar();
 }
 
 void _streamioReset(void)
@@ -81,7 +80,7 @@ void _streamioReset(void)
 uint8 _chready(void)		// Checks if there's a character ready for input
 {
 #ifdef STREAMIO
-	if (_conInCharReady()) return 0xff;
+	if (streamInActive) return 0xff;
 #endif
 	return(_kbhit() ? 0xff : 0x00);
 }
@@ -89,7 +88,7 @@ uint8 _chready(void)		// Checks if there's a character ready for input
 uint8 _getconNB(void)	  // Gets a character, non-blocking, no echo
 {
 #ifdef STREAMIO
-	if (_conInCharReady()) return _getConInChar();
+	if (streamInActive) return _getStreamInChar();
 #endif
 	return(_kbhit() ? _getch() : 0x00);
 }
@@ -97,7 +96,7 @@ uint8 _getconNB(void)	  // Gets a character, non-blocking, no echo
 uint8 _getcon(void)	   // Gets a character, blocking, no echo
 {
 #ifdef STREAMIO
-	if (_conInCharReady()) return _getConInChar();
+	if (streamInActive) return _getStreamInChar();
 #endif
 	return _getch();
 }
@@ -105,7 +104,7 @@ uint8 _getcon(void)	   // Gets a character, blocking, no echo
 uint8 _getconE(void)   // Gets a character, blocking, with echo
 {
 #ifdef STREAMIO
-	if (_conInCharReady()) return _getConInCharEcho();
+	if (streamInActive) return _getStreamInCharEcho();
 #endif
 	return _getche();
 }
