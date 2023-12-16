@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 	_puts("\r\n");
 	_console_reset();
 #ifdef STREAMIO
-	if (streamOutFile) fclose(streamOutFile);
+	_streamioReset();
 #endif
 	return(0);
 }

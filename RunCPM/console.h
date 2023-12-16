@@ -41,9 +41,6 @@ void _puthex16(uint16 w)	// puts a HHHH hex string
 
 #ifdef STREAMIO
 int _nextStreamInChar;
-bool streamInput;
-bool streamOutput;
-bool echoOutput;
 
 void _getNextConInChar(void)
 {
@@ -72,10 +69,12 @@ uint8 _getConInCharEcho()
 
 void _streamioInit(void)
 {
-	streamInput = FALSE;
-	streamOutput = FALSE;
-	echoOutput = FALSE;
 	_getNextConInChar();
+}
+
+void _streamioReset(void)
+{
+	if (streamOutFile) fclose(streamOutFile);
 }
 #endif
 
