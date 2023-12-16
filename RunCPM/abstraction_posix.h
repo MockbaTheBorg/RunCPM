@@ -1,7 +1,9 @@
 #ifndef ABSTRACT_H
 #define ABSTRACT_H
 
+#ifdef STREAMIO2
 #include <argp.h>
+#endif
 #include <errno.h>
 #include <error.h>
 #include <glob.h>
@@ -479,7 +481,7 @@ uint32 _HardwareIn(const uint32 Port) {
 /* Host initialization functions */
 /*===============================================================================*/
 
-#ifdef STREAMIO
+#ifdef STREAMIO2
 static struct argp_option options[] = {
 	{"input",    'i', "FILE", 0,  "File to read console input from"},
 	{"output",   'o', "FILE", 0,  "File to log console output to"},
@@ -503,7 +505,7 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 		streamOutFile = fopen(arg, "w");
 		if (NULL == streamOutFile) {
 		error(EXIT_FAILURE, errno,
-			"error opening console log output file %s", arg);
+			"error opening console output file %s", arg);
 		}
 		break;
 	case 's':
@@ -525,9 +527,62 @@ static struct argp argp = {options, parse_opt, NULL,
     "RunCPM - an emulator to run CP/M programs on modern hosts"};
 #endif
 
-void _host_init(int argc, char* argv[]) {
 #ifdef STREAMIO
+static void _usage(char *argv[]) {
+	fprintf(stderr,
+		"usage: %s [-i input_file] [-o output_file] [-s]\n", argv[0]);
+}
+
+static void _parse_options(int argc, char *argv[]) {
+	int c;
+	int errflg = 0;
+	while ((c = getopt(argc, argv, ":i:o:s")) != -1) {
+		switch(c) {
+			case 'i':
+				streamInFile = fopen(optarg, "r");
+				if (NULL == streamInFile) {
+				error(EXIT_FAILURE, errno,
+					"error opening console input file %s", optarg);
+				}
+				streamInActive = TRUE;
+				break;
+			case 'o':
+				streamOutFile = fopen(optarg, "w");
+				if (NULL == streamOutFile) {
+				error(EXIT_FAILURE, errno,
+					"error opening console output file %s", optarg);
+				}
+				break;
+			case 's':
+				streamInFile = stdin;
+				streamOutFile = stdout;
+				streamInActive = TRUE;
+				consoleOutActive = FALSE;
+				break;
+			case ':':       /* -f or -o without operand */
+				fprintf(stderr,
+					"Option -%c requires an operand\n", optopt);
+				errflg++;
+				break;
+			case '?':
+				fprintf(stderr,
+					"Unrecognized option: '-%c'\n", optopt);
+				errflg++;
+		}
+		if (errflg || optind == argc) {
+			_usage(argv);
+			exit(2);
+		}
+	}
+}
+#endif
+
+void _host_init(int argc, char* argv[]) {
+#ifdef STREAMIO2
 	argp_parse(&argp, argc, argv, 0, NULL, NULL);
+#endif
+#ifdef STREAMIO
+	_parse_options(argc, argv);
 #endif
 	if (chdir(dirname(argv[0]))) {
 		error(EXIT_FAILURE, errno, "error performing chdir(%s)",
