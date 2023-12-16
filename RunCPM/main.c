@@ -26,7 +26,7 @@ This should be the only file modified for portability. Any other file
 should be kept the same.
 */
 
-#ifdef SCRIPTCONSOLE
+#ifdef STREAMIO
 #include <stdio.h>
 FILE *console_in = NULL;
 FILE *console_log = NULL;
@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
 #endif
 
 	_host_init(argc, &argv[0]);
-#ifdef SCRIPTCONSOLE
-  _scriptConsoleInit();
+#ifdef STREAMIO
+	_streamioInit();
 #endif
 	_console_init();
 	_clrscr();
@@ -124,8 +124,8 @@ int main(int argc, char* argv[]) {
 
 	_puts("\r\n");
 	_console_reset();
-#ifdef SCRIPTCONSOLE
-  if (console_log) fclose(console_log);
+#ifdef STREAMIO
+	if (console_log) fclose(console_log);
 #endif
 	return(0);
 }

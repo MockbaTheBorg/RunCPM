@@ -479,43 +479,43 @@ uint32 _HardwareIn(const uint32 Port) {
 /* Host initialization functions */
 /*===============================================================================*/
 
-#ifdef SCRIPTCONSOLE
+#ifdef STREAMIO
 static struct argp_option options[] = {
-  {"input",    'i', "FILE", 0,  "File to read console input from"},
-  {"output",   'o', "FILE", 0,  "File to log console output to"},
-  {"stdio",    's', NULL,   0,  "Route console in/out to stdin/out"},
-  {0}
+	{"input",    'i', "FILE", 0,  "File to read console input from"},
+	{"output",   'o', "FILE", 0,  "File to log console output to"},
+	{"stdio",    's', NULL,   0,  "Route console in/out to stdin/out"},
+	{0}
 };
 
 static error_t parse_opt (int key, char *arg, struct argp_state *state)
 {
-  switch (key)
-    {
-    case 'i':
-      console_in = fopen(arg, "r");
-      if (NULL == console_in) {
-        error(EXIT_FAILURE, errno,
-            "error opening console input file %s", arg);
-      }
-      break;
-    case 'o':
-      console_log = fopen(arg, "w");
-      if (NULL == console_log) {
-        error(EXIT_FAILURE, errno,
-            "error opening console log output file %s", arg);
-      }
-      break;
-    case 's':
-      console_in = stdin;
-      console_log = stdout;
-      break;
-    case ARGP_KEY_ARG:
-    case ARGP_KEY_END:
-      break;
-    default:
-      return ARGP_ERR_UNKNOWN;
-    }
-  return 0;
+	switch (key)
+		{
+	case 'i':
+		console_in = fopen(arg, "r");
+		if (NULL == console_in) {
+		error(EXIT_FAILURE, errno,
+			"error opening console input file %s", arg);
+		}
+		break;
+	case 'o':
+		console_log = fopen(arg, "w");
+		if (NULL == console_log) {
+		error(EXIT_FAILURE, errno,
+			"error opening console log output file %s", arg);
+		}
+		break;
+	case 's':
+		console_in = stdin;
+		console_log = stdout;
+		break;
+	case ARGP_KEY_ARG:
+	case ARGP_KEY_END:
+		break;
+	default:
+		return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
 }
 
 static struct argp argp = {options, parse_opt, NULL,
@@ -523,13 +523,13 @@ static struct argp argp = {options, parse_opt, NULL,
 #endif
 
 void _host_init(int argc, char* argv[]) {
-#ifdef SCRIPTCONSOLE
-  argp_parse(&argp, argc, argv, 0, NULL, NULL);
+#ifdef STREAMIO
+	argp_parse(&argp, argc, argv, 0, NULL, NULL);
 #endif
-  if (chdir(dirname(argv[0]))) {
-    error(EXIT_FAILURE, errno, "error performing chdir(%s)",
+	if (chdir(dirname(argv[0]))) {
+		error(EXIT_FAILURE, errno, "error performing chdir(%s)",
         dirname(argv[0]));
-  }
+	}
 }
 
 /* Console abstraction functions */
