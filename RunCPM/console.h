@@ -13,8 +13,8 @@ uint8 mask8bit = 0x7f;		// TO be used for masking 8 bit characters (XMODEM relat
 void _putcon(uint8 ch)		// Puts a character
 {
 #ifdef STREAMIO
-	if (console_log != stdout) _putch(ch & mask8bit);
-	if (console_log) fputc(ch & mask8bit, console_log);
+	if (streamOutFile != stdout) _putch(ch & mask8bit);
+	if (streamOutFile) fputc(ch & mask8bit, streamOutFile);
 #else
 	_putch(ch & mask8bit);
 #endif
@@ -40,21 +40,24 @@ void _puthex16(uint16 w)	// puts a HHHH hex string
 }
 
 #ifdef STREAMIO
-int nextConInChar;
+int _nextStreamInChar;
+bool streamInput;
+bool streamOutput;
+bool echoOutput;
 
 void _getNextConInChar(void)
 {
-	nextConInChar = console_in ? fgetc(console_in) : EOF;
+	_nextStreamInChar = streamInFile ? fgetc(streamInFile) : EOF;
 }
 
 uint8 _conInCharReady(void)
 {
-	return EOF != nextConInChar;
+	return EOF != _nextStreamInChar;
 }
 
 uint8 _getConInChar(void)
 {
-	uint8 result = nextConInChar;
+	uint8 result = _nextStreamInChar;
 	_getNextConInChar();
 	if (0x0a == result) result = 0x0d;
 	return result;
@@ -69,6 +72,9 @@ uint8 _getConInCharEcho()
 
 void _streamioInit(void)
 {
+	streamInput = FALSE;
+	streamOutput = FALSE;
+	echoOutput = FALSE;
 	_getNextConInChar();
 }
 #endif

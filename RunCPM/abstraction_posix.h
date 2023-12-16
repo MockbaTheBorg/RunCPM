@@ -492,22 +492,22 @@ static error_t parse_opt (int key, char *arg, struct argp_state *state)
 	switch (key)
 		{
 	case 'i':
-		console_in = fopen(arg, "r");
-		if (NULL == console_in) {
+		streamInFile = fopen(arg, "r");
+		if (NULL == streamInFile) {
 		error(EXIT_FAILURE, errno,
 			"error opening console input file %s", arg);
 		}
 		break;
 	case 'o':
-		console_log = fopen(arg, "w");
-		if (NULL == console_log) {
+		streamOutFile = fopen(arg, "w");
+		if (NULL == streamOutFile) {
 		error(EXIT_FAILURE, errno,
 			"error opening console log output file %s", arg);
 		}
 		break;
 	case 's':
-		console_in = stdin;
-		console_log = stdout;
+		streamInFile = stdin;
+		streamOutFile = stdout;
 		break;
 	case ARGP_KEY_ARG:
 	case ARGP_KEY_END:

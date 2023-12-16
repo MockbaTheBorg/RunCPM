@@ -224,6 +224,13 @@ static uint16	physicalExtentBytes;// # bytes described by 1 directory entry
 
 static uint32 timer;
 
+#ifdef STREAMIO
+#include <stdio.h>
+FILE *streamInFile = NULL;
+FILE *streamOutFile = NULL;
+#endif
+
+
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus // If building on Arduino
 extern "C"

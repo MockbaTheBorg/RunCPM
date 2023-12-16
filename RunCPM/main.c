@@ -26,12 +26,6 @@ This should be the only file modified for portability. Any other file
 should be kept the same.
 */
 
-#ifdef STREAMIO
-#include <stdio.h>
-FILE *console_in = NULL;
-FILE *console_log = NULL;
-#endif
-
 #ifdef _WIN32
 #include "abstraction_vstudio.h"
 #else
@@ -125,7 +119,7 @@ int main(int argc, char* argv[]) {
 	_puts("\r\n");
 	_console_reset();
 #ifdef STREAMIO
-	if (console_log) fclose(console_log);
+	if (streamOutFile) fclose(streamOutFile);
 #endif
 	return(0);
 }
