@@ -567,10 +567,10 @@ static void _parse_options(int argc, char *argv[]) {
 					"Unrecognized option: '-%c'\n", optopt);
 				errflg++;
 		}
-		if (errflg || optind != argc) {
-			_usage(argv);
-			exit(EXIT_FAILURE);
-		}
+	}
+	if (errflg || optind != argc) {
+		_usage(argv);
+		exit(EXIT_FAILURE);
 	}
 }
 #endif
