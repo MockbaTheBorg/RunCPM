@@ -513,10 +513,19 @@ static void _usage(char *argv[]) {
 		"this case.\n");
 }
 
+static void _fail_if_stdin_from_tty(char* argv[]) {
+	struct termios dummyTermios;
+	if (0 == tcgetattr(0, &dummyTermios) ||
+	errno != ENOTTY) {
+	_file_failure_exit(argv,
+		"option -s is illegal when stdin comes from %s",
+		"tty");
+	}
+}
+
 static void _parse_options(int argc, char *argv[]) {
 	int c;
 	int errflg = 0;
-	struct termios dummyTermios;
 	while ((c = getopt(argc, argv, ":i:o:s")) != -1) {
 		switch(c) {
 			case 'i':
@@ -535,29 +544,13 @@ static void _parse_options(int argc, char *argv[]) {
 				}
 				break;
 			case 's':
-//				fprintf(stderr, "tcgetattr() = %d\n",
-//					tcgetattr(0, &dummyTermios));
-//				fprintf(stderr, "\nerrno = %d\n", errno);
-//				fprintf(stderr, "ENOTTY = %d\n", ENOTTY);
-//				fprintf(stderr, "dummyTermios:\n"
-//					" c_iflag = %x\n c_oflag = %x\n"
-//					" c_cflag = %x\n c_lflag = %x\n",
-//					dummyTermios.c_iflag, dummyTermios.c_oflag,
-//					dummyTermios.c_cflag, dummyTermios.c_lflag);
-			    if (0 == tcgetattr(0, &dummyTermios) ||
-					errno != ENOTTY) {
-//					fprintf(stderr, "\nerrno = %d\n", errno);
-//					fprintf(stderr, "ENOTTY = %d\n", ENOTTY);
-					_file_failure_exit(argv,
-						"option -s is illegal when stdin comes from %s",
-						"tty");
-					}
+				_fail_if_stdin_from_tty(argv);
 				streamInputFile = stdin;
 				streamOutputFile = stdout;
 				streamInputActive = TRUE;
 				consoleOutputActive = FALSE;
 				break;
-			case ':':       /* -f or -o without operand */
+			case ':':       /* -i or -o without operand */
 				fprintf(stderr,
 					"Option -%c requires an operand\n", optopt);
 				errflg++;
