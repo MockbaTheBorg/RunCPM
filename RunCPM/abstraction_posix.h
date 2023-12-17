@@ -619,7 +619,7 @@ static void _abort_if_kbd_eof() {
 	// keyboard but just continue to yield EOF.
 	// On Windows, this problem doesn't exist because of the separete
 	// conio.h.
-	if (streamInputFile == stdin) {
+	if (!streamInputActive && streamInputFile == stdin) {
 		_puts("\nEOF on console input from stdin\n");
 		_console_reset();
 		_streamioReset();
