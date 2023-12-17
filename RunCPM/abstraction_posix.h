@@ -16,6 +16,10 @@
 #include <time.h>
 #define millis() clock()/1000
 
+#ifdef STREAMIO
+#include <termios.h>
+#endif
+
 // Lua scripting support
 #ifdef HASLUA
 #include "lua/lua.h"
@@ -481,7 +485,10 @@ static void _file_failure_exit(char *argv[], char* fmt, char* filename)
 {
 	fprintf(stderr, "%s: ", argv[0]);
 	fprintf(stderr, fmt, filename);
-	fprintf(stderr, ": %s", strerror(errno));
+	if (errno) {
+		fprintf(stderr, ": %s", strerror(errno));
+	}
+	fprintf(stderr, "\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -509,6 +516,7 @@ static void _usage(char *argv[]) {
 static void _parse_options(int argc, char *argv[]) {
 	int c;
 	int errflg = 0;
+	struct termios dummyTermios;
 	while ((c = getopt(argc, argv, ":i:o:s")) != -1) {
 		switch(c) {
 			case 'i':
@@ -527,6 +535,23 @@ static void _parse_options(int argc, char *argv[]) {
 				}
 				break;
 			case 's':
+//				fprintf(stderr, "tcgetattr() = %d\n",
+//					tcgetattr(0, &dummyTermios));
+//				fprintf(stderr, "\nerrno = %d\n", errno);
+//				fprintf(stderr, "ENOTTY = %d\n", ENOTTY);
+//				fprintf(stderr, "dummyTermios:\n"
+//					" c_iflag = %x\n c_oflag = %x\n"
+//					" c_cflag = %x\n c_lflag = %x\n",
+//					dummyTermios.c_iflag, dummyTermios.c_oflag,
+//					dummyTermios.c_cflag, dummyTermios.c_lflag);
+			    if (0 == tcgetattr(0, &dummyTermios) ||
+					errno != ENOTTY) {
+//					fprintf(stderr, "\nerrno = %d\n", errno);
+//					fprintf(stderr, "ENOTTY = %d\n", ENOTTY);
+					_file_failure_exit(argv,
+						"option -s is illegal when stdin comes from %s",
+						"tty");
+					}
 				streamInFile = stdin;
 				streamOutFile = stdout;
 				streamInActive = TRUE;
