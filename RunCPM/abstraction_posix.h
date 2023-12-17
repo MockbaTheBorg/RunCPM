@@ -542,7 +542,7 @@ static void _parse_options(int argc, char *argv[]) {
 					"Unrecognized option: '-%c'\n", optopt);
 				errflg++;
 		}
-		if (errflg || optind == argc) {
+		if (errflg || optind != argc) {
 			_usage(argv);
 			exit(EXIT_FAILURE);
 		}
@@ -583,6 +583,25 @@ void _console_init(void) {
 void _console_reset(void) {
 	tcsetattr(0, TCSANOW, &_old_term);
 }
+
+#ifdef STREAMIO
+extern void _streamioReset(void);
+
+static void _abort_if_kbd_eof() {
+	// On Posix, if !streamInActive && streamInFile == stdin, this means
+	// EOF on stdin. Assuming that stdin is connected to a file or pipe,
+	// further reading from stdin won't read from the keyboard but just
+	// continue to yield EOF.
+	// On Windows, this problem doesn't exist because of the separete
+	// conio.h.
+	if (streamInFile == stdin) {
+		_puts("\nEOF on console input from stdin\n");
+		_console_reset();
+		_streamioReset();
+		exit(EXIT_FAILURE);
+	}
+}
+#endif
 
 int _kbhit(void) {
 	struct pollfd pfds[1];

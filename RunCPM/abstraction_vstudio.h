@@ -490,6 +490,7 @@ void _host_init(int argc, char* argv[]) {
 
 }
 
+
 /* Console abstraction functions */
 /*===============================================================================*/
 DWORD cOutMode; // Stores initial console mode for the std output
@@ -510,6 +511,12 @@ void _console_init(void) {
 
 void _console_reset(void) {
 }
+
+#ifdef STREAMIO
+static void _abort_if_kbd_eof() {
+
+}
+#endif
 
 /* Implemented by conio.h
 int _kbhit(void)
