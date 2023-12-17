@@ -520,16 +520,16 @@ static void _parse_options(int argc, char *argv[]) {
 	while ((c = getopt(argc, argv, ":i:o:s")) != -1) {
 		switch(c) {
 			case 'i':
-				streamInFile = fopen(optarg, "r");
-				if (NULL == streamInFile) {
+				streamInputFile = fopen(optarg, "r");
+				if (NULL == streamInputFile) {
 					_file_failure_exit(argv,
 						"error opening console input file %s", optarg);
 				}
-				streamInActive = TRUE;
+				streamInputActive = TRUE;
 				break;
 			case 'o':
-				streamOutFile = fopen(optarg, "w");
-				if (NULL == streamOutFile) {
+				streamOutputFile = fopen(optarg, "w");
+				if (NULL == streamOutputFile) {
 					_file_failure_exit(argv,
 						"error opening console output file %s", optarg);
 				}
@@ -552,10 +552,10 @@ static void _parse_options(int argc, char *argv[]) {
 						"option -s is illegal when stdin comes from %s",
 						"tty");
 					}
-				streamInFile = stdin;
-				streamOutFile = stdout;
-				streamInActive = TRUE;
-				consoleOutActive = FALSE;
+				streamInputFile = stdin;
+				streamOutputFile = stdout;
+				streamInputActive = TRUE;
+				consoleOutputActive = FALSE;
 				break;
 			case ':':       /* -f or -o without operand */
 				fprintf(stderr,
@@ -613,13 +613,13 @@ void _console_reset(void) {
 extern void _streamioReset(void);
 
 static void _abort_if_kbd_eof() {
-	// On Posix, if !streamInActive && streamInFile == stdin, this means
-	// EOF on stdin. Assuming that stdin is connected to a file or pipe,
-	// further reading from stdin won't read from the keyboard but just
-	// continue to yield EOF.
+	// On Posix, if !streamInputActive && streamInputFile == stdin,
+	// this means EOF on stdin. Assuming that stdin is connected to a
+	// file or pipe, further reading from stdin won't read from the
+	// keyboard but just continue to yield EOF.
 	// On Windows, this problem doesn't exist because of the separete
 	// conio.h.
-	if (streamInFile == stdin) {
+	if (streamInputFile == stdin) {
 		_puts("\nEOF on console input from stdin\n");
 		_console_reset();
 		_streamioReset();

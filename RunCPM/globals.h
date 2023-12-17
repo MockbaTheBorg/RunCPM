@@ -226,10 +226,10 @@ static uint32 timer;
 
 #ifdef STREAMIO
 #include <stdio.h>
-static FILE		*streamInFile = NULL;
-static FILE		*streamOutFile = NULL;
-static uint8	streamInActive = FALSE;
-static uint8	consoleOutActive = TRUE;
+static FILE		*streamInputFile = NULL;
+static FILE		*streamOutputFile = NULL;
+static uint8	streamInputActive = FALSE;
+static uint8	consoleOutputActive = TRUE;
 #endif
 
 

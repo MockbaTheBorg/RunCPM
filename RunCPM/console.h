@@ -13,8 +13,8 @@ uint8 mask8bit = 0x7f;		// TO be used for masking 8 bit characters (XMODEM relat
 void _putcon(uint8 ch)		// Puts a character
 {
 #ifdef STREAMIO
-	if (consoleOutActive) _putch(ch & mask8bit);
-	if (streamOutFile) fputc(ch & mask8bit, streamOutFile);
+	if (consoleOutputActive) _putch(ch & mask8bit);
+	if (streamOutputFile) fputc(ch & mask8bit, streamOutputFile);
 #else
 	_putch(ch & mask8bit);
 #endif
@@ -44,9 +44,9 @@ int _nextStreamInChar;
 
 void _getNextStreamInChar(void)
 {
-	_nextStreamInChar = streamInFile ? fgetc(streamInFile) : EOF;
+	_nextStreamInChar = streamInputFile ? fgetc(streamInputFile) : EOF;
 	if (EOF == _nextStreamInChar) {
-		streamInActive = FALSE;
+		streamInputActive = FALSE;
 	}
 }
 
@@ -73,14 +73,14 @@ void _streamioInit(void)
 
 void _streamioReset(void)
 {
-	if (streamOutFile) fclose(streamOutFile);
+	if (streamOutputFile) fclose(streamOutputFile);
 }
 #endif
 
 uint8 _chready(void)		// Checks if there's a character ready for input
 {
 #ifdef STREAMIO
-	if (streamInActive) return 0xff;
+	if (streamInputActive) return 0xff;
 	// TODO: Consider adding/keeping _abort_if_kbd_eof() here.
 	_abort_if_kbd_eof();
 #endif
@@ -90,7 +90,7 @@ uint8 _chready(void)		// Checks if there's a character ready for input
 uint8 _getconNB(void)	  // Gets a character, non-blocking, no echo
 {
 #ifdef STREAMIO
-	if (streamInActive) return _getStreamInChar();
+	if (streamInputActive) return _getStreamInChar();
 	// TODO: Consider adding/keeping _abort_if_kbd_eof() here.
 	_abort_if_kbd_eof();
 #endif
@@ -100,7 +100,7 @@ uint8 _getconNB(void)	  // Gets a character, non-blocking, no echo
 uint8 _getcon(void)	   // Gets a character, blocking, no echo
 {
 #ifdef STREAMIO
-	if (streamInActive) return _getStreamInChar();
+	if (streamInputActive) return _getStreamInChar();
 	// TODO: Consider adding/keeping _abort_if_kbd_eof() here.
 	_abort_if_kbd_eof();
 #endif
@@ -110,7 +110,7 @@ uint8 _getcon(void)	   // Gets a character, blocking, no echo
 uint8 _getconE(void)   // Gets a character, blocking, with echo
 {
 #ifdef STREAMIO
-	if (streamInActive) return _getStreamInCharEcho();
+	if (streamInputActive) return _getStreamInCharEcho();
 	// TODO: Consider adding/keeping _abort_if_kbd_eof() here.
 	_abort_if_kbd_eof();
 #endif
