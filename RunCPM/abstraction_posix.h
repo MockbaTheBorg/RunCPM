@@ -3,9 +3,9 @@
 
 #ifdef STREAMIO2
 #include <argp.h>
+#include <error.h>
 #endif
 #include <errno.h>
-#include <error.h>
 #include <glob.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -527,6 +527,14 @@ static struct argp argp = {options, parse_opt, NULL,
     "RunCPM - an emulator to run CP/M programs on modern hosts"};
 #endif
 
+static void _file_failure_exit(char *argv[], char* fmt, char* filename)
+{
+	fprintf(stderr, "%s: ", argv[0]);
+	fprintf(stderr, fmt, filename);
+	fprintf(stderr, ": %s", strerror(errno));
+	exit(EXIT_FAILURE);
+}
+
 #ifdef STREAMIO
 static void _usage(char *argv[]) {
 	fprintf(stderr,
@@ -541,16 +549,16 @@ static void _parse_options(int argc, char *argv[]) {
 			case 'i':
 				streamInFile = fopen(optarg, "r");
 				if (NULL == streamInFile) {
-				error(EXIT_FAILURE, errno,
-					"error opening console input file %s", optarg);
+					_file_failure_exit(argv,
+						"error opening console input file %s", optarg);
 				}
 				streamInActive = TRUE;
 				break;
 			case 'o':
 				streamOutFile = fopen(optarg, "w");
 				if (NULL == streamOutFile) {
-				error(EXIT_FAILURE, errno,
-					"error opening console output file %s", optarg);
+					_file_failure_exit(argv,
+						"error opening console output file %s", optarg);
 				}
 				break;
 			case 's':
@@ -571,7 +579,7 @@ static void _parse_options(int argc, char *argv[]) {
 		}
 		if (errflg || optind == argc) {
 			_usage(argv);
-			exit(2);
+			exit(EXIT_FAILURE);
 		}
 	}
 }
@@ -585,8 +593,8 @@ void _host_init(int argc, char* argv[]) {
 	_parse_options(argc, argv);
 #endif
 	if (chdir(dirname(argv[0]))) {
-		error(EXIT_FAILURE, errno, "error performing chdir(%s)",
-        dirname(argv[0]));
+		_file_failure_exit(argv, "error performing chdir(%s)",
+			dirname(argv[0]));
 	}
 }
 
