@@ -64,9 +64,9 @@ On Mac OS X, install it using "brew install ncurses".<br>
 The "readline.h" header file is also required on Linux/FreeBSD. On some linuxes it is called "libreadline-dev".<br>
 
 All makefile options:
-  `make yyy build`: Compiles RunCPM.  Only recompiles changed files.
-  `make yyy clean`: Deletes all object files.  Doesn't recompile.
-  `make yyy rebuild`: Performs clean, then build.  Required when alternating compiling for different platforms.
+* `make yyy build`: Compiles RunCPM.  Only recompiles changed files.
+* `make yyy clean`: Deletes all object files.  Doesn't recompile.
+* `make yyy rebuild`: Performs clean, then build.  Required when alternating compiling for different platforms.
 
 Anyone having issues building with homebrew 'binutils' on Mac should check this issue: https://github.com/MockbaTheBorg/RunCPM/issues/136<br>
 
