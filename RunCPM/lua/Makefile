@@ -13,7 +13,13 @@ LIBS= -lm $(SYSLIBS) $(MYLIBS)
 
 AR= ar rcu
 RANLIB= ranlib
-RM= rm -f
+ifeq ($(OS),Windows_NT)
+    # If on Windows, use DEL
+    RM = del /Q
+else
+    # If on Linux, use RM
+    RM = rm -f
+endif
 UNAME= uname
 
 SYSCFLAGS=
