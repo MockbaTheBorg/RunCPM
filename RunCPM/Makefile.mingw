@@ -23,7 +23,7 @@ LUABUILD = $(MAKE) -C lua mingw
 LUACLEAN = $(MAKE) -C lua clean
 
 # Clean up program
-RM = rm -f
+RM = del /Q
 
 #------------------------------------------------------------------------
 

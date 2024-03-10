@@ -18,9 +18,13 @@ clean:
 build:
 	$(MAKE) -f Makefile.$(SYS) all
 
+rebuild:
+	$(MAKE) -f Makefile.$(SYS) rebuild
+
 none:
 	@echo "To build RunCPM issue 'make PLATFORM build'."
 	@echo "To clean RunCPM issue 'make PLATFORM clean'."
+	@echo "To clean,then build RunCPM issue 'make PLATFORM rebuild'."
 	@echo "Valid platforms are: $(PLATS)"
 
 .PHONY: all $(PLATS) clean build none
