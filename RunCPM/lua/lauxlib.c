@@ -470,18 +470,27 @@ typedef struct UBox {
 } UBox;
 
 
+/* Resize the buffer used by a box. Optimize for the common case of
+** resizing to the old size. (For instance, __gc will resize the box
+** to 0 even after it was closed. 'pushresult' may also resize it to a
+** final size that is equal to the one set when the buffer was created.)
+*/
 static void *resizebox (lua_State *L, int idx, size_t newsize) {
-  void *ud;
-  lua_Alloc allocf = lua_getallocf(L, &ud);
   UBox *box = (UBox *)lua_touserdata(L, idx);
-  void *temp = allocf(ud, box->box, box->bsize, newsize);
-  if (l_unlikely(temp == NULL && newsize > 0)) {  /* allocation error? */
-    lua_pushliteral(L, "not enough memory");
-    lua_error(L);  /* raise a memory error */
+  if (box->bsize == newsize)  /* not changing size? */
+    return box->box;  /* keep the buffer */
+  else {
+    void *ud;
+    lua_Alloc allocf = lua_getallocf(L, &ud);
+    void *temp = allocf(ud, box->box, box->bsize, newsize);
+    if (l_unlikely(temp == NULL && newsize > 0)) {  /* allocation error? */
+      lua_pushliteral(L, "not enough memory");
+      lua_error(L);  /* raise a memory error */
+    }
+    box->box = temp;
+    box->bsize = newsize;
+    return temp;
   }
-  box->box = temp;
-  box->bsize = newsize;
-  return temp;
 }
 
 
@@ -526,14 +535,15 @@ static void newbox (lua_State *L) {
 
 /*
 ** Compute new size for buffer 'B', enough to accommodate extra 'sz'
-** bytes.
+** bytes plus one for a terminating zero. (The test for "not big enough"
+** also gets the case when the computation of 'newsize' overflows.)
 */
 static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
-  size_t newsize = B->size * 2;  /* double buffer size */
-  if (l_unlikely(MAX_SIZET - sz < B->n))  /* overflow in (B->n + sz)? */
+  size_t newsize = (B->size / 2) * 3;  /* buffer size * 1.5 */
+  if (l_unlikely(MAX_SIZET - sz - 1 < B->n))  /* overflow in (B->n + sz + 1)? */
     return luaL_error(B->L, "buffer too large");
-  if (newsize < B->n + sz)  /* double is not big enough? */
-    newsize = B->n + sz;
+  if (newsize < B->n + sz + 1)  /* not big enough? */
+    newsize = B->n + sz + 1;
   return newsize;
 }
 
@@ -593,9 +603,22 @@ LUALIB_API void luaL_addstring (luaL_Buffer *B, const char *s) {
 LUALIB_API void luaL_pushresult (luaL_Buffer *B) {
   lua_State *L = B->L;
   checkbufferlevel(B, -1);
-  lua_pushlstring(L, B->b, B->n);
-  if (buffonstack(B))
+  if (!buffonstack(B))  /* using static buffer? */
+    lua_pushlstring(L, B->b, B->n);  /* save result as regular string */
+  else {  /* reuse buffer already allocated */
+    UBox *box = (UBox *)lua_touserdata(L, -1);
+    void *ud;
+    lua_Alloc allocf = lua_getallocf(L, &ud);  /* function to free buffer */
+    size_t len = B->n;  /* final string length */
+    char *s;
+    resizebox(L, -1, len + 1);  /* adjust box size to content size */
+    s = (char*)box->box;  /* final buffer address */
+    s[len] = '\0';  /* add ending zero */
+    /* clear box, as 'lua_pushextlstring' will take control over buffer */
+    box->bsize = 0;  box->box = NULL;
+    lua_pushextlstring(L, s, len, allocf, ud);
     lua_closeslot(L, -2);  /* close the box */
+  }
   lua_remove(L, -2);  /* remove box or placeholder from the stack */
 }
 
@@ -649,13 +672,10 @@ LUALIB_API char *luaL_buffinitsize (lua_State *L, luaL_Buffer *B, size_t sz) {
 ** =======================================================
 */
 
-/* index of free-list header (after the predefined values) */
-#define freelist	(LUA_RIDX_LAST + 1)
-
 /*
-** The previously freed references form a linked list:
-** t[freelist] is the index of a first free index, or zero if list is
-** empty; t[t[freelist]] is the index of the second element; etc.
+** The previously freed references form a linked list: t[1] is the index
+** of a first free index, t[t[1]] is the index of the second element,
+** etc. A zero signals the end of the list.
 */
 LUALIB_API int luaL_ref (lua_State *L, int t) {
   int ref;
@@ -664,19 +684,18 @@ LUALIB_API int luaL_ref (lua_State *L, int t) {
     return LUA_REFNIL;  /* 'nil' has a unique fixed reference */
   }
   t = lua_absindex(L, t);
-  if (lua_rawgeti(L, t, freelist) == LUA_TNIL) {  /* first access? */
+  if (lua_rawgeti(L, t, 1) == LUA_TNUMBER)  /* already initialized? */
+    ref = (int)lua_tointeger(L, -1);  /* ref = t[1] */
+  else {  /* first access */
+    lua_assert(!lua_toboolean(L, -1));  /* must be nil or false */
     ref = 0;  /* list is empty */
     lua_pushinteger(L, 0);  /* initialize as an empty list */
-    lua_rawseti(L, t, freelist);  /* ref = t[freelist] = 0 */
-  }
-  else {  /* already initialized */
-    lua_assert(lua_isinteger(L, -1));
-    ref = (int)lua_tointeger(L, -1);  /* ref = t[freelist] */
+    lua_rawseti(L, t, 1);  /* ref = t[1] = 0 */
   }
   lua_pop(L, 1);  /* remove element from stack */
   if (ref != 0) {  /* any free element? */
     lua_rawgeti(L, t, ref);  /* remove it from list */
-    lua_rawseti(L, t, freelist);  /* (t[freelist] = t[ref]) */
+    lua_rawseti(L, t, 1);  /* (t[1] = t[ref]) */
   }
   else  /* no free elements */
     ref = (int)lua_rawlen(L, t) + 1;  /* get a new reference */
@@ -688,11 +707,11 @@ LUALIB_API int luaL_ref (lua_State *L, int t) {
 LUALIB_API void luaL_unref (lua_State *L, int t, int ref) {
   if (ref >= 0) {
     t = lua_absindex(L, t);
-    lua_rawgeti(L, t, freelist);
+    lua_rawgeti(L, t, 1);
     lua_assert(lua_isinteger(L, -1));
-    lua_rawseti(L, t, ref);  /* t[ref] = t[freelist] */
+    lua_rawseti(L, t, ref);  /* t[ref] = t[1] */
     lua_pushinteger(L, ref);
-    lua_rawseti(L, t, freelist);  /* t[freelist] = ref */
+    lua_rawseti(L, t, 1);  /* t[1] = ref */
   }
 }
 
@@ -739,17 +758,18 @@ static int errfile (lua_State *L, const char *what, int fnameindex) {
 }
 
 
-static int skipBOM (LoadF *lf) {
-  const char *p = "\xEF\xBB\xBF";  /* UTF-8 BOM mark */
-  int c;
-  lf->n = 0;
-  do {
-    c = getc(lf->f);
-    if (c == EOF || c != *(const unsigned char *)p++) return c;
-    lf->buff[lf->n++] = c;  /* to be read by the parser */
-  } while (*p != '\0');
-  lf->n = 0;  /* prefix matched; discard it */
-  return getc(lf->f);  /* return next character */
+/*
+** Skip an optional BOM at the start of a stream. If there is an
+** incomplete BOM (the first character is correct but the rest is
+** not), returns the first character anyway to force an error
+** (as no chunk can start with 0xEF).
+*/
+static int skipBOM (FILE *f) {
+  int c = getc(f);  /* read first character */
+  if (c == 0xEF && getc(f) == 0xBB && getc(f) == 0xBF)  /* correct BOM? */
+    return getc(f);  /* ignore BOM and return next char */
+  else  /* no (valid) BOM */
+    return c;  /* return first character */
 }
 
 
@@ -760,13 +780,13 @@ static int skipBOM (LoadF *lf) {
 ** first "valid" character of the file (after the optional BOM and
 ** a first-line comment).
 */
-static int skipcomment (LoadF *lf, int *cp) {
-  int c = *cp = skipBOM(lf);
+static int skipcomment (FILE *f, int *cp) {
+  int c = *cp = skipBOM(f);
   if (c == '#') {  /* first line is a comment (Unix exec. file)? */
     do {  /* skip first line */
-      c = getc(lf->f);
+      c = getc(f);
     } while (c != EOF && c != '\n');
-    *cp = getc(lf->f);  /* skip end-of-line, if present */
+    *cp = getc(f);  /* next character after comment, if present */
     return 1;  /* there was a comment */
   }
   else return 0;  /* no comment */
@@ -788,12 +808,16 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
     lf.f = fopen(filename, "r");
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
   }
-  if (skipcomment(&lf, &c))  /* read initial portion */
-    lf.buff[lf.n++] = '\n';  /* add line to correct line numbers */
-  if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
-    lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
-    if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
-    skipcomment(&lf, &c);  /* re-read initial portion */
+  lf.n = 0;
+  if (skipcomment(lf.f, &c))  /* read initial portion */
+    lf.buff[lf.n++] = '\n';  /* add newline to correct line numbers */
+  if (c == LUA_SIGNATURE[0]) {  /* binary file? */
+    lf.n = 0;  /* remove possible newline */
+    if (filename) {  /* "real" file? */
+      lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
+      if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
+      skipcomment(lf.f, &c);  /* re-read initial portion */
+    }
   }
   if (c != EOF)
     lf.buff[lf.n++] = c;  /* 'c' is the first character of the stream */
@@ -1019,9 +1043,14 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
 }
 
 
+/*
+** Standard panic funcion just prints an error message. The test
+** with 'lua_type' avoids possible memory errors in 'lua_tostring'.
+*/
 static int panic (lua_State *L) {
-  const char *msg = lua_tostring(L, -1);
-  if (msg == NULL) msg = "error object is not a string";
+  const char *msg = (lua_type(L, -1) == LUA_TSTRING)
+                  ? lua_tostring(L, -1)
+                  : "error object is not a string";
   lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
                         msg);
   return 0;  /* return to Lua to abort */
@@ -1085,8 +1114,54 @@ static void warnfon (void *ud, const char *message, int tocont) {
 }
 
 
+
+/*
+** A function to compute an unsigned int with some level of
+** randomness. Rely on Address Space Layout Randomization (if present)
+** and the current time.
+*/
+#if !defined(luai_makeseed)
+
+#include <time.h>
+
+
+/* Size for the buffer, in bytes */
+#define BUFSEEDB	(sizeof(void*) + sizeof(time_t))
+
+/* Size for the buffer in int's, rounded up */
+#define BUFSEED		((BUFSEEDB + sizeof(int) - 1) / sizeof(int))
+
+
+#define addbuff(b,v)	(memcpy(b, &(v), sizeof(v)), b += sizeof(v))
+
+
+static unsigned int luai_makeseed (void) {
+  unsigned int buff[BUFSEED];
+  unsigned int res;
+  unsigned int i;
+  time_t t = time(NULL);
+  char *b = (char*)buff;
+  addbuff(b, b);  /* local variable's address */
+  addbuff(b, t);  /* time */
+  /* fill (rare but possible) remain of the buffer with zeros */
+  memset(b, 0, sizeof(buff) - BUFSEEDB);
+  res = buff[0];
+  for (i = 0; i < BUFSEED; i++)
+    res ^= (res >> 3) + (res << 7) + buff[i];
+  return res;
+}
+
+#endif
+
+
+LUALIB_API unsigned int luaL_makeseed (lua_State *L) {
+  (void)L;  /* unused */
+  return luai_makeseed();
+}
+
+
 LUALIB_API lua_State *luaL_newstate (void) {
-  lua_State *L = lua_newstate(l_alloc, NULL);
+  lua_State *L = lua_newstate(l_alloc, NULL, luai_makeseed());
   if (l_likely(L)) {
     lua_atpanic(L, &panic);
     lua_setwarnf(L, warnfoff, L);  /* default is warnings off */

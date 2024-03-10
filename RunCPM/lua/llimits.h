@@ -16,20 +16,25 @@
 
 
 /*
-** 'lu_mem' and 'l_mem' are unsigned/signed integers big enough to count
-** the total memory used by Lua (in bytes). Usually, 'size_t' and
+** 'lu_mem' is an unsigned integer big enough to count the total memory
+** used by Lua (in bytes). 'l_obj' is a signed integer big enough to
+** count the total number of objects used by Lua. (It is signed due
+** to the use of debt in several computations.)  Usually, 'size_t' and
 ** 'ptrdiff_t' should work, but we use 'long' for 16-bit machines.
 */
 #if defined(LUAI_MEM)		/* { external definitions? */
 typedef LUAI_UMEM lu_mem;
-typedef LUAI_MEM l_mem;
+typedef LUAI_MEM l_obj;
 #elif LUAI_IS32INT	/* }{ */
 typedef size_t lu_mem;
-typedef ptrdiff_t l_mem;
+typedef ptrdiff_t l_obj;
 #else  /* 16-bit ints */	/* }{ */
 typedef unsigned long lu_mem;
-typedef long l_mem;
+typedef long l_obj;
 #endif				/* } */
+
+#define MAX_LOBJ  \
+	cast(l_obj, (cast(lu_mem, 1) << (sizeof(l_obj) * CHAR_BIT - 1)) - 1)
 
 
 /* chars used as small naturals (so that 'char' is reserved for characters) */
@@ -40,14 +45,12 @@ typedef signed char ls_byte;
 /* maximum value for size_t */
 #define MAX_SIZET	((size_t)(~(size_t)0))
 
-/* maximum size visible for Lua (must be representable in a lua_Integer) */
+/*
+** Maximum size for strings and userdata visible for Lua (should be
+** representable in a lua_Integer)
+*/
 #define MAX_SIZE	(sizeof(size_t) < sizeof(lua_Integer) ? MAX_SIZET \
                           : (size_t)(LUA_MAXINTEGER))
-
-
-#define MAX_LUMEM	((lu_mem)(~(lu_mem)0))
-
-#define MAX_LMEM	((l_mem)(MAX_LUMEM >> 1))
 
 
 #define MAX_INT		INT_MAX  /* maximum value of an int */
@@ -57,7 +60,7 @@ typedef signed char ls_byte;
 ** floor of the log2 of the maximum signed value for integral type 't'.
 ** (That is, maximum 'n' such that '2^n' fits in the given signed type.)
 */
-#define log2maxs(t)	(sizeof(t) * 8 - 2)
+#define log2maxs(t)	cast_int(sizeof(t) * 8 - 2)
 
 
 /*
@@ -71,11 +74,24 @@ typedef signed char ls_byte;
 
 
 /*
-** conversion of pointer to unsigned integer:
-** this is for hashing only; there is no problem if the integer
-** cannot hold the whole pointer value
+** conversion of pointer to unsigned integer: this is for hashing only;
+** there is no problem if the integer cannot hold the whole pointer
+** value. (In strict ISO C this may cause undefined behavior, but no
+** actual machine seems to bother.)
 */
-#define point2uint(p)	((unsigned int)((size_t)(p) & UINT_MAX))
+#if !defined(LUA_USE_C89) && defined(__STDC_VERSION__) && \
+    __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+#if defined(UINTPTR_MAX)  /* even in C99 this type is optional */
+#define L_P2I	uintptr_t
+#else  /* no 'intptr'? */
+#define L_P2I	uintmax_t  /* use the largest available integer */
+#endif
+#else  /* C89 option */
+#define L_P2I	size_t
+#endif
+
+#define point2uint(p)	((unsigned int)((L_P2I)(p) & UINT_MAX))
 
 
 

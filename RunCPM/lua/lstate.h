@@ -9,6 +9,11 @@
 
 #include "lua.h"
 
+
+/* Some header files included here need this definition */
+typedef struct CallInfo CallInfo;
+
+
 #include "lobject.h"
 #include "ltm.h"
 #include "lzio.h"
@@ -139,18 +144,19 @@ struct lua_longjmp;  /* defined in ldo.c */
 
 #define BASIC_STACK_SIZE        (2*LUA_MINSTACK)
 
-#define stacksize(th)	cast_int((th)->stack_last - (th)->stack)
+#define stacksize(th)	cast_int((th)->stack_last.p - (th)->stack.p)
 
 
 /* kinds of Garbage Collection */
 #define KGC_INC		0	/* incremental gc */
-#define KGC_GEN		1	/* generational gc */
+#define KGC_GENMINOR	1	/* generational gc in minor (regular) mode */
+#define KGC_GENMAJOR	2	/* generational in major mode */
 
 
 typedef struct stringtable {
-  TString **hash;
+  TString **hash;  /* array of buckets (linked lists of strings) */
   int nuse;  /* number of elements */
-  int size;
+  int size;  /* number of buckets */
 } stringtable;
 
 
@@ -169,14 +175,14 @@ typedef struct stringtable {
 ** - field 'transferinfo' is used only during call/returnhooks,
 ** before the function starts or after it ends.
 */
-typedef struct CallInfo {
-  StkId func;  /* function index in the stack */
-  StkId	top;  /* top for this function */
+struct CallInfo {
+  StkIdRel func;  /* function index in the stack */
+  StkIdRel	top;  /* top for this function */
   struct CallInfo *previous, *next;  /* dynamic call link */
   union {
     struct {  /* only for Lua functions */
       const Instruction *savedpc;
-      volatile l_signalT trap;
+      volatile l_signalT trap;  /* function is tracing lines/counts */
       int nextraargs;  /* # of extra arguments in vararg functions */
     } l;
     struct {  /* only for C functions */
@@ -196,7 +202,7 @@ typedef struct CallInfo {
   } u2;
   short nresults;  /* expected number of results from this function */
   unsigned short callstatus;
-} CallInfo;
+};
 
 
 /*
@@ -249,25 +255,22 @@ typedef struct CallInfo {
 typedef struct global_State {
   lua_Alloc frealloc;  /* function to reallocate memory */
   void *ud;         /* auxiliary data to 'frealloc' */
-  l_mem totalbytes;  /* number of bytes currently allocated - GCdebt */
-  l_mem GCdebt;  /* bytes allocated not yet compensated by the collector */
-  lu_mem GCestimate;  /* an estimate of the non-garbage memory in use */
-  lu_mem lastatomic;  /* see function 'genstep' in file 'lgc.c' */
+  lu_mem totalbytes;  /* number of bytes currently allocated */
+  l_obj totalobjs;  /* total number of objects allocated + GCdebt */
+  l_obj GCdebt;  /* objects counted but not yet allocated */
+  l_obj marked;  /* number of objects marked in a GC cycle */
+  l_obj GCmajorminor;  /* auxiliar counter to control major-minor shifts */
   stringtable strt;  /* hash table for strings */
   TValue l_registry;
   TValue nilvalue;  /* a nil value */
   unsigned int seed;  /* randomized seed for hashes */
+  lu_byte gcparams[LUA_GCPN];
   lu_byte currentwhite;
   lu_byte gcstate;  /* state of garbage collector */
   lu_byte gckind;  /* kind of GC running */
   lu_byte gcstopem;  /* stops emergency collections */
-  lu_byte genminormul;  /* control for minor generational collections */
-  lu_byte genmajormul;  /* control for major generational collections */
   lu_byte gcstp;  /* control whether GC is running */
   lu_byte gcemergency;  /* true if this is an emergency collection */
-  lu_byte gcpause;  /* size of pause between successive GCs */
-  lu_byte gcstepmul;  /* GC "speed" */
-  lu_byte gcstepsize;  /* (log2 of) GC granularity */
   GCObject *allgc;  /* list of all collectable objects */
   GCObject **sweepgc;  /* current position of sweep in list */
   GCObject *finobj;  /* list of collectable objects with finalizers */
@@ -291,7 +294,7 @@ typedef struct global_State {
   struct lua_State *mainthread;
   TString *memerrmsg;  /* message for memory-allocation errors */
   TString *tmname[TM_N];  /* array with tag-method names */
-  struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
+  struct Table *mt[LUA_NUMTYPES];  /* metatables for basic types */
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
   lua_WarnFunction warnf;  /* warning function */
   void *ud_warn;         /* auxiliary data to 'warnf' */
@@ -306,13 +309,13 @@ struct lua_State {
   lu_byte status;
   lu_byte allowhook;
   unsigned short nci;  /* number of items in 'ci' list */
-  StkId top;  /* first free slot in the stack */
+  StkIdRel top;  /* first free slot in the stack */
   global_State *l_G;
   CallInfo *ci;  /* call info for current function */
-  StkId stack_last;  /* end of stack (last element + 1) */
-  StkId stack;  /* stack base */
+  StkIdRel stack_last;  /* end of stack (last element + 1) */
+  StkIdRel stack;  /* stack base */
   UpVal *openupval;  /* list of open upvalues in this stack */
-  StkId tbclist;  /* list of to-be-closed variables */
+  StkIdRel tbclist;  /* list of to-be-closed variables */
   GCObject *gclist;
   struct lua_State *twups;  /* list of threads with open upvalues */
   struct lua_longjmp *errorJmp;  /* current error recover point */
@@ -385,13 +388,13 @@ union GCUnion {
 #define obj2gco(v)	check_exp((v)->tt >= LUA_TSTRING, &(cast_u(v)->gc))
 
 
-/* actual number of total bytes allocated */
-#define gettotalbytes(g)	cast(lu_mem, (g)->totalbytes + (g)->GCdebt)
+/* actual number of total objects allocated */
+#define gettotalobjs(g)	((g)->totalobjs - (g)->GCdebt)
 
-LUAI_FUNC void luaE_setdebt (global_State *g, l_mem debt);
+
+LUAI_FUNC void luaE_setdebt (global_State *g, l_obj debt);
 LUAI_FUNC void luaE_freethread (lua_State *L, lua_State *L1);
 LUAI_FUNC CallInfo *luaE_extendCI (lua_State *L);
-LUAI_FUNC void luaE_freeCI (lua_State *L);
 LUAI_FUNC void luaE_shrinkCI (lua_State *L);
 LUAI_FUNC void luaE_checkcstack (lua_State *L);
 LUAI_FUNC void luaE_incCstack (lua_State *L);

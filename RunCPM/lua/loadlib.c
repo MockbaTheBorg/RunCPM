@@ -25,15 +25,6 @@
 
 
 /*
-** LUA_IGMARK is a mark to ignore all before it when building the
-** luaopen_ function name.
-*/
-#if !defined (LUA_IGMARK)
-#define LUA_IGMARK		"-"
-#endif
-
-
-/*
 ** LUA_CSUBSEP is the character that replaces dots in submodule names
 ** when searching for a C loader.
 ** LUA_LSUBSEP is the character that replaces dots in submodule names
@@ -292,7 +283,8 @@ static int noenv (lua_State *L) {
 
 
 /*
-** Set a path
+** Set a path. (If using the default path, assume it is a string
+** literal in C and create it as an external string.)
 */
 static void setpath (lua_State *L, const char *fieldname,
                                    const char *envname,
@@ -303,7 +295,7 @@ static void setpath (lua_State *L, const char *fieldname,
   if (path == NULL)  /* no versioned environment variable? */
     path = getenv(envname);  /* try unversioned name */
   if (path == NULL || noenv(L))  /* no environment variable? */
-    lua_pushstring(L, dft);  /* use default */
+    lua_pushextlstring(L, dft, strlen(dft), NULL, NULL);  /* use default */
   else if ((dftmark = strstr(path, LUA_PATH_SEP LUA_PATH_SEP)) == NULL)
     lua_pushstring(L, path);  /* nothing to change */
   else {  /* path contains a ";;": insert default path in its place */
@@ -708,8 +700,13 @@ static const luaL_Reg ll_funcs[] = {
 
 
 static void createsearcherstable (lua_State *L) {
-  static const lua_CFunction searchers[] =
-    {searcher_preload, searcher_Lua, searcher_C, searcher_Croot, NULL};
+  static const lua_CFunction searchers[] = {
+    searcher_preload,
+    searcher_Lua,
+    searcher_C,
+    searcher_Croot,
+    NULL
+  };
   int i;
   /* create 'searchers' table */
   lua_createtable(L, sizeof(searchers)/sizeof(searchers[0]) - 1, 0);
