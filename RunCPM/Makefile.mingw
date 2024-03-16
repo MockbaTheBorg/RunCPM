@@ -19,7 +19,7 @@ LDFLAGS = -mconsole -lm -ldl
 OBJS = main.o lua/liblua.a
 
 # Lua building
-LUABUILD = $(MAKE) -C lua mingw
+LUABUILD = $(MAKE) -C lua
 LUACLEAN = $(MAKE) -C lua clean
 
 # Clean up program
