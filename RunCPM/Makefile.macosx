@@ -17,11 +17,11 @@ CFLAGS+=-ggdb
 LDFLAGS = -lm -ldl
 
 # Objects to build
-OBJS = main.o lua/liblua.a
+OBJS = main.o # lua/liblua.a
 
 # Lua building
-LUABUILD = $(MAKE) -C lua
-LUACLEAN = $(MAKE) -C lua clean
+#LUABUILD = $(MAKE) -C lua
+#LUACLEAN = $(MAKE) -C lua clean
 
 # Clean up program
 RM = rm -f
@@ -34,13 +34,13 @@ $(PROG): main.o
 	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
 
 main.o: main.c $(wildcard *.h) $(MFILE)
-	$(LUABUILD)
+#	$(LUABUILD)
 	$(CC) $(CFLAGS) -c main.c
 
 rebuild: clean all
 
 .PHONY: clean
 clean:
-	$(LUACLEAN)
+#	$(LUACLEAN)
 	$(RM) *.o
 	$(RM) $(PROG)
