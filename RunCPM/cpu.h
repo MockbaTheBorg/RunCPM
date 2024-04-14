@@ -2075,6 +2075,10 @@ static inline void Z80run(void) {
 
 		case 0x76:      /* HALT */
 #ifdef DEBUG
+	#ifdef DEBUGONHALT
+			_puts("\r\n");
+			Z80debug();
+	#endif
 			_puts("\r\n::CPU HALTED::");	// A halt is a good indicator of broken code
 			_puts("Press any key...");
 			_getch();
