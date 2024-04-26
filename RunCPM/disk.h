@@ -57,6 +57,7 @@ int _SelectDisk(uint8 dr) {
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
 		result = 0x00;
 	} else {
+		cDrive = oDrive = dr;
 		_error(errSELECT);
 	}
 
