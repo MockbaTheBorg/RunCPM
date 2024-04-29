@@ -313,7 +313,7 @@ uint8 _sys_makedisk(uint8 drive) {
 	} else {
 		uint8 dFolder = drive + '@';
 		uint8 disk[2] = { dFolder, 0 };
-		if (!mkdir((char*)disk, S_IRUSR | S_IWUSR | S_IXUSR)) {
+		if (mkdir((char*)disk, S_IRUSR | S_IWUSR | S_IXUSR)) {
 			result = 0xfe;
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
