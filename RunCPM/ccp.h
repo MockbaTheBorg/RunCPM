@@ -213,7 +213,6 @@ void _ccp_dir(void) {
     uint8 i;
     uint8 dirHead[6] = "A: ";
     uint8 dirSep[6] = "  |  ";
-    uint32 fcount = 0;  // Number of files printed
     uint32 ccount = 0;  // Number of columns printed
     
     if (_RamRead(ParFCB + 1) == ' ')
@@ -225,7 +224,6 @@ void _ccp_dir(void) {
     if (!_SearchFirst(ParFCB, TRUE)) {
         _puts((char *)dirHead);
         _ccp_printfcb(tmpFCB, FALSE);
-        ++fcount;
         ++ccount;
         
         while (!_SearchNext(ParFCB, TRUE)) {
@@ -236,7 +234,6 @@ void _ccp_dir(void) {
                 _puts((char *)dirSep);
             }
             _ccp_printfcb(tmpFCB, FALSE);
-            ++fcount;
             ++ccount;
             if (ccount > 3)
                 ccount = 0;
