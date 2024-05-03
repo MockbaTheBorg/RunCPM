@@ -30,7 +30,8 @@ RM = rm -f
 all: $(PROG)
 
 $(PROG): main.o
-	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
+	windres msys2.rc -O coff -o RunCPM.res
+	$(CC) $(OBJS) RunCPM.res -o $(PROG) $(LDFLAGS)
 
 main.o: main.c $(wildcard *.h) $(MFILE)
 #	$(LUABUILD)
