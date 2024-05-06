@@ -57,6 +57,7 @@ int _SelectDisk(uint8 dr) {
 		loginVector = loginVector | (1 << (disk[0] - 'A'));
 		result = 0x00;
 	} else {
+		cDrive = oDrive = dr;
 		_error(errSELECT);
 	}
 
@@ -409,8 +410,12 @@ uint8 _DeleteFile(uint16 fcbaddr) {
 				}
 #endif
 				_FCBtoHostname(tmpFCB, &filename[0]);
-				if (_sys_deletefile(&filename[0]))
+				if (_sys_deletefile(&filename[0])) {
 					deleted = 0x00;
+				} else {
+					_error(errWRITEPROT);
+					break;
+				}
 				result = _SearchFirst(fcbaddr, FALSE);	// FALSE = Does not create a fake dir entry when finding the file
 			}
 		} else {

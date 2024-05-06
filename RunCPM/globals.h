@@ -15,6 +15,7 @@
 
 /* Definitions for file/console based debugging */
 //#define DEBUG				// Enables the internal debugger (enabled by default on vstudio debug builds)
+//#define DEBUGONHALT		// Enables the internal debugger when the CPU halts
 //#define iDEBUG			// Enables instruction logging onto iDebug.log (for development debug only)
 //#define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
 //#define CONSOLELOG		// Writes debug information to console instead of file
@@ -25,8 +26,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.1"
-#define VersionBCD 0x61
+#define VERSION	"6.2"
+#define VersionBCD 0x62
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
@@ -153,7 +154,7 @@ typedef unsigned int    uint32;
 									// For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
 #define BANKS 1						// Number of memory banks available
-static uint8 curBank = 1;			// Number of the current RAM bank in use (1-x, not 0-x)
+static uint8 curBank = 1;			// Number of the current RAM bank in use (1 to x, not 0 to x)
 static uint8 isXmove = FALSE;		// Used by BIOS
 static uint8 srcBank = 1;			// Source bank for memory MOVE
 static uint8 dstBank = 1;			// Destination bank for memory MOVE
@@ -165,6 +166,7 @@ static uint8 ioBank = 1;			// Destination bank for sector IO
 #if BANKS==1
 #define RAM_FAST					// If this is defined, all RAM function calls become direct access (see below)
 									// This saves about 2K on the Arduino code and should bring speed improvements
+									// This feature is only available if there is only one bank of RAM
 #endif
 
 #ifdef RAM_FAST						// Makes all function calls to memory access into direct RAM access (less calls / less code)
