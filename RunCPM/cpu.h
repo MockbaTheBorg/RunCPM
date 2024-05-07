@@ -1343,7 +1343,7 @@ void Z80debug(void) {
 
 		_puts("\r\n");
 		_puts("Command|? : ");
-		ch = _getch();
+		ch = _getcon();
 		if (ch > 21 && ch < 127)
 			_putch(ch);
 		switch (ch) {
@@ -2081,7 +2081,7 @@ static inline void Z80run(void) {
 	#endif
 			_puts("\r\n::CPU HALTED::");	// A halt is a good indicator of broken code
 			_puts("Press any key...");
-			_getch();
+			_getcon();
 #endif
 			--PC;
 			goto end_decode;

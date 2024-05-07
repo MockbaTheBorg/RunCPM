@@ -536,7 +536,7 @@ void _Bios(void) {
 			break;
 		}
 		case B_CONIN: {		// 3 - Console input
-			SET_HIGH_REGISTER(AF, _getch());
+			SET_HIGH_REGISTER(AF, _getcon());
 #ifdef DEBUG
 			if (HIGH_REGISTER(AF) == 4)
 				Debug = 1;
@@ -698,7 +698,7 @@ void _Bdos(void) {
 		   Returns: A=Char
 		 */
 		case C_READ: {
-			HL = _getche();
+			HL = _getconE();
 #ifdef DEBUG
 			if (HL == 4)
 				Debug = 1;
@@ -766,7 +766,7 @@ void _Bdos(void) {
 		 */
 		case C_RAWIO: {
 			if (LOW_REGISTER(DE) == 0xff) {
-				HL = _getchNB();
+				HL = _getconNB();
 #ifdef DEBUG
 				if (HL == 4)
 					Debug = 1;
@@ -853,7 +853,7 @@ void _Bdos(void) {
                 // pre-backspace, retype & post backspace counts
                 uint8 preBS = 0, reType = 0, postBS = 0;
 
-                chr = _getch(); //input a character
+                chr = _getcon(); //input a character
 
                 if (chr == 1) {                             // ^A - Move cursor one character to the left
                     if (curCol > 0) {

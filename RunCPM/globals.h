@@ -93,6 +93,9 @@
 
 //#define HASLUA					// Will enable Lua scripting (BDOS call 254)
 									// Should be passed externally per-platform with -DHASLUA
+//#define STREAMIO					// Will enable command line flags to read
+									// console input from file and to log console output to file
+									// Should be passed externally per-platform with -DSTREAMIO
 
 //#define PROFILE					// For measuring time taken to run a CP/M command
 									// This should be enabled only for debugging purposes when trying to improve emulation speed
@@ -227,6 +230,15 @@ static uint8	firstBoot = TRUE;	// True if this is the first boot
 #define BOOTONLY FALSE				// If TRUE, the autoexec file will only be loaded on the first boot
 
 static uint32 timer;
+
+#ifdef STREAMIO
+#include <stdio.h>
+static FILE		*streamInputFile = NULL;
+static FILE		*streamOutputFile = NULL;
+static uint8	streamInputActive = FALSE;
+static uint8	consoleOutputActive = TRUE;
+#endif
+
 
 /* Definition of externs to prevent precedence compilation errors */
 #ifdef __cplusplus // If building on Arduino

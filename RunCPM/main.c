@@ -61,6 +61,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 	_host_init(argc, &argv[0]);
+#ifdef STREAMIO
+	_streamioInit();
+#endif
 	_console_init();
 	_clrscr();
 	_puts("  CP/M Emulator v" VERSION " by Marcelo Dantas\r\n");
@@ -143,6 +146,9 @@ int main(int argc, char* argv[]) {
 
 	_puts("\r\n");
 	_console_reset();
+#ifdef STREAMIO
+	_streamioReset();
+#endif
 	return(0);
 }
 
