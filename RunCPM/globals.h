@@ -14,7 +14,7 @@
 #define USE_LST
 
 /* Definitions for file/console based debugging */
-#define DEBUG				// Enables the internal debugger (enabled by default on vstudio debug builds)
+//#define DEBUG				// Enables the internal debugger (enabled by default on vstudio debug builds)
 //#define DEBUGONHALT		// Enables the internal debugger when the CPU halts
 //#define iDEBUG			// Enables instruction logging onto iDebug.log (for development debug only)
 //#define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
@@ -26,8 +26,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.2"
-#define VersionBCD 0x62
+#define VERSION	"6.3"
+#define VersionBCD 0x63
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
