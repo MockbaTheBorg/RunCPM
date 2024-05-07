@@ -224,7 +224,7 @@ static uint16	physicalExtentBytes;// # bytes described by 1 directory entry
 /* definition of an autoexec functionality */
 static uint8	firstBoot = TRUE;	// True if this is the first boot
 #define AUTOEXEC "AUTOEXEC.BAT"		// Name of the autoexec file
-#define BOOTONLY TRUE				// If TRUE, the autoexec file will only be loaded on the first boot
+#define BOOTONLY FALSE				// If TRUE, the autoexec file will only be loaded on the first boot
 
 static uint32 timer;
 
