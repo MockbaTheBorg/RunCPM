@@ -129,6 +129,11 @@ Disks created by **FORMAT** cannot be removed from inside RunCPM itself, if need
 The master disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.<br>
 Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience. These applications are listed on the 1STREAD.ME file.
 
+## Automation
+
+If a single line text file named AUTOEXEC.TXT containing a CP/M command up to 125 characters long is placed onto the same folder as the RunCPM executable, the command on this file will be loaded onto the CCP buffer, emulating the patch of the CCP sector on a real CP/M disk.<br>
+This command will then be executed every time the CCP is restarted or once when RunCPM loads, which is configurable in the globals.h header file.
+
 ## Printing
 
 Printing to the PUN: and LST: devices is allowed and will generate files called "PUN.TXT" and "LST.TXT" under user area 0 of disk A:. These files can then be tranferred over to a host computer via XMODEM for real physical printing.
