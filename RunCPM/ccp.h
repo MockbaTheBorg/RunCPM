@@ -713,7 +713,11 @@ void _ccp(void) {
 		}
 		if (BOOTONLY)
 			firstBoot = FALSE;
-	}
+	} else {
+        _RamWrite(inBuf, 0);                        // Clears the buffer
+        _RamWrite(inBuf + 1, 0);                    // Clears the buffer
+        blen = 0;
+    }
        
     while (TRUE) {
         curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);   // Get current drive
@@ -726,7 +730,7 @@ void _ccp(void) {
         if(!blen){
             _puts((char *)prompt);
 
-            _RamWrite(inBuf, cmdLen);                       // Sets the buffer size to read the command line
+            _RamWrite(inBuf, cmdLen);                   // Sets the buffer size to read the command line
             _ccp_readInput();
         }
         blen = _RamRead(inBuf + 1);                     // Obtains the number of bytes read
@@ -742,8 +746,10 @@ void _ccp(void) {
             }
             if (!blen)                                  // There were only spaces
                 continue;
-            if (_RamRead(pbuf) == ';')                  // Found a comment line
+            if (_RamRead(pbuf) == ';') {                // Found a comment line
+                blen = 0;                               // Ignore the rest of the line
                 continue;
+            }
             
             // parse for DU: command line shortcut
             bool errorFlag = FALSE, continueFlag = FALSE;
@@ -785,9 +791,11 @@ void _ccp(void) {
             }
             if (errorFlag) {
                 _ccp_cmdError();                        // print command error
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             if (continueFlag) {
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             _ccp_initFCB(CmdFCB, 36);                   // Initializes the command FCB
@@ -795,6 +803,7 @@ void _ccp(void) {
             perr = pbuf;                                // Saves the pointer in case there's an error
             if (_ccp_nameToFCB(CmdFCB) > 8) {           // Extracts the command from the buffer
                 _ccp_cmdError();                        // Command name cannot be non-unique or have an extension
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             _RamWrite(defDMA, blen);                    // Move the command line at this point to 0x0080
@@ -904,7 +913,6 @@ void _ccp(void) {
             if (i)
                 _ccp_cmdError();
         }
-        blen = 0;
         if ((Status == 1) || (Status == 2))
             break;
     }
