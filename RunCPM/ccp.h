@@ -24,7 +24,7 @@ bool sFlag = FALSE;             // Submit Flag
 uint8 sRecs = 0;                // Number of records on the Submit file
 uint8 prompt[8] = "\r\n  >";
 uint16 pbuf, perr;
-uint8 blen;                     // Actual size of the typed command line (size of the buffer)
+uint8 blen = 0;                 // Actual size of the typed command line (size of the buffer)
 
 static const char *Commands[] =
 {
@@ -685,22 +685,54 @@ void _ccp(void) {
     sFlag = (bool)_ccp_bdos(DRV_ALLRESET, 0x0000);
     _ccp_bdos(DRV_SET, curDrive);
     
-    for (i = 0; i < 36; ++i)
+    for (i = 0; i < 36; ++i) {
         _RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
-    
+    }
+
+	// Loads an autoexec file if it exists and this is the first boot
+	// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
+	if (firstBoot && !sFlag) {
+       	uint8 dmabuf[128];
+       	uint16 cmd = inBuf + 1;
+		if (_sys_exists((uint8*)AUTOEXEC)) {
+			FILE* file = _sys_fopen_r((uint8*)AUTOEXEC);
+			blen = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
+			int count = 0;
+			if (blen) {
+				for (int i = 0; i < 126; ++i) {
+					_RamWrite(cmd + 1 + i, 0x00);
+					if (dmabuf[i] == 0x0D || dmabuf[i] == 0x0A || dmabuf[i] == 0x1A || dmabuf[i] == 0x00) {
+						break;
+					}
+					_RamWrite(cmd + 1 + i, dmabuf[i]);
+					count++;
+				}
+			}
+			_RamWrite(cmd, count);
+			_sys_fclose(file);
+		}
+		if (BOOTONLY)
+			firstBoot = FALSE;
+	} else {
+        _RamWrite(inBuf, 0);                        // Clears the buffer
+        _RamWrite(inBuf + 1, 0);                    // Clears the buffer
+        blen = 0;
+    }
+
     while (TRUE) {
         curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);   // Get current drive
         curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);  // Get current user
         _RamWrite(DSKByte, (curUser << 4) + curDrive);  // Set user/drive on addr DSKByte
         
         parDrive = curDrive;                            // Initially the parameter drive is the same as the current drive
-        
+
         sprintf((char *) prompt, "\r\n%c%u%c", 'A' + curDrive, curUser, sFlag ? '$' : '>');
-        _puts((char *)prompt);
-        
-        _RamWrite(inBuf, cmdLen);                       // Sets the buffer size to read the command line
-        _ccp_readInput();
-        
+        if(!blen){
+            _puts((char *)prompt);
+
+            _RamWrite(inBuf, cmdLen);                   // Sets the buffer size to read the command line
+            _ccp_readInput();
+        }
         blen = _RamRead(inBuf + 1);                     // Obtains the number of bytes read
         
         _ccp_bdos(F_DMAOFF, defDMA);                    // Reset current DMA
@@ -714,8 +746,10 @@ void _ccp(void) {
             }
             if (!blen)                                  // There were only spaces
                 continue;
-            if (_RamRead(pbuf) == ';')                  // Found a comment line
+            if (_RamRead(pbuf) == ';') {                // Found a comment line
+                blen = 0;                               // Ignore the rest of the line
                 continue;
+            }
             
             // parse for DU: command line shortcut
             bool errorFlag = FALSE, continueFlag = FALSE;
@@ -757,9 +791,11 @@ void _ccp(void) {
             }
             if (errorFlag) {
                 _ccp_cmdError();                        // print command error
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             if (continueFlag) {
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             _ccp_initFCB(CmdFCB, 36);                   // Initializes the command FCB
@@ -767,6 +803,7 @@ void _ccp(void) {
             perr = pbuf;                                // Saves the pointer in case there's an error
             if (_ccp_nameToFCB(CmdFCB) > 8) {           // Extracts the command from the buffer
                 _ccp_cmdError();                        // Command name cannot be non-unique or have an extension
+                blen = 0;                               // ignore the rest of the line
                 continue;
             }
             _RamWrite(defDMA, blen);                    // Move the command line at this point to 0x0080

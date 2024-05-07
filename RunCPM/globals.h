@@ -14,7 +14,7 @@
 #define USE_LST
 
 /* Definitions for file/console based debugging */
-//#define DEBUG				// Enables the internal debugger (enabled by default on vstudio debug builds)
+#define DEBUG				// Enables the internal debugger (enabled by default on vstudio debug builds)
 //#define DEBUGONHALT		// Enables the internal debugger when the CPU halts
 //#define iDEBUG			// Enables instruction logging onto iDebug.log (for development debug only)
 //#define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
@@ -223,6 +223,11 @@ static uint8	extentsPerDirEntry;	// # of logical (16K) extents in a directory en
 static uint16	physicalExtentBytes;// # bytes described by 1 directory entry
 
 #define tohex(x)	((x) < 10 ? (x) + 48 : (x) + 87)
+
+/* definition of an autoexec functionality */
+static uint8	firstBoot = TRUE;	// True if this is the first boot
+#define AUTOEXEC "AUTOEXEC.TXT"		// Name of the autoexec file
+#define BOOTONLY FALSE				// If TRUE, the autoexec file will only be loaded on the first boot
 
 static uint32 timer;
 
