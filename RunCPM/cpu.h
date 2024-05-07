@@ -1235,6 +1235,59 @@ void memdump(uint16 pos) {
 	}
 }
 
+DisHex(uint16 pos) {
+	const char* txt;
+	char jr;
+	uint8 ch = _RamRead(pos);
+	uint8 count = 0;
+
+	switch (ch) {
+	case 0xCB: ++pos; ch = _RamRead(pos); txt = MnemonicsCB[_RamRead(pos++)]; break;
+	case 0xED: ++pos; ch = _RamRead(pos); txt = MnemonicsED[_RamRead(pos++)]; break;
+	case 0xDD:
+	case 0xFD:
+		++pos;
+		ch = _RamRead(pos);
+		if (_RamRead(pos) != 0xCB) {
+			txt = MnemonicsXX[_RamRead(pos++)];
+		} else {
+			_puthex8(ch); _putch(' '); count++;
+			++pos; txt = MnemonicsXCB[_RamRead(pos++)];
+		}
+		break;
+	default: ch = _RamRead(pos); txt = Mnemonics[_RamRead(pos++)];
+	}
+	_puthex8(ch);
+	_putch(' ');
+	count++;
+	while (*txt != 0) {
+		switch (*txt) {
+		case '*':
+		case '^':
+		case '@':
+			txt += 2;
+			++count;
+			_puthex8(_RamRead(pos++));
+			_putch(' ');
+			break;
+		case '#':
+			txt += 2;
+			count += 2;
+			_puthex8(_RamRead(pos));
+			_putch(' ');
+			_puthex8(_RamRead(pos + 1));
+			_putch(' ');
+			break;
+		default:
+			++txt;
+		}
+	}
+	while (count < 6) {
+		_puts("   ");
+		count++;
+	}
+}
+
 uint8 Disasm(uint16 pos) {
 	const char* txt;
 	char jr;
@@ -1264,10 +1317,6 @@ uint8 Disasm(uint16 pos) {
 	while (*txt != 0) {
 		switch (*txt) {
 		case '*':
-			txt += 2;
-			++count;
-			_puthex8(_RamRead(pos++));
-			break;
 		case '^':
 			txt += 2;
 			++count;
@@ -1378,6 +1427,7 @@ void Z80debug(void) {
 			while (I > 0) {
 				_puthex16(l);
 				_puts(" : ");
+				DisHex(l);
 				l += Disasm(l);
 				_puts("\r\n");
 				--I;
@@ -1412,6 +1462,7 @@ void Z80debug(void) {
 				while (I > 0) {
 					_puthex16(l);
 					_puts(" : ");
+					DisHex(l);
 					l += Disasm(l);
 					_puts("\r\n");
 					--I;
