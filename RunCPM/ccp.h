@@ -688,10 +688,10 @@ void _ccp(void) {
     for (i = 0; i < 36; ++i) {
         _RamWrite(BatchFCB + i, _RamRead(tmpFCB + i));
     }
-   
+
 	// Loads an autoexec file if it exists and this is the first boot
 	// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
-	if (firstBoot) {
+	if (firstBoot && !sFlag) {
        	uint8 dmabuf[128];
        	uint16 cmd = inBuf + 1;
 		if (_sys_exists((uint8*)AUTOEXEC)) {
@@ -718,7 +718,7 @@ void _ccp(void) {
         _RamWrite(inBuf + 1, 0);                    // Clears the buffer
         blen = 0;
     }
-       
+
     while (TRUE) {
         curDrive = (uint8)_ccp_bdos(DRV_GET, 0x0000);   // Get current drive
         curUser = (uint8)_ccp_bdos(F_USERNUM, 0x00FF);  // Get current user

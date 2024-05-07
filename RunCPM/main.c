@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 
 		// Loads an autoexec file if it exists and this is the first boot
 		// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
-		if (firstBoot) {
+		if (firstBoot an not sFlag) {
 			uint8 dmabuf[128];
 			uint8 bytesread;
 			uint16 cmd = CCPaddr + 7;
@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
 			if (BOOTONLY)
 				firstBoot = FALSE;
 		}
+
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(DSKByte));	// Sets C to the current drive/user
 		PC = CCPaddr;		// Sets CP/M application jump point
