@@ -96,6 +96,33 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 		_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
+
+		// Loads an autoexec file if it exists and this is the first boot
+		// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
+		if (firstBoot) {
+			uint8 dmabuf[128];
+			uint8 bytesread;
+			uint16 cmd = CCPaddr + 7;
+			if (_sys_exists((uint8*)AUTOEXEC)) {
+				FILE* file = _sys_fopen_r((uint8*)AUTOEXEC);
+				bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
+				int count = 0;
+				if (bytesread) {
+					for (int i = 0; i < 126; ++i) {
+						_RamWrite(cmd + 1 + i, 0x00);
+						if (dmabuf[i] == 0x0D || dmabuf[i] == 0x0A || dmabuf[i] == 0x1A || dmabuf[i] == 0x00) {
+							break;
+						}
+						_RamWrite(cmd + 1 + i, dmabuf[i]);
+						count++;
+					}
+				}
+				_RamWrite(cmd, count);
+				_sys_fclose(file);
+			}
+			if (BOOTONLY)
+				firstBoot = FALSE;
+		}
 		Z80reset();			// Resets the Z80 CPU
 		SET_LOW_REGISTER(BC, _RamRead(DSKByte));	// Sets C to the current drive/user
 		PC = CCPaddr;		// Sets CP/M application jump point
