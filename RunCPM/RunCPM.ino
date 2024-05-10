@@ -45,6 +45,8 @@ void setup(void) {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
   Serial.begin(SERIALSPD);
+  Serial1.begin(SERIALSPD);
+  Serial2.begin(SERIALSPD);
   while (!Serial) {	// Wait until serial is connected
     digitalWrite(LED, HIGH^LEDinv);
     delay(sDELAY);

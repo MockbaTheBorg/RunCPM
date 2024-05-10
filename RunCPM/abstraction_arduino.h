@@ -491,30 +491,342 @@ uint32 _HardwareIn(const uint32 Port) {
 	return 0;
 }
 
+// ***************************** Physical Device List **************************************
+//CON: = TTY: CRT: BAT: UC1:
+//RDR: = TTY: PTR: UR1: UR2:
+//PUN: = TTY: PTP: UP1: UP2:
+//LST: = TTY: CRT: LPT: UL1:
+
+// TTY
+
+void deviceTTYout(uint8_t ch)  // same as _putch 
+{
+  Serial1.write(ch); // same as _putch but with buffer overflow protection
+  while (Serial1.availableForWrite() < 20) {
+      delay(100); // at 9600 baud, ESP32 output buffer is 128 bytes, if stops when only 20 chars left in the output buffer, and pause 100ms, then have about 115 left as sending about 1 per ms.
+  }
+}
+
+uint8_t deviceTTYavailable(void) {  // same as _kbhit
+  return(Serial1.available());
+}
+
+uint8_t deviceTTYin(void) {  // same as _getch
+  while (!Serial1.available());
+  return(Serial1.read());
+}
+
+uint8_t deviceTTYinEcho(void) { // same as _getche
+  uint8_t ch = deviceTTYin();
+  deviceTTYout(ch);
+  return(ch);
+}
+
+// CRT
+
+void deviceCRTout(uint8_t ch)  // same as _putch 
+{
+  Serial.write(ch); // same as _putch but with buffer overflow protection
+  while (Serial.availableForWrite() < 20) {
+      delay(100); // at 9600 baud, ESP32 output buffer is 128 bytes, if stop when only 20 chars left in the output buffer, and pause 100ms, then have about 115 left as sending about 1 per ms.
+  }
+}
+
+uint8_t deviceCRTavailable(void) {  // same as _kbhit
+  return(Serial.available());
+}
+
+uint8_t deviceCRTin(void) {  // same as _getch
+  while (!Serial.available());
+  return(Serial.read());
+}
+
+uint8_t deviceCRTinEcho(void) { // same as _getche
+  uint8_t ch = deviceCRTin();
+  deviceCRTout(ch);
+  return(ch);
+}
+
+// UR1 
+
+uint8_t deviceUR1in(void) {
+    uint8_t ch = 26;
+    return ch;
+}
+
+// UP1 
+
+void deviceUP1out(uint8_t ch) {
+  // add code here
+}
+
+// BAT, console device, input and output and can see if characters waiting, input used by Kermit as the default input device
+
+void deviceBATout(uint8_t ch) 
+{
+  Serial2.write(ch); // same as _putch but with buffer overflow protection
+  while (Serial2.availableForWrite() < 20) {
+      delay(100); // at 9600 baud, ESP32 output buffer is 128 bytes, if stop when only 20 chars left in the output buffer, and pause 100ms, then have about 115 left as sending about 1 per ms.
+  }
+}
+
+uint8_t deviceBATavailable(void) {  
+   return(Serial2.available());
+}
+
+uint8_t deviceBATin(void) {  
+  while (!Serial2.available());
+  return(Serial2.read());
+}
+
+uint8_t deviceBATinEcho(void) { 
+  uint8_t ch = deviceBATin();
+  deviceBATout(ch);
+  return(ch);
+}
+
+// UC1, console device
+
+void deviceUC1out(uint8_t ch) 
+{
+  // add code here
+}
+
+uint8_t deviceUC1available(void) {  
+  return(1); // add code here
+}
+
+uint8_t deviceUC1in(void) {  
+    return(26); // add code here
+}
+
+uint8_t deviceUC1inEcho(void) { 
+  uint8_t ch = deviceUC1in();
+  deviceUC1out(ch);
+  return(ch);
+}
+
+// PTR, reader device
+
+uint8_t devicePTRin(void) {
+    return 26; // add code here
+}
+
+// UR2, reader device
+
+uint8_t deviceUR2in(void) {
+    return 26; // add code here
+}
+
+// PTP,  punch device
+
+void devicePTPout(uint8_t ch) {
+    Serial2.write(ch); // used by Kermit as the default output device
+    while (Serial2.availableForWrite() < 20) {
+      delay(100); // at 9600 baud, if stop when only 20 chars left, and pause 100ms, then have about 115 left, as sending about 1 per ms. Should not need to do this if using small packets with Kermit
+    }
+}
+
+// UP2, punch device
+
+void deviceUP2out(uint8_t ch) {
+  // add code here - eg write to file
+}
+
+// UL1,  LST device
+
+void deviceUL1out(uint8_t ch) {
+  // add code here - eg write to file
+}
+
+
+// LPT,  LST device
+
+void deviceLPTout(uint8_t ch) {
+  // add code here
+}
+
+// *************************************
+
+// redirection for CON RDR PUN and LST eg CONin, CONout, CONavailable directed to one of four places depending on IOBYTE. 
+
+uint8_t iobyteCON()
+{
+  uint8_t iobyte;
+  iobyte = _RamRead(0x0003);
+  iobyte = iobyte & 0x03; // mask off 00000011
+  return iobyte;
+}
+
+uint8_t iobyteRDR()
+{
+  uint8_t iobyte;
+  iobyte = _RamRead(0x0003);
+  iobyte = iobyte & 0x0C; // mask off 00001100
+  iobyte = iobyte >> 2; // bitshift so low 2 bits
+  return iobyte;
+}
+
+uint8_t iobytePUN()
+{
+  uint8_t iobyte;
+  iobyte = _RamRead(0x0003);
+  iobyte = iobyte & 0x30; // mask off 00110000
+  iobyte = iobyte >> 4; // bitshift so low 2 bits
+  return iobyte;
+}
+
+uint8_t iobyteLST()
+{
+  uint8_t iobyte;
+  iobyte = _RamRead(0x0003);
+  iobyte = iobyte & 0xC0; // mask off 11000000
+  iobyte = iobyte >> 6; // bitshift so low 2 bits
+  return iobyte;
+}
+
+//CON: = TTY: CRT: BAT: UC1:
+void outCON(uint8_t ch)
+{
+  uint8_t iobyte;
+  iobyte = iobyteCON(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: deviceTTYout(ch);
+            break;
+    case 1: deviceCRTout(ch);
+            break;
+    case 2: deviceBATout(ch);
+            break;
+    case 3: deviceUC1out(ch);
+            break;                                 
+  }
+}
+
+uint8_t availableCON()
+{
+  uint8_t iobyte;
+  uint8_t dataAvailable;
+  iobyte = iobyteCON(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: dataAvailable = deviceTTYavailable();
+            break;
+    case 1: dataAvailable = deviceCRTavailable();
+            break;
+    case 2: dataAvailable = deviceBATavailable();
+            break;
+    case 3: dataAvailable = deviceUC1available();
+            break;                                 
+  }
+  return dataAvailable;
+}
+
+uint8_t inCON(void)
+{
+  uint8_t iobyte;
+  uint8_t dataIn;
+  iobyte = iobyteCON(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: dataIn = deviceTTYin();
+            break;
+    case 1: dataIn = deviceCRTin();
+            break;
+    case 2: dataIn = deviceBATin();
+            break;
+    case 3: dataIn = deviceUC1in();
+            break;                                 
+  }
+  return dataIn;
+}
+
+uint8_t echoCON()
+{
+  uint8_t ch;
+  ch = inCON();
+  outCON(ch);
+  return(ch);
+}
+
+//RDR: = TTY: PTR: UR1: UR2:
+uint8_t inRDR(void)
+{
+  uint8_t iobyte;
+  uint8_t dataIn;
+  iobyte = iobyteRDR(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: dataIn = deviceTTYin();
+            break;
+    case 1: dataIn = devicePTRin();
+            break;
+    case 2: dataIn = deviceUR1in();
+            break;
+    case 3: dataIn = deviceUR2in();
+            break;                                 
+  }
+  return dataIn;
+}
+
+//PUN: = TTY: PTP: UP1: UP2:
+void outPUN(uint8_t ch)
+{
+  uint8_t iobyte;
+  iobyte = iobytePUN(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: deviceTTYout(ch);
+            break;
+    case 1: devicePTPout(ch);
+            break;
+    case 2: deviceUP1out(ch);
+            break;
+    case 3: deviceUP2out(ch);
+            break;                                 
+  }
+}
+
+//LST: = TTY: CRT: LPT: UL1:
+void outLST(uint8_t ch)
+{
+  uint8_t iobyte;
+  iobyte = iobyteLST(); // 00, 01 10, 11
+  switch (iobyte) {
+    case 0: deviceTTYout(ch);
+            break;
+    case 1: deviceCRTout(ch);
+            break;
+    case 2: deviceLPTout(ch);
+            break;
+    case 3: deviceUL1out(ch);
+            break;                                 
+  }
+}
+
 /* Console abstraction functions */
 /*===============================================================================*/
 
-int _kbhit(void) {
-	return(Serial.available());
+uint8_t _kbhit(void) {
+  //return(Serial.available());
+  return availableCON();  // redirect based on iobyte
 }
 
-uint8 _getch(void) {
-	while (!Serial.available());
-	return(Serial.read());
+uint8_t _getch(void) {
+  //while (!Serial.available());
+  //return(Serial.read());
+  return inCON(); // redirect based on iobyte
 }
 
-uint8 _getche(void) {
-	uint8 ch = _getch();
-	Serial.write(ch);
-	return(ch);
+uint8_t _getche(void) {
+  //uint8_t ch = _getch();
+  //Serial.write(ch);
+  //return(ch);
+  return echoCON(); // redirect based on iobyte
 }
 
-void _putch(uint8 ch) {
-	Serial.write(ch);
+void _putch(uint8_t ch) {
+  //Serial.write(ch);
+  outCON(ch); // redirect based on iobyte
 }
 
 void _clrscr(void) {
-	Serial.println("\e[H\e[J");
+  Serial.println("\e[H\e[J"); // done once at startup so left as is
 }
 
 #endif
