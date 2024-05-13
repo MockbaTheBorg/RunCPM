@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
 
 		// Loads an autoexec file if it exists and this is the first boot
 		// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
-		if (firstBoot an not sFlag) {
+		if (firstBoot) {
 			uint8 dmabuf[128];
 			uint8 bytesread;
 			uint16 cmd = CCPaddr + 7;
