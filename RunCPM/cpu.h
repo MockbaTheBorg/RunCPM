@@ -1358,7 +1358,7 @@ void Z80debug(void) {
 
 	_puts("\r\nDebug Mode - Press '?' for help");
 
-	while (loop) {
+	while (loop && Debug) {
 		pos = PC;
 		_puts("\r\n");
 		_puts("BC:");  _puthex16(BC);
@@ -1485,6 +1485,11 @@ void Z80debug(void) {
 				_puts("\r\n");
 			}
 			break;
+		case 'X':
+			_puts("\r\nExiting...\r\n");
+			Debug = 0;
+			Status = 1;
+			break;
 		case '?':
 			_puts("\r\n");
 			_puts("Lowercase commands:\r\n");
@@ -1506,6 +1511,7 @@ void Z80debug(void) {
 			_puts("  L - Disassembles at address\r\n");
 			_puts("  T - Steps over a call\r\n");
 			_puts("  W - Sets a byte/word watch\r\n");
+			_puts("  X - Exit RunCPM\r\n");
 			break;
 		default:
 			_puts(" ???\r\n");
@@ -1538,6 +1544,8 @@ static inline void Z80run(void) {
 		}
 		if (Debug)
 			Z80debug();
+		if (Status)
+			break;
 #endif
 
 		PCX = PC;
