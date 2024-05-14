@@ -18,6 +18,8 @@
 //#define DEBUGONHALT		// Enables the internal debugger when the CPU halts
 //#define iDEBUG			// Enables instruction logging onto iDebug.log (for development debug only)
 //#define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
+#define DEBUGKEY 4			// Key to trigger the debugger. 4 = ^D
+
 //#define CONSOLELOG		// Writes debug information to console instead of file
 //#define LOGBIOS_NOT 01	// If defined will not log this BIOS function number
 //#define LOGBIOS_ONLY 02	// If defined will log only this BIOS function number
