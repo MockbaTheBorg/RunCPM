@@ -538,7 +538,7 @@ void _Bios(void) {
 		case B_CONIN: {		// 3 - Console input
 			SET_HIGH_REGISTER(AF, _getcon());
 #ifdef DEBUG
-			if (HIGH_REGISTER(AF) == 4)
+			if (HIGH_REGISTER(AF) == DEBUGKEY)
 				Debug = 1;
 #endif // ifdef DEBUG
 			break;
@@ -700,7 +700,7 @@ void _Bdos(void) {
 		case C_READ: {
 			HL = _getconE();
 #ifdef DEBUG
-			if (HL == 4)
+			if (HL == DEBUGKEY)
 				Debug = 1;
 #endif // ifdef DEBUG
 			break;
@@ -768,7 +768,7 @@ void _Bdos(void) {
 			if (LOW_REGISTER(DE) == 0xff) {
 				HL = _getconNB();
 #ifdef DEBUG
-				if (HL == 4)
+				if (HL == DEBUGKEY)
 					Debug = 1;
 #endif // ifdef DEBUG
 			} else {
@@ -878,7 +878,7 @@ void _Bdos(void) {
                 }
 
 #ifdef DEBUG
-                if (chr == 4) {                             // ^D - DEBUG
+                if (chr == DEBUGKEY) {                      // Enter debugger
                     Debug = 1;
 					break;
                 }
