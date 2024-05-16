@@ -81,10 +81,25 @@ void setup(void) {
         _PatchCPM();
 	Status = 0;
 #ifndef CCP_INTERNAL
-        if (!_RamLoad((char *)CCPname, CCPaddr)) {
+        if (!_RamLoad((uint8 *)CCPname, CCPaddr)) {
           _puts("Unable to load the CCP.\r\nCPU halted.\r\n");
           break;
         }
+     		// Loads an autoexec file if it exists and this is the first boot
+		    // The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
+		    if (firstBoot) {
+			    if (_sys_exists((uint8*)AUTOEXEC)) {
+				    uint16 cmd = CCPaddr + 8;
+				    uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+				    uint8 blen = 0;
+				    while (blen < bytesread && _RamRead(cmd + blen) > 31)
+				    	blen++;
+				    _RamWrite(cmd + blen, 0x00);
+				    _RamWrite(--cmd, blen);
+			    }
+			    if (BOOTONLY)
+				    firstBoot = FALSE;
+		    }
         Z80reset();
         SET_LOW_REGISTER(BC, _RamRead(DSKByte));
         PC = CCPaddr;
