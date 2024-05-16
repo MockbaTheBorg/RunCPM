@@ -32,6 +32,21 @@ bool _RamLoad(char* filename, uint16 address) {
 	}
 	return(result);
 }
+uint16 _RamLoadSz(char* filename, uint16 address, uint16 maxsize) {
+	File f;
+	bool result = false;
+	uint16 bytesread = 0;
+
+	if (f = SD.open(filename, FILE_READ)) {
+		while (f.available()) {
+			_RamWrite(address++, f.read());
+			bytesread++;
+		}
+		f.close();
+		result = true;
+	}
+	return(bytesread);
+}
 
 /* Filesystem (disk) abstraction functions */
 /*===============================================================================*/
