@@ -103,25 +103,14 @@ int main(int argc, char* argv[]) {
 		// Loads an autoexec file if it exists and this is the first boot
 		// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
 		if (firstBoot) {
-			uint8 dmabuf[128];
-			uint8 bytesread;
-			uint16 cmd = CCPaddr + 7;
 			if (_sys_exists((uint8*)AUTOEXEC)) {
-				FILE* file = _sys_fopen_r((uint8*)AUTOEXEC);
-				bytesread = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
-				int count = 0;
-				if (bytesread) {
-					for (int i = 0; i < 126; ++i) {
-						_RamWrite(cmd + 1 + i, 0x00);
-						if (dmabuf[i] == 0x0D || dmabuf[i] == 0x0A || dmabuf[i] == 0x1A || dmabuf[i] == 0x00) {
-							break;
-						}
-						_RamWrite(cmd + 1 + i, dmabuf[i]);
-						count++;
-					}
-				}
-				_RamWrite(cmd, count);
-				_sys_fclose(file);
+				uint16 cmd = CCPaddr + 8;
+				uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+				uint8 blen = 0;
+				while (blen < bytesread && _RamRead(cmd + blen) > 31)
+					blen++;
+				_RamWrite(cmd + blen, 0x00);
+				_RamWrite(--cmd, blen);
 			}
 			if (BOOTONLY)
 				firstBoot = FALSE;

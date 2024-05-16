@@ -692,28 +692,18 @@ void _ccp(void) {
 	// Loads an autoexec file if it exists and this is the first boot
 	// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
 	if (firstBoot && !sFlag) {
-       	uint8 dmabuf[128];
-       	uint16 cmd = inBuf + 1;
-		if (_sys_exists((uint8*)AUTOEXEC)) {
-			FILE* file = _sys_fopen_r((uint8*)AUTOEXEC);
-			blen = (uint8)_sys_fread(&dmabuf[0], 1, 128, file);
-			int count = 0;
-			if (blen) {
-				for (int i = 0; i < 126; ++i) {
-					_RamWrite(cmd + 1 + i, 0x00);
-					if (dmabuf[i] == 0x0D || dmabuf[i] == 0x0A || dmabuf[i] == 0x1A || dmabuf[i] == 0x00) {
-						break;
-					}
-					_RamWrite(cmd + 1 + i, dmabuf[i]);
-					count++;
-				}
-			}
-			_RamWrite(cmd, count);
-			_sys_fclose(file);
-		}
-		if (BOOTONLY)
-			firstBoot = FALSE;
-	} else {
+        if (_sys_exists((uint8*)AUTOEXEC)) {
+            uint16 cmd = inBuf + 2;
+            uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+            blen = 0;
+            while (blen < bytesread && _RamRead(cmd + blen) > 31)
+                blen++;
+            _RamWrite(cmd + blen, 0x00);
+            _RamWrite(--cmd, blen);
+        }
+        if (BOOTONLY)
+            firstBoot = FALSE;
+    } else {
         _RamWrite(inBuf, 0);                        // Clears the buffer
         _RamWrite(inBuf + 1, 0);                    // Clears the buffer
         blen = 0;
@@ -732,9 +722,9 @@ void _ccp(void) {
 
             _RamWrite(inBuf, cmdLen);                   // Sets the buffer size to read the command line
             _ccp_readInput();
+            blen = _RamRead(inBuf + 1);                 // Obtains the number of bytes read
         }
-        blen = _RamRead(inBuf + 1);                     // Obtains the number of bytes read
-        
+
         _ccp_bdos(F_DMAOFF, defDMA);                    // Reset current DMA
         if (blen) {
             _RamWrite(inBuf + 2 + blen, 0);             // "Closes" the read buffer with a \0
