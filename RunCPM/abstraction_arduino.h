@@ -20,11 +20,11 @@
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-bool _RamLoad(char* filename, uint16 address) {
+bool _RamLoad(uint8* filename, uint16 address) {
 	File f;
 	bool result = false;
 
-	if (f = SD.open(filename, FILE_READ)) {
+	if (f = SD.open((char*)filename, FILE_READ)) {
 		while (f.available())
 			_RamWrite(address++, f.read());
 		f.close();
@@ -32,12 +32,12 @@ bool _RamLoad(char* filename, uint16 address) {
 	}
 	return(result);
 }
-uint16 _RamLoadSz(char* filename, uint16 address, uint16 maxsize) {
+uint16 _RamLoadSz(uint8* filename, uint16 address, uint16 maxsize) {
 	File f;
 	bool result = false;
 	uint16 bytesread = 0;
 
-	if (f = SD.open(filename, FILE_READ)) {
+	if (f = SD.open((char*)filename, FILE_READ)) {
 		while (f.available()) {
 			_RamWrite(address++, f.read());
 			bytesread++;
