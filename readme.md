@@ -314,3 +314,4 @@ Last but not least, if you feel like make a donation to help the project moving 
 These will help me source more hardware and other things that assist on the RunCPM development.
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
+Tor  6 Jun 2024 23:34:14 CEST

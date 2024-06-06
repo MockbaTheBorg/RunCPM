@@ -6,7 +6,7 @@ MFILE = Makefile.macosx
 
 # Compiler command
 CC = gcc
-#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
+#CC = gcc -DDEBUG=1 -DDEBUGLOG=1 
 
 # Flags to pass to the compiler - add "-g" to include debug information
 CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
