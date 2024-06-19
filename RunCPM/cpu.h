@@ -1235,7 +1235,7 @@ void memdump(uint16 pos) {
 	}
 }
 
-DisHex(uint16 pos) {
+void DisHex(uint16 pos) {
 	const char* txt;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 0;
