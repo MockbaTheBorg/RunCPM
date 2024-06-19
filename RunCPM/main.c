@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
 #endif
 		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
 #ifdef DEBUG
-#ifdef DEBUGONHALT
+	#ifdef DEBUGONHALT
 			Debug = 1;
 			Z80debug();
 	#endif
