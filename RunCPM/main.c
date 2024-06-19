@@ -122,6 +122,12 @@ int main(int argc, char* argv[]) {
 		Z80run();			// Starts simulation
 #endif
 		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
+#ifdef DEBUG
+#ifdef DEBUGONHALT
+			Debug = 1;
+			Z80debug();
+	#endif
+#endif
 			break;
 #ifdef USE_PUN
 		if (pun_dev)

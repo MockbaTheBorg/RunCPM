@@ -1237,7 +1237,6 @@ void memdump(uint16 pos) {
 
 DisHex(uint16 pos) {
 	const char* txt;
-	char jr;
 	uint8 ch = _RamRead(pos);
 	uint8 count = 0;
 
@@ -2134,13 +2133,14 @@ static inline void Z80run(void) {
 
 		case 0x76:      /* HALT */
 #ifdef DEBUG
-	#ifdef DEBUGONHALT
-			_puts("\r\n");
-			Z80debug();
-	#endif
-			_puts("\r\n::CPU HALTED::");	// A halt is a good indicator of broken code
+			_puts("\r\n::CPU HALTED::\r\n");	// A halt is a good indicator of broken code
 			_puts("Press any key...");
 			_getcon();
+	#ifdef DEBUGONHALT
+			_puts("\r\n");
+			Debug = 1;
+			Z80debug();
+	#endif
 #endif
 			--PC;
 			goto end_decode;

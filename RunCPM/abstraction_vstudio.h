@@ -56,7 +56,7 @@ uint16 _RamLoadSz(uint8* filename, uint16 address, uint16 maxsize) {
 	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
 
 	_sys_fclose(file);
-	return l;
+	return (uint16)l;
 }
 
 /* Filesystem (disk) abstraction functions */
