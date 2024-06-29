@@ -700,6 +700,8 @@ void _ccp(void) {
                 blen++;
             _RamWrite(cmd + blen, 0x00);
             _RamWrite(--cmd, blen);
+        } else {
+            blen = 0;
         }
         if (BOOTONLY)
             firstBoot = FALSE;
