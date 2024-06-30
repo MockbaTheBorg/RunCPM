@@ -126,7 +126,7 @@ uint8 _FCBtoHostname(uint16 fcbaddr, uint8* filename) {
 	return(unique);
 }
 
-// Convers a host OS filename string onto a FCB entry
+// Converts a host OS filename string onto a FCB entry
 void _HostnameToFCB(uint16 fcbaddr, uint8* filename) {
 	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
 	uint8 i = 0;
