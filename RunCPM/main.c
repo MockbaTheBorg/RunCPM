@@ -81,6 +81,11 @@ int main(int argc, char* argv[]) {
 	_puts("CCP " CCPname " at 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
+#ifdef FILEBASE
+	_puts("FILEBASE is ");
+	_puts(FILEBASE);
+	_puts("\r\n");
+#endif
 #if BANKS > 1
 	_puts("Banked Memory: ");
 	_puthex8(BANKS);
