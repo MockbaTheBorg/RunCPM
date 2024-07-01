@@ -156,7 +156,7 @@ int _sys_rename(uint8* name1, uint8* name2) {
 	uint8 fullpath1[128] = FILEBASE;
 	strcat((char*)fullpath1, (char*)filename);
 	uint8 fullpath2[128] = FILEBASE;
-	strcat((char*)fullpath1, (char*)filename);
+	strcat((char*)fullpath2, (char*)filename);
 	return(rename((const char*)fullpath1, (const char*)fullpath2));
 }
 
