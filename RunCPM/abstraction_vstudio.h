@@ -65,7 +65,7 @@ WIN32_FIND_DATA FindFileData;
 HANDLE hFind;
 int dirPos;
 #define FOLDERCHAR '\\'
-#define FILEPATH ".\\"
+#define FILEBASE ".\\"
 
 typedef struct {
 	uint8 dr;
@@ -85,31 +85,31 @@ typedef struct {
 } CPM_DIRENTRY;
 
 BOOL _sys_exists(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(GetFileAttributesA((char*)fullpath) != INVALID_FILE_ATTRIBUTES);
 }
 
 FILE* _sys_fopen_r(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(fopen((const char*)fullpath, "rb"));
 }
 
 FILE* _sys_fopen_w(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(fopen((const char*)fullpath, "wb"));
 }
 
 FILE* _sys_fopen_rw(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(fopen((const char*)fullpath, "r+b"));
 }
 
 FILE* _sys_fopen_a(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(fopen((const char*)fullpath, "a"));
 }
@@ -147,21 +147,21 @@ int _sys_fclose(FILE* file) {
 }
 
 int _sys_remove(uint8* filename) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	return(remove((const char*)fullpath));
 }
 
 int _sys_rename(uint8* name1, uint8* name2) {
-	uint8 fullpath1[128] = FILEPATH;
+	uint8 fullpath1[128] = FILEBASE;
 	strcat((char*)fullpath1, (char*)filename);
-	uint8 fullpath2[128] = FILEPATH;
+	uint8 fullpath2[128] = FILEBASE;
 	strcat((char*)fullpath1, (char*)filename);
 	return(rename((const char*)fullpath1, (const char*)fullpath2));
 }
 
 int _sys_select(uint8* disk) {
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)disk);
 	uint32 attr = GetFileAttributes((LPCSTR)fullpath);
 	return(attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) != 0);
@@ -330,7 +330,7 @@ void NextUserArea() {
 	filename[2]++; // This needs to be improved so it doesn't stop searching once there's an user area gap
 	if (filename[2] == ':')
 		filename[2] = 'A';
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 	hFind = FindFirstFile((LPCSTR)fullpath, &FindFileData);
 }
@@ -341,7 +341,7 @@ uint8 _findnext(uint8 isdir) {
 	uint8 more = 1;
 	uint32 bytes;
 
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)filename);
 
 	if (allExtents && fileRecords) {
@@ -441,7 +441,7 @@ uint8 _Truncate(char* fn, uint8 rc) {
 	LARGE_INTEGER fp;
 	fp.QuadPart = (LONGLONG)rc * 128;
 	wchar_t filename[128];
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, fn);
 	MultiByteToWideChar(CP_ACP, 0, (char*)fullpath, -1, filename, 15);
 	HANDLE fh = CreateFileW(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -459,7 +459,7 @@ void _MakeUserDir() {
 	uint8 dFolder = cDrive + 'A';
 	uint8 uFolder = toupper(tohex(userCode));
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 
 	strcat((char*)fullpath, (char*)path);
 	CreateDirectory((char*)fullpath, NULL);
@@ -472,13 +472,13 @@ uint8 _sys_makedisk(uint8 drive) {
 	} else {
 		uint8 dFolder = drive + '@';
 		uint8 disk[2] = { dFolder, 0 };
-		uint8 fullpath1[128] = FILEPATH;
+		uint8 fullpath1[128] = FILEBASE;
 		strcat((char*)fullpath1, (char*)disk);
 		if (!CreateDirectory((char*)fullpath1, NULL)) {
 			result = 0xfe;
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
-			uint8 fullpath2[128] = FILEPATH;
+			uint8 fullpath2[128] = FILEBASE;
 			strcat((char*)fullpath2, (char*)path);
 			CreateDirectory((char*)fullpath2, NULL);
 		}
@@ -502,7 +502,7 @@ uint8 _RunLuaScript(char* filename) {
 	lua_register(L, "ReadReg", luaReadReg);
 	lua_register(L, "WriteReg", luaWriteReg);
 
-	uint8 fullpath[128] = FILEPATH;
+	uint8 fullpath[128] = FILEBASE;
 	strcat(fullpath, filename);
 	int result = luaL_loadfile(L, fullpath);
 	if (result) {
