@@ -328,6 +328,7 @@ void _ccp_ren(void) {
     uint8 ch, i;
     
     ++pbuf;
+    --blen;
     
     _ccp_nameToFCB(SecFCB);
     
