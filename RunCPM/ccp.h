@@ -300,6 +300,7 @@ uint8 _ccp_save(void) {
             --blen;
         }
         _ccp_nameToFCB(SecFCB);                     // Loads file name onto the ParFCB
+        _puts("\r\n");
         if (_ccp_bdos(F_MAKE, SecFCB)) {
             _puts("Err: create");
         } else {
@@ -308,7 +309,6 @@ uint8 _ccp_save(void) {
             } else {
                 pages *= 2;                         // Calculates the number of CP/M blocks to write
                 dma = defLoad;
-                _puts("\r\n");
                 
                 for (i = 0; i < pages; i++) {
                     _ccp_bdos(	F_DMAOFF,	dma);
@@ -804,8 +804,8 @@ void _ccp(void) {
                 _RamWrite(defDMA + i + 1, toupper(_RamRead(pbuf + i)));
             while (i++ < 127)                           // "Zero" the rest of the DMA buffer
                 _RamWrite(defDMA + i, 0);
-            _ccp_initFCB(	ParFCB, 18);                // Initializes the parameter FCB
-            _ccp_initFCB(	SecFCB, 18);                // Initializes the secondary FCB
+            _ccp_initFCB(ParFCB, 18);                   // Initializes the parameter FCB
+            _ccp_initFCB(SecFCB, 18);                   // Initializes the secondary FCB
             
             while (_RamRead(pbuf) == ' ' && blen) {     // Skips any leading spaces
                 ++pbuf;
