@@ -285,6 +285,8 @@ uint8 _OpenFile(uint16 fcbaddr) {
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
+		if (!filename[4])
+			return(0xff);	// Invalid filename
 		if (_sys_openfile(&filename[0])) {
 
 			len = _FileSize(fcbaddr) / BlkSZ;	// Compute the len on the file in blocks
@@ -312,6 +314,8 @@ uint8 _CloseFile(uint16 fcbaddr) {
 		if (!(F->s2 & 0x80)) {					// if file is modified
 			if (!RW) {
 				_FCBtoHostname(fcbaddr, &filename[0]);
+				if (!filename[4])
+					return(0xff);	// Invalid filename
 				if (fcbaddr == BatchFCB)
 					_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 				result = 0x00;
@@ -334,6 +338,8 @@ uint8 _MakeFile(uint16 fcbaddr) {
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
+			if (!filename[4])
+				return(0xff);	// Invalid filename
 			if (_sys_makefile(&filename[0])) {
 				F->ex = 0x00;	// Makefile also initializes the FCB (file becomes "open")
 				F->s1 = 0x00;
@@ -358,6 +364,8 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
+		if (!filename[4])
+			return(0xff);	// Invalid filename
 		allUsers = F->dr == '?';
 		allExtents = F->ex == '?';
 		if (allUsers) {
@@ -432,9 +440,13 @@ uint8 _RenameFile(uint16 fcbaddr) {
 
 	if (!_SelectDisk(F->dr)) {
 		if (!RW) {
-			_RamWrite(fcbaddr + 16, _RamRead(fcbaddr));	// Prevents rename from moving files among folders
+			_RamWrite(fcbaddr + 16, _RamRead(fcbaddr));	// Prevents rename from moving files between folders
 			_FCBtoHostname(fcbaddr + 16, &newname[0]);
 			_FCBtoHostname(fcbaddr, &filename[0]);
+			if (!newname[4])
+				return(0xff);	// Invalid filename
+			if (!filename[4])
+				return(0xff);	// Invalid filename
 			if (_sys_renamefile(&filename[0], &newname[0]))
 				result = 0x00;
 		} else {
