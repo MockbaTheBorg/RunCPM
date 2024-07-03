@@ -906,6 +906,7 @@ void _ccp(void) {
             if (i)
                 _ccp_cmdError();
         }
+        blen = 0;
         if ((Status == 1) || (Status == 2))
             break;
     }
