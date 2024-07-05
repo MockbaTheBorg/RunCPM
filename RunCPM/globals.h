@@ -28,8 +28,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.4"
-#define VersionBCD 0x64
+#define VERSION	"6.5"
+#define VersionBCD 0x65
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
