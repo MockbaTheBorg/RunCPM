@@ -613,11 +613,11 @@ static void _parse_options(int argc, char *argv[]) {
 }
 #endif
 
-void _host_init(int argc, char* argv[]) {
 #ifdef STREAMIO
+void _host_init(int argc, char* argv[]) {
 	_parse_options(argc, argv);
-#endif
 }
+#endif
 
 /* Console abstraction functions */
 /*===============================================================================*/

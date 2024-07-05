@@ -89,7 +89,7 @@ uint8 _ccp_cnum(void) {
     return (result);
 } // _ccp_cnum
 
-// Returns true if character is a separator
+// Returns true if character is a delimiter
 uint8 _ccp_delim(uint8 ch) {
     return (ch == 0 || ch == ' ' || ch == '=' || ch == '.' || ch == ':' || ch == ';' || ch == '<' || ch == '>');
 }
@@ -100,8 +100,8 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
     
     ch = _RamRead(fcb);
     if (ch && compact) {
-        _ccp_bdos(	C_WRITE,	ch + '@');
-        _ccp_bdos(	C_WRITE,	':');
+        _ccp_bdos(C_WRITE,	ch + '@');
+        _ccp_bdos(C_WRITE,	':');
     }
     
     for (i = 1; i < 12; ++i) {
@@ -250,12 +250,12 @@ void _ccp_era(void) {
 } // _ccp_era
 
 // TYPE command
-uint8 _ccp_type(void) {
+void _ccp_type(void) {
     uint8 i, c, l = 0, error = TRUE;
     uint16 a, p = 0;
     
+    _puts("\r\n");
     if (!_ccp_bdos(F_OPEN, ParFCB)) {
-        _puts("\r\n");
         
         while (!_ccp_bdos(F_READ, ParFCB)) {
             i = 128;
@@ -282,8 +282,9 @@ uint8 _ccp_type(void) {
                 break;
         }
         error = FALSE;
+    } else {
+        _puts("No file");
     }
-    return (error);
 } // _ccp_type
 
 // SAVE command
@@ -835,7 +836,7 @@ void _ccp(void) {
                 }
                     
                 case 2: {           // TYPE
-                    i = _ccp_type();
+                    _ccp_type();
                     break;
                 }
                     

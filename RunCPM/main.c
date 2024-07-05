@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
 	_sys_deletefile((uint8*)LogName);
 #endif
 
-	_host_init(argc, &argv[0]);
 #ifdef STREAMIO
+	_host_init(argc, &argv[0]);
 	_streamioInit();
 #endif
 	_console_init();
