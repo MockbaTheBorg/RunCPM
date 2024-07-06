@@ -89,7 +89,12 @@
 //
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M " STR(TPASIZE) "K)\r\n"
+#ifdef DEBUG
+#define DBG " - DEBUG"
+#else
+#define DBG
+#endif
+#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M " STR(TPASIZE) "K)" DBG "\r\n"
 
 #define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
