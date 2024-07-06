@@ -251,7 +251,7 @@ void _ccp_era(void) {
 
 // TYPE command
 void _ccp_type(void) {
-    uint8 i, c, l = 0, error = TRUE;
+    uint8 i, c, l = 0;
     uint16 a, p = 0;
     
     _puts("\r\n");
@@ -281,7 +281,6 @@ void _ccp_type(void) {
             if (p == 3)
                 break;
         }
-        error = FALSE;
     } else {
         _puts("No file");
     }
