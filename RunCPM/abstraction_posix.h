@@ -526,6 +526,7 @@ uint32 _HardwareIn(const uint32 Port) {
 /* Host initialization functions */
 /*===============================================================================*/
 
+#ifdef STREAMIO
 static void _file_failure_exit(char *argv[], char* fmt, char* filename)
 {
 	fprintf(stderr, "%s: ", argv[0]);
@@ -537,7 +538,6 @@ static void _file_failure_exit(char *argv[], char* fmt, char* filename)
 	exit(EXIT_FAILURE);
 }
 
-#ifdef STREAMIO
 static void _usage(char *argv[]) {
 	fprintf(stderr,
 		"RunCPM - an emulator to run CP/M programs on modern hosts\n"
