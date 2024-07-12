@@ -503,8 +503,8 @@ uint8 _RunLuaScript(char* filename) {
 	lua_register(L, "WriteReg", luaWriteReg);
 
 	uint8 fullpath[128] = FILEBASE;
-	strcat(fullpath, filename);
-	int result = luaL_loadfile(L, fullpath);
+	strcat((char*)fullpath, (char*)filename);
+	int result = luaL_loadfile(L, (char*)fullpath);
 	if (result) {
 		_puts(lua_tostring(L, -1));
 	} else {
