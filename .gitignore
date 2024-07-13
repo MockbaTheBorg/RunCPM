@@ -48,21 +48,17 @@ Temporary Items
 .vs
 
 # RunCPM targets and intermediate files
+.vscode
 x64
 CPM
 debug
 release
 RunCPM/*.o
 RunCPM/*.exe
+RunCPM/*.res
 RunCPM/RunCPM
-
 RunCPM/lua/*.o
 RunCPM/lua/*.exe
 RunCPM/lua/*.a
 RunCPM/lua/lua
 RunCPM/lua/luac
-RunCPM/A
-RunCPM/B
-RunCPM/C
-RunCPM/D
-RunCPM/E

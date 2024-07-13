@@ -1051,12 +1051,6 @@ void _Bdos(void) {
                     last[j] = _RamRead((chrsCntIdx + j) & 0xFFFF);
                 }
             }
-#if 0
-            printf("\n\r chrsMaxIdx: %0X, chrsMax: %u, chrsCnt: %u", chrsMaxIdx, chrsMax, chrsCnt);
-            for (j = 0; j < chrsCnt + 2; j++) {
-                printf("\n\r chrsMaxIdx[%u]: %0.2x", j, last[j]);
-            }
-#endif
             _putcon('\r');          // Gives a visual feedback that read ended
 			break;
 		}

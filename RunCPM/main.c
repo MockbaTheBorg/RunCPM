@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
 	_sys_deletefile((uint8*)LogName);
 #endif
 
-	_host_init(argc, &argv[0]);
 #ifdef STREAMIO
+	_host_init(argc, &argv[0]);
 	_streamioInit();
 #endif
 	_console_init();
@@ -81,6 +81,11 @@ int main(int argc, char* argv[]) {
 	_puts("CCP " CCPname " at 0x");
 	_puthex16(CCPaddr);
 	_puts("\r\n");
+#ifdef FILEBASE
+	_puts("FILEBASE is ");
+	_puts(FILEBASE);
+	_puts("\r\n");
+#endif
 #if BANKS > 1
 	_puts("Banked Memory: ");
 	_puthex8(BANKS);
@@ -122,6 +127,12 @@ int main(int argc, char* argv[]) {
 		Z80run();			// Starts simulation
 #endif
 		if (Status == 1)	// This is set by a call to BIOS 0 - ends CP/M
+#ifdef DEBUG
+	#ifdef DEBUGONHALT
+			Debug = 1;
+			Z80debug();
+	#endif
+#endif
 			break;
 #ifdef USE_PUN
 		if (pun_dev)

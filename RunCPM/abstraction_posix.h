@@ -64,12 +64,13 @@ uint16 _RamLoadSz(uint8* filename, uint16 address, uint16 maxsize) {
 	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
 
 	_sys_fclose(file);
-	return l;
+	return (uint16)l;
 }
 
 /* Filesystem (disk) abstraction functions */
 /*===============================================================================*/
 #define FOLDERCHAR '/'
+#define FILEBASE "./"
 
 typedef struct {
 	uint8 dr;
@@ -89,23 +90,33 @@ typedef struct {
 } CPM_DIRENTRY;
 
 uint8 _sys_exists(uint8* filename) {
-	return(!access((const char*)filename, F_OK));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(!access((const char*)fullpath, F_OK));
 }
 
 FILE* _sys_fopen_r(uint8* filename) {
-	return(fopen((const char*)filename, "rb"));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(fopen((const char*)fullpath, "rb"));
 }
 
 FILE* _sys_fopen_w(uint8* filename) {
-	return(fopen((const char*)filename, "wb"));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(fopen((const char*)fullpath, "wb"));
 }
 
 FILE* _sys_fopen_rw(uint8* filename) {
-	return(fopen((const char*)filename, "r+b"));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(fopen((const char*)fullpath, "r+b"));
 }
 
 FILE* _sys_fopen_a(uint8* filename) {
-	return(fopen((const char*)filename, "a"));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(fopen((const char*)fullpath, "a"));
 }
 
 int _sys_fseek(FILE* file, long delta, int origin) {
@@ -141,16 +152,24 @@ int _sys_fclose(FILE* file) {
 }
 
 int _sys_remove(uint8* filename) {
-	return(remove((const char*)filename));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	return(remove((const char*)fullpath));
 }
 
 int _sys_rename(uint8* name1, uint8* name2) {
-	return(rename((const char*)name1, (const char*)name2));
+	uint8 fullpath1[128] = FILEBASE;
+	strcat((char*)fullpath1, (char*)name1);
+	uint8 fullpath2[128] = FILEBASE;
+	strcat((char*)fullpath2, (char*)name2);
+	return(rename((const char*)fullpath1, (const char*)fullpath2));
 }
 
 int _sys_select(uint8* disk) {
 	struct stat st;
-	return((stat((char*)disk, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)disk);
+	return((stat((char*)fullpath, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
 }
 
 long _sys_filesize(uint8* filename) {
@@ -310,7 +329,9 @@ uint8 _sys_writerand(uint8* filename, long fpos) {
 
 uint8 _Truncate(char* fn, uint8 rc) {
 	uint8 result = 0x00;
-	if (truncate(fn, rc * 128))
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)fn);
+	if (truncate((char*)fullpath, rc * 128))
 		result = 0xff;
 	return(result);
 }
@@ -320,8 +341,10 @@ void _MakeUserDir() {
 	uint8 uFolder = toupper(tohex(userCode));
 
 	uint8 path[4] = { dFolder, FOLDERCHAR, uFolder, 0 };
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)path);
 
-	mkdir((char*)path, S_IRUSR | S_IWUSR | S_IXUSR);
+	mkdir((char*)fullpath, S_IRUSR | S_IWUSR | S_IXUSR);
 }
 
 uint8 _sys_makedisk(uint8 drive) {
@@ -331,11 +354,15 @@ uint8 _sys_makedisk(uint8 drive) {
 	} else {
 		uint8 dFolder = drive + '@';
 		uint8 disk[2] = { dFolder, 0 };
-		if (mkdir((char*)disk, S_IRUSR | S_IWUSR | S_IXUSR)) {
+		uint8 fullpath1[128] = FILEBASE;
+		strcat((char*)fullpath1, (char*)disk);
+		if (mkdir((char*)fullpath1, S_IRUSR | S_IWUSR | S_IXUSR)) {
 			result = 0xfe;
 		} else {
 			uint8 path[4] = { dFolder, FOLDERCHAR, '0', 0 };
-			mkdir((char*)path, S_IRUSR | S_IWUSR | S_IXUSR);
+			uint8 fullpath2[128] = FILEBASE;
+			strcat((char*)fullpath2, (char*)path);
+			mkdir((char*)fullpath2, S_IRUSR | S_IWUSR | S_IXUSR);
 		}
 	}
 
@@ -357,7 +384,9 @@ uint8 _RunLuaScript(char* filename) {
 	lua_register(L, "ReadReg", luaReadReg);
 	lua_register(L, "WriteReg", luaWriteReg);
 
-	int result = luaL_loadfile(L, filename);
+	uint8 fullpath[128] = FILEBASE;
+	strcat((char*)fullpath, (char*)filename);
+	int result = luaL_loadfile(L, (char*)fullpath);
 	if (result) {
 		_puts(lua_tostring(L, -1));
 	} else {
@@ -382,7 +411,7 @@ uint8 _RunLuaScript(char* filename) {
 glob_t	pglob;
 int	dirPos;
 
-static char findNextDirName[17];
+static char findNextDirName[128];
 static uint16 fileRecords = 0;
 static uint16 fileExtents = 0;
 static uint16 fileExtentsUsed = 0;
@@ -412,12 +441,15 @@ uint8 _findnext(uint8 isdir) {
 			dir[2] = '?';
 		else
 			dir[2] = filename[2];
-		if (!glob(dir, 0, NULL, &pglob)) {
+		uint8 fullpath[128] = FILEBASE;
+		strcat((char*)fullpath, (char*)dir);
+		if (!glob((char*)fullpath, 0, NULL, &pglob)) {
 			for (i = dirPos; i < pglob.gl_pathc; ++i) {
 				++dirPos;
 				strncpy(findNextDirName, pglob.gl_pathv[i], sizeof(findNextDirName) - 1);
 				findNextDirName[sizeof(findNextDirName) - 1] = 0;
-				_HostnameToFCBname((uint8*)findNextDirName, fcbname);
+				char* shortName = &findNextDirName[strlen(FILEBASE)];
+				_HostnameToFCBname((uint8*)shortName, fcbname);
 				if (match(fcbname, pattern) &&
 					(stat(findNextDirName, &st) == 0) &&
 					((st.st_mode & S_IFREG) != 0) &&
@@ -448,7 +480,7 @@ uint8 _findnext(uint8 isdir) {
 						firstFreeAllocBlock = firstBlockAfterDir;
 					}
 					_RamWrite(tmpFCB, filename[0] - '@');
-					_HostnameToFCB(tmpFCB, (uint8*)findNextDirName);
+					_HostnameToFCB(tmpFCB, (uint8*)shortName);
 					result = 0x00;
 					break;
 				}
@@ -494,6 +526,7 @@ uint32 _HardwareIn(const uint32 Port) {
 /* Host initialization functions */
 /*===============================================================================*/
 
+#ifdef STREAMIO
 static void _file_failure_exit(char *argv[], char* fmt, char* filename)
 {
 	fprintf(stderr, "%s: ", argv[0]);
@@ -505,7 +538,6 @@ static void _file_failure_exit(char *argv[], char* fmt, char* filename)
 	exit(EXIT_FAILURE);
 }
 
-#ifdef STREAMIO
 static void _usage(char *argv[]) {
 	fprintf(stderr,
 		"RunCPM - an emulator to run CP/M programs on modern hosts\n"
@@ -581,15 +613,15 @@ static void _parse_options(int argc, char *argv[]) {
 }
 #endif
 
-void _host_init(int argc, char* argv[]) {
 #ifdef STREAMIO
+void _host_init(int argc, char* argv[]) {
 	_parse_options(argc, argv);
-#endif
 	if (chdir(dirname(argv[0]))) {
 		_file_failure_exit(argv, "error performing chdir(%s)",
 			dirname(argv[0]));
 	}
 }
+#endif
 
 /* Console abstraction functions */
 /*===============================================================================*/

@@ -61,11 +61,15 @@ void setup(void) {
   _puts("Arduino read/write support by Krzysztof Klis\r\n");
   _puts("      Built " __DATE__ " - " __TIME__ "\r\n");
   _puts("--------------------------------------------\r\n");
-  _puts("CCP: " CCPname "    CCP Address: 0x");
-  _puthex16(CCPaddr);
-  _puts("\r\nBOARD: ");
-  _puts(BOARD);
-  _puts("\r\n");
+	_puts("BIOS at 0x");
+	_puthex16(BIOSjmppage);
+	_puts(" - ");
+	_puts("BDOS at 0x");
+	_puthex16(BDOSjmppage);
+	_puts("\r\n");
+	_puts("CCP " CCPname " at 0x");
+	_puthex16(CCPaddr);
+	_puts("\r\n");
 
 #if defined board_esp32
   _puts("Initializing SPI.\r\n");
@@ -78,7 +82,9 @@ void setup(void) {
         _puts(CCPHEAD);
         _PatchCPM();
 	Status = 0;
-#ifndef CCP_INTERNAL
+#ifdef CCP_INTERNAL
+        _ccp();
+#else
         if (!_RamLoad((uint8 *)CCPname, CCPaddr)) {
           _puts("Unable to load the CCP.\r\nCPU halted.\r\n");
           break;
@@ -102,10 +108,14 @@ void setup(void) {
         SET_LOW_REGISTER(BC, _RamRead(DSKByte));
         PC = CCPaddr;
         Z80run();
-#else
-        _ccp();
 #endif
         if (Status == 1)
+#ifdef DEBUG
+	#ifdef DEBUGONHALT
+    			Debug = 1;
+		    	Z80debug();
+	#endif
+#endif
           break;
 #ifdef USE_PUN
         if (pun_dev)

@@ -89,7 +89,7 @@ uint8 _ccp_cnum(void) {
     return (result);
 } // _ccp_cnum
 
-// Returns true if character is a separator
+// Returns true if character is a delimiter
 uint8 _ccp_delim(uint8 ch) {
     return (ch == 0 || ch == ' ' || ch == '=' || ch == '.' || ch == ':' || ch == ';' || ch == '<' || ch == '>');
 }
@@ -100,8 +100,8 @@ void _ccp_printfcb(uint16 fcb, uint8 compact) {
     
     ch = _RamRead(fcb);
     if (ch && compact) {
-        _ccp_bdos(	C_WRITE,	ch + '@');
-        _ccp_bdos(	C_WRITE,	':');
+        _ccp_bdos(C_WRITE,	ch + '@');
+        _ccp_bdos(C_WRITE,	':');
     }
     
     for (i = 1; i < 12; ++i) {
@@ -250,12 +250,12 @@ void _ccp_era(void) {
 } // _ccp_era
 
 // TYPE command
-uint8 _ccp_type(void) {
-    uint8 i, c, l = 0, error = TRUE;
+void _ccp_type(void) {
+    uint8 i, c, l = 0;
     uint16 a, p = 0;
     
+    _puts("\r\n");
     if (!_ccp_bdos(F_OPEN, ParFCB)) {
-        _puts("\r\n");
         
         while (!_ccp_bdos(F_READ, ParFCB)) {
             i = 128;
@@ -281,9 +281,9 @@ uint8 _ccp_type(void) {
             if (p == 3)
                 break;
         }
-        error = FALSE;
+    } else {
+        _puts("No file");
     }
-    return (error);
 } // _ccp_type
 
 // SAVE command
@@ -300,6 +300,7 @@ uint8 _ccp_save(void) {
             --blen;
         }
         _ccp_nameToFCB(SecFCB);                     // Loads file name onto the ParFCB
+        _puts("\r\n");
         if (_ccp_bdos(F_MAKE, SecFCB)) {
             _puts("Err: create");
         } else {
@@ -308,7 +309,6 @@ uint8 _ccp_save(void) {
             } else {
                 pages *= 2;                         // Calculates the number of CP/M blocks to write
                 dma = defLoad;
-                _puts("\r\n");
                 
                 for (i = 0; i < pages; i++) {
                     _ccp_bdos(	F_DMAOFF,	dma);
@@ -328,6 +328,7 @@ void _ccp_ren(void) {
     uint8 ch, i;
     
     ++pbuf;
+    --blen;
     
     _ccp_nameToFCB(SecFCB);
     
@@ -700,6 +701,8 @@ void _ccp(void) {
                 blen++;
             _RamWrite(cmd + blen, 0x00);
             _RamWrite(--cmd, blen);
+        } else {
+            blen = 0;
         }
         if (BOOTONLY)
             firstBoot = FALSE;
@@ -802,8 +805,8 @@ void _ccp(void) {
                 _RamWrite(defDMA + i + 1, toupper(_RamRead(pbuf + i)));
             while (i++ < 127)                           // "Zero" the rest of the DMA buffer
                 _RamWrite(defDMA + i, 0);
-            _ccp_initFCB(	ParFCB, 18);                // Initializes the parameter FCB
-            _ccp_initFCB(	SecFCB, 18);                // Initializes the secondary FCB
+            _ccp_initFCB(ParFCB, 18);                   // Initializes the parameter FCB
+            _ccp_initFCB(SecFCB, 18);                   // Initializes the secondary FCB
             
             while (_RamRead(pbuf) == ' ' && blen) {     // Skips any leading spaces
                 ++pbuf;
@@ -832,7 +835,7 @@ void _ccp(void) {
                 }
                     
                 case 2: {           // TYPE
-                    i = _ccp_type();
+                    _ccp_type();
                     break;
                 }
                     
@@ -903,6 +906,7 @@ void _ccp(void) {
             if (i)
                 _ccp_cmdError();
         }
+        blen = 0;
         if ((Status == 1) || (Status == 2))
             break;
     }
