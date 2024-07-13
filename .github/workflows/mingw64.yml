@@ -18,11 +18,5 @@ jobs:
     - name: gcc version
       run: gcc --version
 
-    - name: Install dependencies
-      run: make
-
-    - name: Run check
-      run: make check
-
-    - name: Run distcheck
-      run: make distcheck
+    - name: Build
+      run: make -C RunCPM mingw build
