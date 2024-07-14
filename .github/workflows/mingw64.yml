@@ -18,7 +18,7 @@ jobs:
     - name: gcc version
       run: gcc --version
     - name: all files in vm
-      run: find / -print
+      run: dir /s c:\
 
     - name: Build
       run: make -C RunCPM mingw build
