@@ -453,10 +453,10 @@ uint8 _findnext(uint8 isdir) {
 				if (match(fcbname, pattern) &&
 					(stat(findNextDirName, &st) == 0) &&
 					((st.st_mode & S_IFREG) != 0) &&
-					isxdigit((uint8)findNextDirName[2]) &&
-					(isupper((uint8)findNextDirName[2]) || isdigit((uint8)findNextDirName[2]))) {
+					isxdigit((uint8)shortName[2]) &&
+					(isupper((uint8)shortName[2]) || isdigit((uint8)shortName[2]))) {
 					if (allUsers)
-						currFindUser = isdigit((uint8)findNextDirName[2]) ? findNextDirName[2] - '0' : findNextDirName[2] - 'A' + 10;
+						currFindUser = isdigit((uint8)shortName[2]) ? shortName[2] - '0' : shortName[2] - 'A' + 10;
 					if (isdir) {
 						// account for host files that aren't multiples of the block size
 						// by rounding their bytes up to the next multiple of blocks
