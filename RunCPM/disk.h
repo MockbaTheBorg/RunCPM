@@ -201,7 +201,8 @@ void _mockupDirEntry(void) {
 
 	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	_HostnameToFCB(dmaAddr, (uint8*)findNextDirName);
+	char* shortName = &findNextDirName[strlen(FILEBASE)];
+	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
 	if (allUsers) {
 		DE->dr = currFindUser; // set user code for return
