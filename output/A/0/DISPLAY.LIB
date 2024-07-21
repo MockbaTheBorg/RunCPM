@@ -1,0 +1,226 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+;
+; Z80 Library to assist on displaying strings and numeric values
+; Requires BDOSEQU.LIB
+;
+decndx	ds	2	; Pointer to the decimal nuffer
+decbuf	ds	5	; Decimal buffer - 5 digits max (0-65535)
+;
+;;;;;;;;;;
+dspch	push	af		;display character in A
+	exx
+	ld	c,conout
+	ld	e,a
+	call	bdos
+	exx
+	pop	af
+	ret
+;;;;;;;;;;
+dspstr	ld	a,(hl)		;display \0 terminated string pointed by HL
+	inc	hl
+	or	a,a
+	ret	z
+	call	dspch
+	jr	dspstr
+;;;;;;;;;;
+dsp1hex	push	af		;display A rightmost 4bit in hex
+	and	a,0FH
+	cp	a,10
+	jr	c,dsp1h1
+	add	a,7
+dsp1h1	add	a,30H
+	call	dspch
+	pop	af
+	ret
+;;;;;;;;;;
+dsp2hex	push	af		;display A 8 bits in hex
+	push	af
+	rrca
+	rrca
+	rrca
+	rrca
+	call	dsp1hex
+	pop	af
+	call	dsp1hex
+	pop	af
+	ret
+;;;;;;;;;;
+dsp4hex	push	af		;display HL in hex
+	ld	a,h
+	call	dsp2hex
+	ld	a,l
+	call	dsp2hex
+	pop	af
+	ret
+;;;;;;;;;;
+dspbin	push	af		;display A as binary
+	push	bc
+	ld	b,8
+dspbn1	rla
+	push	af
+	ld	a,'0'
+	jr	nc,dspbn2
+	ld	a,'1'
+dspbn2	call	dspch
+	pop	af
+	djnz	dspbn1
+	pop	bc
+	pop	af
+	ret
+;;;;;;;;;;
+dspas	cp	80h		;display A as signed char
+	jp	c,dspau
+	ex	af,af'
+	ld	a,'-'
+	call	dspch
+	ex	af,af'
+	neg	
+;;;;;;;;;;
+dspau	push	hl		;display A as unsigned char
+	ld	h,0
+	ld	l,a
+	call	dsphlu
+	pop	hl
+	ret
+;;;;;;;;;;
+dsphls	ld	a,h		;display HL as signed word
+	cp	80h
+	jp	c,dsphlu
+	ex	af,af'
+	ld	a,'-'
+	call	dspch
+	ex	af,af'
+	ld	a,h
+	cpl
+	ld	h,a
+	ld	a,l
+	cpl
+	ld	l,a
+	inc	hl	
+;;;;;;;;;;
+dsphlu	push	de		;display HL as unsigned word
+	ld	de,decbuf
+	call	decval
+	ld	hl,decbuf
+	call	dspdec
+	pop	de
+	ret
+;;;;;;;;;;
+dsphlub	push	de		;display HL as unsigned word with leading blanks
+	ld	de,decbuf	;B defines number of digits (1-5), C defines the flag
+	call	decval
+	ld	hl,decbuf
+	call	dspdecb
+	pop	de
+	ret
+;;;;;;;;;;
+dspnxt	ex	(sp),hl		;display \0 terminated string following call
+	push	af
+	call	dspstr
+	pop	af
+	ex	(sp),hl
+	ret
+;;;;;;;;;;
+divide	or	a,a		;primitive repeated subtraction divide
+	ld	b,-1		;HL/DE  8-bit result in A
+divid1	sbc	hl,de
+	inc	b
+	jr	nc,divid1
+	add	hl,de
+	ld	a,b
+	ret
+;;;;;;;;;;
+dspdecb	push	hl		;display decimal digits from buffer (with leading spaces)
+	push	de		;B defines number of digits (1-5), C defines the flag
+	push	bc
+	jp	dpdc1
+;;;;;;;;;;
+dspdec	push	hl		;display decimal digits from buffer
+	push	de		; pointed to by HL
+	push	bc
+	ld	c,0		;leading blank flag
+	ld	b,5		;only five digits
+dpdc1	ld	a,(hl)
+	inc	hl
+	cp	a,' '
+	jr	nz,dpdc2
+	ld	d,a		;save digit
+	ld	a,c		;leading blank?
+	or	a,a
+	jr	z,dpdc3
+	ld	a,d		;restore digit
+dpdc2	call	dspch
+	inc	c		;reset leading blank flag
+dpdc3	djnz	dpdc1
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;;;;;;;;;;
+putdig	cp	a,0		;move digits of number to "lnbuff"
+	jr	nz,ptdg1	;if digit<>'0' then move it anyway
+	cp	a,c		;elseif it is a leading zero
+	jr	nz,ptdg1
+	ld	a,' '-30H	;  move " " instead
+	jr	ptdg2
+ptdg1	inc	c		;reset leading zero flag
+ptdg2	add	a,30H
+	push	hl
+	ld	hl,(decndx)
+	ld	(hl),a
+	inc	hl
+	ld	(decndx),hl
+	pop	hl
+	ret
+;;;;;;;;;;
+decvalz	push	hl		;put value of HL as decimal digits into ^DE
+	push	de
+	push	bc
+	ld	c,1
+	jp	decval1		;leading zero flag on
+;;;;;;;;;;
+decval	push	hl		;put value of HL as decimal digits into ^DE
+	push	de
+	push	bc
+	ld	c,0		;leading zero flag off
+decval1	ld	(decndx),de
+	ld	de,10000	;10 000's
+	call	divide
+	call	putdig
+	ld	de,1000		;1000's
+	call	divide
+	call	putdig
+	ld	de,100		;100's
+	call	divide
+	call	putdig
+	ld	de,10		;10's
+	call	divide
+	call	putdig
+	ld	a,l		;1's
+	ld	c,1		;always display last digit
+	call	putdig
+	pop	bc
+	pop	de
+	pop	hl
+	ret
+;;;;;;;;;;
+uctolc	cp	a,'Z'+1		;translate U/C in A to l/c
+	ret	nc
+	cp	a,'A'
+	ret	c
+	add	a,20H
+	ret
+;;;;;;;;;;
+lctouc	cp	a,'z'+1		;translate l/c in A to U/C
+	ret	nc
+	cp	a,'a'
+	ret	c
+	sub	a,20H
+	ret
+;

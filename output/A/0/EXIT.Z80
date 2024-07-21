@@ -1,0 +1,27 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+; EXIT - Calls to BIOS to terminate RunCPM
+	org	0100h
+;
+BDOS	equ	0005h
+BIOS	equ	0001h
+;
+	ld	c,9
+	ld	de,MSG
+	call	BDOS
+;
+	ld	hl,(BIOS)
+	dec	hl
+	dec	hl
+	dec	hl
+	jp	(hl)
+;
+MSG	db	'Terminating RunCPM.',0Dh,0Ah
+        db      'CPU Halted.',0Dh,0Ah,0Dh,0Ah,'$'
+;
+

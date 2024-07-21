@@ -1,0 +1,618 @@
+; Z3HDR - Maximum Configuration
+; Offset:  5100H
+
+*************************************************************************
+*									*
+*  Z C P R 3 -- Z80-Based Command Processor Replacement, Version 3.0	*
+*									*
+*  Copyright (c) 1984 by Richard Conn					*
+*  Copyright Pending, US Government					*
+*  All Rights Reserved							*
+*									*
+*  ZCPR3 was written by Richard Conn, who assumes no responsibility	*
+*  or liability for its use.  ZCPR3 is released to the CP/M user	*
+*  community for non-commercial use only.				*
+*									*
+*  All registered users of CP/M are encouraged to freely copy and use	*
+*  ZCPR3 and its associated utilities on their registered systems for	*
+*  non-commercial purposes.						*
+*									*
+*  Any commercial use of ZCPR3 is prohibited unless approved by the	*
+*  author, Richard Conn, or his authorized agent, Echelon, Inc, in	*
+*  writing.								*
+*									*
+*  This is the RELEASE VERSION of ZCPR3.				*
+*									*
+*************************************************************************
+
+;
+;  Module:  Z3HDR
+;  Author:  Richard Conn
+;  Module Used By:  ZCPR3 Version 3.x
+;  Note:  Z3HDR contains the key customization equates for ZCPR3.  These
+;	equates allow the user to select various ZCPR3 options and do an
+;	extensive amount of tailoring of ZCPR3 to the user's desires.
+;
+
+;
+;  1. BASIC SYSTEM DEFINITIONS
+;
+;	The following equates may be used to customize this CPR for the user's
+; system and integration technique.  The following equate are provided:
+;
+;    REL - TRUE if integration is to be done via MOVCPM
+;	 - FALSE if integration is to be done via DDT and SYSGEN
+;
+;    CPRLOC - Base Page Address of CPR; this value can be obtained by running
+;	      the CCPLOC program on your system, and if REL is FALSE, this
+;	      value is supplied through the Z3BASE.LIB CCP equate
+;
+REL	EQU	FALSE
+;
+	IF	REL
+CPRLOC	EQU	0
+	ELSE
+CPRLOC	EQU	CCP	;VALUE PROVIDED IN Z3BASE.LIB
+	ENDIF
+
+;
+;  2. DEFAULT FILE TYPES
+;
+;	The following macros define the file types of the command object files
+; (COM files under CP/M 2.2) to be loaded when a non-resident ZCPR3 command
+; is given and of the indirect command files (SUB files under CP/M 2.2) to
+; be used to extract commands from when the indirect command facility is
+; invoked.
+;
+COMTYP	MACRO
+	DB	'COM'
+	ENDM
+
+SUBTYP	MACRO
+	DB	'SUB'
+	ENDM
+
+;
+;  3. SUBMIT FILE PROCESSING
+;
+;	The following flag enables the ability of ZCPR3 to process
+; SUBMIT files (command files of the form $$$.SUB).  If SUBON is TRUE, then
+; ZCPR3 will process such files like CP/M's CCP normally does; if SUBON is
+; FALSE, ZCPR3 will not process such files (ignore them).  In such a case,
+; only indirect command file facilities like ZEX will work.  Much code is
+; saved inside of the ZCPR3 Command Processor if SUBON is set to FALSE,
+; but this rather useful facility is lost.
+;
+SUBON	EQU	TRUE 
+
+
+;
+;  4. COMMAND PREFIX
+;
+;	The following flag allows ZCPR3 to accept commands of the form
+; "du:command params" or "dir:command params".	If DRVPREFIX is TRUE,
+; this form is accepted; if FALSE, this form is not accepted.
+;
+DRVPREFIX	equ	TRUE 
+
+
+;
+;  5. COMMAND ATTRIBUTES
+;
+;	The following equate allows the user to select the attributes of the
+; COM files which are selected for execution.  The ZCPR3 Command Processor
+; can be made to execute only COM files with the System attribute set, with
+; the Directory (non-System) attribute set, or with either attribute set.
+; The following values are defined for this equate:
+;
+;		  COMATT	Files Selected
+;		    0		System
+;		   80H		Directory
+;		    1		Both System and Directory
+;
+COMATT	equ	01H
+
+
+;
+;  6. ZCPR3 RESIDENT COMMAND ACTIVATION AND WHEEL FACILITY
+;
+;	The following equates enable various ZCPR3-resident commands.
+; The user may invoke these as desired, but should keep in mind the size
+; of the resulting ZCPR3 and make sure it does not exceed the required
+; limits.
+;
+DIRON	equ	TRUE	;DIR COMMAND
+LTON	equ	TRUE	;LIST, TYPE COMMANDS
+GOON	equ	TRUE	;GO COMMAND
+ERAON	equ	TRUE	;ERA COMMAND
+SAVEON	equ	TRUE	;SAVE COMMAND
+RENON	equ	TRUE	;REN COMMAND
+GETON	equ	TRUE	;GET COMMAND
+JUMPON	equ	TRUE	;JUMP COMMAND
+NOTEON	equ	TRUE	;NOTE COMMAND
+
+;
+;  The Wheel equate table enables the WHEEL facility of ZCPR3.	With this
+;  facility, a WHEEL BYTE, which exists somewhere in memory, is examined
+;  before a set of installer-selected commands are executed.
+;  If this byte is not zero, then the command proceeds.  If it is zero,
+;  then the command is not allowed to proceed and is exited with an error
+;  message.
+;
+;  The following set of equates make each of the indicated commands
+;  selectable to respond to the Wheel Byte or not.  For instance, if
+;  WERA=TRUE, then it responds to the Wheel Byte; if WERA=FALSE, it does not.
+;
+;  The statement "IF Z3WHL EQ 0" was changed from "IF Z3WHL NE 0" to eliminate
+;  a MAC assembly error with the Wheel byte set to zero.  If you intend to use
+;  the Wheel facility, be sure to change this back to the original statement.
+;						J. Furst
+; 
+;	IF	Z3WHL NE 0	;IF A WHEEL BYTE ADDRESS IS DEFINED
+WERA	equ	FALSE	;Make ERA a Wheel-Oriented Command
+WREN	equ	FALSE	; "   REN "   "       "       "
+WLT	equ	FALSE	; "   L/T "   "       "       "  (LIST/TYPE)
+WGO	equ	FALSE	; "   GO  "   "       "       "
+WSAVE	equ	FALSE	; "   SAVE "  "       "       "
+WGET	equ	FALSE	; "   GET "   "       "       "
+WJUMP	equ	FALSE	; "   JUMP "  "       "       "
+WDU	equ	FALSE	; "   DU: "   "       "       " (DU/DIR Change)
+WHEEL	equ	WERA OR WREN OR WLT OR WGO OR WSAVE OR WGET OR WJUMP OR WDU
+;	ENDIF		;Z3WHL
+
+;
+;  7. ZCPR3 RESIDENT COMMAND TABLE
+;
+;	This table consists of the names of the various ZCPR3-resident
+; commands and their addresses.  The NCHARS equate defines how many
+; characters long each name may be, and all table entries must be exactly
+; the indicated number of characters (trailing spaces are used to fill
+; out shorter names).
+;
+;	Each table entry is structured as follows:
+;
+;		DB	'CMND'	;Name of Command (NCHARS long)
+;		DB	CMNDADR ;Address of Command within ZCPR3
+;
+;	The installer should only change the names of the commands as
+; desired and should not, as a rule, touch the address definition since
+; this is fixed within the body of ZCPR3.
+;
+NCHARS	EQU	4		;NUMBER OF CHARS/COMMAND
+
+CTABLE	MACRO
+;
+	IF	DIRON
+	DB	'DIR '
+	DW	DIR		;DIRECTORY DISPLAY COMMAND
+	ENDIF
+;
+	IF	LTON
+	DB	'LIST'
+	DW	LIST		;LIST FILE ON PRINTER COMMAND
+	DB	'TYPE'
+	DW	TYPE		;TYPE FILE ON CONSOLE COMMAND
+	ENDIF
+;
+	IF	GOON
+	DB	'GO  '
+	DW	GO		;EXECUTE CURRENT TPA COMMAND
+	ENDIF
+;
+	IF	ERAON
+	DB	'ERA '
+	DW	ERA		;ERASE FILES COMMAND
+	ENDIF
+;
+	IF	SAVEON
+	DB	'SAVE'
+	DW	SAVE		;SAVE TPA COMMAND
+	ENDIF
+;
+	IF	RENON
+	DB	'REN '
+	DW	REN		;RENAME FILES COMMAND
+	ENDIF
+;
+	IF	GETON
+	DB	'GET '
+	DW	GET		;LOAD FILE INTO TPA COMMAND
+	ENDIF
+;
+	IF	JUMPON
+	DB	'JUMP'
+	DW	JUMP		;JUMP TO ANY MEMORY LOCATION COMMAND
+	ENDIF
+;
+	IF	NOTEON
+	DB	'NOTE'
+	DW	NOTE		;NOTE - NULL COMMAND (NOP)
+	ENDIF
+;
+	ENDM
+
+
+;
+;  8. CONTROLS ON ZCPR3 RESIDENT COMMANDS
+;
+;	The following sets of equates provide special controls and
+; parameters on various ZCPR3-resident commands.
+;
+
+;
+;	The following equates set the width of the spacing between the
+; file names for the DIR command and the character used to separate file
+; names from one another on the same line.
+;
+;	Assuming that FENCE is set to the character '|', If WIDE is TRUE,
+; then the output will look like:
+;
+;		filename.typ__|__filename.typ ...
+;
+; while if WIDE is FALSE, the output will look like:
+;
+;		filename.typ_|_filename.typ ...
+;
+; (underscore represents a space)
+;
+WIDE	EQU	TRUE 
+FENCE	EQU	'|'
+
+;
+;	The following equates define two flags which are used in
+; conjunction with the DIR command on the command line.  SYSFLG is
+; the character used to indicate to DIR that all files, both System
+; and Non-System, are to be displayed.	SOFLG is the character used
+; to indicate to DIR that only the System files are to be displayed.
+; By default, DIR displays non-System files.
+;
+;	For example, if SYSFLG is set to 'A' and SOFLG is set to
+; 'S', then:
+;		DIR *.COM A
+;
+; displays all COM files with both System and non-System attributes
+; while:
+;		DIR *.COM S
+;
+; displays only COM files with the System attribute.  Naturally:
+;
+;		DIR *.COM
+;
+; displays only COM files with the non-System attribute.
+;
+SYSFLG	EQU	'A'
+SOFLG	EQU	'S'
+
+;
+;	The following equate causes ERA to confirm the files to be erased
+; before it goes ahead and erases them.  If ERAOK is TRUE, then the user
+; will be prompted each time; if it is FALSE, then the user will not be
+; prompted.
+;
+ERAOK	equ	FALSE 
+
+;
+;	If ERAOK is TRUE, the following equate adds a Verify option to the
+; ERA command which causes the user to be prompted only if the Verify
+; option letter, defined by ERDFLG, is given after the file name.  If
+; ERAV is TRUE, then the user will be asked to verify only when ERDFLG
+; is contained in the command line; if ERAV is FALSE, the user will always
+; be asked to verify.
+;
+;	For example, if ERAOK is TRUE, ERAV is TRUE, and ERDFLG is 'V',
+; then the command:
+;			ERA *.* V
+; will result in the file names being displayed and the user being asked
+; for verification.  If the V option were not given, the user would not
+; be asked for verification.
+;
+ERAV	equ	FALSE
+ERDFLG	equ	'V'
+
+;
+;	The following equates set the paging parameters for the TYPE
+; command.
+;
+;	PGDFLT determines if TYPE pages by default.  If PGDFLT is TRUE,
+; then:
+;		TYPE FILE.TXT
+;
+; will be paged.  If PGDFLT is FALSE, the above command will not be paged.
+;
+;	PGDFLG defines the option character in the TYPE command line which
+; is used to toggle the default set by PGDFLT.	Assuming that PGDFLG is set
+; to 'P', then:
+;		TYPE FILE.TXT P
+;
+; will page the file listing if PGDFLT is FALSE and not page it if PGDFLT is
+; TRUE.
+;
+PGDFLT	EQU	TRUE 
+PGDFLG	EQU	'P'
+
+;
+;	The following equate defines the number of lines on the user's CRT
+; screen for use by the TYPE command when it is paging.  This value is usually
+; 24.
+;
+NLINES	EQU	24
+
+;
+;	The following equate defines the option letter used with the
+; SAVE command to indicate that the associated number is 128-byte sectors
+; as opposed to 256-byte pages.  For example, if SECTFLG is set to 'S', then:
+;
+;		SAVE 25 FILE.BIN S
+;
+; save 25 128-byte sectors starting at location 100H into the file named
+; FILE.BIN.  IF the S option was not present, SAVE would have saved 25
+; 256-byte blocks starting at location 100H into the file named FILE.BIN.
+;
+SECTFLG EQU	'S'
+
+;
+;  9. PATH DEFINITION
+;
+;	The following equate specifies the address of the PATH to be followed
+; for the PATH command-search if the PATH is to be initialized by the BIOS
+; and set by the user via a PATH.COM program.  The value of PATH should
+; be the address of the PATH data area in memory.  If the internal PATH
+; provided by ZCPR3 is to be used, then PATHBASE should be equated to 0,
+; which selects the PATH located just after the MEMLOAD routine.  If the
+; external PATH is to be used, then PATHBASE should be set to the address
+; of the external path.
+;
+;	A PATH is a series of byte-pairs, terminated by a binary 0.  The first
+; byte of each pair is the disk number (1-16 for disks A-P), and the second
+; byte of each pair is the user number (0-31).	The special character '$'
+; indicates the current user or current disk.  For example, the path
+; from current disk/current user to current disk/user 0 to disk A/user 0
+; is selected by the following sequence:
+;
+;		DB	'$$'	;current disk/user
+;		DB	'$',0	;current disk/user 0
+;		DB	1,0	;disk A/user 0
+;		DB	0	;end of path
+;
+	IF	EXPATH NE 0	;External Path Selected
+;
+;  This equate defines the base address of the external path
+;
+PATH	equ	EXPATH		;External ZCPR3 PATH at CBIOS Buffer Area
+
+	ELSE			;Internal Path Selected
+;
+;  The following macro defines the n-element internal path
+;
+IPATH	MACRO
+	db	'A'-'@','$'	;Disk A, Current User
+	db	'A'-'@',0	;Disk A, User 0
+	db	0		;End of Path -- MUST be here
+	ENDM
+;
+	ENDIF
+
+;
+;	The following flag enables ZCPR3 to perform an optimized path
+; search when it is searching along a path for a file.	If this equate
+; is TRUE, ZCPR3 will build a path in memory of absolute entries (A1, B7, etc)
+; from the symbolic path (one containing '$') which is the path it would
+; otherwise use.  This new path would contain no duplicate path elements,
+; where a symbolic path analysis may.  For example, if the path is:
+;
+;		db	'A'-'@','$'	;disk A, current user
+;		db	'A'-'@',15	;disk A, user 15
+;		db	0
+;
+; then if the user is logged into A15, setting the below equate to TRUE
+; would allow ZCPR3 to build the path:
+;
+;		db	'A'-'@',15	;only one entry
+;		db	0
+;
+; in the analysis of this symbolic path, while with this equate FALSE,
+; ZCPR3 may log into A15 as many as three times (once for the default
+; and twice more for the symbolic path) in looking for a file which is
+; not found before it gives up.  Using this minimum path facility costs
+; some code in ZCPR3, but it speeds up processing noticably in some cases.
+;
+;	Enable this equate if MINIMUM PATH SEARCH is to be employed.
+;
+MINPATH EQU	TRUE 
+
+;
+;	In searching for a file along a path, ZCPR3 can be commanded
+; to always look in the current logged-in directory before beginning
+; the path search.  This equate controls this feature.	If SCANCUR
+; is set to TRUE, the current directory need never be referenced in
+; a symbolic path expression (DB '$','$') since SCANCUR insures that
+; the current directory is scanned.
+;
+;	Enable this equate if the current DU is always to be scanned.
+;
+SCANCUR EQU	TRUE 
+
+
+;
+; 10. DU AND DIR CONTROLS
+;
+
+;
+;	The following equate enables the appearance of the current disk/user
+; in the ZCPR3 prompt.	If set to FALSE, the prompt appears as '>' (assuming
+; > is the current value of CPRMPT).  If set to TRUE, the prompt appears
+; as 'd>' or 'dn>'.  (see INCLNDR below)
+;
+INCLDU	equ	TRUE 
+
+;
+;	The following equate allows ZCPR3 to accept the DU: prefix or
+; login form for input.  Set this to TRUE if DU: prefix is to be allowed.
+;
+;	Setting this equate to TRUE allows the following forms:
+;
+;		A>B1:
+;		A>TYPE B4:FILE.TXT
+;		A>B:
+;		A>1:
+;
+ACCPTDU EQU	TRUE 
+
+;
+;	This equate enables ZCPR3 to process DIR: forms internally
+; through the memory-based named directory buffer.  This equate and
+; the NDBASE address should be TRUE (non-zero) in order to enable
+; ZCPR3 to process named directories.
+;
+;	If NDINCP is TRUE, the following forms are allowed:
+;
+;		A>ROOT:
+;		A>TYPE TEXT:FILE.TXT
+;
+; if the other associated equates (below) are set correctly.
+;
+
+NDINCP	EQU	TRUE 
+
+;
+;	The following equate will cause the name of the current directory
+; to be displayed as part of the prompt along with the DU form if enabled.
+; (see INCLDU above)
+;
+;	For example, if INCLNDR is TRUE, the prompt would look like:
+;
+;		B7:TEXT>	-- if INCLDU is also TRUE
+;		TEXT>		-- if INCLDU is FALSE
+;
+INCLNDR EQU	TRUE 
+
+;
+;	The following equate allows ZCPR3 to accept the DIR: prefix or
+; login form for input.  Set this to TRUE if DIR: prefix is to be allowed.
+;
+;	Setting this equate to TRUE allows the following forms:
+;
+;		A>ROOT:
+;		A>TYPE TEXT:FILE.TXT
+;
+
+ACCPTND EQU	TRUE 
+
+;
+;	The following equate determines the hierarchy of DU:/DIR: evaluation.
+; Set this to TRUE if DU: is to be tested for before DIR: or set this to
+; FALSE if DIR: is to be tested for before DU:.  If this is FALSE, named
+; directories like C: (standing for C work area - NOT disk C) are permitted.
+;
+;	Assuming that a directory for C programs, named 'C', and a root
+; directory, named 'ROOT', exist, then if DUFIRST is set to FALSE:
+;
+;		A>C:	-- logs the user into the directory named 'C'
+;		A>ROOT: -- logs the user into the directory named 'ROOT'
+;
+; while if DUFIRST is set to TRUE:
+;
+;		A>C:	-- logs the user into disk C: (dir C can't be accessed)
+;		A>ROOT: -- logs the user into the directory named 'ROOT'
+;
+
+DUFIRST EQU	FALSE
+
+;
+;	Enable password check on named directory references.  If a named
+; directory is referenced and has a password associated with it, ZCPR3
+; will ask the user for this password and approve the reference only
+; if he gives a valid response.  One and only one try is permitted.
+; Setting this equate to TRUE will enable the password check facility.
+;
+
+PWCHECK EQU	TRUE 
+
+
+;
+; 11. COMMAND LINE BUFFER CONTROL
+;
+;	The MULTCMD equate enables the feature of having more than
+; one command on the same line, separated by a separation char
+; which is defined by the CMDSEP equate.  If this feature is
+; enabled, the command line buffer and buffer pointers are
+; moved outside of ZCPR3 at the indicated address of Z3CL.
+;
+;	MULTCMD indicates if the ability to have more than one command
+; on a line is to be enabled, and CMDSEP is the character used to separate
+; these commands.  For example, if CMDSEP is ';' and MULTCMD is TRUE, then
+; commands like this are possible:
+;
+;		ERA *.BAK;DIR
+;
+	IF	Z3CL NE 0
+MULTCMD equ	TRUE 
+	ELSE
+MULTCMD equ	FALSE
+	ENDIF
+CMDSEP	equ	';'
+
+
+;
+; 12. CMDRUN -- ZCPR3 EXTENDED COMMAND PROCESSING FACILITY
+;
+;	This equate enables the ZCPR3 CMDRUN facility.	If CMDRUN is TRUE, then
+; another stage of command processing is invoked should ZCPR3 fail to find
+; a COM file when the user gives a command.  This stage involves invoking
+; the COM file specified by CMDFCB and giving it the current command line
+; as an argument.  In this way, if, say, M80 PROG2 fails as a command,
+; a new command like LRUNZ M80 PROG2, SUB M80 PROG2, or ZEX M80 PROG2 may
+; be processed.  If the new command fails, an appropriate error message is
+; given.
+;
+;	The ROOTONLY option causes ZCPR3 to only look at the Root (bottom of
+; path) for the Extended Command Processor if it is set to TRUE.  If it
+; is set to FALSE, the path is searched for the Extended Command Processor.
+; The tradeoff here is that ROOTONLY = TRUE is less flexible but somewhat
+; faster than ROOTONLY = FALSE.
+;
+CMDRUN	equ	FALSE	; Enable the Facility
+
+	if	CMDRUN
+ROOTONLY	equ	TRUE	; TRUE if look at Root Only for Extended
+				; Command Processor, FALSE if look along
+				; path
+CMDFCB	MACRO
+	db	0
+	db	'CMDRUN  '	;Name of Program
+	db	'COM'		;File Type
+	ENDM
+	endif	;CMDRUN
+
+
+;
+; 13. FLOW COMMAND FACILITY
+;
+;	This equate enables ZCPR3 to respond to IF processing.
+; ZCPR3 simply flushes commands if a FALSE IF is currently engaged.
+; FCPs must be enabled for IFON to work correctly.
+;
+IFON	EQU	TRUE 
+
+
+;
+; 14. MISCELLANEOUS EQUATES
+;
+MAXUSR	EQU	31		;MAXIMUM USER NUMBER ACCESSABLE
+MAXDISK EQU	16		;MAXIMUM NUMBER OF DISKS ACCESSABLE
+
+SUPRES	EQU	FALSE		;SUPRESSES USER # REPORT FOR USER 0
+
+SPRMPT	EQU	'$'		;CPR PROMPT INDICATING SUBMIT COMMAND
+CPRMPT	EQU	'>'		;CPR PROMPT INDICATING USER COMMAND
+
+NUMBASE EQU	'H'		;CHAR USED TO SWITCH FROM DEFAULT NUMBER BASE
+
+CURIND	EQU	'$'		;SYMBOL FOR CURRENT DISK OR USER
+
+COMMENT EQU	';'		;LINES BEGINNING WITH THIS CHAR ARE COMMENTS
+
+;
+; END OF ZCPR3 CUSTOMIZATION SECTION
+;
+

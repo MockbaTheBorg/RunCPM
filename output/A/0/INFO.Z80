@@ -1,0 +1,187 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+; INFO - Prints RunCPM information
+
+	org	0100h
+	jp	start
+;;;;;;;;;;
+	include bdosequ.lib
+	include	display.lib
+;;;;;;;;;;
+;
+start
+	call	dspnxt
+	db	'RunCPM System Information v1.0',0dh,0ah,0ah,0
+;
+; Print version
+	call	dspnxt
+	db	'RunCPM Version ',0
+	ld	c, 251
+	call	bdos
+	ld	d, a
+	rra
+	rra
+	rra
+	rra
+	and	0fh
+	add	a, '0'
+	call	dspch
+	ld	a, '.'
+	call	dspch
+	ld	a, d
+	and	0fh
+	add	a, '0'
+	call	dspch
+;
+; Print host OS
+	call	dspnxt
+	db	' running on ',0
+	ld	c, 250
+	call	bdos
+	or	a
+	jr	z, windows
+	dec	a
+	jr	z, arduino
+	dec	a
+	jr	z, posix
+	dec	a
+	jr	z, dos
+	dec a
+	jr	z, teensy
+	dec a
+	jr	z, esp32
+	dec a
+	jr	z, stm32
+	call	dspnxt
+	db	'Unknown',0
+	jr	info2
+windows
+	call	dspnxt
+	db	'Windows',0
+	jr	info2
+arduino
+	call	dspnxt
+	db	'Arduino',0
+	jr	info2
+posix
+	call	dspnxt
+	db	'Posix',0
+	jr	info2
+dos
+	call	dspnxt
+	db	'DOS',0
+	jr	info2
+teensy
+	call	dspnxt
+	db	'Teensy',0
+	jr	info2
+esp32
+	call	dspnxt
+	db	'ESP32',0
+	jr	info2
+stm32
+	call	dspnxt
+	db	'STM32',0
+	jr	info2
+;
+; Print CCP type
+info2
+	call	dspnxt
+	db	0dh,0ah,'CCP is ',0
+	ld	c, 252
+	call	bdos
+	or	a
+	jr	z, dri
+	cp	1
+	jr	z, ccpz
+	cp	2
+	jr	z, zcpr2
+	cp	3
+	jr	z, zcpr3
+	cp	4
+	jr	z, z80cpm
+	cp	10h
+	jr	nc, internal
+	call	dspnxt
+	db	'Unknown',0
+	jr	info3
+dri
+	call	dspnxt
+	db	'DRI',0
+	jr	info3
+ccpz
+	call	dspnxt
+	db	'CCPZ',0
+	jr	info3
+zcpr2
+	call	dspnxt
+	db	'ZCPR2',0
+	jr	info3
+zcpr3
+	call	dspnxt
+	db	'ZCPR3',0
+	jr	info3
+z80cpm
+	call	dspnxt
+	db	'Z80CPM',0
+	jr	info3
+internal
+	call	dspnxt
+	db	'Internal Version ',0
+	ld	d, a
+	rra
+	rra
+	rra
+	rra
+	and	0fh
+	add	a, '0'
+	call	dspch
+	ld	a, '.'
+	call	dspch
+	ld	a, d
+	and	0fh
+	add	a, '0'
+	call	dspch
+;
+; Print CCP load addr
+info3
+	call	dspnxt
+	db	0dh,0ah,'CCP loads at address ',0
+	ld	c, 253
+	call	bdos
+	call	dsp4hex
+;
+; Print BDOS addr
+info4
+	call	dspnxt
+	db	'h',0dh,0ah,'BDOS is at address ',0
+	ld	hl, (bdos+1)
+	ld	l, 0
+	call	dsp4hex
+;
+; Print BIOS addr
+info5
+	call	dspnxt
+	db	'h',0dh,0ah,'BIOS is at address ',0
+	ld	hl, (boot+1)
+	ld	l, 0
+	call	dsp4hex
+;
+; Print bytes free
+	call	dspnxt
+	db	'h',0dh,0ah,0
+	ld	hl, (bdos+1)
+	dec	h
+	ld	l, 0
+	call	dsphlu
+	call	dspnxt
+	db	' bytes available for applications',0dh,0ah,0
+;	
+	jp	0
+;
+

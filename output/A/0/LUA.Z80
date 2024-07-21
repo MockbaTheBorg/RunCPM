@@ -1,0 +1,25 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+; LUA - Lua file bootstrap for lua capable systems
+
+	org	0100h
+	jp	start
+;;;;;;;;;;
+	include bdosequ.lib
+;;;;;;;;;;
+start:	ld	c, 254
+	ld	de, deffcb
+	ld	a, 'L'
+	ld	(deffcb+9), a
+	ld	a, 'U'
+	ld	(deffcb+10), a
+	ld	a, 'A'
+	ld	(deffcb+11), a
+	call	bdos
+	ret
+;

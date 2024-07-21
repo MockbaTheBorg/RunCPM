@@ -1,0 +1,87 @@
+	MLOAD - a multi-file hex load utility for CP/M
+
+Written by Ron Fowler, Fort Atkinson, Wisconsin.  This documentation
+was extracted from the source file (MLOAD21.ASM), with trivial 
+modifications.
+
+This program is a replacement for the CP/M "LOAD" program.  Why replace
+"LOAD"?  Well... LOAD.COM has a few deficiencies.  For example, if your
+hex file's origin is above 100h, LOAD.COM prepends blank space to the
+output file to insure it will work as a CP/M transient.  It cares not if
+the file is not intended as a CP/M transient.  It also doesn't like hex
+records with mixed load addresses (for example, one that loads below a
+previous record -- which is a perfectly legitimate happenstance).  Also,
+LOAD.COM can load only one program at a time, and has no provision for a
+load bias in the command specification.  Finally, there is no provision
+for user specification of output file name. 
+
+Hence, this program....
+
+Command syntax is as follows:
+
+	MLOAD [<outnam>=] <file1>[,<file2>...] [bias]
+
+where:
+	<outnam> is the (optional!) output file name (only the drive
+	spec and primary filename may be specified; the output filetype
+	is derived exclusively from the 3-byte string at 103h within
+	MLOAD). 
+
+	<filen> are the input files.  <file1> may specify an extension,
+	in which case it is assumed to be a binary file (starting at
+	100h).
+
+	<bias> is the offset within the saved image to apply when
+	loading the file. 
+
+
+MLOAD with no arguments prints a small help message -- this message is
+also printed whenever a command line syntax error occurs. 
+
+Filenames may contain drive specs, and must not contain wildcards.  Input
+filenames must be separated by commas, and a space is required between
+the last filename and the optional bias.  Note that ZCPR2-style
+drive/user notation may be used in all file specifications (e.g.,
+"B3:MYFILE.COM, "A14:MDM7.HEX"). 
+
+A load information summary is printed at the successful conclusion of
+the load.  Any errors in loading will generally include the name of the
+file in question. 
+
+If no output filename is specified, it will be derived from the first
+input filename, with filetype of 'COM' (this default filetype may be
+patched directly into MLOAD via DDT -- its location is at 103h in
+MLOAD.COM).  Note that a command line of the form "C:=<filename>" will
+place the output file on the "C" drive with the same primary filename as
+the first input file. 
+
+In its simplest form, MLOAD's syntax is identical to LOAD.COM; thus
+there should be no problem in learning to use the new program.  The only
+significant difference here is that, under LOAD.COM, all files are
+output starting at 100h, even if they originate elsewhere.  MLOAD
+outputs starting at the hex file origin (actually, the first hex record
+specifies the output load address).  The bias option may be used to
+override this. 
+
+An example should clarify this.  Suppose you have a file that loads at
+1000h.  LOAD.COM would save an output file that begins at 100h and loads
+past 1000h (to wherever the program ends).  MLOAD will save an output
+file starting from 1000h only.  If, for some reason you need the file to
+start at 100h in spite of its 1000h origin (I can think of several
+circumstances where this would be necessary), you'd have to specify a
+bias to MLOAD.  Thus, using this example, "MLOAD MYFILE 0F00" would do. 
+
+Note that this program re-initializes itself each time it is run. Thus,
+if your system supports a direct branch to the TPA (via a zero-length
+.COM file, or the ZCPR "GO" command), you may safely re-execute MLOAD. 
+
+Please report any bugs, bug fixes, or enhancements to me at:
+
+		"Fort Fone File Folder" RCPM/CBBS
+		Fort Atkinson, Wisconsin
+		(414) 563-9932 (no ring back)
+
+				--Ron Fowler
+				  03/08/84
+ 
+

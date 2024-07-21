@@ -1,0 +1,74 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+;
+; Z80/8080 Library to assist on BDOS development
+;
+boot	equ	0	;reboot cp/m here
+bdos	equ	5	;call here for system
+defdma	equ	80h	;this is dma buffer
+deffcb	equ	5ch	;default file control block
+fcbtwo	equ	6ch	;second fcb
+offset	equ	1	;get system offset vector here
+iobyte	equ	3	;i/o flag byte here
+userdrv	equ	4	;current user and drive
+memtop	equ	6	;this is top of tpa
+;
+;    file control block equates
+;
+fcbdrv	equ	deffcb		;drive # (0 for current)
+fcbname	equ	deffcb+1	;file name(8 bytes)
+fcbtype	equ	deffcb+9	;file type(3 bytes)
+fcbext	equ	deffcb+12	;extent (clear to 0)
+fcbend	equ	deffcb+33	;clear fcb to here
+;
+;    i/o equates
+;
+conin	equ	1	;input con: character to a
+conout	equ	2	;output con: character from e
+reader	equ	3	;input rdr: character to a
+punch	equ	4	;output pun: character from e
+list	equ	5	;output lst: character from e
+conio	equ	6	;input/output chat from/to console
+print	equ	9	;output string (de) to con:
+inline	equ	10	;input line from con:
+constat	equ	11	;check console ready
+;
+;    disk function calls
+;
+vernum	equ	12	;version number
+reset	equ	13	;disk system reset
+select	equ	14	;disk select
+open	equ	15	;open file
+close	equ	16	;close file
+first	equ	17	;find first file
+next	equ	18	;find next file
+delete	equ	19	;delete file
+read	equ	20	;read sequential
+write	equ	21	;write sequential
+make	equ	22	;create file
+rename	equ	23	;rename file
+current	equ	25	;current drive
+setdma	equ	26	;set dma address to (de)
+usernum	equ	32	;get/set user number
+readr	equ	33	;read random
+writer	equ	34	;write random
+size	equ	35	;get file size
+setr	equ	36	;set random record
+;
+false	equ	0
+true	equ	not false
+;
+cr	equ	0dh
+lf	equ	0ah
+ff	equ	0ch
+ack	equ	06h
+nak	equ	15h
+stxt	equ	02h
+eot	equ	04h
+space	equ	20h
+;

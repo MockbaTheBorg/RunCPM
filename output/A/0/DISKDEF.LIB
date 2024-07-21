@@ -1,0 +1,251 @@
+;	CP/M 2.0 disk re-definition library
+;
+;	Copyright (c) 1979
+;	Digital Research
+;	Box 579
+;	Pacific Grove, CA
+;	93950
+;
+;	CP/M logical disk drives are defined using the
+;	macros given below, where the sequence of calls
+;	is:
+;
+;	disks	n
+;	diskdef	parameter-list-0
+;	diskdef	parameter-list-1
+;	...
+;	diskdef	parameter-list-n
+;	endef
+;
+;	where n is the number of logical disk drives attached
+;	to the CP/M system, and parameter-list-i defines the
+;	characteristics of the ith drive (i=0,1,...,n-1)
+;
+;	each parameter-list-i takes the form
+;		dn,fsc,lsc,[skf],bls,dks,dir,cks,ofs,[0]
+;	where
+;	dn	is the disk number 0,1,...,n-1
+;	fsc	is the first sector number (usually 0 or 1)
+;	lsc	is the last sector number on a track
+;	skf	is optional "skew factor" for sector translate
+;	bls	is the data block size (1024,2048,...,16384)
+;	dks	is the disk size in bls increments (word)
+;	dir	is the number of directory elements (word)
+;	cks	is the number of dir elements to checksum
+;	ofs	is the number of tracks to skip (word)
+;	[0]	is an optional 0 which forces 16K/directory entry
+;
+;	for convenience, the form
+;		dn,dm
+;	defines disk dn as having the same characteristics as
+;	a previously defined disk dm.
+;
+;	a standard four drive CP/M system is defined by
+;		disks	4
+;		diskdef	0,1,26,6,1024,243,64,64,2
+;	dsk	set	0
+;		rept	3
+;	dsk	set	dsk+1
+;		diskdef	%dsk,0
+;		endm
+;		endef
+;
+;	the value of "begdat" at the end of assembly defines the
+;	beginning of the uninitialize ram area above the bios,
+;	while the value of "enddat" defines the next location
+;	following the end of the data area.  the size of this
+;	area is given by the value of "datsiz" at the end of the
+;	assembly.  note that the allocation vector will be quite
+;	large if a large disk size is defined with a small block
+;	size.
+;
+dskhdr	macro	dn
+;;	define a single disk header list
+dpe&dn:	dw	xlt&dn,0000h	;translate table
+	dw	0000h,0000h	;scratch area
+	dw	dirbuf,dpb&dn	;dir buff,parm block
+	dw	csv&dn,alv&dn	;check, alloc vectors
+	endm
+;
+disks	macro	nd
+;;	define nd disks
+ndisks	set	nd	;;for later reference
+dpbase	equ	$	;base of disk parameter blocks
+;;	generate the nd elements
+dsknxt	set	0
+	rept	nd
+	dskhdr	%dsknxt
+dsknxt	set	dsknxt+1
+	endm
+	endm
+;
+dpbhdr	macro	dn
+dpb&dn	equ	$		;disk parm block
+	endm
+;
+ddb	macro	data,comment
+;;	define a db statement
+	db	data		comment
+	endm
+;
+ddw	macro	data,comment
+;;	define a dw statement
+	dw	data		comment
+	endm
+;
+gcd	macro	m,n
+;;	greatest common divisor of m,n
+;;	produces value gcdn as result
+;;	(used in sector translate table generation)
+gcdm	set	m	;;variable for m
+gcdn	set	n	;;variable for n
+gcdr	set	0	;;variable for r
+	rept	65535
+gcdx	set	gcdm/gcdn
+gcdr	set	gcdm - gcdx*gcdn
+	if	gcdr = 0
+	exitm
+	endif
+gcdm	set	gcdn
+gcdn	set	gcdr
+	endm
+	endm
+;
+diskdef	macro	dn,fsc,lsc,skf,bls,dks,dir,cks,ofs,k16
+;;	generate the set statements for later tables
+	if	nul lsc
+;;	current disk dn same as previous fsc
+dpb&dn	equ	dpb&fsc	;equivalent parameters
+als&dn	equ	als&fsc	;same allocation vector size
+css&dn	equ	css&fsc	;same checksum vector size
+xlt&dn	equ	xlt&fsc	;same translate table
+	else
+secmax	set	lsc-(fsc)	;;sectors 0...secmax
+sectors	set	secmax+1;;number of sectors
+als&dn	set	(dks)/8	;;size of allocation vector
+	if	((dks) mod 8) ne 0
+als&dn	set	als&dn+1
+	endif
+css&dn	set	(cks)/4	;;number of checksum elements
+;;	generate the block shift value
+blkval	set	bls/128	;;number of sectors/block
+blkshf	set	0	;;counts right 0's in blkval
+blkmsk	set	0	;;fills with 1's from right
+	rept	16	;;once for each bit position
+	if	blkval=1
+	exitm
+	endif
+;;	otherwise, high order 1 not found yet
+blkshf	set	blkshf+1
+blkmsk	set	(blkmsk shl 1) or 1
+blkval	set	blkval/2
+	endm
+;;	generate the extent mask byte
+blkval	set	bls/1024	;;number of kilobytes/block
+extmsk	set	0	;;fill from right with 1's
+	rept	16
+	if	blkval=1
+	exitm
+	endif
+;;	otherwise more to shift
+extmsk	set	(extmsk shl 1) or 1
+blkval	set	blkval/2
+	endm
+;;	may be double byte allocation
+	if	(dks) > 256
+extmsk	set	(extmsk shr 1)
+	endif
+;;	may be optional [0] in last position
+	if	not nul k16
+extmsk	set	k16
+	endif
+;;	now generate directory reservation bit vector
+dirrem	set	dir	;;# remaining to process
+dirbks	set	bls/32	;;number of entries per block
+dirblk	set	0	;;fill with 1's on each loop
+	rept	16
+	if	dirrem=0
+	exitm
+	endif
+;;	not complete, iterate once again
+;;	shift right and add 1 high order bit
+dirblk	set	(dirblk shr 1) or 8000h
+	if	dirrem > dirbks
+dirrem	set	dirrem-dirbks
+	else
+dirrem	set	0
+	endif
+	endm
+	dpbhdr	dn	;;generate equ $
+	ddw	%sectors,<;sec per track>
+	ddb	%blkshf,<;block shift>
+	ddb	%blkmsk,<;block mask>
+	ddb	%extmsk,<;extnt mask>
+	ddw	%(dks)-1,<;disk size-1>
+	ddw	%(dir)-1,<;directory max>
+	ddb	%dirblk shr 8,<;alloc0>
+	ddb	%dirblk and 0ffh,<;alloc1>
+	ddw	%(cks)/4,<;check size>
+	ddw	%ofs,<;offset>
+;;	generate the translate table, if requested
+	if	nul skf
+xlt&dn	equ	0		;no xlate table
+	else
+	if	skf = 0
+xlt&dn	equ	0		;no xlate table
+	else
+;;	generate the translate table
+nxtsec	set	0	;;next sector to fill
+nxtbas	set	0	;;moves by one on overflow
+	gcd	%sectors,skf
+;;	gcdn = gcd(sectors,skew)
+neltst	set	sectors/gcdn
+;;	neltst is number of elements to generate
+;;	before we overlap previous elements
+nelts	set	neltst	;;counter
+xlt&dn	equ	$		;translate table
+	rept	sectors	;;once for each sector
+	if	sectors < 256
+	ddb	%nxtsec+(fsc)
+	else
+	ddw	%nxtsec+(fsc)
+	endif
+nxtsec	set	nxtsec+(skf)
+	if	nxtsec >= sectors
+nxtsec	set	nxtsec-sectors
+	endif
+nelts	set	nelts-1
+	if	nelts = 0
+nxtbas	set	nxtbas+1
+nxtsec	set	nxtbas
+nelts	set	neltst
+	endif
+	endm
+	endif	;;end of nul fac test
+	endif	;;end of nul bls test
+	endm
+;
+defds	macro	lab,space
+lab:	ds	space
+	endm
+;
+lds	macro	lb,dn,val
+	defds	lb&dn,%val&dn
+	endm
+;
+endef	macro
+;;	generate the necessary ram data areas
+begdat	equ	$
+dirbuf:	ds	128	;directory access buffer
+dsknxt	set	0
+	rept	ndisks	;;once for each disk
+	lds	alv,%dsknxt,als
+	lds	csv,%dsknxt,css
+dsknxt	set	dsknxt+1
+	endm
+enddat	equ	$
+datsiz	equ	$-begdat
+;;	db 0 at this point forces hex record
+	endm
+;
+

@@ -1,0 +1,451 @@
+
+*************************************************************************
+*									*
+*  Z C P R 2 -- Z80-Based Command Processor Replacement, Version 2.0	*
+*									*
+*  Copyright (c) 1982 by Richard Conn					*
+*  All Rights Reserved							*
+*									*
+*  ZCPR2 is Copyright (c) 1982 by Richard Conn, who assumes no respons- *
+*  ibility or liability for its use.  ZCPR2 is released to the public	*
+*  domain for non-commercial use only.					*
+*									*
+*  The public is encouraged to freely copy and use this program for	*
+*  non-commercial purposes.  Any commercial use of ZCPR2 is prohibited	*
+*  unless approved by the author, Richard Conn, in writing.		*
+*									*
+*  This is the RELEASE VERSION of ZCPR2.				*
+*									*
+*************************************************************************
+
+;
+;  Module:  ZCPRHDR
+;  Author:  Richard Conn
+;  Module Used By:  ZCPR2 Version 2.x
+;  Note:  ZCPRHDR contains the key customization equates for ZCPR2.  These
+;	equates allow the user to select various ZCPR2 options and do an
+;	extensive amount of tailoring of ZCPR2 to the user's desires.
+;  Note:  This is the RELEASE VERSION of ZCPR2
+;
+
+;
+;  The following equates may be used to customize this CPR for the user's
+;    system and integration technique.	The following constants are provided:
+;
+;    REL - TRUE if integration is to be done via MOVCPM
+;	 - FALSE if integration is to be done via DDT and SYSGEN
+;
+;    BASE - Base Address of user's CP/M system (normally 0 for DR version)
+;	    This equate allows easy modification by non-standard CP/M (eg,H89)
+;
+;    CPRLOC - Base Page Address of CPR; this value can be obtained by running
+;	      the BDOSLOC program on your system, or by setting the
+;	      MSIZE and BIOSEX equates to the system memory size in
+;	      K-bytes and the "extra" memory required by your BIOS
+;	      in K-bytes. BIOSEX is zero if your BIOS is normal size,
+;	      and can be negative if your BIOS is in PROM or in
+;	      non-contiguous memory.
+;
+REL	EQU	FALSE	;SET TO TRUE FOR MOVCPM INTEGRATION
+;
+BASE	EQU	0	;BASE OF CP/M SYSTEM (SET FOR STANDARD CP/M)
+;
+	IF	REL
+CPRLOC	EQU	0	;MOVCPM IMAGE
+	ELSE
+;
+; If REL is FALSE, the value of CPRLOC may be set in one
+; of two ways.	The first way is to set MSIZE and BIOSEX
+; as described above using the following three lines:
+;
+;MSIZE	EQU	64	;SIZE OF MEM IN K-BYTES
+;BIOSEX EQU	0	;EXTRA # K-BYTES IN BIOS
+;CPRLOC EQU	3400H+(MSIZE-20-BIOSEX)*1024	;CPR ORIGIN
+;
+; The second way is to obtain the origin of your current
+; CPR using BDSLOC or its equivalent, then merely set CPRLOC
+; to that value as as in the following line:
+;
+;CPRLOC	EQU	0CF00H	;FILL IN WITH BDOSLOC SUPPLIED VALUE
+CPRLOC	EQU	0E400H	; for RunCPM 60K
+;CPRLOC	EQU	0F400H	; for RunCPM 64K
+;
+; Note that you should only use one method or the other.
+; Do NOT define CPRLOC twice!
+;
+; The following gives the required offset to load the CPR into the
+; CP/M SYSGEN Image through DDT (the Roffset command); Note that this
+; value conforms with the standard value presented in the CP/M reference
+; manuals, but it may not necessarily conform with the location of the
+; CPR in YOUR CP/M system; several systems (Morrow Designs, P&T, Heath
+; Org-0 to name a few) have the CPR located at a non-standard address in
+; the SYSGEN Image
+;
+;CPRR	EQU	0980H-CPRLOC	;DDT LOAD OFFSET
+CPRR	EQU	0A00H-CPRLOC	;DDT LOAD OFFSET FOR Heath systems
+	ENDIF
+
+
+;
+; The following equate identifies the location of the BIOS.  This equate
+; (as provided in the release copy of ZCPR2HDR) assumes the standard sizes
+; of 800H for ZCPR2 and 0E00H for BDOS and does not need to be modified if
+; the user is running a standard CP/M configuration.
+;
+;BIOS	EQU	CPRLOC+800H+0E00H	;ADDRESS OF BIOS
+BIOS	EQU	0FE00H	; for RunCPM
+
+;
+;   The following macros define the file types of the command object files
+; (COM files under CP/M 2.2) to be loaded when a non-resident ZCPR2 command
+; is given and of the indirect command files (SUB files under CP/M 2.2) to
+; be used to extract commands from when the indirect command facility is
+; invoked.
+;
+COMTYP	MACRO
+	DB	'COM'		;FILE TYPE OF COMMAND FILE
+	ENDM
+
+SUBTYP	MACRO
+	DB	'SUB'		;FILE TYPE OF INDIRECT COMMAND FILE
+	ENDM
+
+;
+;   The following flag enables or disables the ability of ZCPR2 to process
+; SUBMIT files (command files of the form $$$.SUB).  If SUBON is TRUE, then
+; ZCPR2 will process such files like CP/M's CCP normally does; if SUBON is
+; FALSE, ZCPR2 will not process such files (ignore them).  In such a case,
+; only indirect command file facilities like ZEX will work.
+;
+SUBON	EQU	TRUE	;SET TO TRUE TO ENABLE PROCESSING OF $$$.SUB
+
+
+;
+;   The following flag allows ZCPR2 to accept commands of the form "du:cmnd".
+; If DRVPREFIX is TRUE, this form is accepted; if FALSE, this form is not
+; accepted.  This flag has the additional side effect of automatically
+; selecting files in the current disk/current user if the command
+; is of the form "cmnd".  The DRVPFATT determines the attributes of the
+; selected files if DRVPREFIX is TRUE.
+;
+DRVPREFIX	equ	TRUE	;ENABLE PREFIX
+
+
+
+;
+;   The following flag allows the user to select the attributes of the files
+; in the current disk/current user to be examined if the DRVPREFIX flag
+; is TRUE.  The following values are defined:
+;
+;		DRVPFATT	Files Selected
+;		    0		System
+;		   80H		Directory
+;		    1		Both System and Directory
+;
+DRVPFATT	equ	1	;SELECT BOTH SYSTEM AND DIRECTORY
+
+
+
+;
+;   The following flag enables or disables the ability to switch user areas.
+; For a more secure system, it is recommended that this ability be disabled and
+; the CD.COM facility be employed instead.
+;
+USERON	equ	TRUE		;ENABLE USER SPECIFICATION
+
+
+;
+;  The following flags enable or disable various ZCPR2-resident commands.
+; The user may invoke these as desired, but should keep in mind the size
+; of the resulting ZCPR2 and make sure it does not exceed the required
+; limits.
+;
+DIRON	equ	TRUE	;DIR
+LTON	equ	TRUE	;LIST, TYPE
+GOON	equ	TRUE	;GO
+ERAON	equ	TRUE	;ERA
+SAVEON	equ	TRUE	;SAVE
+RENON	equ	TRUE	;REN
+GETON	equ	TRUE	;GET
+JUMPON	equ	TRUE	;JUMP
+
+
+
+;
+;   The following equate specifies the address of the PATH to be followed
+; for the PATH command-search if the PATH is to be initialized by the BIOS
+; and set by the user via a PATH.COM program.  The value of PATH should
+; be the address of the PATH data area in memory.  If the internal PATH
+; provided by ZCPR2 is to be used, then INTPATH should be equated to TRUE,
+; which selects the PATH located just after the MEMLOAD routine.  If the
+; external PATH is to be used, then INTPATH should be equated to FALSE and
+; and equate for the address of the PATH should be provided.
+;   A PATH is a series of byte-pairs, terminated by a binary 0.  The first
+; byte of each pair is the disk number (1-16 for disks A-P), and the second
+; byte of each pair is the user number (0-31).	The special character '$'
+; indicates the current user or current disk.  For example, the path
+; from current disk/current user to current disk/user 0 to disk A/user 0
+; is selected by the following sequence:
+;		DB	'$$'	;current disk/user
+;		DB	'$',0	;current disk/user 0
+;		DB	1,0	;disk A/user 0
+;		DB	0	;end of path
+;    NOTE:  If DRVPREFIX is TRUE, then current disk/user is automatically
+; searched, and including it in the command search path causes it to be
+; searched twice, wasting time (and space in the path).  Since many environs
+; will run with DRVPREFIX = TRUE, then a good command search path would not
+; include the current disk/user.
+;
+INTPATH equ	TRUE		;INTERNAL ZCPR2 PATH SELECTED
+
+	IF	NOT INTPATH	;External Path Selected
+;
+;  This equate defines the base address of the external path
+;
+PATH	equ	40H		;External ZCPR2 PATH at CBIOS Buffer Area
+
+	ELSE			;Internal Path Selected
+;
+;  The following macro defines the n-element internal path
+;
+IPATH	MACRO
+	db	'A'-'@',0	;Disk A, User 0
+	db	'$',0		;Current Disk, User 0 - see DRVPREFIX
+	db	'A'-'@','$'	;Disk A, Current User
+	db	0		;End of Path -- MUST be here
+	ENDM
+;
+	ENDIF
+
+;
+;   The following equate causes ERA to confirm on the files to be erased
+; before it goes ahead and erases them.  If ERAOK is TRUE, then the user
+; will be prompted each time; if it is FALSE, then the user will not be
+; prompted.
+;
+ERAOK	equ	FALSE		;SET TO TRUE FOR PROMPT
+
+;
+;   If ERAOK is TRUE, the following equate adds a Verify option to the
+; ERA command which causes the user to be prompted only if the Verify
+; option letter, defined by ERDFLG, is given after the file name.  If
+; ERAV is TRUE, then the user will be asked to verify only when ERDFLG
+; is contained in the command line; if ERAV is FALSE, the user will always
+; be asked to verify.
+;
+ERAV	equ	TRUE		;ENABLE VERIFY OPTION
+ERDFLG	equ	'V'		;SET OPTION LETTER
+
+;
+;   The following equate enables the appearance of the current disk/user
+; in the ZCPR2 prompt.	If set to FALSE, the prompt appears as '>' (assuming
+; > is the current value of CPRMPT).  If set to TRUE, the prompt appears
+; as 'd>' or 'dn>'.
+;
+DUPRMPT equ	TRUE		;ENABLE D> OR DN> FORM
+
+;
+;  The MULTCMD equate enables the feature of having more than
+;  one command on the same line, separated by a separation char
+;  which is defined by the CMDSEP equate.  If this feature is
+;  enabled, the command line buffer and buffer pointers are
+;  moved outside of ZCPR2 at the indicated address of CLBASE.
+;
+
+MULTCMD equ	FALSE	;Multiple Commands on one line permitted
+
+	IF	MULTCMD
+CMDSEP	equ	';'	;Command Separator
+CLBASE	equ	0FF00H	;Base address of buffer
+BUFLEN	equ	200	;200 Bytes in Input Buffer
+	ENDIF
+
+;
+;  The Wheel equate table enables the WHEEL facility of ZCPR2.	With this
+;  facility, a WHEEL BYTE, which exists somewhere in memory, is examined
+;  before a set of installer-selected commands are executed.
+;  If this byte is not zero, then the command proceeds.  If it is zero,
+;  then the command is not allowed to proceed and is exited with an error
+;  message.
+;
+;  The following set of equates make each of the indicated commands
+;  selectable to respond to the Wheel Byte or not.  For instance, if
+;  WERA=TRUE, then it responds to the Wheel Byte; if WERA=FALSE, it does not.
+;
+WHLADR	equ	3BH	;Address of Byte to Examine
+WERA	equ	FALSE	;Make ERA a Wheel-Oriented Command
+WREN	equ	FALSE	; "   REN "   "       "       "
+WLT	equ	FALSE	; "   L/T "   "       "       "  (LIST/TYPE)
+WGO	equ	FALSE	; "   GO  "   "       "       "
+WSAVE	equ	FALSE	; "   SAVE "  "       "       "
+WGET	equ	FALSE	; "   GET "   "       "       "
+WJUMP	equ	FALSE	; "   JUMP "  "       "       "
+WDU	equ	FALSE	; "   DU: "   "       "       " (DU Change)
+WHEEL	equ	WERA OR WREN OR WLT OR WGO OR WSAVE OR WGET OR WJUMP OR WDU
+
+;
+;  The INTSTACK equate is used to specify if the stack is internal or
+;  external to ZCPR2.  Naturally, quite a bit of space is saved if the
+;  stack is placed external to ZCPR2.  If such is the case, the user
+;  should set the STKBASE equate to the beginning of the stack area
+;  (bottom of the stack).  NOTE:  THIS IS THE BOTTOM OF THE STACK, NOT THE
+;  TOP OF THE STACK.
+;
+;  If INTSTACK is TRUE, the stack is internal to ZCPR2.  If INTSTACK is
+;  FALSE, the stack is external to ZCPR2, and the base of the stack
+;  (bottom of the stack) is located at STKBASE.
+;
+INTSTACK	equ	TRUE	;Enable or Disable Internal Stack
+
+	IF	NOT INTSTACK
+STKBASE 	equ	0F5D0H		;Address of Bottom of External Stack
+STACK		equ	STKBASE+48	;Address of Top of Stack
+					;Stack Size should be at least 48 bytes
+	ENDIF	;NOT INTSTACK
+
+;
+;*** TERMINAL AND 'TYPE' CUSTOMIZATION EQUATES
+;
+NLINES	EQU	24		;NUMBER OF LINES ON CRT SCREEN
+WIDE	EQU	FALSE		;TRUE IF WIDE DIR DISPLAY
+FENCE	EQU	'|'		;SEP CHAR BETWEEN DIR FILES
+;
+PGDFLT	EQU	TRUE		;SET TO FALSE TO DISABLE PAGING BY DEFAULT
+PGDFLG	EQU	'P'		;FOR TYPE COMMAND: PAGE OR NOT (DEP ON PGDFLT)
+				;  THIS FLAG REVERSES THE DEFAULT EFFECT
+
+
+;
+;*** MISCELLANEOUS EQUATES
+;
+MAXUSR	EQU	31		;MAXIMUM USER NUMBER ACCESSABLE
+MAXDISK EQU	16		;MAXIMUM NUMBER OF DISKS ACCESSABLE
+;
+SYSFLG	EQU	'A'		;FOR DIR COMMAND: LIST $SYS AND $DIR
+;
+SOFLG	EQU	'S'		;FOR DIR COMMAND: LIST $SYS FILES ONLY
+;
+SUPRES	EQU	TRUE		;SUPRESSES USER # REPORT FOR USER 0
+;
+SPRMPT	EQU	'$'		;CPR PROMPT INDICATING SUBMIT COMMAND
+CPRMPT	EQU	'>'+80H 	;CPR PROMPT INDICATING USER COMMAND
+				;... THE MSB IS SET (+80H) FOR ZEX
+;
+NUMBASE EQU	'H'		;CHARACTER USED TO SWITCH FROM DEFAULT
+				; NUMBER BASE
+;
+SECTFLG EQU	'S'		;OPTION CHAR FOR SAVE COMMAND TO SAVE SECTORS
+;
+CURIND	EQU	'$'		;SYMBOL FOR CURRENT DISK OR USER
+;
+COMMENT EQU	';'		;LINES BEGINNING WITH THIS CHAR ARE COMMENTS
+
+
+;
+; CPR COMMAND NAME TABLE
+;   EACH TABLE ENTRY IS COMPOSED OF THE 4-BYTE COMMAND AND 2-BYTE ADDRESS
+;
+NCHARS	EQU	4		;NUMBER OF CHARS/COMMAND
+
+CTABLE	MACRO
+;
+	IF	DIRON
+;
+	DB	'DIR '
+	DW	DIR		;DIRECTORY DISPLAY COMMAND
+;
+	ENDIF
+	IF	LTON
+;
+	DB	'LIST'
+	DW	LIST		;LIST FILE ON PRINTER COMMAND
+	DB	'TYPE'
+	DW	TYPE		;TYPE FILE ON CONSOLE COMMAND
+;
+	ENDIF
+	IF	GOON
+;
+	DB	'GO  '
+	DW	GO		;EXECUTE CURRENT TPA COMMAND
+;
+	ENDIF
+	IF	ERAON
+;
+	DB	'ERA '
+	DW	ERA		;ERASE FILES COMMAND
+;
+	ENDIF
+	IF	SAVEON
+;
+	DB	'SAVE'
+	DW	SAVE		;SAVE TPA COMMAND
+;
+	ENDIF
+	IF	RENON
+;
+	DB	'REN '
+	DW	REN		;RENAME FILES COMMAND
+;
+	ENDIF
+	IF	GETON
+;
+	DB	'GET '
+	DW	GET		;LOAD FILE INTO TPA COMMAND
+;
+	ENDIF
+	IF	JUMPON
+;
+	DB	'JUMP'
+	DW	JUMP		;JUMP TO ANY MEMORY LOCATION COMMAND
+;
+	ENDIF
+;
+	ENDM
+
+;
+;  This equate determines if the ZCPR2 FCB is located internal to or external
+;  to ZCPR2.  If EXTFCB is TRUE, FCBADR defines where it is located.  By
+;  placing the ZCPR2 FCB external to ZCPR2, more space is freed up for other
+;  uses within ZCPR2.
+;
+EXTFCB	equ	TRUE	; Allow External FCB
+
+	if	EXTFCB
+FCBADR	equ	005CH  ; Address of External FCB
+	endif
+
+;
+;  CMDRUN -- ZCPR2 Extended Command Processing Facility
+;
+;  This equate enables the ZCPR2 CMDRUN facility.  If CMDRUN is TRUE, then
+;  another stage of command processing is invoked should ZCPR2 fail to find
+;  a COM file when the user gives a command.  This stage involves invoking
+;  the COM file specified by CMDFCB and giving it the current command line
+;  as an argument.  In this way, if, say, M80 PROG2 fails as a command,
+;  a new command like LRUNZ M80 PROG2, SUB M80 PROG2, or ZEX M80 PROG2 may
+;  be processed.  If the new command fails, an appropriate error message is
+;  given.
+;
+;  The ROOTONLY option causes ZCPR2 to only look at the Root (bottom of
+;  path) for the Extended Command Processor if it is set to TRUE.  If it
+;  is set to FALSE, the path is searched for the Extended Command Processor.
+;  The tradeoff here is that ROOTONLY = TRUE is less flexible but somewhat
+;  faster than ROOTONLY = FALSE.
+;
+CMDRUN	equ	FALSE	; Enable the Facility
+
+	if	CMDRUN
+ROOTONLY	equ	TRUE	; TRUE if look at Root Only for Extended
+				; Command Processor, FALSE if look along
+				; path
+CMDFCB	MACRO
+	db	0
+	db	'CMDRUN  '	;Name of Program
+	db
+	ENDM
+	endif	;CMDRUN
+
+;
+; END OF CUSTOMIZATION SECTION
+;
+

@@ -1,0 +1,104 @@
+;
+;	RunCPM - Execute 8bit CP/M applications on modern computers
+;	Copyright (c) 2016 - Marcelo Dantas
+;
+;	Extensive debugging/testing by Tom L. Burnett
+;	Debugging/testing and new features by Krzysztof Klis
+;
+
+	This disk contains a basic CP/M system which  will  work  fine
+	with RunCPM.
+
+	Important things about this disk:
+
+	ZSID has been patched for a bug according to  Digital Research
+	patches.
+	It would add wrong  values  when  entering  16  bit  values in 
+	assembly.
+
+	SUBMIT  has  been  patched  for  a  bug  according  to Digital 
+	Research patches.
+	It would create the $$$.SUB on the current drive, not  on  the
+	system drive (A:).
+	The original (unpatched) SUBMIT is kept on the disk renamed to
+	SUBMITD.COM.
+
+	The DRI BDOS source code (BDOS.ASM) is  included  and  can  be 
+	built using BDOS.SUB.
+	This source code is the DR original and is included  only  for
+	reference.  The  generated  BDOS  image  is  not necessary for 
+	RunCPM to run.
+
+	The DRI CCP source code (CCP.ASM) is included and can be built
+	using CCP.SUB.
+	This  source  code is the DRI's original,  same as the  binary 
+	used by RunCPM.
+	When building the  DRI's CCP,  adjust the  ORG location on the 
+	CCP.ASM accordingly.
+
+	The CCPZ (v4.1) CCP source code (CCPZ.Z80) is included and can
+	be built using CCPZ.SUB.
+	This source code is the CCPZ original, same as the binary used
+	by RunCPM.
+	When  building  the  CCPZ CCP,  adjust the ORG location on the
+	CCPZ.Z80 file accordingly.
+
+	The ZCPR2 CCP source code (ZCPR2.ASM) is included and  can  be
+	built using ZCPR2.SUB.
+	This source code is the ZCPR v2 original,  same as the  binary
+	used by RunCPM.
+	When  building  the ZCPR2 CCP,  adjust the ORG location on the
+	Z2HDR.LIB file.
+
+	The ZCPR3 CCP source code (ZCPR2.ASM)  is included and can  be
+	built using ZCPR2.SUB.
+	This source code is the ZCPR original, same as the binary used
+	by RunCPM.
+	When building the ZCPR3 CCP,  adjust  the settings accordingly
+	on Z3BASE.LIB and Z3HDR.LIB.
+
+	The Z80CCP CCP source code (Z80CCP.ASM) is included and can be
+	built using Z80CCP.SUB.
+	This source code is the Z80CCP original,  same as  the  binary
+	used by RunCPM.
+	When building the Z80CCP CCP,  adjust the ORG location on  the
+	Z80CCP.ASM file.
+
+	The rights to all the code and software included in this  disk
+	belongs to whoever wrote them.
+
+	The extra software  included  other  than  the  official DRI's
+	distribution are:
+
+	EXIT - Exits RunCPM. 
+		v1.00 - Copyright (c) 2016 by Marcelo Dantas
+	FORMAT - "Formats" a disk folder
+		v1.00 - Copyright (c) 2018 by Marcelo Dantas
+	RSTAT - RunCPM version of STAT.
+		v1.00 - Copyright (c) 2016 by Marcelo Dantas
+	CONSOLE7 and CONSOLE8 - Sets console 8th bit stripping
+		v1.00 - Copyright (c) 2018 by Marcelo Dantas
+
+	LU - Library Utility.
+		v3.10 - Copyright (c) 1983-1985 by Gary P. Novosielski
+	MBASIC - BASIC-85.
+		v5.29 - Copyright (c) 1985, 1986 by Microsoft
+	MLOAD - Multi-file HEX Load Utility.
+		v2.5 - Copyright (c) 1983, 1984, 1985 by NightOwl Software
+	TE - Text Editor.
+		v1.11 - Copyright (c) 2015-2018 by Miguel Garcia
+	UNARC - Archive File Extractor.
+		v1.6 - Copyright (c) 1986, 1987 by Robert A. Freed
+	UNCR - File Un-Cruncher.
+		v2.4 - Copyright (c) 1987 by S. Greenberg
+	USQ - File Un-Squeezer.
+		v1.20 - Copyright (c) 1984 by Dave Rand
+	XMODEM - XMODEM send/receive
+		v2.7 - Copyright (c) 2016 by M. Eberhard
+	Z80ASM - Z80 Assembler.
+		v1.32 - Copyright (c) 1983-1986 by SLR Systems
+	ZEXALL/ZEXDOC - Z80 Instruction Exerciser.
+		v1.00 - Copyright (c) 1994 by Frank D. Cringle
+	ZTRAN - 8080 to Z80 code translator.
+		v1.4 - Copyright (c) 1986 by Elliam Associates
+

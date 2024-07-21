@@ -1,0 +1,11 @@
+bdos      equ 5
+          org 0100h
+start:    ld c,230
+          ld e,07fh
+          call bdos
+          ld c,9
+          ld de,msg
+          call bdos
+          jp 0
+msg:      db 'Console set to 7 bits.',0dh,0ah,'$'
+          end

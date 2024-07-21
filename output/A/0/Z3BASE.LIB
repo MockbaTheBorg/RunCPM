@@ -1,0 +1,296 @@
+; Z3BASE - Maximum Configuration
+; Offset:  5100H
+; Z3BASE ADDRESS FILE FOR H-89 W/H37 & H17 DRIVES
+;****************************************************************
+;*								*
+;*  Z3BASE.LIB -- Base Addresses for ZCPR3 System		*
+;*	by Richard Conn 					*
+;*								*
+;*	These addresses are used by the following System	*
+;* Segments:							*
+;*								*
+;*	Segment 	Function				*
+;*	------- 	--------				*
+;*	ZCPR3		ZCPR3 Command Processor 		*
+;*	*.ENV		All Environment Descriptors		*
+;*	*.FCP		All Flow Command Packages		*
+;*	*.NDR		All Named Directory Definition Files	*
+;*	*.RCP		All Resident Command Packages		*
+;*								*
+;*	Configured for H-89 equates with sample addresses from	*
+;*	my system			J. Furst		*
+;*								*
+;* Memory Map of System:					*
+;*								*
+;*	Address Range	  Size	Function			*
+;*	-------------	------- --------			*
+;*	    0 -   FF	256 b	Standard CP/M Buffers		*
+;*	  100 - BFFF	 ~48  K TPA				*
+;*	 BE00 - C5FF	   2  K ZCPR3 Command Processor 	*
+;*	 C600 - D3FF	   3.5K BDOS				*
+;*	 D400 - F169	  ~8.0K CBIOSZ with Buffers		*
+;*	 F16A - F174	 11 b	External Path Address		*
+;*	 F175		  1 b	Wheel byte
+;*	 F176 - F975	   2  K Resident Command Package	*
+;*	 F976 - FB75	   0.5K Flow Command Package		*
+;*	 FB76 - FC75	256 b	Environment Descriptors 	*
+;*				Bytes 00H-7FH:	Z3 Parameters	*
+;*				Bytes 80H-FFH:	Z3 Terminal Cap *
+;*	 FC76 - FCF5	128 b	ZCPR3 Shell Stack		*
+;*	 FCF6 - FD46	 80 b	ZCPR3 Message Buffers		*
+;*				Byte 0:  Error Flag (Z/NZ)	*
+;*				Byte 1:  IF (8 Levels)		*
+;*				Byte 2:  IF Active (8 Levels)	*
+;*				Byte 3:  Z3 Cmd Status		*
+;*					00B - Normal		*
+;*					01B - Shell		*
+;*					10B - Error		*
+;*				Bytes 4&5: Error Address if 10B *
+;*				Byte 6: Program Error Code	*
+;*				Byte 7: ZEX Message Byte	*
+;*					00B - Normal		*
+;*					01B - Z3 Prompt 	*
+;*					10B - Suspend Intercept *
+;*				Byte 8: ZEX Running Flag (0=No) *
+;*				Bytes 9-10: Address of Next	*
+;*					Char for ZEX to Return	*
+;*				Bytes 11-12: Address of First	*
+;*					Char in ZEX Memory-	*
+;*					Based File Buffer	*
+;*				Byte 13: SH Control Byte	*
+;*					Bit 0: Enable SHCMT	*
+;*					Bit 1: Enable SHECHO	*
+;*					Bit 7: Enable Shell	*
+;*						Entry Wait	*
+;*				Bytes 14-15: Shell Scratch	*
+;*				Bytes 10H-2FH: Error Cmd	*
+;*				Bytes 30H-39H: Registers	*
+;*				Bytes 3AH-3FH: Reserved 	*
+;*				Bytes 40H-4FH: User-Defined	*
+;*	 FD46 - FD69	 36 b	ZCPR3 External FCB		*
+;*	 FD6A - FE69	256 b	Memory-Based Named Directory	*
+;*	 FE6A - FF31	200 b	Multiple Command Line Buffer	*
+;*	 FF32 - FF61	 48 b	ZCPR3 External Stack		*
+;*	 FF62 - FFFF		System reserved 		*
+;*								*
+;****************************************************************
+
+;
+;  True and False
+;
+FALSE	equ	0
+TRUE	equ	NOT FALSE
+
+
+;*
+;*  ZCPR3 BASE EQUATES
+;*
+
+;
+;  1. VERSION NUMBERS, MEMORY SIZE, and CP/M BASE ADDRESS
+;
+;	The following equates define the version numbers of the ZCPR3
+; Command Processor and the CBIOSZ.  They also explicitly state the size
+; of the TPA for inclusion in the CBIOSZ header printed at Cold Boot.
+; Not used for H-89			J. Furst
+;
+Z3REV	EQU	30	; ZCPR3 REV NUMBER
+CBREV	EQU	41	; CBIOSZ REV NUMBER
+MSIZE	EQU	48	; SIZE OF TPA
+;
+;    BASE - Base Address of user's CP/M system (normally 0 for DR version)
+;	    This equate allows easy modification by non-standard CP/M (eg,H89)
+;
+BASE	EQU	0
+
+;
+;  2. PROCESSOR SELECTION
+;
+;	The following equate selects the use of the 8080/8085 micro or
+; the Z80 micro for the target for ZCPR3.  Note that selecting the
+; 8080/8085 should be done ONLY if you have an 8080 or 8085.  If you have
+; a Z80, by all means select this one since the code is much smaller and
+; you can cram more features into the system as a result.
+;	If the processor is an 8080 or 8085, set this equate to TRUE.
+; If the processor is a Z80, set it to FALSE.
+;
+I8080	EQU	FALSE
+
+;
+;  3. EXTERNAL PATH
+;
+;	The following equates define the address of the ZCPR3 External
+; Path and the number of two-byte elements contained in this path (maximum).
+; If there is no ZCPR3 External Path, both of these values should be set to 0.
+;
+;EXPATH	EQU	0F16AH	; EXTERNAL PATH
+;EXPATHS EQU	5	; 5 2-byte Path Elements
+;			;  (PATH SIZE = EXPATHS*2 + 1)
+EXPATH	EQU	0	; EXTERNAL PATH
+EXPATHS EQU	0	; 5 2-byte Path Elements
+			;  (PATH SIZE = EXPATHS*2 + 1)
+
+;
+;  4. WHEEL BYTE
+;
+;	The following equate defines the address of the ZCPR3 Wheel Byte.
+; If there is no ZCPR3 Wheel Byte, this value should be set to 0.
+;
+;Z3WHL	EQU	0F175H	; WHEEL BYTE ADDRESS
+Z3WHL	EQU	0	; WHEEL BYTE ADDRESS
+
+
+;
+;  5. CCP LOCATION
+;
+;	The following equate defines the address of the ZCPR3 Command
+; Processor.  This address MUST be supplied.
+;
+;CCP	EQU	0BE00H	; ZCPR3 COMMAND PROCESSOR
+BDOSAD	EQU	0EC00H	; for RunCPM 60k
+;BDOSAD	EQU	0FC00H	; for RunCPM 64k
+CCP	EQU	BDOSAD-1000H ; Place the CCP 4K below the BDOS (from RunCPM globals.h)
+BIOS	EQU	0FE00H ; for RunCPM
+
+
+;
+;  6. RCP LOCATION
+;
+;	The following equates define the address of the ZCPR3 Resident
+; Command Package and its size in 128-byte blocks.  If there is no
+; ZCPR3 Resident Command Package, both of these values should be 0.
+;
+;RCP	EQU	0F176H	; RESIDENT COMMAND PACKAGE
+;RCPS	EQU	16	; 16 128-byte Blocks (2K bytes)
+RCP	EQU	0	; RESIDENT COMMAND PACKAGE
+RCPS	EQU	0	; 16 128-byte Blocks (2K bytes)
+
+
+;
+;  7. IOP LOCATION
+;
+;	The following equates define the address of the ZCPR3 Input/Output
+; Package and its size in 128-byte blocks.  If there is no ZCPR3 Input/Output
+; Package, both of these values should be 0.
+;
+IOP	EQU	0	; REDIRECTABLE I/O PACKAGE
+IOPS	EQU	0	; 12 128-byte Blocks (1.5K bytes)
+
+
+;
+;  8. FCP LOCATION
+;
+;	The following equates define the address of the ZCPR3 Flow Command
+; Package and its size in 128-byte blocks.  If there is no ZCPR3 Flow Command
+; Package, both of these values should be 0.
+;
+;FCP	EQU	0F976H	; FLOW COMMAND PACKAGE
+;FCPS	EQU	4	; 4 128-byte Blocks (0.5K bytes)
+FCP	EQU	0	; FLOW COMMAND PACKAGE
+FCPS	EQU	0	; 4 128-byte Blocks (0.5K bytes)
+
+
+;
+;  9. ENV LOCATION
+;
+;	The following equates define the address of the ZCPR3 Environment
+; Descriptor and its size in 128-byte blocks.  If there is no ZCPR3 Environment
+; Descriptor, both of these values should be 0.
+;
+;Z3ENV	EQU	0FB76H	; ENVIRONMENT DESCRIPTORS
+;Z3ENVS	EQU	2	; SIZE OF ENVIRONMENT DESCRIPTOR IN 128-BYTE BLOCKS
+Z3ENV	EQU	0	; ENVIRONMENT DESCRIPTORS
+Z3ENVS	EQU	0	; SIZE OF ENVIRONMENT DESCRIPTOR IN 128-BYTE BLOCKS
+
+
+;
+; 10. SHELL STACK
+;
+;	The following equates define the address of the ZCPR3 Shell Stack,
+; the number of entries permitted in the ZCPR3 Shell Stack, and the size
+; of each entry in the Shell Stack in terms of bytes.  If there is no ZCPR3
+; Shell Stack, all three values should be 0.
+;
+;SHSTK	EQU	0FC76H	; ZCPR3 SHELL STACK
+;SHSTKS	EQU	4	; NUMBER OF SHSIZE-BYTE SHELL STACK ENTRIES
+;SHSIZE	EQU	32	; SIZE OF A SHELL STACK ENTRY
+;			;   (STACK SIZE = SHSTKS * SHSIZE)
+SHSTK	EQU	0	; ZCPR3 SHELL STACK
+SHSTKS	EQU	0	; NUMBER OF SHSIZE-BYTE SHELL STACK ENTRIES
+SHSIZE	EQU	0	; SIZE OF A SHELL STACK ENTRY
+			;   (STACK SIZE = SHSTKS * SHSIZE)
+
+
+;
+; 11. ZCPR3 MESSAGES
+;
+;	The following equate defines the address of the ZCPR3 Message Buffer.
+; This buffer is always 80 bytes long.	If there is no ZCPR3 Message Buffer,
+; this address should be 0.
+;
+;Z3MSG	EQU	0FCF6H	; ZCPR3 MESSAGE BUFFER
+Z3MSG	EQU	0	; ZCPR3 MESSAGE BUFFER
+
+
+;
+; 12. EXTERNAL FCB
+;
+;	The following equate defines the address of the ZCPR3 External FCB.
+; This buffer is always 36 bytes long.	If there is no ZCPR3 External FCB,
+; this address should be 0.
+;
+;EXTFCB	EQU	0FD46H	; ZCPR3 EXTERNAL FCB
+EXTFCB	EQU	0	; ZCPR3 EXTERNAL FCB
+
+
+;
+; 13. NAMED DIRECTORY BUFFER
+;
+;	The following equates define the address and size (in terms of 18-byte
+; entries) of the ZCPR3 Named Directory Buffer.  If there is no such buffer,
+; both of these values should be 0.
+;
+;Z3NDIR	EQU	0FD6AH	; ZCPR3 NAMED DIRECTORY AREA
+;Z3NDIRS EQU	14	; 14 18-byte Named Directory Elements permitted
+;			;   (NDIR SIZE = Z3NDIRS*18 + 1 for trailing 0)
+Z3NDIR	EQU	0	; ZCPR3 NAMED DIRECTORY AREA
+Z3NDIRS EQU	0	; 14 18-byte Named Directory Elements permitted
+			;   (NDIR SIZE = Z3NDIRS*18 + 1 for trailing 0)
+
+
+;
+; 14. COMMAND LINE
+;
+;	The following equates define the address and size (in terms of bytes)
+; of the ZCPR3 Command Line Buffer (formerly called the Multiple Command Line
+; Buffer under ZCPR2).	If there is no such buffer, both of these values should
+; be 0.
+;
+;Z3CL	EQU	0FE6AH	; ZCPR3 COMMAND LINE BUFFER
+;Z3CLS	EQU	200	; SIZE OF COMMAND LINE BUFFER
+Z3CL	EQU	0	; ZCPR3 COMMAND LINE BUFFER
+Z3CLS	EQU	0	; SIZE OF COMMAND LINE BUFFER
+
+
+;
+; 15. EXTERNAL STACK
+;
+;	The following equate defines the address of the ZCPR3 External Stack.
+; This stack is always 48 bytes in size.  If there is no such stack, this
+; value should be 0.
+;
+;EXTSTK	EQU	0FF32H	; ZCPR3 EXTERNAL STACK
+EXTSTK	EQU	0	; ZCPR3 EXTERNAL STACK
+
+
+;
+; 16. USER EQUATES
+;
+;	The following equates are available for the implementer's target
+; system.  These are implementation-defined.
+;
+;  If you have any, put them here	 
+;*
+;*  END of ZCPR3 BASE EQUATES
+;*
+

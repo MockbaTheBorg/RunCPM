@@ -1,0 +1,137 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+;
+; Z80 Library to create a cp/m file control block from a command string
+; at the address in hl and place it at the address in de.
+; Returns with the carry set if an error occurs.
+;
+fcbsiz:	equ	33
+fnmlen:	equ	11		; file name length
+;;;;;;;;;;
+mtfcb:	push	hl		; save cmd string ptr
+	push	de		; save fcb address
+	ld	bc,fcbsiz	; clear entire fcb area
+	call	clrb
+	pop	de		; fill file name with spaces
+	push	de
+	inc	de
+	ld	bc,fnmlen
+	ld	a,' '
+	call	fillb
+	pop	de		; restore pointers
+	pop	hl
+	call	skips		; skip leading spaces
+	inc	hl		; check for disk code
+	ld	a,(hl)
+	dec	hl
+	cp	':'
+	jp	nz,mtfcb1	; jump on no code
+	ld	a,(hl)		; test if disk code good
+	inc	hl
+	inc	hl
+	sbc	a,'@'
+	ret	c 		; make error return if bad
+	cp	'z'+1
+	ccf
+	ret	c
+	ld	(de),a		; store disk code at fcb + 0
+mtfcb1:	inc	de
+	ld	c,8		; process file name field
+	call	getnam
+	ld	a,(hl)		; test for file type separator
+	inc	hl
+	cp	'.'
+	jp	nz,mtfcb2
+	ld	c,3		; process file type field
+	call	getnam
+	ld	a,(hl)
+	inc	hl
+mtfcb2:	call	termt		; test for corect terminator
+	ret
+;;;;;;;;;;
+; process name field
+getnam:	ld	a,(hl)		; get char from cmd str
+	inc	hl
+	cp	'?'		; allow ambig reference char
+	jp	z ,getna1
+	cp	'*'		; fill rest with ?
+	jp	z ,getna2
+	call	valchr		; test for allowed char in name
+	jp	c ,getna3
+getna1:	ld	(de),a		; store char in tfcb
+	inc	de
+	dec	c		; check name size
+	jp	nz,getnam
+	ret
+getna2:	ld	a,'?'		; fill rest of field with ?
+	ld	b,0
+	jp	fillb
+getna3:	inc	de		; move fcb ptr to end of field
+	dec	c
+	jp	nz,getna3
+	dec	hl
+	ret
+;;;;;;;;;;
+; test for valid char in  name field
+; return with carry set if invalid.
+valchr:	cp	'*'
+	ccf	
+	ret	z 
+	cp	','
+	ccf	
+	ret	c 
+	cp	'.'
+	ccf	
+	ret	z 
+	cp	' '
+	ret	c 
+	cp	'^'+1
+	ccf	
+	ret	c 
+	cp	':'
+	ccf	
+	ret	nc
+	cp	'@'
+	ret
+;;;;;;;;;;
+; test for valid filename terminator char
+; return with carry set if invalid.
+termt:	cp	' '
+	ret	z 
+	cp	','
+	ret	z 
+	cp	0dh
+	ret	z 
+	cp	';'
+	ret	z 
+	scf	
+	ret
+;;;;;;;;;;
+; skip spaces in cmd string
+skips:	ld	a,' '
+skips1:	cp	(hl)
+	ret	nz
+	inc	hl
+	jp	skips1
+;;;;;;;;;;
+; fill block with value
+; enter with:
+; a  = value for fill
+; de = start of block
+; bc = length of block
+clrb:	ld	a,0
+fillb:	inc	b
+	dec	b
+	jp	nz,fillb1
+	inc	c
+	dec	c
+	ret	z 
+fillb1:	ld	(de),a
+	inc	de
+	dec	bc
+	jp	fillb

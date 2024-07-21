@@ -20,8 +20,8 @@ jobs:
 
     - name: gcc version
       run: gcc --version
-#    - name: all files in vm
-#      run: dir /s c:\
-
     - name: Build
       run: make -C RunCPM msys2 build
+    - name: Copy binary to artifact folder
+      run: cp RunCPM/RunCPM.exe output
+

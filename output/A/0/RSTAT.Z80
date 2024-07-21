@@ -1,0 +1,155 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+; RSTAT - RunCPM version of the STAT command
+;         the only thing RSTAT can do is show the size of files
+
+	org	0100h
+	jp	start
+;;;;;;;;;;
+	include bdosequ.lib
+	include	display.lib
+;;;;;;;;;;
+;
+m_crlf	db	0dh,0ah,0
+m_ok	db	0dh,0ah,' Recs  Bytes  Ext Acc',0
+m_nf	db	'RSTAT v1.0 - RunCPM file status',0dh,0ah
+	db	'Copyright (c) 2016 - Marcelo Dantas',0dh,0ah,0ah
+	db	'Usage: RSTAT <filespec>',0dh,0ah,0
+m_spc	db	' R/W ',0
+fsize	dw	0	; Temporary storage for the file size
+;
+start
+	ld	c, first
+	ld	de, deffcb
+	call	bdos
+	inc	a
+	jp	z, nofirst
+	ld	hl, m_ok
+	call	dspstr
+prt
+	call	dofile
+	ld	c, next
+	ld	de, deffcb ; this shouldn't be needed
+	call	bdos
+	inc	a
+	jp	z, nomore
+	jp	prt
+nomore
+	ld	hl, m_crlf
+	call	dspstr
+; End of execution
+quit
+	jp	boot
+; Error getting first file
+nofirst
+	ld	hl, m_nf
+	call	dspstr
+	jp	quit
+;
+dofile
+	ld	a, (deffcb)
+	ld	(defdma), a
+	ld	hl, m_crlf
+	call	dspstr
+	ld	c, size
+	ld	de, defdma
+	call	bdos
+	ld	a, (defdma+34)
+	ld	h, a
+	ld	a, (defdma+33)
+	ld	l, a
+	ld	(fsize), hl
+	ld	bc, 0501h	; Display the number of records
+	call	dsphlub
+	ld	a,' '
+	call	dspch
+	ld	hl, (fsize)
+	ld	c, 8
+	call	dodiv		; Calculate kbytes
+	or	a		; Check for a remainder
+	jp	z, dofile1
+	inc	hl
+dofile1
+	push	hl
+	ld	bc, 0501h	; Display the number of kbytes
+	call	dsphlub
+	ld	a, 'k'
+	call	dspch
+	pop	hl
+	ld	c, 16
+	call	dodiv		; Calculate extensions
+	or	a		; Check for a remainder
+	jp	z, dofile2
+	inc	hl
+dofile2
+	ld	bc, 0501h	; Display the number of extensions (fake)
+	call	dsphlub	
+	ld	hl, m_spc	; Display the spacing (files are always R/W)
+	call	dspstr
+	ld	hl, defdma	; Display the drv:filename.ext from the dir entry
+	ld	a, (hl)
+	or	a
+	jp	nz, dofile3	; A drive was selected
+	ld	a, (userdrv)	; else load the current user/drive
+	and	0fh		; take out the user
+	inc	a		; and adjust to print
+dofile3
+	add	'@'		; Print the drive
+	call	dspch
+	ld	a, ':'
+	call	dspch
+	inc	hl		; and point to the name
+	ld	b,8		; Will print up to 8 characters
+prtname	
+	ld	a, (hl)
+	cp	' '
+	jp	z, skip		; no more chars to print, skip the blanks
+	push	bc
+	call	dspch
+	pop	bc
+	inc	hl
+	dec	b
+	jp	nz, prtname
+	jp	ckext
+skip
+	inc	hl
+	dec	b
+	jp	nz, skip
+ckext
+	ld	a, (hl)		; Is there an extension?
+	cp	' '
+	jp	z, goback	; If not, go back
+prtdot
+	ld	a, '.'
+	call	dspch
+	ld	b,3
+prtext
+	ld	a, (hl)
+	cp	' '
+	jp	z, goback
+	push	bc
+	call	dspch
+	pop	bc
+	inc	hl
+	dec	b
+	jp	nz, prtext
+goback
+	ret
+;
+dodiv
+	ld	b, 16
+	xor	a
+	add	hl,hl
+	rla
+	cp	c
+	jr	c,$+4
+	inc	l
+	sub	c
+	djnz	$-7
+	ret
+;	

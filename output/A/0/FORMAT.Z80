@@ -1,0 +1,55 @@
+;
+;		RunCPM - Execute 8bit CP/M applications on modern computers
+;		Copyright (c) 2016 - Marcelo Dantas
+;
+;		Extensive debugging/testing by Tom L. Burnett
+;		Debugging/testing and new features by Krzysztof Klis
+;
+; FORMAT - Creates non-existent disk folder (format disk)
+
+	org	0100h
+	jp	start
+;;;;;;;;;;
+	include bdosequ.lib
+	include	display.lib
+;;;;;;;;;;
+;
+start
+	call	dspnxt
+	db	'RunCPM Disk Creator v1.0',0dh,0ah,0ah,0
+;
+; Format disk
+	ld	a,(deffcb)
+	cp	0
+	jr	z, nodefault
+	cp	17
+	jr	nc, invalid
+	add	40h
+	ld	(disk),a
+	call	dspnxt
+	db	'Formatting disk '
+disk	db 0
+	db	': ... ',0
+	ld	c,249	; Create disk directory
+	ld	de,deffcb
+	call	bdos
+	ld	a,l
+	cp	0
+	jr	nz,error
+	call	dspnxt
+	db	'ok',0dh,0ah,0
+	jp	0
+;
+nodefault
+	call	dspnxt
+	db	'Unable to format the default disk',0dh,0ah,0
+	jp	0
+invalid
+	call	dspnxt
+	db	'Invalid disk selected',0dh,0ah,0
+	jp	0
+error
+	call	dspnxt
+	db	'Error',0dh,0ah,0
+	jp	0
+
