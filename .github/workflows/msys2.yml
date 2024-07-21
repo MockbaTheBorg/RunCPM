@@ -1,4 +1,4 @@
-name: Makefile CI
+name: msys2 build
 # https://stackoverflow.com/a/75758843
 
 on:
@@ -11,6 +11,9 @@ jobs:
   build:
 
     runs-on: windows-2019
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - uses: actions/checkout@v4
@@ -19,4 +22,4 @@ jobs:
       run: gcc --version
 
     - name: Build
-      run: make -C RunCPM mingw build
+      run: make -C RunCPM msys2 build
