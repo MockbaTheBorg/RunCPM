@@ -25,3 +25,12 @@ jobs:
     - name: Copy binary to artifact folder
       run: cp RunCPM/RunCPM.exe output
 
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        # Artifact name
+        name: runcpm-windows
+        # A file, directory or wildcard pattern that describes what to upload
+        path: output
+        # The desired behavior if no files are found using the provided path.
+        if-no-files-found: error
