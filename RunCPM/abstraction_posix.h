@@ -430,7 +430,7 @@ uint8 _findnext(uint8 isdir) {
 		// The last found file was large enough that in CP/M it would
 		// have another directory entry, so mock up the next entry
 		// for the file.
-		_mockupDirEntry();
+		_mockupDirEntry(1);
 		result = 0;
 	} else {
 		// Either we're only interested in the first directory entry
@@ -472,7 +472,7 @@ uint8 _findnext(uint8 isdir) {
 						fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
 						fileExtentsUsed = 0;
 						firstFreeAllocBlock = firstBlockAfterDir;
-						_mockupDirEntry();
+						_mockupDirEntry(1);
 					} else {
 						fileRecords = 0;
 						fileExtents = 0;

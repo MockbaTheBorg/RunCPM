@@ -263,7 +263,7 @@ extern "C"
 
 	extern void _HostnameToFCB(uint16 fcbaddr, uint8* filename);
 	extern void _HostnameToFCBname(uint8* from, uint8* to);
-	extern void _mockupDirEntry(void);
+	extern void _mockupDirEntry(uint8 mode);
 	extern uint8 match(uint8* fcbname, uint8* pattern);
 
 	extern void _puts(const char* str);

@@ -195,13 +195,18 @@ void _HostnameToFCBname(uint8* from, uint8* to) {
 }
 
 // Creates a fake directory entry for the current dmaAddr FCB
-void _mockupDirEntry(void) {
+void _mockupDirEntry(uint8 mode) {
 	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
 	uint8 blocks, i;
 
 	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	char* shortName = &findNextDirName[strlen(FILEBASE)];
+	char* shortName;
+	if (mode) {
+		shortName = &findNextDirName[strlen(FILEBASE)];
+	} else {
+		shortName = &findNextDirName[0];
+	}
 	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
 	if (allUsers) {

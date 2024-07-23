@@ -342,7 +342,7 @@ uint8 _findnext(uint8 isdir) {
 
 	digitalWrite(LED, HIGH ^ LEDinv);
 	if (allExtents && fileRecords) {
-		_mockupDirEntry();
+		_mockupDirEntry(0);
 		result = 0;
 	} else {
 		while (f = userdir.openNextFile()) {
@@ -365,7 +365,7 @@ uint8 _findnext(uint8 isdir) {
 					fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
 					fileExtentsUsed = 0;
 					firstFreeAllocBlock = firstBlockAfterDir;
-					_mockupDirEntry();
+					_mockupDirEntry(0);
 				} else {
 					fileRecords = 0;
 					fileExtents = 0;
