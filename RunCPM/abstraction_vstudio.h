@@ -10,6 +10,7 @@
 #include <conio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <signal.h>
 #endif
 #define millis() clock()
 
@@ -635,9 +636,31 @@ BOOL _signal_handler(DWORD signal) {
 }
 
 void _console_init(void) {
+	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+	GetConsoleMode(hOutHandle, &cOutMode);
+	GetConsoleMode(hInHandle, &cInMode);
+
+	GetConsoleTitle(cTitle, MAX_PATH);
+
+	SetConsoleMode(hOutHandle, cOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
+	SetConsoleTitle("RunCPM v" VERSION);
+
+	if(!SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE)) {
+		_puts("Error setting ^C signal handler.\n");
+		exit(EXIT_FAILURE);
+	}
 }
 
 void _console_reset(void) {
+	HANDLE hOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hInHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+	SetConsoleMode(hOutHandle, cOutMode);
+	SetConsoleMode(hInHandle, cInMode);
+	SetConsoleTitle(cTitle);
 }
 
 
