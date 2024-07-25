@@ -648,6 +648,7 @@ void _console_init(void) {
 	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
 	SetConsoleTitle("RunCPM v" VERSION);
 
+	setvbuf(stdin, NULL, _IONBF, 256);
 	setvbuf(stdout, NULL, _IONBF, 0);
 
 	if(!SetConsoleCtrlHandler((PHANDLER_ROUTINE)_signal_handler, TRUE)) {
