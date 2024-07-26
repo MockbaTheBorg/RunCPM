@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <signal.h>
+#include <wincon.h>
 #endif
 #define millis() clock()
 
