@@ -430,7 +430,7 @@ uint8 _findnext(uint8 isdir) {
 		// The last found file was large enough that in CP/M it would
 		// have another directory entry, so mock up the next entry
 		// for the file.
-		_mockupDirEntry();
+		_mockupDirEntry(1);
 		result = 0;
 	} else {
 		// Either we're only interested in the first directory entry
@@ -453,10 +453,10 @@ uint8 _findnext(uint8 isdir) {
 				if (match(fcbname, pattern) &&
 					(stat(findNextDirName, &st) == 0) &&
 					((st.st_mode & S_IFREG) != 0) &&
-					isxdigit((uint8)findNextDirName[2]) &&
-					(isupper((uint8)findNextDirName[2]) || isdigit((uint8)findNextDirName[2]))) {
+					isxdigit((uint8)shortName[2]) &&
+					(isupper((uint8)shortName[2]) || isdigit((uint8)shortName[2]))) {
 					if (allUsers)
-						currFindUser = isdigit((uint8)findNextDirName[2]) ? findNextDirName[2] - '0' : findNextDirName[2] - 'A' + 10;
+						currFindUser = isdigit((uint8)shortName[2]) ? shortName[2] - '0' : shortName[2] - 'A' + 10;
 					if (isdir) {
 						// account for host files that aren't multiples of the block size
 						// by rounding their bytes up to the next multiple of blocks
@@ -472,7 +472,7 @@ uint8 _findnext(uint8 isdir) {
 						fileExtents = fileRecords / BlkEX + ((fileRecords & (BlkEX - 1)) ? 1 : 0);
 						fileExtentsUsed = 0;
 						firstFreeAllocBlock = firstBlockAfterDir;
-						_mockupDirEntry();
+						_mockupDirEntry(1);
 					} else {
 						fileRecords = 0;
 						fileExtents = 0;
@@ -640,6 +640,7 @@ void _console_init(void) {
 
 	tcsetattr(0, TCSANOW, &_new_term); /* Apply changes immediately */
 
+	setvbuf(stdin, (char*)NULL, _IONBF, 256); /* Enable stdin buffering */
 	setvbuf(stdout, (char*)NULL, _IONBF, 0); /* Disable stdout buffering */
 }
 
