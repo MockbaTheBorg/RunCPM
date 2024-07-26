@@ -1,7 +1,0 @@
-; Cleans up the disk
-ERA *.PRN
-ERA *.HEX
-ERA *.SYM
-ERA *.BAK
-ERA *.BIN
-

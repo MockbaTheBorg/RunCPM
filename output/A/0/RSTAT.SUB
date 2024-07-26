@@ -1,3 +1,0 @@
-; Build RSTAT.Z80 into RSTAT.COM
-Z80ASM RSTAT
-
