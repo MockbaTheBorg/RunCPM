@@ -645,8 +645,8 @@ void _console_init(void) {
 
 	GetConsoleTitle(cTitle, MAX_PATH);
 
-	SetConsoleMode(hOutHandle, cOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
-	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
+//	SetConsoleMode(hOutHandle, cOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+//	SetConsoleMode(hInHandle, cInMode | ENABLE_VIRTUAL_TERMINAL_INPUT);
 	SetConsoleTitle("RunCPM v" VERSION);
 
 	setvbuf(stdin, NULL, _IONBF, 256);
