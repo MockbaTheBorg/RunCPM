@@ -3,7 +3,7 @@
 
 /* see main.c for definition */
 
-#ifdef _WIN32
+//#ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <time.h>
 #include <signal.h>
 #include <wincon.h>
-#endif
+//#endif
 #define millis() clock()
 
 // Lua scripting support
