@@ -2,6 +2,9 @@ name: MacOS build
 
 on:
   push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -10,5 +13,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: make 
+    - name: Build 
       run: make -C RunCPM macosx build
