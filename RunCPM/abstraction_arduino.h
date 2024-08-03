@@ -52,6 +52,7 @@ uint16 _RamLoadSz(uint8* filename, uint16 address, uint16 maxsize) {
 /*===============================================================================*/
 File rootdir, userdir;
 #define FOLDERCHAR '/'
+#define FILEBASE "./"
 
 typedef struct {
 	uint8 dr;
