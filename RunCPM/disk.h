@@ -201,11 +201,11 @@ void _mockupDirEntry(uint8 mode) {
 
 	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	char* shortName;
+	unsigned char* shortName;
 	if (mode) {
-		shortName = &findNextDirName[strlen(FILEBASE)];
+		shortName = (unsigned char*)&findNextDirName[strlen(FILEBASE)];
 	} else {
-		shortName = &findNextDirName[0];
+		shortName = (unsigned char*)&findNextDirName[0];
 	}
 	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
