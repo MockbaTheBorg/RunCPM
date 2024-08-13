@@ -59,10 +59,6 @@ For building on other systems run `make yyy build`, where "yyy" is:
 * **posix** - when building under Linux, FreeBSD etc,
 * **tdm** - when building with TDM-GCC under Windows.
 
-For Linux and FreeBSD the "ncurses.h" header file (and library) is required and needs to be installed prior to building RunCPM. The name of the package varies depending on the Linux distribution. Some are named "ncurses-dev", some "ncurses-devel", so Google is your friend for that.<br>
-On Mac OS X, install it using "brew install ncurses".<br>
-The "readline.h" header file is also required on Linux/FreeBSD. On some linuxes it is called "libreadline-dev".<br>
-
 All makefile options:
 * `make yyy build`: Compiles RunCPM.  Only recompiles changed files.
 * `make yyy clean`: Deletes all object files.  Doesn't recompile.
