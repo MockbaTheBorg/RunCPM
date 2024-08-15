@@ -413,56 +413,6 @@ uint8 _ccp_hlp(void) {
     return(FALSE);
 }
 
-#ifdef HASLUA
-
-// External (.LUA) command
-uint8 _ccp_lua(void) {
-    uint8 error = TRUE;
-    uint8 found, drive, user = 0;
-    uint16 loadAddr = defLoad;
-    
-    _RamWrite(	CmdFCB + 9,		'L');
-    _RamWrite(	CmdFCB + 10,	'U');
-    _RamWrite(	CmdFCB + 11,	'A');
-    
-    drive = _RamRead(CmdFCB);
-    found = !_ccp_bdos(F_OPEN, CmdFCB);                 // Look for the program on the FCB drive, current or specified
-    if (!found) {                                       // If not found
-        if (!drive) {                                   // and the search was on the default drive
-            _RamWrite(CmdFCB, 0x01);                    // Then look on drive A: user 0
-            if (curUser) {
-                user = curUser;                         // Save the current user
-                _ccp_bdos(F_USERNUM, 0x0000);           // then set it to 0
-            }
-            found = !_ccp_bdos(F_OPEN, CmdFCB);
-            if (!found) {                               // If still not found then
-                if (curUser) {                          // If current user not = 0
-                    _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
-                    found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
-                }
-            }
-        }
-    }
-    if (found) {
-        _puts("\r\n");
-        
-        _ccp_bdos(F_RUNLUA, CmdFCB);
-        if (user) {                                     // If a user was selected
-            _ccp_bdos(F_USERNUM, curUser);              // Set it back
-            user = 0;
-        }
-        _RamWrite(CmdFCB, drive);                       // Set the command FCB drive back to what it was
-        cDrive = oDrive;                                // And restore cDrive
-        error = FALSE;
-    }
-    if (user)                                           // If a user was selected
-        _ccp_bdos(F_USERNUM, curUser);                  // Set it back
-    _RamWrite(CmdFCB, drive);                           // Set the command FCB drive back to what it was
-    
-    return (error);
-} // _ccp_lua
-#endif // ifdef HASLUA
-
 // External (.COM) command
 uint8 _ccp_ext(void) {
     bool error = TRUE, found = FALSE;
@@ -887,13 +837,9 @@ void _ccp(void) {
                     break;
                 }
                     
-                // External/Lua commands
+                // External commands
                 case 255: {         // It is an external command
                     i = _ccp_ext();
-#ifdef HASLUA
-                    if (i)
-                        i = _ccp_lua();
-#endif // ifdef HASLUA
                     break;
                 }
                     

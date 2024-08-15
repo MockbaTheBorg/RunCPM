@@ -136,54 +136,6 @@ Printing to the PUN: and LST: devices is allowed and will generate files called 
 These files are created when the first printing occurs, and will be kept open throughout RunCPM usage. They can be erased inside CP/M to trigger the start of a new printing.
 As of now RunCPM does not support printing to physical devices.
 
-## Lua Scripting Support (Deprecated)
-
-The internal CCP can be built with support for Lua scripting.<br>
-Lua scripts can be written on the CP/M environment using any text editor and then executed as if they were CP/M extrinsic commands.<br>
-
-The order of execution on the internal CCP when an extrinsic command is typed with no explicit drive is:<br>
-* The command with extension .COM is searched on the current drive.<br>
-* If not found it is searched on drive A: user area 0.<br>
-* If not found it is searched on the current drive user area 0.<br>
-* If not found then use .LUA extension instead and repeat the above search.
-
-Lua scripts have access to these functions:
-* **BdosCall(C, DE)** - **C** is the number of the function to call and **DE** the parameter to pass.<br>
-  The C and DE CPU registers are loaded accordingly and the BDOS function if called.<br>
-  The function returns the contents of the HL register upon returning from the BDOS call.
-* **RamRead(addr)** - **addr** is the memory address to read from, the function returns a byte.
-* **RamWrite(addr, v)** - **addr** is the memory address to write **v** to. **v** must be a byte.
-* **RamRead16(addr)** - **addr** is the memory address to read from, the function returns a 16 bit word.
-* **RamWrite16(addr, v)** - **addr** is the memory address to write **v** to. **v** must be a 16 bit word.
-* **ReadReg(reg)** - **reg** is the 16 bit CPU register to read from, the function returns a 16 bit word.
-* **WriteReg(reg, v)** - **reg** is the CPU register to write to. **v** must be a 16 bit word.
-  Extra care must be taken when willing to replace only part of the 16 bit register.<br>
-
-The **ReadReg** and **WriteReg** functions refer to the CPU registers as index values.
-The possible values for **reg** on those functions are:<br>
-```
- 0: PCX - External view of PC
- 1: AF
- 2: BC
- 3: DE
- 4: HL
- 5: IX
- 6: IY
- 7: PC
- 8: SP
- 9: AF'
-10: BC'
-11: DE'
-12: HL'
-13: IFF - Interrupt Flip Flop
-14: IR - Interrupt (upper) / Refresh (lower) register
-```
-The disk A.ZIP contains an example script called LUAINFO.LUA, with the same functionality of INFO.COM, which provides information about RunCPM.
-
-Caveat: Lua scripts must have a comment (--) on their last line, to prevent issues with the CP/M ^Z end-of-file character when the scripts are created with CP/M text editors. The comment on the last line comments out the CP/M EOF (^Z) character and prevents Lua interpreter errors.
-
-UPDATE: Lua support has been removed, it can still be built in by manually modifying the Makefiles or renaming the RunCPM.vcxproj and RunCPM.vcxproj.filters files. However, it will eventually be gone forever. Maybe one day from now, maybe ten years from now, who knows.
-
 ## Limitations / Misbehaviors
 
 The objective of RunCPM is **not** to emulate a Z80 CP/M computer perfectly, but to allow CP/M to be emulated as close as possible while keeping its files on the native (host) filesystem.<br>
@@ -198,8 +150,6 @@ The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standa
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
-
-Lua scripting is not supported on platforms other than Windows, Linux and MacOS. There is no Lua support for Arduino based platforms yet. (see deprecation comment above)
 
 Some applications, like hi-tech C for example, will try to access user areas higher than 15 to verify if they are running on a different CP/M flavor than 2.2. This causes the generation of user areas with letters higher than F. This is an expected behavior and won't be "fixed".
 
