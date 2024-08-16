@@ -614,7 +614,7 @@ static void _abort_if_kbd_eof() {
 	// this means EOF on stdin. Assuming that stdin is connected to a
 	// file or pipe, further reading from stdin won't read from the
 	// keyboard but just continue to yield EOF.
-	// On Windows, this problem doesn't exist because of the separete
+	// On Windows, this problem doesn't exist because of the separate
 	// conio.h.
 	if (!streamInputActive && streamInputFile == stdin) {
 		_puts("\nEOF on console input from stdin\n");
