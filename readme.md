@@ -1,4 +1,4 @@
-# RunCPM v6.5 - Z80 CP/M emulator
+# RunCPM v6.6 - Z80 CP/M emulator
 
 (It is important to read this documentation fully before attempting to build/use RunCPM)
 
