@@ -1609,9 +1609,9 @@ static inline void Z80run(void) {
 			break;
 
 		case 0x08:      /* EX AF,AF' */
-			temp = AF;
-			AF = AF1;
-			AF1 = temp;
+		    AF ^= AF1;
+    		AF1 ^= AF;
+    		AF ^= AF1;
 			break;
 
 		case 0x09:      /* ADD HL,BC */
@@ -2695,47 +2695,51 @@ static inline void Z80run(void) {
 			case 0x00:  /* shift/rotate */
 				switch (op & 0x38) {
 
-				case 0x00:/* RLC */
-					temp = (acu << 1) | (acu >> 7);
-					cbits = temp & 1;
-					goto cbshflg1;
+					case 0x00:/* RLC */
+						temp = (acu << 1) | (acu >> 7);
+						cbits = temp & 1;
+						break;
 
-				case 0x08:/* RRC */
-					temp = (acu >> 1) | (acu << 7);
-					cbits = temp & 0x80;
-					goto cbshflg1;
+					case 0x08:/* RRC */
+						temp = (acu >> 1) | (acu << 7);
+						cbits = temp & 0x80;
+						break;
 
-				case 0x10:/* RL */
-					temp = (acu << 1) | TSTFLAG(C);
-					cbits = acu & 0x80;
-					goto cbshflg1;
+					case 0x10:/* RL */
+						temp = (acu << 1) | TSTFLAG(C);
+						cbits = acu & 0x80;
+						break;
 
-				case 0x18:/* RR */
-					temp = (acu >> 1) | (TSTFLAG(C) << 7);
-					cbits = acu & 1;
-					goto cbshflg1;
+					case 0x18:/* RR */
+						temp = (acu >> 1) | (TSTFLAG(C) << 7);
+						cbits = acu & 1;
+						break;
 
-				case 0x20:/* SLA */
-					temp = acu << 1;
-					cbits = acu & 0x80;
-					goto cbshflg1;
+					case 0x20:/* SLA */
+						temp = acu << 1;
+						cbits = acu & 0x80;
+						break;
 
-				case 0x28:/* SRA */
-					temp = (acu >> 1) | (acu & 0x80);
-					cbits = acu & 1;
-					goto cbshflg1;
+					case 0x28:/* SRA */
+						temp = (acu >> 1) | (acu & 0x80);
+						cbits = acu & 1;
+						break;
 
-				case 0x30:/* SLIA */
-					temp = (acu << 1) | 1;
-					cbits = acu & 0x80;
-					goto cbshflg1;
+					case 0x30:/* SLIA */
+						temp = (acu << 1) | 1;
+						cbits = acu & 0x80;
+						break;
 
-				case 0x38:/* SRL */
-					temp = acu >> 1;
-					cbits = acu & 1;
-				cbshflg1:
+					case 0x38:/* SRL */
+						temp = acu >> 1;
+						cbits = acu & 1;
+						break;
+
+					default:
+						temp = acu;
+						cbits = 0;
+					}
 					AF = (AF & ~0xff) | rotateShiftTable[temp & 0xff] | !!cbits;
-				}
 				break;
 
 			case 0x40:  /* BIT */
@@ -3330,47 +3334,51 @@ static inline void Z80run(void) {
 				case 0x00:  /* shift/rotate */
 					switch (op & 0x38) {
 
-					case 0x00:/* RLC */
-						temp = (acu << 1) | (acu >> 7);
-						cbits = temp & 1;
-						goto cbshflg2;
+						case 0x00:/* RLC */
+							temp = (acu << 1) | (acu >> 7);
+							cbits = temp & 1;
+							break;
 
-					case 0x08:/* RRC */
-						temp = (acu >> 1) | (acu << 7);
-						cbits = temp & 0x80;
-						goto cbshflg2;
+						case 0x08:/* RRC */
+							temp = (acu >> 1) | (acu << 7);
+							cbits = temp & 0x80;
+							break;
 
-					case 0x10:/* RL */
-						temp = (acu << 1) | TSTFLAG(C);
-						cbits = acu & 0x80;
-						goto cbshflg2;
+						case 0x10:/* RL */
+							temp = (acu << 1) | TSTFLAG(C);
+							cbits = acu & 0x80;
+							break;
 
-					case 0x18:/* RR */
-						temp = (acu >> 1) | (TSTFLAG(C) << 7);
-						cbits = acu & 1;
-						goto cbshflg2;
+						case 0x18:/* RR */
+							temp = (acu >> 1) | (TSTFLAG(C) << 7);
+							cbits = acu & 1;
+							break;
 
-					case 0x20:/* SLA */
-						temp = acu << 1;
-						cbits = acu & 0x80;
-						goto cbshflg2;
+						case 0x20:/* SLA */
+							temp = acu << 1;
+							cbits = acu & 0x80;
+							break;
 
-					case 0x28:/* SRA */
-						temp = (acu >> 1) | (acu & 0x80);
-						cbits = acu & 1;
-						goto cbshflg2;
+						case 0x28:/* SRA */
+							temp = (acu >> 1) | (acu & 0x80);
+							cbits = acu & 1;
+							break;
 
-					case 0x30:/* SLIA */
-						temp = (acu << 1) | 1;
-						cbits = acu & 0x80;
-						goto cbshflg2;
+						case 0x30:/* SLIA */
+							temp = (acu << 1) | 1;
+							cbits = acu & 0x80;
+							break;
 
-					case 0x38:/* SRL */
-						temp = acu >> 1;
-						cbits = acu & 1;
-					cbshflg2:
-						AF = (AF & ~0xff) | rotateShiftTable[temp & 0xff] | !!cbits;
+						case 0x38:/* SRL */
+							temp = acu >> 1;
+							cbits = acu & 1;
+							break;
+
+						default:
+							temp = acu;
+							cbits = 0;
 					}
+					AF = (AF & ~0xff) | rotateShiftTable[temp & 0xff] | !!cbits;
 					break;
 
 				case 0x40:  /* BIT */
@@ -3517,9 +3525,9 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xeb:      /* EX DE,HL */
-			temp = HL;
-			HL = DE;
-			DE = temp;
+			HL ^= DE;
+			DE ^= HL;
+			HL ^= DE;
 			break;
 
 		case 0xec:      /* CALL PE,nnnn */
@@ -4551,47 +4559,51 @@ static inline void Z80run(void) {
 				case 0x00:  /* shift/rotate */
 					switch (op & 0x38) {
 
-					case 0x00:/* RLC */
-						temp = (acu << 1) | (acu >> 7);
-						cbits = temp & 1;
-						goto cbshflg3;
-
-					case 0x08:/* RRC */
-						temp = (acu >> 1) | (acu << 7);
-						cbits = temp & 0x80;
-						goto cbshflg3;
-
-					case 0x10:/* RL */
-						temp = (acu << 1) | TSTFLAG(C);
-						cbits = acu & 0x80;
-						goto cbshflg3;
-
-					case 0x18:/* RR */
-						temp = (acu >> 1) | (TSTFLAG(C) << 7);
-						cbits = acu & 1;
-						goto cbshflg3;
-
-					case 0x20:/* SLA */
-						temp = acu << 1;
-						cbits = acu & 0x80;
-						goto cbshflg3;
-
-					case 0x28:/* SRA */
-						temp = (acu >> 1) | (acu & 0x80);
-						cbits = acu & 1;
-						goto cbshflg3;
-
-					case 0x30:/* SLIA */
-						temp = (acu << 1) | 1;
-						cbits = acu & 0x80;
-						goto cbshflg3;
-
-					case 0x38:/* SRL */
-						temp = acu >> 1;
-						cbits = acu & 1;
-					cbshflg3:
-						AF = (AF & ~0xff) | rotateShiftTable[temp & 0xff] | !!cbits;
+						case 0x00:/* RLC */
+							temp = (acu << 1) | (acu >> 7);
+							cbits = temp & 1;
+							break;
+	
+						case 0x08:/* RRC */
+							temp = (acu >> 1) | (acu << 7);
+							cbits = temp & 0x80;
+							break;
+	
+						case 0x10:/* RL */
+							temp = (acu << 1) | TSTFLAG(C);
+							cbits = acu & 0x80;
+							break;
+	
+						case 0x18:/* RR */
+							temp = (acu >> 1) | (TSTFLAG(C) << 7);
+							cbits = acu & 1;
+							break;
+	
+						case 0x20:/* SLA */
+							temp = acu << 1;
+							cbits = acu & 0x80;
+							break;
+	
+						case 0x28:/* SRA */
+							temp = (acu >> 1) | (acu & 0x80);
+							cbits = acu & 1;
+							break;
+	
+						case 0x30:/* SLIA */
+							temp = (acu << 1) | 1;
+							cbits = acu & 0x80;
+							break;
+	
+						case 0x38:/* SRL */
+							temp = acu >> 1;
+							cbits = acu & 1;
+							break;
+	
+						default:
+							temp = acu;
+							cbits = 0;
 					}
+					AF = (AF & ~0xff) | rotateShiftTable[temp & 0xff] | !!cbits;
 					break;
 
 				case 0x40:  /* BIT */
