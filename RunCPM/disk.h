@@ -196,7 +196,7 @@ void _HostnameToFCBname(uint8* from, uint8* to) {
 
 // Creates a fake directory entry for the current dmaAddr FCB
 void _mockupDirEntry(uint8 mode) {
-	CPM_DIRENTRY* DE = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
+	CPM_DIRENTRY* DirEntry = (CPM_DIRENTRY*)_RamSysAddr(dmaAddr);
 	uint8 blocks, i;
 
 	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
@@ -210,25 +210,25 @@ void _mockupDirEntry(uint8 mode) {
 	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
 	if (allUsers) {
-		DE->dr = currFindUser; // set user code for return
+		DirEntry->dr = currFindUser; // set user code for return
 	} else {
-		DE->dr = userCode;
+		DirEntry->dr = userCode;
 	}
 	// does file fit in a single directory entry?
 	if (fileExtents <= extentsPerDirEntry) {
 		if (fileExtents) {
-			DE->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
-			DE->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
-			DE->rc = fileRecords - (BlkEX * (fileExtents - 1));
+			DirEntry->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
+			DirEntry->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
+			DirEntry->rc = fileRecords - (BlkEX * (fileExtents - 1));
 		}
 		blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
 		fileRecords = 0;
 		fileExtents = 0;
 		fileExtentsUsed = 0;
 	} else { // no, max out the directory entry
-		DE->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
-		DE->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
-		DE->rc = BlkEX;
+		DirEntry->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
+		DirEntry->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
+		DirEntry->rc = BlkEX;
 		blocks = numAllocBlocks < 256 ? 16 : 8;
 		// update remaining records and extents for next call
 		fileRecords -= BlkEX * extentsPerDirEntry;
@@ -238,11 +238,11 @@ void _mockupDirEntry(uint8 mode) {
 	// phoney up an appropriate number of allocation blocks
 	if (numAllocBlocks < 256) {
 		for (i = 0; i < blocks; ++i)
-			DE->al[i] = (uint8)firstFreeAllocBlock++;
+			DirEntry->al[i] = (uint8)firstFreeAllocBlock++;
 	} else {
 		for (i = 0; i < 2 * blocks; i += 2) {
-			DE->al[i] = firstFreeAllocBlock & 0xFF;
-			DE->al[i + 1] = firstFreeAllocBlock >> 8;
+			DirEntry->al[i] = firstFreeAllocBlock & 0xFF;
+			DirEntry->al[i + 1] = firstFreeAllocBlock >> 8;
 			++firstFreeAllocBlock;
 		}
 	}
