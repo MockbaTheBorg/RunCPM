@@ -28,8 +28,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.5"
-#define VersionBCD 0x65
+#define VERSION	"6.6"
+#define VersionBCD 0x66
 
 /* Definition of which CCP to use (must define only one) */
 #define CCP_INTERNAL		// If this is defined, an internal CCP will emulated
@@ -42,8 +42,8 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v3.0"			// Will use the CCP from ccp.h
-#define VersionCCP	0x30					// 0x10 and above reserved for Internal CCP
+#define CCPname		"INTERNAL v3.1"			// Will use the CCP from ccp.h
+#define VersionCCP	0x31					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 48)
 #define CCPaddr		BDOSjmppage				// Internal CCP has size 0
 #endif
@@ -98,8 +98,6 @@
 
 #define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
-//#define HASLUA					// Will enable Lua scripting (BDOS call 254)
-									// Should be passed externally per-platform with -DHASLUA
 //#define STREAMIO					// Will enable command line flags to read
 									// console input from file and to log console output to file
 									// Should be passed externally per-platform with -DSTREAMIO

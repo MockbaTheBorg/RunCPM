@@ -68,9 +68,6 @@ int main(int argc, char* argv[]) {
 	_clrscr();
 	_puts("  CP/M Emulator v" VERSION " by Marcelo Dantas\r\n");
 	_puts("      Built " __DATE__ " - " __TIME__ "\r\n");
-#ifdef HASLUA
-	_puts("       with Lua scripting support\r\n");
-#endif
 	_puts("----------------------------------------\r\n");
 	_puts("BIOS at 0x");
 	_puthex16(BIOSjmppage);

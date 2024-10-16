@@ -48,8 +48,8 @@ jobs:
       uses: actions/upload-artifact@v4.3.4
       with:
         # Artifact name
-        name: runcpm-windows
+        name: RunCPM.exe
         # A file, directory or wildcard pattern that describes what to upload
-        path: output
+        path: Release
         # The desired behavior if no files are found using the provided path.
         if-no-files-found: error

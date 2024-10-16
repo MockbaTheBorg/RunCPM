@@ -124,8 +124,7 @@ enum eBDOSFunc {
 	F_HOSTOS = 250,
 	F_VERSION = 251,
 	F_CCPVERSION = 252,
-	F_CCPADDR = 253,
-	F_RUNLUA = 254
+	F_CCPADDR = 253
 };
 
 /* see main.c for definition */
@@ -1764,18 +1763,6 @@ void _Bdos(void) {
 			HL = CCPaddr;
 			break;
 		}
-
-#ifdef HASLUA
-
-		/*
-		   C = 254 (FEh) : Run Lua file
-		 */
-		case F_RUNLUA: {
-			HL = _RunLua(DE);
-			break;
-		}
-
-#endif // ifdef HASLUA
 
 		/*
 		   Unimplemented calls get listed

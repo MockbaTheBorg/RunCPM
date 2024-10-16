@@ -201,11 +201,11 @@ void _mockupDirEntry(uint8 mode) {
 
 	for (i = 0; i < sizeof(CPM_DIRENTRY); ++i)
 		_RamWrite(dmaAddr + i, 0x00); // zero out directory entry
-	char* shortName;
+	unsigned char* shortName;
 	if (mode) {
-		shortName = &findNextDirName[strlen(FILEBASE)];
+		shortName = (unsigned char*)&findNextDirName[strlen(FILEBASE)];
 	} else {
-		shortName = &findNextDirName[0];
+		shortName = (unsigned char*)&findNextDirName[0];
 	}
 	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
@@ -638,21 +638,5 @@ uint8 _CheckSUB(void) {
 	userCode = oCode;								// Restores the current user code
 	return(result);
 }
-
-#ifdef HASLUA
-// Executes a Lua script
-uint8 _RunLua(uint16 fcbaddr) {
-	uint8 luascript[17];
-	uint8 result = 0xff;
-
-	if (_FCBtoHostname(fcbaddr, &luascript[0])) {	// Script name must be unique
-		if (!_SearchFirst(fcbaddr, FALSE)) {		// and must exist
-			result = _RunLuaScript((char*)&luascript[0]);
-		}
-	}
-
-	return(result);
-}
-#endif
 
 #endif

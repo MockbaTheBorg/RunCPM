@@ -1,3 +1,0 @@
-[submodule "RunCPM/lua"]
-	path = RunCPM/lua
-	url = https://github.com/lua/lua

@@ -20,16 +20,6 @@
 #include <termios.h>
 #endif
 
-// Lua scripting support
-#ifdef HASLUA
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-
-#include "lua.h"
-lua_State* L;
-#endif
-
 #define HostOS 0x02
 
 /* Externals for abstracted functions need to go here */
@@ -358,38 +348,6 @@ uint8 _sys_makedisk(uint8 drive) {
 	return(result);
 }
 
-#ifdef HASLUA
-uint8 _RunLuaScript(char* filename) {
-
-	L = luaL_newstate();
-	luaL_openlibs(L);
-
-	// Register Lua functions
-	lua_register(L, "BdosCall", luaBdosCall);
-	lua_register(L, "RamRead", luaRamRead);
-	lua_register(L, "RamWrite", luaRamWrite);
-	lua_register(L, "RamRead16", luaRamRead16);
-	lua_register(L, "RamWrite16", luaRamWrite16);
-	lua_register(L, "ReadReg", luaReadReg);
-	lua_register(L, "WriteReg", luaWriteReg);
-
-	uint8 fullpath[128] = FILEBASE;
-	strcat((char*)fullpath, (char*)filename);
-	int result = luaL_loadfile(L, (char*)fullpath);
-	if (result) {
-		_puts(lua_tostring(L, -1));
-	} else {
-		result = lua_pcall(L, 0, LUA_MULTRET, 0);
-		if (result)
-			_puts(lua_tostring(L, -1));
-	}
-
-	lua_close(L);
-
-	return(result);
-}
-#endif
-
 #ifndef POLLRDBAND
 #define POLLRDBAND 0
 #endif
@@ -645,7 +603,7 @@ static void _abort_if_kbd_eof() {
 	// this means EOF on stdin. Assuming that stdin is connected to a
 	// file or pipe, further reading from stdin won't read from the
 	// keyboard but just continue to yield EOF.
-	// On Windows, this problem doesn't exist because of the separete
+	// On Windows, this problem doesn't exist because of the separate
 	// conio.h.
 	if (!streamInputActive && streamInputFile == stdin) {
 		_puts("\nEOF on console input from stdin\n");

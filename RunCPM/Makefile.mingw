@@ -14,14 +14,9 @@ CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
 
 # Flags to pass to the linker
 LDFLAGS =
-#LDFLAGS = -mconsole -lm -ldl
 
 # Objects to build
-OBJS = main.o # lua/liblua.a
-
-# Lua building
-#LUABUILD = $(MAKE) -C lua
-#LUACLEAN = $(MAKE) -C lua clean
+OBJS = main.o
 
 # Clean up program
 RM = del /Q
@@ -34,13 +29,11 @@ $(PROG): main.o
 	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
 
 main.o: main.c $(wildcard *.h) $(MFILE)
-#	$(LUABUILD)
 	$(CC) $(CFLAGS) -c main.c
 
 rebuild: clean all
 
 .PHONY: clean
 clean:
-#	$(LUACLEAN)
 	$(RM) *.o
 	$(RM) $(PROG)
