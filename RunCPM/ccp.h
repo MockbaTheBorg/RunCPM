@@ -645,7 +645,7 @@ void _ccp(void) {
 	if (firstBoot && !sFlag) {
         if (_sys_exists((uint8*)AUTOEXEC)) {
             uint16 cmd = inBuf + 2;
-            uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+            uint8 bytesread = (uint8)_RamLoad((uint8*)AUTOEXEC, cmd, 125);
             blen = 0;
             while (blen < bytesread && _RamRead(cmd + blen) > 31)
                 blen++;
