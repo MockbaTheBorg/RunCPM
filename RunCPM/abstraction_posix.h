@@ -42,23 +42,12 @@ int _sys_fclose(FILE* file);
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-void _RamLoad(uint8* filename, uint16 address) {
+uint16 _RamLoad(uint8* filename, uint16 address, uint16 maxsize) {
 	long l;
 	FILE* file = _sys_fopen_r(filename);
 	_sys_fseek(file, 0, SEEK_END);
 	l = _sys_ftell(file);
-
-	_sys_fseek(file, 0, SEEK_SET);
-	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space
-
-	_sys_fclose(file);
-}
-uint16 _RamLoadSz(uint8* filename, uint16 address, uint16 maxsize) {
-	long l;
-	FILE* file = _sys_fopen_r(filename);
-	_sys_fseek(file, 0, SEEK_END);
-	l = _sys_ftell(file);
-	if (l > maxsize)
+	if (maxsize && l > maxsize)
 		l = maxsize;
 	_sys_fseek(file, 0, SEEK_SET);
 	_sys_fread(_RamSysAddr(address), 1, l, file); // (todo) This can overwrite past RAM space

@@ -103,14 +103,14 @@ int main(int argc, char* argv[]) {
 			_puts("Unable to load CP/M CCP.\r\nCPU halted.\r\n");
 			break;
 		}
-		_RamLoad((uint8*)CCPname, CCPaddr);	// Loads the CCP binary file into memory
+		_RamLoad((uint8*)CCPname, CCPaddr, 0);	// Loads the CCP binary file into memory
 
 		// Loads an autoexec file if it exists and this is the first boot
 		// The file contents are loaded at ccpAddr+8 up to 126 bytes then the size loaded is stored at ccpAddr+7
 		if (firstBoot) {
 			if (_sys_exists((uint8*)AUTOEXEC)) {
 				uint16 cmd = CCPaddr + 8;
-				uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+				uint8 bytesread = (uint8)_RamLoad((uint8*)AUTOEXEC, cmd, 125);
 				uint8 blen = 0;
 				while (blen < bytesread && _RamRead(cmd + blen) > 31)
 					blen++;
