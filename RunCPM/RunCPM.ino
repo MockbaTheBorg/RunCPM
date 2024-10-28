@@ -85,7 +85,7 @@ void setup(void) {
 #ifdef CCP_INTERNAL
         _ccp();
 #else
-        if (!_RamLoad((uint8 *)CCPname, CCPaddr)) {
+        if (!_RamLoad((uint8 *)CCPname, CCPaddr ,0)) {
           _puts("Unable to load the CCP.\r\nCPU halted.\r\n");
           break;
         }
@@ -94,7 +94,7 @@ void setup(void) {
 		    if (firstBoot) {
 			    if (_sys_exists((uint8*)AUTOEXEC)) {
 				    uint16 cmd = CCPaddr + 8;
-				    uint8 bytesread = (uint8)_RamLoadSz((uint8*)AUTOEXEC, cmd, 125);
+				    uint8 bytesread = (uint8)_RamLoad((uint8*)AUTOEXEC, cmd, 125);
 				    uint8 blen = 0;
 				    while (blen < bytesread && _RamRead(cmd + blen) > 31)
 				    	blen++;
