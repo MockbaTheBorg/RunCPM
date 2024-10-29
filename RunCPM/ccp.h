@@ -15,6 +15,8 @@
 #define defDMA	0x0080					// Default DMA address
 #define defLoad	0x0100					// Default load address
 
+#define Internals                       // Define to have internal commands
+
 // CCP global variables
 uint8 pgSize = 22;              // for TYPE
 uint8 curDrive = 0;             // 0 -> 15 = A -> P	.. Current drive for the CCP (same as RAM[DSKByte])
@@ -70,6 +72,7 @@ uint8 _ccp_cnum(void) {
     uint8 command[9];
     uint8 i = 0;
     
+#ifdef Internals
     if (!_RamRead(CmdFCB)) {    // If a drive was set, then the command is external
         while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
             command[i] = _RamRead(CmdFCB + i + 1);
@@ -86,6 +89,7 @@ uint8 _ccp_cnum(void) {
             ++i;
         }
     }
+#endif
     return (result);
 } // _ccp_cnum
 
@@ -208,6 +212,7 @@ uint16 _ccp_fcbtonum() {
     return (n);
 } // _ccp_fcbtonum
 
+#ifdef Internals
 // DIR command
 void _ccp_dir(void) {
     uint8 i;
@@ -412,6 +417,7 @@ uint8 _ccp_hlp(void) {
     _puts("\t    which comes from each volume's INFO.TXT");
     return(FALSE);
 }
+#endif
 
 // External (.COM) command
 uint8 _ccp_ext(void) {
@@ -773,6 +779,7 @@ void _ccp(void) {
             i = FALSE;                                  // Checks if the command is valid and executes
             
             switch (_ccp_cnum()) {
+#ifdef Internals
                 // Standard CP/M commands
                 case 0: {           // DIR
                     _ccp_dir();
@@ -836,7 +843,8 @@ void _ccp(void) {
                     i = _ccp_hlp();
                     break;
                 }
-                    
+#endif
+
                 // External commands
                 case 255: {         // It is an external command
                     i = _ccp_ext();
