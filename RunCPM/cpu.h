@@ -1117,12 +1117,12 @@ int32 Watch = -1;
 #endif
 
 /* Memory management    */
-static uint8 GET_BYTE(uint32 a) {
-	return _RamRead(a & ADDRMASK);
+static uint8 GET_BYTE(uint16 a) {
+	return _RamRead(a);
 }
 
-static void PUT_BYTE(uint32 a, uint32 v) {
-	_RamWrite(a & ADDRMASK, v);
+static void PUT_BYTE(uint16 a, uint8 v) {
+	_RamWrite(a, v);
 }
 
 static uint16 GET_WORD(uint32 a) {
