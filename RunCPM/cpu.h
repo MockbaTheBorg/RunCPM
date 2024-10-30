@@ -39,33 +39,26 @@ const char* iLogTxt;
 /*
 	Functions needed by the soft CPU implementation
 */
-void cpu_out(const uint32 Port, const uint32 Value) {
-	if (Port == 0xFF) {
+void cpu_out(const uint32 p, const uint32 v) {
+	if (p == 0xFF) {
 		_Bios();
 	} else {
-		_HardwareOut(Port, Value);
+		_HardwareOut(p, v);
 	}
 }
 
-uint32 cpu_in(const uint32 Port) {
-	uint32 Result;
-	if (Port == 0xFF) {
+uint32 cpu_in(const uint32 p) {
+	uint32 v;
+	if (p == 0xFF) {
 		_Bdos();
-		Result = HIGH_REGISTER(AF);
+		v = HIGH_REGISTER(AF);
 	} else {
-		Result = _HardwareIn(Port);
+		v = _HardwareIn(p);
 	}
-	return(Result);
+	return(v);
 }
 
 /* Z80 Custom soft core */
-
-/* simulator stop codes */
-#define STOP_HALT       0   /* HALT                                             */
-#define STOP_IBKPT      1   /* breakpoint   (program counter)                   */
-#define STOP_MEM        2   /* breakpoint   (memory access)                     */
-#define STOP_INSTR      3   /* breakpoint   (instruction access)                */
-#define STOP_OPCODE     4   /* invalid operation encountered (8080, Z80, 8086)  */
 
 #define ADDRMASK        0xffff
 
@@ -78,8 +71,6 @@ uint32 cpu_in(const uint32 Port) {
 
 #define SETFLAG(f,c)    (AF = (c) ? AF | FLAG_ ## f : AF & ~FLAG_ ## f)
 #define TSTFLAG(f)      ((AF & FLAG_ ## f) != 0)
-
-#define PARITY(x)   parityTable[(x) & 0xff]
 
 #define SET_PVS(s)  (((cbits >> 6) ^ (cbits >> 5)) & 4)
 #define SET_PV      (SET_PVS(sum))
@@ -101,9 +92,9 @@ uint32 cpu_in(const uint32 Port) {
 
 #define CALLC(cond) {                           \
     if (cond) {                                 \
-        uint32 addr = GET_WORD(PC);             \
+        uint32 a = GET_WORD(PC);                \
         PUSH(PC + 2);                           \
-        PC = addr;                              \
+        PC = a;                                 \
     } else {                                    \
 		PC++;                                   \
         PC++;                                   \
@@ -1126,21 +1117,21 @@ int32 Watch = -1;
 #endif
 
 /* Memory management    */
-static uint8 GET_BYTE(uint32 Addr) {
-	return _RamRead(Addr & ADDRMASK);
+static uint8 GET_BYTE(uint32 a) {
+	return _RamRead(a & ADDRMASK);
 }
 
-static void PUT_BYTE(uint32 Addr, uint32 Value) {
-	_RamWrite(Addr & ADDRMASK, Value);
+static void PUT_BYTE(uint32 a, uint32 v) {
+	_RamWrite(a & ADDRMASK, v);
 }
 
 static uint16 GET_WORD(uint32 a) {
 	return GET_BYTE(a) | (GET_BYTE(a + 1) << 8);
 }
 
-static void PUT_WORD(uint32 Addr, uint32 Value) {
-	_RamWrite(Addr, Value);
-	_RamWrite(++Addr, Value >> 8);
+static void PUT_WORD(uint32 a, uint32 v) {
+	_RamWrite(a, v);
+	_RamWrite(++a, v >> 8);
 }
 
 #define RAM_MM(a)   GET_BYTE(a--)
@@ -1524,7 +1515,7 @@ static inline void Z80run(void) {
 	uint32 acu;
 	uint32 sum;
 	uint32 cbits;
-	uint32 op;
+	uint32 op = 0;
 	uint32 adr;
 
 	/* main instruction fetch/decode loop */
@@ -1576,7 +1567,7 @@ static inline void Z80run(void) {
 
 		case 0x01:      /* LD BC,nnnn */
 			BC = GET_WORD(PC++);
-			PC++;
+			++PC;
 			break;
 
 		case 0x02:      /* LD (BC),A */
@@ -1659,7 +1650,7 @@ static inline void Z80run(void) {
 
 		case 0x11:      /* LD DE,nnnn */
 			DE = GET_WORD(PC++);
-			PC++;
+			++PC;
 			break;
 
 		case 0x12:      /* LD (DE),A */
@@ -1740,12 +1731,12 @@ static inline void Z80run(void) {
 
 		case 0x21:      /* LD HL,nnnn */
 			HL = GET_WORD(PC++);
-			PC++;
+			++PC;
 			break;
 
 		case 0x22:      /* LD (nnnn),HL */
 			PUT_WORD(GET_WORD(PC++), HL);
-			PC++;
+			++PC;
 			break;
 
 		case 0x23:      /* INC HL */
@@ -1809,7 +1800,7 @@ static inline void Z80run(void) {
 
 		case 0x2a:      /* LD HL,(nnnn) */
 			HL = GET_WORD(GET_WORD(PC++));
-			PC++;
+			++PC;
 			break;
 
 		case 0x2b:      /* DEC HL */
@@ -1845,12 +1836,12 @@ static inline void Z80run(void) {
 
 		case 0x31:      /* LD SP,nnnn */
 			SP = GET_WORD(PC++);
-			PC++;
+			++PC;
 			break;
 
 		case 0x32:      /* LD (nnnn),A */
 			PUT_BYTE(GET_WORD(PC++), HIGH_REGISTER(AF));
-			PC++;
+			++PC;
 			break;
 
 		case 0x33:      /* INC SP */
@@ -1894,7 +1885,7 @@ static inline void Z80run(void) {
 
 		case 0x3a:      /* LD A,(nnnn) */
 			SET_HIGH_REGISTER(AF, GET_BYTE(GET_WORD(PC++)));
-			PC++;
+			++PC;
 			break;
 
 		case 0x3b:      /* DEC SP */
@@ -2651,45 +2642,38 @@ static inline void Z80run(void) {
 			switch ((op = GET_BYTE(PC)) & 7) {
 
 			case 0:
-				++PC;
 				acu = HIGH_REGISTER(BC);
 				break;
 
 			case 1:
-				++PC;
 				acu = LOW_REGISTER(BC);
 				break;
 
 			case 2:
-				++PC;
 				acu = HIGH_REGISTER(DE);
 				break;
 
 			case 3:
-				++PC;
 				acu = LOW_REGISTER(DE);
 				break;
 
 			case 4:
-				++PC;
 				acu = HIGH_REGISTER(HL);
 				break;
 
 			case 5:
-				++PC;
 				acu = LOW_REGISTER(HL);
 				break;
 
 			case 6:
-				++PC;
 				acu = GET_BYTE(adr);
 				break;
 
 			case 7:
-				++PC;
 				acu = HIGH_REGISTER(AF);
 				break;
 			}
+			++PC;
 			switch (op & 0xc0) {
 
 			case 0x00:  /* shift/rotate */
@@ -2861,15 +2845,15 @@ static inline void Z80run(void) {
 			break;
 
 		case 0xd9:      /* EXX */
-			temp = BC;
-			BC = BC1;
-			BC1 = temp;
-			temp = DE;
-			DE = DE1;
-			DE1 = temp;
-			temp = HL;
-			HL = HL1;
-			HL1 = temp;
+			BC ^= BC1;
+			BC1 ^= BC;
+			BC ^= BC1;
+			DE ^= DE1;
+			DE1 ^= DE;
+			DE ^= DE1;
+			HL ^= HL1;
+			HL1 ^= HL;
+			HL ^= HL1;
 			break;
 
 		case 0xda:      /* JP C,nnnn */
@@ -2906,12 +2890,12 @@ static inline void Z80run(void) {
 
 			case 0x21:      /* LD IX,nnnn */
 				IX = GET_WORD(PC++);
-				PC++;
+				++PC;
 				break;
 
 			case 0x22:      /* LD (nnnn),IX */
 				PUT_WORD(GET_WORD(PC++), IX);
-				PC++;
+				++PC;
 				break;
 
 			case 0x23:      /* INC IX */
@@ -2941,7 +2925,7 @@ static inline void Z80run(void) {
 
 			case 0x2a:      /* LD IX,(nnnn) */
 				IX = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0x2b:      /* DEC IX */
@@ -3290,45 +3274,38 @@ static inline void Z80run(void) {
 				switch ((op = GET_BYTE(PC)) & 7) {
 
 				case 0:
-					++PC;
 					acu = HIGH_REGISTER(BC);
 					break;
 
 				case 1:
-					++PC;
 					acu = LOW_REGISTER(BC);
 					break;
 
 				case 2:
-					++PC;
 					acu = HIGH_REGISTER(DE);
 					break;
 
 				case 3:
-					++PC;
 					acu = LOW_REGISTER(DE);
 					break;
 
 				case 4:
-					++PC;
 					acu = HIGH_REGISTER(HL);
 					break;
 
 				case 5:
-					++PC;
 					acu = LOW_REGISTER(HL);
 					break;
 
 				case 6:
-					++PC;
 					acu = GET_BYTE(adr);
 					break;
 
 				case 7:
-					++PC;
 					acu = HIGH_REGISTER(AF);
 					break;
 				}
+				++PC;
 				switch (op & 0xc0) {
 
 				case 0x00:  /* shift/rotate */
@@ -3559,7 +3536,7 @@ static inline void Z80run(void) {
 
 			case 0x43:      /* LD (nnnn),BC */
 				PUT_WORD(GET_WORD(PC++), BC);
-				PC++;
+				++PC;
 				break;
 
 			case 0x44:      /* NEG */
@@ -3628,7 +3605,7 @@ static inline void Z80run(void) {
 
 			case 0x4b:      /* LD BC,(nnnn) */
 				BC = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0x4d:      /* RETI */
@@ -3661,7 +3638,7 @@ static inline void Z80run(void) {
 
 			case 0x53:      /* LD (nnnn),DE */
 				PUT_WORD(GET_WORD(PC++), DE);
-				PC++;
+				++PC;
 				break;
 
 			case 0x56:      /* IM 1 */
@@ -3693,7 +3670,7 @@ static inline void Z80run(void) {
 
 			case 0x5b:      /* LD DE,(nnnn) */
 				DE = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0x5e:      /* IM 2 */
@@ -3725,7 +3702,7 @@ static inline void Z80run(void) {
 
 			case 0x63:      /* LD (nnnn),HL */
 				PUT_WORD(GET_WORD(PC++), HL);
-				PC++;
+				++PC;
 				break;
 
 			case 0x67:      /* RRD */
@@ -3755,7 +3732,7 @@ static inline void Z80run(void) {
 
 			case 0x6b:      /* LD HL,(nnnn) */
 				HL = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0x6f:      /* RLD */
@@ -3786,7 +3763,7 @@ static inline void Z80run(void) {
 
 			case 0x73:      /* LD (nnnn),SP */
 				PUT_WORD(GET_WORD(PC++), SP);
-				PC++;
+				++PC;
 				break;
 
 			case 0x78:      /* IN A,(C) */
@@ -3810,7 +3787,7 @@ static inline void Z80run(void) {
 
 			case 0x7b:      /* LD SP,(nnnn) */
 				SP = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0xa0:      /* LDI */
@@ -4130,13 +4107,13 @@ static inline void Z80run(void) {
 
 			case 0x21:      /* LD IY,nnnn */
 				IY = GET_WORD(PC++);
-				PC++;
+				++PC;
 				break;
 
 			case 0x22:      /* LD (nnnn),IY */
 				temp = GET_WORD(PC++);
 				PUT_WORD(temp, IY);
-				PC++;
+				++PC;
 				break;
 
 			case 0x23:      /* INC IY */
@@ -4166,7 +4143,7 @@ static inline void Z80run(void) {
 
 			case 0x2a:      /* LD IY,(nnnn) */
 				IY = GET_WORD(GET_WORD(PC++));
-				PC++;
+				++PC;
 				break;
 
 			case 0x2b:      /* DEC IY */
@@ -4515,45 +4492,38 @@ static inline void Z80run(void) {
 				switch ((op = GET_BYTE(PC)) & 7) {
 
 				case 0:
-					++PC;
 					acu = HIGH_REGISTER(BC);
 					break;
 
 				case 1:
-					++PC;
 					acu = LOW_REGISTER(BC);
 					break;
 
 				case 2:
-					++PC;
 					acu = HIGH_REGISTER(DE);
 					break;
 
 				case 3:
-					++PC;
 					acu = LOW_REGISTER(DE);
 					break;
 
 				case 4:
-					++PC;
 					acu = HIGH_REGISTER(HL);
 					break;
 
 				case 5:
-					++PC;
 					acu = LOW_REGISTER(HL);
 					break;
 
 				case 6:
-					++PC;
 					acu = GET_BYTE(adr);
 					break;
 
 				case 7:
-					++PC;
 					acu = HIGH_REGISTER(AF);
 					break;
 				}
+				++PC;
 				switch (op & 0xc0) {
 
 				case 0x00:  /* shift/rotate */
