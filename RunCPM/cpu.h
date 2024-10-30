@@ -1125,7 +1125,7 @@ static void PUT_BYTE(uint16 a, uint8 v) {
 	_RamWrite(a, v);
 }
 
-static uint16 GET_WORD(uint16 a) {
+static uint16 GET_WORD(uint32 a) {
 	return _RamRead(a) | (_RamRead(a + 1) << 8);
 }
 
