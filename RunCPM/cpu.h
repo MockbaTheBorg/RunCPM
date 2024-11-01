@@ -1125,17 +1125,17 @@ static void PUT_BYTE(uint16 a, uint8 v) {
 	_RamWrite(a, v);
 }
 
-static uint16 GET_WORD(uint32 a) {
+static uint16 GET_WORD(uint16 a) {
 	return _RamRead(a) | (_RamRead(a + 1) << 8);
 }
 
-static void PUT_WORD(uint32 a, uint32 v) {
+static void PUT_WORD(uint16 a, uint32 v) {
 	_RamWrite(a, v);
 	_RamWrite(++a, v >> 8);
 }
 
-#define RAM_MM(a)   _RamRead(a--)
-#define RAM_PP(a)   _RamRead(a++)
+#define RAM_MM(a)   GET_BYTE(a--)
+#define RAM_PP(a)   GET_BYTE(a++)
 
 #define PUT_BYTE_PP(a,v) _RamWrite(a++, v)
 #define PUT_BYTE_MM(a,v) _RamWrite(a--, v)
