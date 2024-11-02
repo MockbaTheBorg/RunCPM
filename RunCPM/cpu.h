@@ -1137,9 +1137,9 @@ static void PUT_WORD(uint16 a, uint32 v) {
 #define RAM_MM(a)   GET_BYTE(a--)
 #define RAM_PP(a)   GET_BYTE(a++)
 
-#define PUT_BYTE_PP(a,v) _RamWrite(a++, v)
-#define PUT_BYTE_MM(a,v) _RamWrite(a--, v)
-#define MM_PUT_BYTE(a,v) _RamWrite(--a, v)
+#define PUT_BYTE_PP(a,v) PUT_BYTE(a++, v)
+#define PUT_BYTE_MM(a,v) PUT_BYTE(a--, v)
+#define MM_PUT_BYTE(a,v) PUT_BYTE(--a, v)
 
 #define PUSH(x) do {            \
 	MM_PUT_BYTE(SP, (x) >> 8);  \
