@@ -89,6 +89,9 @@ int main(int argc, char* argv[]) {
 	_puts(" banks\r\n");
 #endif
 
+#ifdef ABDOS
+	_PatchBIOS();
+#endif
 	while (TRUE) {
 		_puts(CCPHEAD);
 		_PatchCPM();		// Patches the CP/M entry points and other things in

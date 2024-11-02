@@ -31,7 +31,7 @@
 #define VERSION	"6.7"
 #define VersionBCD 0x67
 
-/* Definition of which BDOS to use (not for Internal CCP, set to 60K ZCPR3 by default) */
+/* Definition of which BDOS to use (not for Internal CCP, set to 60K CCPs by default) */
 //#define ABDOS				// Based on work by Pavel Zampach (https://www.chstercius.cz/runcpm/)
 // This requires ABDOS.SYS to be present on A: user 0 - see 'abdos' folder under 'tools'
 
@@ -91,6 +91,12 @@
 #error No CCP defined
 #endif
 //
+#ifdef CCP_INTERNAL
+	#ifdef ABDOS
+		#error Internal CCP doesn't support ABDOS
+	#endif
+#endif
+
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #ifdef DEBUG
