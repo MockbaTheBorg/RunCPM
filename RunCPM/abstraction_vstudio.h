@@ -424,7 +424,7 @@ uint8 _Truncate(char* fn, uint8 rc) {
 	wchar_t filename[128];
 	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, fn);
-	MultiByteToWideChar(CP_ACP, 0, (char*)fullpath, -1, filename, 15);
+	MultiByteToWideChar(CP_ACP, 0, (char*)fullpath, -1, filename, strlen(fullpath)+1);
 	HANDLE fh = CreateFileW(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (fh == INVALID_HANDLE_VALUE) {
 		result = 0xff;
