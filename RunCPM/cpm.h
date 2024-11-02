@@ -187,7 +187,7 @@ void _PatchCPM(void) {
 
 	// **********  Patch CP/M Version into the memory so the CCP can see it
 #ifdef ABDOS
-	_RamLoad((char*)"A/0/ABDOS.SYS", BDOSjmppage, 0);
+	_RamLoad((uint8*)"A/0/ABDOS.SYS", BDOSjmppage, 0);
 #else
 	_RamWrite16(BDOSjmppage,		0x1600);
 	_RamWrite16(BDOSjmppage + 2,	0x0000);

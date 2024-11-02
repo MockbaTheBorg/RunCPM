@@ -93,7 +93,7 @@
 //
 #ifdef CCP_INTERNAL
 	#ifdef ABDOS
-		#error Internal CCP doesn't support ABDOS
+		#error Internal CCP does not support ABDOS
 	#endif
 #endif
 
