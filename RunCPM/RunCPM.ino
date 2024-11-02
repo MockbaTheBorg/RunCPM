@@ -78,6 +78,9 @@ void setup(void) {
   _puts("Initializing SD card.\r\n");
   if (SD.begin(SDINIT)) {
     if (VersionCCP >= 0x10 || SD.exists(CCPname)) {
+#ifdef ABDOS
+      _PatchBIOS();
+#endif
       while (true) {
         _puts(CCPHEAD);
         _PatchCPM();

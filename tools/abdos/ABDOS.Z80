@@ -1,0 +1,185 @@
+; BDOS module for RunCPM
+; Funcions (0-11) are handled using BIOS calls,
+; other (disk) funcions are handled by original RunCMP BDOS routine
+; Pavel Zampach, 2020
+;
+	maclib	z3base.lib
+;
+; For non-ZCPR3 environment add BIOS and BDOSAD values:
+;bios	equ	0fe00h
+;bdosad	equ	0ec00h
+;
+boot	defl	bios+3*0	; cold boot
+wboot	defl	bios+3*1	; warm boot
+const	defl	bios+3*2	; console status
+conin	defl	bios+3*3	; console input
+conout	defl	bios+3*4	; console output
+list	defl	bios+3*5	; list output
+punch	defl	bios+3*6	; punch output
+reader	defl	bios+3*7	; reader input
+listst	defl	bios+3*15	; list status
+;
+reboot	equ	0000h
+ioloc	equ	0003h
+;	equates for now graphic characters
+;
+ctlc	equ	03h		; control c
+ctlh	equ	08h		; backspace
+ctlu	equ	15h		; line delete
+ctly	equ	19h		; line delete
+rubout	equ	7fh		; char delete
+cr	equ	0dh		; carriage return
+lf	equ	0ah		; line feed
+;
+	org	bdosad
+;
+	db	0,22,0,0,0,0	; sign bytes
+;
+	jp	start
+;
+bufptr: dw	0		; buffer position pointer
+;
+start:
+	ld	a,c
+	or	a
+	jp	z,wboot
+	cp	1
+	jr	z,dos1
+	cp	2
+	jr	z,dos2
+	cp	3
+	jp	z,reader
+	cp	4
+	jr	z,dos4
+	cp	5
+	jr	z,dos5
+	cp	6
+	jr	z,dos6
+	cp	7
+	jr	z,dos7
+	cp	8
+	jr	z,dos8
+	cp	9
+	jr	z,dos9
+	cp	10
+	jr	z,dos10
+	cp	11
+	jp	z,const
+;
+	in	a,(0ffh)		; call RunCPM bdos
+	ret
+;	
+dos1:
+	call	conin
+	push	af
+	ld	c,a
+	call	conout
+	pop	af
+	ret
+dos2:
+	ld	c,e
+	jp	conout
+dos4:
+	ld	c,e
+	jp	punch
+dos5:
+	ld	c,e
+	jp	list
+dos6:
+	ld	c,e
+	inc	e
+	jp	nz,conout
+	call	const
+	or	a
+	ret	z
+	jp	conin
+dos7:
+	ld	a,(ioloc)
+	ret
+dos8:
+	ld	hl,ioloc
+	ld	(hl),e
+	ret
+dos9:
+	ld	a,(de)
+	cp	'$'
+	ret	z
+	inc	de
+	push	de
+	ld	c,a
+	call	conout
+	pop	de
+	jr	dos9
+;
+; Minimalistic version of buffer edit funcion
+; nobody uses teletype, so simple editing is sufficiant for screen console
+; also paralel printer output (^P) is not used
+; accept only ^C, ^H or del, CR or LF, ^U or ^Y
+;
+dos10:
+	push	de		; buffer addr to IY
+	pop	iy
+	inc	de
+	inc	de
+	ld	(bufptr),de	; save pointer
+	ld	(iy+1),0	; clear char counter
+mainlp:				; main loop
+	ld	a,(iy)		; buffer full?
+	cp	(iy+1)
+	ret	z		; yes -> return
+	call	conin		; char enter
+	and	7fh		; mask MSB
+	cp	cr		; ^M?
+	ret	z
+	cp	lf		; ^J?
+	ret	z
+	cp	ctlc		; ^C?
+	jr	z,ccproc
+	cp	ctlh		; ^H?
+	jr	z,chproc
+	cp	rubout		; del?
+	jr	z,chproc
+	cp	ctlu		; ^U?
+	jr	z,cuproc
+	cp	ctly		; ^Y?
+	jr	z,cuproc
+	cp	20h		; control char?
+	jr	c,mainlp	; yes -> do nothing
+	ld	hl,(bufptr)
+	ld	(hl),a		; char to buffer
+	inc	hl		; inc buffer pointer
+	ld	(bufptr),hl
+	inc	(iy+1)		; inc char counter
+	ld	c,a		; display char
+	call	conout
+	jr	mainlp		; and again
+;
+ccproc:				; process ^C
+	ld	a,(iy+1)	; is it the first char?
+	or	a
+	jp	z,wboot		; yes -> warm boot
+	jr	mainlp
+;
+chproc:				; process ^H or del
+	ld	a,(iy+1)	; is buffer empty?
+	or	a
+	call	nz,delchr	; no -> del char
+	jr	mainlp
+;
+cuproc:				; process ^U
+	ld	a,(iy+1)	; is buffer empty?
+	or	a
+	jr	z,mainlp	; yes -> main loop
+	call	delchr		; del char
+	jr	cuproc		; again
+;
+delchr:				; del char from buffer (w/o checking buffer)
+	ld	hl,(bufptr)	; dec buffer pointer
+	dec	hl
+	ld	(bufptr),hl
+	dec	(iy+1)		; dec char counter
+	ld	de,backst	; display "\b \b"
+	jp	dos9
+backst	db	ctlh,' ',ctlh,'$'
+;
+	end

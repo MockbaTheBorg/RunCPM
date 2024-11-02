@@ -1,0 +1,1818 @@
+;  Program:  ZEX
+;  Author:  Richard Conn (derived from ex, which was written by someone else)
+;  Version:  3.0
+;  date:  8 mar 84
+;  previous versions:  none
+;
+; Modified by Bob Logan for assembly by M80 & Z80 codes 25/4/85
+; Adapted by Pavel Zampach, 2020
+;
+VERS	EQU	30
+;
+; zcpr3 definitions
+;
+	MACLIB	Z3BASE.LIB
+ZEXADR	EQU	CCP-0400H
+;
+;  offsets to zcpr3 environment descriptor elements
+;
+EPOFF	EQU	9	;external path data
+MCOFF	EQU	24	;command line data
+;
+;  general equates
+;
+BELL	EQU	7
+CTRLZ	EQU	1AH	;^z
+DELAY	EQU	6000H	;delay constant for timer loop
+BS	EQU	'H'-'@'	;backspace
+CR	EQU	0DH
+LF	EQU	0AH
+;
+;  zex monitor command bytes
+;
+PSUP	EQU	80H	;^. print suppress flag
+IMON	EQU	81H	;^< immediate mode start
+IMOFF	EQU	82H	;^> immediate mode stop
+MSUP	EQU	83H	;^# zex message suppress flag
+CRWAIT	EQU	84H	;^? zex runtime wait for cr flag
+REXEC	EQU	85H	;^: zex runtime re-execute flag
+CRBWAIT	EQU	86H	;^/ zex runtime ring bell and wait for cr flag
+RNG	EQU	87H	;^* ZEX RUNTIME RING BELL
+UICH	EQU	88H	;^" user input command char sequence
+IPS	EQU	89H	;^& false if print suppress
+;
+;  cp/m constants
+;
+WARM	EQU	0
+BDISK	EQU	4
+BDOS	EQU	5
+DFCB	EQU	5CH
+BUFF	EQU	80H
+;
+;	start of zex initiator code segment
+;
+	ORG	100H
+;
+; external ZCPR3 Environment Descriptor
+;
+	JP	start
+	DB	'Z3ENV'		;this is a ZCPR3 Utility
+	DB	1		;external Environment Descriptor
+Z3EADR:
+	DW	Z3ENV
+START:
+	LD	HL,(Z3EADR)	;pt to ZCPR3 environment
+;
+; start of Program -- Initialize ZCPR3 Environment
+;
+	CALL	Z3INIT		;initialize the ZCPR3 Env
+	JP	START0
+;
+;  initial command line area
+;
+	DB	0FFH		;size of command line
+DBUFF:	DB	0FFH		;size of buffer
+	DS	100H		;space for command line
+;
+;  start of zex
+;
+START0:
+	NOP			;replaced with ret to prevent reentry
+	LD	A,(DFCB+1)	;check for help request
+	CP	'/'		;help?
+	JP	Z,HELP
+	LD	(CCPSTK),SP	;ccp stack ptr
+	LD	SP,CCPSTK	;user stack area
+	LD	A,0C9H		; (8080 ret)
+	LD	(START0),A	;prevent re-entrance by zcpr
+	LD	HL,BUFF		;copy input line into dbuff
+	LD	DE,DBUFF
+	LD	BC,128		;size of buffer
+	LDIR
+	LD	DE,SIGNON	;logo
+	CALL	PRINT
+	CALL	ZEXACTV		;check for recursion
+	CALL	ZRELOC		;relocate zex module
+	CALL	ZPARMS		;extract parameters from command line
+	LD	A,(DFCB+1)	;check to see if sub file present
+	CP	' '		;<sp>=no
+	PUSH	AF		;save flag
+	CALL	NZ,OPENSB	;open and load zex file if present or abort
+	POP	AF		;get flag
+	CALL	Z,INPUTSB	;input commands from user
+;
+;  hl now points to byte after loaded text
+;
+	CALL	ZMCL		;store rest of multiple command line
+	CALL	ZLINES		;copy and process command lines
+;
+;  set up for zex execution and run; hl pts to bottom of data area
+;
+	PUSH	HL		;save ptr to end of data
+	LD	HL,(RELSTRT)	;get ptr to start of zex
+	LD	(GOTOZEX+1),HL	;set address to run to
+	DEC	HL		;pt to start of data area
+	LD	(Z3MSG+09H),HL	;set address of next char for zex processing
+	LD	(Z3MSG+0BH),HL	;set address of first char for zex processing
+	LD	A,0FFH		;set zex running flag
+	LD	(Z3MSG+08H),A	;zex is now running
+	POP	HL		;hl is ptr to end of data
+	LD	(HL),A		;set up end of data
+	DEC	HL
+	LD	A,(BDOS+2)	;set up bdos jump to protect data
+	LD	(HL),A
+	DEC	HL
+	LD	A,(BDOS+1)
+	LD	(HL),A
+	DEC	HL
+	LD	(HL),0C3H	;sim jump
+	LD	(BDOS+1),HL	;set new bdos address
+	LD	HL,0		;assume no multiple commands
+	LD	A,(MCAVAIL)	;get flag
+	OR	A		;0=none
+	JR	Z,GOTOZEX	;no multiple commands, so bc=0
+	LD	HL,(MCADR)	;get address of multiple command buffer
+;
+;  zex monitor entry parameters --
+;	HL	address of multiple command buffer or 0 if none
+;
+GOTOZEX:
+	JP	0
+;
+; init zcpr3 environment
+;
+Z3INIT:
+	PUSH	HL		;save ptr to environment
+	LD	DE,MCOFF	;offset to cl data
+	ADD	HL,DE
+	LD	E,(HL)		;get cl address
+	INC	HL
+	LD	D,(HL)
+	INC	HL		;get cl size
+	LD	A,(HL)
+	OR	D		;if all three values are 0, then no command line
+	OR	E
+	LD	(MCAVAIL),A	;set available flag
+	EX	DE,HL		;hl pts to cl
+	LD	(MCADR),HL
+	POP	HL		;get ptr to environment
+	LD	DE,EPOFF	;offset to external path data
+	ADD	HL,DE
+	LD	E,(HL)		;get external path address
+	INC	HL
+	LD	D,(HL)
+	LD	A,D		;check for any
+	OR	E
+	LD	(EPAVAIL),A	;set available flag
+	EX	DE,HL
+	LD	(EPADR),HL	;set address
+	RET
+;
+; z3init buffers
+;
+INTPATH:			;internal path
+	DB	1,0		;disk a, user 0
+	DB	0,0		;end of path
+MCAVAIL:			;multiple command line data
+	DB	0
+MCADR:
+	DW	0
+EPAVAIL:			;external path data
+	DB	0
+EPADR:
+	DW	0
+;
+;  print help message for zex
+;
+HELP:
+	LD	DE,SIGNON	;print banner
+	CALL	PRINT
+	LD	HL,HMSG1
+HPRINT:
+	LD	A,(HL)		;get char
+	OR	A		;done?
+	RET	Z
+	INC	HL		;pt to next
+	PUSH	HL		;save ptr
+	LD	E,A		;char in e
+	LD	C,2		;console output
+	CALL	BDOS
+	POP	HL		;get ptr
+	JR	HPRINT
+HMSG1:
+	DB	CR,LF,LF
+	DB	'	**** ZEX Embedded Command Processing Facility ****'
+	DB	CR,LF
+	DB	CR,LF,'	Cmd Meaning		Cmd Meaning'
+	DB	CR,LF,'	 |  insert <CR>		^|  insert <CR> <LF>'
+	DB	CR,LF,'	^:  rerun command file	^.  suppress print of chars'
+	DB	CR,LF,'	^#  toggle ZEX msgs	^$  define default params'
+	DB	CR,LF,'	^?  wait for user <CR>	^/  ring and wait for <CR>'
+	DB	CR,LF,'	^*  ring bell		^"  allow user input'
+	DB	CR,LF,'	^<  display chars only	^>  stop display'
+	DB	CR,LF,'	;;  zex comment		$n  1<=n<=9 for param'
+	DB	CR,LF,'	$$  =$			$^  =^'
+	DB	CR,LF,'	$|  =|			^c  insert ctrl char c'
+	DB	CR,LF,LF,0
+;
+;  relocate zex module into high memory just below zcpr3
+;
+ZRELOC:
+	LD	HL,REST
+	LD	BC,RELE
+	LD	DE,ZEXADR
+	PUSH	DE		;save load address
+	LDIR
+	POP	HL		;get back load address in hl
+	LD	(RELSTRT),HL	;save ptr
+	DEC	HL		;relocate program-1
+	LD	(OUTBUF),HL	;save ptr to byte in front of relocated program
+	RET
+;
+;  get parameters from command line
+;	terminate each parameter with a binary zero, and set pointers
+;	to each parameter
+;
+ZPARMS:
+	LD	DE,DBUFF	;terminate command line with cr
+	LD	A,(DE)		;get char count
+	INC	DE		;pt to first char
+	PUSH	DE
+	LD	L,A		;hl = number of chars in line
+	LD	H,0
+	ADD	HL,DE		;pt to after last char
+	LD	(HL),CR		;store <cr>
+	LD	HL,PRMDMY	;start at dummy parameter for .sub file spec
+	PUSH	HL
+	LD	BC,PRMPNL+2
+	XOR	A
+	CALL	FILL		;clear ptr area
+	POP	HL		;get ptr to pointer for parameter 0
+	POP	DE		;get ptr to first char in line
+	LD	A,PRMPNL/2+1	;number of parameters possible, max
+	LD	(PRMMAX),A	;highest parameter # + 1 for .SUB SPEC
+;
+;  parameter extraction routine  HL pts to first param ptr, DE pts to line
+;
+PARMS:
+	LD	B,0		;clear parameter counter
+	LD	(ERRLNE),DE	;save in case of error
+;
+PARMSL:
+	LD	A,(DE)		;ignore leading spaces
+	INC	DE
+	CP	CR
+	JR	Z,ENDLNE
+	CP	' '
+	JR	Z,PARMSL
+	DEC	DE		;back up to 1st char
+	LD	(HL),E		;save address in table
+	INC	HL
+	LD	(HL),D
+	INC	HL
+	INC	B		;count+1
+	LD	A,(PRMMAX)
+	CP	B
+	JP	C,PRMTOO	;too many arguments
+;
+ENDPRM:
+	LD	A,(DE)		;go to end of parameter
+	INC	DE
+	CP	CR
+	JR	Z,ENDLNE
+	CP	' '		;skip until <sp>
+	JR	NZ,ENDPRM
+	XOR	A		;a=0 to terminate param
+	DEC	DE		;pt to <sp> following param
+	LD	(DE),A		;terminate parameter
+	INC	DE		;pt to char after <sp>
+	JR	PARMSL		;ignore spaces between parameters
+ENDLNE:
+	XOR	A		;store zero after last parameter
+	DEC	DE		;pt to cr
+	LD	(DE),A		;terminate last parameter
+	INC	DE		;pt to after last param
+	LD	A,CR		;store ending cr
+	LD	(DE),A
+	RET
+;
+;  input command lines from user
+;
+INPUTSB:
+	LD	HL,0
+	LD	(LINES),HL	;start line counter
+	LD	A,0FFH		;set buffer length
+	LD	(DBUFF-1),A
+	LD	HL,BEGREL	;set up output buffer
+	LD	(INBUF),HL
+GETLIN:
+	CALL	CRLF
+	LD	HL,(LINES)
+	INC	HL
+	LD	(LINES),HL
+	CALL	DECOUT		;print line #
+	LD	E,':'		;get prompt
+	CALL	OUTCHR
+	LD	E,' '
+	CALL	OUTCHR
+	LD	DE,DBUFF-1
+	LD	C,10		;read console buffer
+	CALL	BDOS
+	LD	DE,DBUFF
+	LD	A,(DE)		;get length
+	LD	B,A
+	INC	DE
+	LD	HL,(INBUF)	;get input pointer
+	OR	A		;see if end
+	RET	Z		;done with input
+	EX	DE,HL
+	CALL	MOVE		;move to input buffer
+	EX	DE,HL
+	LD	(HL),CR
+	INC	HL
+	LD	(HL),LF
+	INC	HL
+	LD	(INBUF),HL
+	JR	GETLIN
+;
+;  open and load sub file
+;
+OPENSB:
+	CALL	PUTUD		;save user/disk
+;
+;  set up to read zex file
+;
+	LD	DE,DFCB+9
+	LD	HL,ZEXNAM	;move 'ZEX' to dfcb file type
+	LD	BC,3
+	LDIR
+	XOR	A		;zero cr field
+	LD	(DFCB+32),A
+	LD	DE,BUFF		;set dma address
+	LD	C,26		;set dma
+	CALL	BDOS
+	LD	DE,DFCB
+	LD	HL,INTPATH	;pt to internal path
+	LD	A,(EPAVAIL)	;external paths available?
+	OR	A		;0=no
+	JR	Z,OSB1		;use internal path
+	LD	HL,(EPADR)	;pt to external path
+OSB1:
+	PUSH	HL		;save path ptr
+	CALL	FNDFILE		;look for file along path and say if it is found
+	POP	HL		;get path ptr
+	JP	NZ,READSB
+;
+;  zex file not found -- set up to read sub file
+;
+	PUSH	HL		;save path ptr
+	CALL	GETUD		;restore user/disk
+	LD	DE,DFCB+9	;set type to SUB
+	LD	HL,SUBNAM
+	LD	BC,3
+	LDIR
+	XOR	A		;zero cr field
+	LD	(DFCB+32),A
+	POP	HL		;pt to path
+	LD	DE,DFCB		;pt to fcb
+	CALL	FNDFILE		;look for file
+	JP	NZ,READSB
+RSBERR:
+	CALL	GETUD		;restore user/disk
+	LD	HL,NOSBF2
+	LD	DE,DFCB+1
+	LD	B,8		;name length
+	CALL	MOVEFN		;move file name
+	LD	B,3		;type length
+	LD	(HL),'.'
+	INC	HL
+	LD	DE,DFCB+9	;file type pointer
+	CALL	MOVEFN		;move file type
+	LD	(HL),'$'	;end terminater
+	JP	NOSUB
+;*
+;*  FNDFILE -- LOOK FOR FILE ALONG ZCPR3 PATH
+;*  INPUT PARAMETERS:  HL = BASE ADDRESS OF PATH, DE = PTR TO FCB OF FILE
+;*  OUTPUT PARAMETERS:  A=0 AND ZERO FLAG SET IF NOT FOUND, NZ IF FOUND
+;*
+FNDFILE:
+	LD	(PATH),HL	;save path base address
+	LD	C,17		;search for first
+	CALL	BENTRY		;look for file
+	INC	A		;set flag
+	JP	NZ,FF5		;found it -- return found flag
+	EX	DE,HL		;hl=fcb ptr
+	LD	(FCBPTR),HL	;save it
+	LD	HL,(PATH)	;pt to path for failure possibility
+	LD	C,32		;get current user
+	LD	E,0FFH
+	CALL	BENTRY
+	LD	(TMPUSR),A	;save it for later
+;
+; main search loop
+;
+FF1:
+	LD	A,(HL)		;get drive
+	AND	7FH		;mask msb
+	OR	A		;0=done=command not found
+	JR	NZ,FF2		;no error abort?
+;
+; file not found error
+;
+	XOR	A		;zero flag means not found
+	RET
+;
+; look for command in directory pted to by HL; drive in a
+;
+FF2:
+	LD	E,A		;disk in e
+	CP	'$'		;current disk?
+	JR	NZ,FF3		;skip default drive selection if so
+	LD	A,(BDISK)	;get default user/disk
+	AND	0FH		;mask for default disk
+	INC	A		;prep for following dcr a
+	LD	E,A		;disk number in e
+FF3:
+	DEC	E		;adjust path 1 to 0 for a, etc
+	LD	C,14		;select disk fct
+	CALL	BENTRY		;select drive
+	INC	HL		;pt to user number
+	LD	A,(HL)		;get user number
+	AND	7FH		;mask out msb
+	INC	HL		;pt to next entry in path
+	PUSH	HL		;save ptr
+	LD	E,A		;save in e
+	CP	'$'		;match?
+	JR	NZ,FF4		;do not select current user if so
+	LD	A,(TMPUSR)	;get original user number
+	LD	E,A		;select user
+FF4:
+	LD	C,32
+	CALL	BENTRY
+	LD	HL,(FCBPTR)	;get ptr to fcb
+	EX	DE,HL		;... in de
+	LD	C,17		;search for first
+	CALL	BENTRY		;look for file
+	POP	HL		;get ptr to next path entry
+	INC	A		;set flag
+	JR	Z,FF1		;continue path search if search failed
+;
+; file found -- perform system test and proceed if approved
+;
+FF5:
+	LD	A,0FFH		;set ok return
+	OR	A
+	RET
+;
+;  bdos routine
+;
+BENTRY:
+	PUSH	HL		;save regs
+	PUSH	DE
+	PUSH	BC
+	CALL	BDOS
+	POP	BC		;get regs
+	POP	DE
+	POP	HL
+	RET
+;
+;* BUFFERS
+FCBPTR:
+	DS	2		;pointer to fcb for file search
+TMPUSR:
+	DS	1		;current user number
+PATH:
+	DS	2		;base address of path
+;
+;  putud -- save away current user/disk
+;  getud -- restore current user/disk
+;
+PUTUD:
+	LD	E,0FFH		;get current user
+	LD	C,32		;bdos
+	CALL	BDOS
+	LD	(CUSER),A	;save current user away
+	LD	C,25		;get current disk
+	CALL	BDOS
+	LD	(CDISK),A
+	RET
+GETUD:
+	LD	A,(CDISK)	;get current disk
+	LD	E,A		;... in e
+	LD	C,14		;select disk
+	CALL	BDOS
+	LD	A,(CUSER)	;get current user
+	LD	E,A		;... in e
+	LD	C,32		;select user
+	CALL	BDOS
+	RET
+CDISK:
+	DS	1		;current disk number
+CUSER:
+	DS	1		;current user number
+;
+;  open and read sub file
+;
+READSB:
+	LD	C,15		;open file
+	CALL	BDOS		;bdos
+	INC	A		;error?
+	JP	Z,RSBERR
+;
+;  read in and store sub file
+;
+READTX:
+	LD	HL,(INBUF)	;get ptr to next byte
+	EX	DE,HL		;set ptr in de
+	LD	HL,80H		;get sector offset
+	ADD	HL,DE		;hl pts to following block to be read, de pts to
+	LD	(INBUF),HL	;  block to read; save ptr to following block
+	LD	C,26		;set dma address
+	CALL	BDOS
+	LD	DE,DFCB
+	LD	C,20		;read sequential
+	CALL	BDOS
+	OR	A
+	JR	Z,READTX	;read complete .sub file
+	CALL	GETUD		;restore current user/disk
+	LD	HL,(INBUF)	;make sure buffer's terminated
+	LD	DE,-100H	;pt to first byte of last block read
+	ADD	HL,DE
+	LD	B,80H		;look at at most 80h bytes
+SKIP1A:
+	LD	A,(HL)		;get byte
+	CP	CTRLZ		;eof?
+	JR	Z,SKIP1B
+	INC	HL		;pt to next
+	DEC	B		;count down
+	JR	NZ,SKIP1A
+;  hl now points to after last valid char in file
+SKIP1B:
+	LD	(INBUF),HL	;set ptr
+	RET			;done with no error
+;
+;  this part of the code stores the rest of the command line as part of the
+;  command file for zcpr3; on entry, hl pts to next available byte
+;
+ZMCL:
+	EX	DE,HL		;buffer pted to by de
+	LD	HL,(MCADR)	;get base address of multiple command line
+	LD	A,(HL)		;get low
+	INC	HL
+	LD	H,(HL)		;get high
+	LD	L,A		;hl pts to next char in multiple command line
+	EX	DE,HL		;de pts to next char in command line, hl pts to buf end
+	LD	A,(MCAVAIL)	;multiple commands enabled?
+	OR	A		;0=no
+	JR	Z,ENDSTR	;terminate file; hl pts to next byte
+	LD	A,(DE)		;get first byte
+	LD	B,A		;save first byte in b
+	XOR	A		;a=0
+	LD	(DE),A		;clear command line
+	INC	DE		;pt to next byte
+	LD	A,B		;get first byte
+	CP	';'		;separation char?
+	JR	NZ,CMCMD1	;process if not
+;
+;  loop to store rest of multiple command line into loaded file
+;
+CMCMD:
+	LD	A,(DE)		;get byte from line
+CMCMD1:
+	OR	A		;eol if zero
+	JR	Z,CMEND		;read in file; hl pts to next available byte
+	LD	(HL),A		;store byte
+	INC	HL		;pt to next
+	INC	DE
+	JR	CMCMD
+CMEND:
+	LD	(HL),CR		;store <cr> <lf>
+	INC	HL
+	LD	(HL),LF
+	INC	HL		;pt to next available byte
+;
+;  mark end of buffer and continue
+;
+ENDSTR:
+	LD	(HL),1AH	;eof character
+	LD	(ENDBUF),HL	;eob address
+	LD	A,L
+	SUB	LOW BEGREL+1	;see if buffer's empty
+	LD	A,H
+	SBC	A,HIGH BEGREL
+	JP	C,BUFLOW
+	RET
+;
+;  copy and process command lines, placing final command line form under zex
+;    return with hl pting to next available byte in memory buffer under zex
+;
+ZLINES:
+	XOR	A
+	LD	(IMFLG1),A
+	LD	(IMFLG2),A
+	LD	(PRTFLG),A
+	LD	(OUTCNT),A
+	LD	HL,1
+	LD	(LINES),HL	;set line count
+	LD	HL,(OUTBUF)	;pt to byte just below loaded zex
+	LD	(OUTLNE),HL
+	LD	(BUFSTR),HL
+	LD	DE,BEGREL	;pt to first byte of command buffer
+;
+;  main copy loop to copy buffer at begrel to just under zex with processing
+;
+MOVSTR:
+	LD	A,(DE)		;get next command byte
+	INC	DE		;pt to following
+	AND	7FH		;make sure no parity
+	CP	LF		;new line?
+	JR	NZ,MOVST0
+;
+;  new line -- don't store <lf> and increment line count
+;
+MOVSTX:
+	CALL	INCR		;increment line count
+	JR	MOVSTR		;continue
+;
+;  begin character processing
+;    a contains char, de pts to byte after char, hl pts to next buffer pos
+;
+MOVST0:
+	CP	1AH		;end of input?
+	RET	Z		;done if so
+	CP	'|'		;carriage return?
+	JR	NZ,MOVST1	;nope
+;
+;  process carriage return form (|)
+;
+	PUSH	DE		;save old pointer
+	INC	DE		;look for eof after | (pt to lf)
+	INC	DE		;pt to possible eof
+	LD	A,(DE)		;get present location+2
+	POP	DE		;get old pointer
+	CP	1AH		;end of buffer
+	RET	Z		;end, so no following <cr>
+	LD	A,CR		;make char a <cr>
+	CALL	INCR		;increment lines for errors
+	JR	MOVST4		;store <cr> in a
+;
+;  check for non-cr forms
+;    at this point, de pts to next char in line and hl pts to next
+;    byte in buffer (moving down)
+;
+MOVST1:
+	LD	C,A		;save char in c
+	LD	A,(IMFLG1)
+	CP	IMON		;immediate mode on ?
+	LD	A,C		;get char back
+	JR	Z,MOVST2	;yes..skip zex comment processing
+	CP	';'		;first ';'?
+	JP	Z,EXCOMM	;process possible zex comment
+MOVST2:
+	CP	'^'		;control char?
+	JR	Z,MOVST5	;convert control characters
+	CP	'$'		;parameter or control char?
+	CALL	Z,GTPARM	;substitute command parameter or control char.
+MOVST3:
+	LD	(LCHR),A	;save last char entered
+	CP	CR		;=cr?
+	JR	NZ,MOVST4
+	LD	C,A		;save char temporarily
+	LD	A,(OUTCNT)	;get char output flag
+	OR	A		;any char?
+	LD	A,C
+	JR	Z,MOVSTR	;no..use input cr only if other non-control
+;			         characters in current line
+;  place char in buffer
+;    char in A, HL pts to buffer loc
+;
+MOVST4:
+	CALL	CHRSTR		;add to buffer
+	CALL	CNTINC		;increment count
+	JR	MOVSTR
+;
+;  prefix was an uparrow (^), so process control chars
+;
+MOVST5:
+	CALL	GETCMD		;validate control characters
+	CP	':'
+	JR	Z,REXC		;re-execute
+	CP	'?'
+	JR	Z,GCRW		;cr wait
+	CP	'/'
+	JR	Z,GCRBW		;ring bell and wait for <cr>
+	CP	'"'
+	JR	Z,UISET		;user input
+	CP	'*'
+	JR	Z,GRNG		;continually ring bell while waiting for <cr>
+	CP	'|'
+	JR	Z,GCRLF		;cr,lf generation
+	CP	'$'
+	JR	Z,PRMDEF	;default parameters' line
+	CP	'.'
+	JP	Z,PRTSUP	;print suppress toggle
+	CP	'#'
+	JP	Z,MSGSUP	;message suppress toggle
+	CP	'<'
+	JP	Z,IMPRTY	;immediate mode start
+	CP	'>'
+	JP	Z,IMPRTN	;immediate mode stop
+	CP	'&'
+	JR	Z,IFPSUP	;print suppress during false if
+MVST3:	JR	MOVST3		;other control codes
+;
+IFPSUP:
+	LD	A,IPS		;convert '^&' to if print suppress flag
+	JR	MVST3
+;
+REXC:
+	LD	A,REXEC		;convert '^:' to re-execute flag
+	JR	MVST3
+;
+GCRW:
+	LD	A,CRWAIT	;convert '^?' to crwait flag
+	JR	MVST3
+;
+GCRBW:
+	LD	A,CRBWAIT	;convert '^/' to crbwait flag
+	JR	MVST3
+;
+;  allow user input from now on, but first skip out rest of line
+;
+UISET:
+	LD	A,(DE)		;get next char
+	AND	7FH		;mask it
+	CP	LF		;done?
+	JR	Z,UISET1
+	CP	1AH		;eof?
+	JR	Z,UISET1
+	INC	DE		;pt to next char
+	JR	UISET		;continue skipping
+UISET1:
+	LD	A,UICH		;control char
+	JR	MVST3
+;
+GRNG:
+	LD	A,RNG		;convert '^*' TO RNG FLAG
+	JR	MVST3
+;
+GCRLF:
+	LD	A,CR		;generate cr & lf
+	CALL	CHRSTR
+	LD	A,LF
+	CALL	CHRSTR
+	LD	(LCHR),A
+	JP	MOVSTR
+;
+PRMDEF:
+	PUSH	HL
+	LD	HL,PRMDFP
+	PUSH	HL
+	LD	BC,PRMDFL
+	XOR	A
+	CALL	FILL		;clear ptr table
+	POP	HL
+	LD	A,PRMDFL/2
+	LD	(PRMMAX),A	;highest parameter #
+	CALL	PARMS		;build default parameters ptrs
+	POP	HL
+	INC	DE		;skip cr
+	LD	A,LF
+	JP	MOVSTX		;continue at eol
+;
+;  check to see if previous char was also a ; and flush as zex comment if so
+;
+EXCOMM:
+	PUSH	HL
+	LD	HL,LCHR		;pt to previous char
+	CP	(HL)		; double ;?
+	LD	(HL),A		;store current char as previous char
+	POP	HL
+	JP	NZ,MOVST3	;no...continue
+	LD	C,A		;save char
+	LD	A,(PRTFLG)
+	CP	PSUP
+	LD	A,C
+	JP	Z,MOVST3	;print suppress
+	LD	A,(IMFLG1)
+	CP	IMON
+	LD	A,C
+	JP	Z,MOVST3	;immediate mode
+	INC	HL		;yes..ignore previous ;
+	PUSH	HL
+	LD	HL,LCHR
+	LD	A,(OUTCNT)
+	DEC	A		;drop 1 char.
+	LD	(OUTCNT),A
+EXCOML:
+	LD	A,(DE)		;ignore characters until eof or lf
+	INC	DE
+	CP	1AH		;eof
+	JR	Z,EXCOMX
+	CP	LF		;line feed
+	JR	NZ,EXCOML
+	LD	(HL),A
+	LD	A,(OUTCNT)
+	OR	A		;any char. on this line?
+	JR	Z,EXCOM2	;no...skip cr
+EXCOM1:
+	POP	HL		;yes..force cr
+	LD	A,CR
+	CALL	CHRSTR
+	LD	A,LF
+	JP	MOVSTX		;continue
+;
+EXCOM2:
+	POP	HL
+	LD	A,LF
+	JP	MOVSTX		;continue
+;
+EXCOMX:
+	POP	HL
+	RET			;return to main flow, with hl pting to next byte
+;
+MSGSUP:
+	LD	A,MSUP		;convert '^#' to message suppress flag
+	JP	MOVST3
+;
+PRTSUP:
+	LD	A,PSUP		;convert '^.' to print suppress flag
+	PUSH	HL
+	LD	HL,PRTFLG
+	CP	(HL)		;already on?
+	JR	NZ,PRTSST	;no...set flag
+	XOR	A		;yes..clear flag
+PRTSST:
+	LD	(HL),A		;set/reset flag
+	POP	HL
+	LD	A,PSUP
+	JP	MOVST3
+;
+IMPRTY:
+	LD	A,IMON		;convert '^<' to immediate mode start
+	LD	(LCHR),A
+	PUSH	HL
+	LD	HL,IMFLG1
+	CP	(HL)		;already on?
+	POP	HL
+	JP	Z,MOVSTR	;yes..
+	LD	(IMFLG1),A
+	LD	(IMFLG2),A
+	JP	MOVST3		;no...
+;
+IMPRTN:
+	LD	A,IMOFF		;convert '^>' to immediate mode stop
+	LD	(LCHR),A
+	PUSH	HL
+	LD	HL,IMFLG2
+	CP	(HL)		;already off?
+	POP	HL
+	JP	Z,MOVSTR	;yes..
+	LD	(IMFLG2),A
+	LD	(IMFLG1),A
+	JP	MOVST3		;no...
+;
+;  place char in buffer; a=char, hl pts to buffer loc
+;
+CHRSTR:
+	PUSH	AF		;check for input/zex buffer overlap
+	PUSH	DE
+	PUSH	HL
+	LD	HL,(ENDBUF)
+	EX	DE,HL
+	POP	HL
+	LD	A,L
+	CP	E
+	JR	NZ,CHRSTX	;lsb<>
+	LD	A,H
+	CP	D
+	JP	Z,OVERL		;msb=, overlap will occur/abort zex
+;
+; add char to zex's buffer
+;
+CHRSTX:
+	POP	DE		;add char. to zex's buffer
+	POP	AF
+	LD	(HL),A		;store char
+	DEC	HL		;pt to next location (moving down)
+	RET
+;
+;  check to see if zex is already active, and abort if so
+;
+ZEXACTV:
+	LD	A,(Z3MSG+08H)	;zex running?
+	OR	A		;0 if no
+	RET	Z
+	LD	DE,ZEXACT
+	CALL	PRINT		;zex already present
+;
+;  abort and return to zcpr3
+;
+CCPRET:
+	LD	SP,(CCPSTK)	;restore stack
+	RET			;return to ccp
+;
+;	error exits
+;
+GETERR:
+	LD	DE,CMDER	;control character invalid
+	CALL	PRINT
+	JP	LINE		;print line # and line and exit
+;
+NUMERR:
+	LD	DE,NONUM	;excessive number
+	CALL	PRINT
+	JP	LINE		;print line # and line and exit
+;
+PRMERR:
+	LD	DE,PMERR
+	CALL	PRINT
+	JP	LINE		;print line # and line and exit
+;
+PRMTOO:
+	LD	DE,TOOARG	;too many parameter arguments
+	CALL	PRINT
+	LD	HL,(ERRLNE)
+	CALL	EPRT		;print parameter line
+	JR	CCPRET
+;
+BUFLOW:
+	LD	DE,BUFMTY	;text buffer empty
+	CALL	PRINT
+	JR	CCPRET
+;
+NOSUB:
+	LD	DE,NOSBF1	;.sub file not found
+	CALL	PRINT
+	LD	DE,NOTHER
+	CALL	PRINT
+	JR	CCPRET
+;
+OVERL:
+	LD	DE,OVERLP	;input/zex buffer overlap
+	CALL	PRINT
+	JP	LINE
+;
+;	subroutines
+;
+;	control codes 0-1fh
+;	with support for $ . # < >
+;
+GETCMD:
+	LD	A,(DE)		;get next character
+	INC	DE		;increment pointer
+	CP	'|'
+	RET	Z		;cr,lf generation
+	CP	'a'-1		;lowercase?
+	JR	C,GETUPR	;nope
+	CP	'z'+1		;a-z?
+	JP	NC,GETERR	;nope
+	SUB	'a'-'A' 	;get to uppercase
+GETUPR:
+	CP	'@'		;0-1fh control code?
+	JR	NC,GETCC
+	CP	':'
+	RET	Z		;re-execute
+	CP	'?'
+	RET	Z		;cr wait
+	CP	'/'
+	RET	Z		;cr wait and ring bell
+	CP	'*'
+	RET	Z		;ring bell
+	CP	'"'
+	RET	Z		;user input
+	CP	'$'
+	RET	Z		;default parameters' line
+	CP	'.'
+	RET	Z		;print suppress toggle
+	CP	'#'
+	RET	Z		;message suppress toggle
+	CP	'<'
+	RET	Z		;immediate mode start
+	CP	'>'
+	RET	Z		;immediate mode stop
+	CP	'&'
+	RET	Z		;false if print suppress
+	JP	GETERR
+GETCC:
+	SUB	'@'		;get control code
+	RET	NC
+	JP	GETERR
+;
+;  extract parameter element whose $n specification is pointed to by DE
+;    DE pts to char after the $
+;    buffer to place resulting parameter is pted to by HL
+;
+GTPARM:
+	LD	A,(DE)		;get char after the $
+	INC	DE		;pt to next char
+	CP	'$'		;if double $, then store as $
+	RET	Z
+	CP	'^'		;up arrow
+	RET	Z
+	CP	'|'		;carriage return
+	RET	Z
+	CP	'1'		;check for valid digit (1-9)
+	JP	C,PRMERR
+	CP	'9'+1		;range error?
+	JP	NC,PRMERR
+	SUB	'1'		;get actual # (zero relative)
+	ADD	A,A		;double for offset
+	LD	(PRMNUM),A
+	PUSH	DE		;save ptrs
+	PUSH	HL
+	LD	HL,PRMPNT	;pt to parameter ptr table
+	CP	PRMPNL-1	;parameter number within range?
+	JP	NC,NOPARM	;> highest #
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	LD	E,(HL)		;get parameter pointer
+	INC	HL
+	LD	D,(HL)
+	POP	HL		;restore ptr to next byte in output buffer below zex
+	LD	A,E		;any param?
+	OR	D
+	JR	Z,NOPARM	;no parameter present, try defaults
+;
+;  move parameter pted to by DE into buffer below zex, 1st byte pted to by HL
+;
+MOVPRM:
+	LD	A,(DE)		;get parameter char
+	INC	DE		;pt to next
+	OR	A		;done?
+	JP	Z,ENDPAR
+	CALL	CHRSTR		;store chars
+	JR	MOVPRM
+;
+;  parameter placed in memory -- continue
+;
+ENDPAR:
+	POP	DE		;get ptr to next char in line
+	POP	AF		;clear stack
+	JP	MOVSTR		;resume processing
+;
+;  no parameter pted to
+;
+NOPARM:
+	PUSH	HL		;save ptr to next byte in buffer below zex
+	LD	HL,PRMDFP	;try default parameters
+	LD	A,(PRMNUM)
+	CP	PRMDFL-1
+	JP	NC,NUMERR	;> highest #
+	LD	E,A
+	LD	D,0
+	ADD	HL,DE
+	LD	E,(HL)		;get parameter pointer
+	INC	HL
+	LD	D,(HL)
+	POP	HL
+	LD	A,E
+	OR	D
+	JR	NZ,MOVPRM	;move parameter into buffer
+	JR	ENDPAR		;resume with no parameter
+;
+MOVEFN:
+	LD	A,(DE)
+	CP	' '		;see if space
+	RET	Z
+	LD	(HL),A
+	INC	DE		;increment pointers
+	INC	HL
+	DJNZ	MOVEFN
+	RET
+;
+;  increment line count, and affect only HL (must not affect A)
+;
+INCR:
+	PUSH	HL		;save output pointer
+	LD	HL,(LINES)
+	INC	HL		;increment line counter
+	LD	(LINES),HL
+	LD	HL,LCHR		;clear last character
+	LD	(HL),0
+	LD	HL,OUTCNT	;clear character count
+	LD	(HL),0
+	LD	L,E		;de=hl
+	LD	H,D
+	LD	(BEGLIN),HL
+	POP	HL
+	LD	(OUTLNE),HL	;save new output line
+	RET
+;
+CNTINC:
+	CP	' '		;control character?
+	RET	C		;yes..
+	CP	UICH		;user input char?
+	JR	Z,CNTIN1
+	AND	80H		;special control?
+	RET	NZ		;yes..
+	LD	A,(PRTFLG)
+	CP	PSUP		;print suppress flag?
+	RET	Z		;yes..
+	LD	A,(IMFLG1)
+	CP	IMON		;immediate mode?
+	RET	Z		;yes..
+CNTIN1:
+	LD	A,(OUTCNT)
+	INC	A
+	LD	(OUTCNT),A
+	RET
+;
+PRINT:
+	LD	C,9		;print string at (DE)
+	JP	BDOS
+;
+EPRT:
+	LD	A,(HL)		;print parameter line at (HL)
+	CP	CR
+	RET	Z
+	CP	0
+	JR	NZ,EPRT1
+	LD	A,' '
+EPRT1:
+	INC	HL
+	PUSH	HL
+	LD	E,A
+	LD	C,2
+	CALL	BDOS
+	POP	HL
+	JR	EPRT
+;
+CRLF:
+	LD	DE,CRLFS	;print cr/lf
+	JP	PRINT
+;
+LINE:
+	LD	DE,LINEM	;print line # and line in error and exit
+	CALL	PRINT
+	LD	HL,(LINES)
+	CALL	DECOUT		;print line #
+	CALL	CRLF
+	LD	HL,(BEGLIN)
+	PUSH	HL		;save begging pointer
+FINDCR:
+	LD	A,(HL)
+	INC	HL
+	CP	1AH		;end of buffer
+	JR	Z,FOUND
+	CP	CR
+	JR	NZ,FINDCR
+FOUND:
+	LD	(HL),0		;end of string
+	POP	HL		;start of string
+	CALL	PRNTHL		;print bad line
+	JP	CCPRET		;thats all folks
+;
+PRNTHL:
+	LD	A,(HL)		;print line at (HL)
+	INC	HL
+	OR	A
+	RET	Z
+	LD	E,A
+	PUSH	HL		;save pointer
+	CALL	OUTCHR
+	POP	HL		;get pointer back
+	JR	PRNTHL
+;
+OUTCHR:
+	LD	C,2		;print character in E
+	JP	BDOS
+;
+DECOUT:
+	PUSH	HL		;print decimal line number
+	PUSH	DE
+	PUSH	BC
+	LD	BC,-10		;radix for conversion
+	LD	DE,-1		;this becomes no divided by radix
+DX:
+	ADD	HL,BC		;subtract 10
+	INC	DE
+	JP	C,DX
+	LD	BC,10
+	ADD	HL,BC		;add radix back in once
+	EX	DE,HL
+	LD	A,H
+	OR	L		;test for zero
+	CALL	NZ,DECOUT	;recursive call
+	LD	A,E
+	ADD	A,'0'		;convert from bcd to hex
+	LD	E,A		;to e for output
+	CALL	OUTCHR
+	POP	BC		;restore registers
+	POP	DE
+	POP	HL
+	RET
+;
+MOVE:
+	LD	A,(HL)		;move string at (HL) to (DE) for length in B
+	INC	HL
+	LD	(DE),A
+	INC	DE
+	DJNZ	MOVE
+	RET
+;
+FILL:
+	PUSH	DE		; fill storage at (HL) with character in A
+	LD	E,A		; for length in BC
+	LD	A,B
+	OR	C
+	LD	A,E
+	POP	DE
+	RET	Z
+	DEC	BC
+	LD	(HL),A
+	INC	HL
+	JR	FILL
+;
+;	working storage area
+;
+SUBNAM:
+	DB	'SUB'
+ZEXNAM:
+	DB	'ZEX'
+LINEM:
+	DB	' Error Line # $'
+ZEXACT:
+	DB	CR,LF,' ZEX Already Present$'
+BUFMTY:
+	DB	CR,LF,'Text Buffer Empty$'
+OVERLP:
+	DB	CR,LF,'Input/ZEX Buffer Overlap$'
+NONUM:
+	DB	CR,LF,'Parameter Number out of range$'
+NOPRM:
+	DB	CR,LF,'No Parameter or Default Parameter$'
+PMERR:
+	DB	CR,LF,'Parameter$'
+NOSBF1:
+	DB	CR,LF,'File '
+NOSBF2:
+	DB	'filename.typ$'
+NOTHER:
+	DB	' not there$'
+CMDER:
+	DB	CR,LF,'Control character$'
+TOOARG:
+	DB	CR,LF,'Too many arguments - $'
+SIGNON:
+	DB	'ZEX, Version '
+	DB	VERS/10+'0','.',(VERS MOD 10)+'0','$'
+CRLFS:
+	DB	CR,LF,'$'
+;
+	DS	80		;stack space
+CCPSTK:
+	DW	0		;ccp stack ptr
+IMFLG1:
+	DB	0		;=imon encountered
+IMFLG2:
+	DB	0		;=imoff encountered
+PRTFLG:
+	DB	0		;=psup on
+LCHR:
+	DB	0		;last character read
+PRMMAX:
+	DB	0		;highest parameter #
+PRMNUM:
+	DB	0		;current $<1-9> number * 2 (ZERO RELATIVE)
+ERRLNE:
+	DW	0
+BITMAP:
+	DB	0		;present offset bit's
+COUNT:
+	DB	0FFH		;present offset bit count
+BEGLIN:
+	DW	BEGREL		;beginning of old line pointer
+LINES:
+	DW	1
+INBUF:
+	DW	BEGREL
+ENDBUF:
+	DW	0		;end of input buffer
+OUTCNT:
+	DB	0
+OUTLNE:
+	DW	0
+RELSTRT:
+	DW	0
+OUTBUF:
+	DW	0
+BUFSTR:
+	DW	0
+RELOCL:
+	DW	0		;length of reloc program (filled in by sid)
+PRMDFP: 			;default parameter ptrs
+	DS	18
+
+PRMDFL	EQU	$-PRMDFP
+PRMDMY:
+	DW	0		;dummy parameter for .sub file spec.
+PRMPNT: 			;command line parameter ptrs
+	DS	18
+
+PRMPNL	EQU	$-PRMPNT
+PATCH:				;patch area
+	REPT	32
+
+	DB	'p'
+	ENDM
+	DS	60
+
+BEGREL:
+	DS	0	;reloc program starts here (also used as buffer)
+;
+;	end of zex initiator code segment
+;
+;****************** START OF ZEX *******************
+
+;
+;	start of zex relocated code segment
+;		HL pts to multiple command buffer
+;		 or HL=0 if no multiple commands
+;
+REST	EQU	$
+
+	.PHASE	ZEXADR
+
+ZEX:
+	LD	(EXMBASE),HL	;save address of mcl buffer
+	LD	HL,(Z3MSG+09H)	;pt to next char
+	LD	A,(HL)		;get 1st char
+	CP	MSUP		;1st char=message suppress?
+	JR	NZ,ZEX1		;no...
+	DEC	HL		;yes..skip character
+	LD	(Z3MSG+09H),HL	;set ptr to next char
+	LD	(MSUPFL),A	;set initial flag
+ZEX1:
+	LD	SP,MEMTOP
+	LD	HL,(BDOS+1)	;get warm jump for standard ccp
+	LD	(MEMTOP),HL	;set ptr to top of memory
+	LD	HL,(WARM+1)	;save warm boot address
+	LD	(WARMPT),HL
+	LD	DE,BSWARM	;save old bios jumps
+	LD	BC,12
+	LDIR			;move bios jumps
+	LD	DE,(WARMPT)
+	LD	HL,LOCJMP	;store new bios jumps
+	LD	BC,12
+	LDIR			;move new bios jumps to bios area
+;
+;	zex runtime bios intercept routines
+;
+NWARM:
+	LD	SP,MEMTOP
+	LD	HL,(Z3MSG+09H)	;see if we're at buffers end
+	LD	A,(HL)
+	CP	0FFH		;test it
+	JP	Z,WARMX		;warm return
+	LD	HL,(WARMPT)	;set warm boot address
+	LD	(WARM+1),HL
+	LD	HL,(MEMTOP)	;set bdos entry address
+	LD	(BDOS+1),HL
+	LD	DE,BUFF		;dma address
+	LD	C,26		;set dma
+	CALL	BDOS
+	LD	A,(BDISK)
+	LD	C,A
+	JP	CCP+3		;goto console processor
+;
+;	jmp table to overlay bios with new zex-based jumps
+;
+LOCJMP:
+	JP	NWARM		;warm
+	JP	BCONST		;const
+	JP	NCONIN		;conin
+	JP	NCONOT		;conot
+;
+;	console input intercept routine
+;
+NCONIN:
+	LD	HL,Z3MSG+7	;pt to zex message byte
+	LD	A,(HL)		;get zex message
+	CP	2		;suspend intercept?
+	JP	Z,BCONIN	;get input via bios if user input active
+	CP	1		;prompt just printed?
+	JR	NZ,NCONNP
+	LD	(HL),0		;clear zex message
+	LD	HL,STARTM	;print message
+	CALL	PMSG
+NCONNP:
+	LD	A,(Z3MSG+08H)	;is zex running?
+	OR	A		;0=no
+	JP	Z,WARMX		;abort zex if not
+	LD	(CONSTK),SP
+	LD	SP,MEMTOP	;set user stack
+NCONNL:
+	CALL	BCONST		;get console status
+	OR	A
+	JP	Z,GETBUF	;get character from buffer
+	CALL	BCONIN		;get character
+	CP	'C'-'@' 	;see if terminate character
+	JP	Z,ZEXABRT
+	CP	'S'-'@' 	;13h
+	JR	NZ,NCONEX
+	CALL	BCONIN		;wait for next character
+	AND	7FH
+	LD	HL,(Z3MSG+09H)	;pt to next char
+	INC	HL
+	LD	(HL),A
+	LD	(Z3MSG+09H),HL	;reset ptr
+	LD	A,'S'-'@'	;13h
+NCONEX:
+	LD	SP,(CONSTK)	;restore caller's stack
+	RET
+;
+;  return next char from input buffer
+;
+GETBUF:
+	LD	A,(IPSUPFL)	;combine psupfl and ipsupfl to set print flag
+	OR	A		;0=no suppress
+	JR	Z,GBUF0
+	LD	HL,Z3MSG+1	;pt to if flag
+	LD	A,(HL)		;get if flag
+	OR	A		;no if?
+	JR	Z,GBUF0
+	INC	HL
+	AND	(HL)		;set if state
+	JR	NZ,GBUF0	;current if is true
+	LD	A,0FFH		;suppress print
+	LD	(OUTFLG),A
+	JR	GBUF1
+GBUF0:
+	LD	A,(PSUPFL)	;set print suppress flag for nconot
+	LD	(OUTFLG),A
+GBUF1:
+	CALL	GETCHR		;get next character
+	CP	UICH		;user input?
+	JP	Z,UISTRT	;yes..set user input pending flag
+	CP	REXEC		;re-execute?
+	JP	Z,REXECR	;yes..reset buffer ptr
+	CP	CRWAIT		;cr wait?
+	JP	Z,CRWRTN	;yes..wait for cr
+	CP	CRBWAIT		;cr wait with ring bell?
+	JP	Z,CRBWRTN	;yes..wait for cr and ring bell
+	CP	RNG		;ring bell?
+	JP	Z,RNGBELL	;yes..just ring the bell
+	CP	MSUP		;message suppress flag?
+	JP	Z,MSUPCK	;yes..toggle flag
+	CP	PSUP		;print suppress ?
+	JP	Z,PSUPCK	;yes..toggle flag
+	CP	IPS		;false if print suppress?
+	JP	Z,IPSUPCK
+	CP	IMON		;immediate mode start ?
+	JP	Z,IMFLGS	;yes..set flag
+	CP	IMOFF		;immediate mode stop?
+	JP	Z,IMFLGS	;yes..reset flag
+	CP	CR		;cr?
+	JR	NZ,GETEXT	;no...exit
+;
+; cr, so reset print suppression based only on ipsupfl
+;
+	LD	A,(IPSUPFL)	;combine psupfl and ipsupfl to set print flag
+	OR	A		;0=no suppress
+	JR	Z,GBUF2
+	LD	HL,Z3MSG+1	;pt to if flag
+	LD	A,(HL)		;get if flag
+	OR	A		;no if?
+	JR	Z,GBUF2
+	INC	HL
+	AND	(HL)		;set if state
+	JR	NZ,GBUF2	;current if is true
+	LD	A,0FFH		;suppress print
+	LD	(OUTFLG),A
+	LD	A,CR
+	JR	GETEXT
+GBUF2:
+	XOR	A
+	LD	(OUTFLG),A	;yes..reset print suppression
+	LD	A,CR
+GETEXT:
+	LD	C,A
+	LD	A,(IMFLG)
+	CP	IMON		;immediate mode ?
+	LD	A,C
+	JP	NZ,NCONEX	;no...return to caller with char
+	CALL	BCONOT		;yes..immediate echo to console
+	JP	NCONNL		;...loop until imoff
+;
+;  ^" command
+;
+UISTRT:
+	LD	A,2		;set message to suspend intercept
+	LD	(Z3MSG+7),A
+	LD	SP,(CONSTK)	;restore caller's stack
+	JP	NCONIN		;get char from user for now
+;
+;  ^: command
+;
+REXECR:
+	LD	HL,(Z3MSG+0BH)	;start at top of buffer again
+	LD	(Z3MSG+09H),HL
+	XOR	A
+	LD	(IMFLG),A	;reset all flags
+	LD	(PSUPFL),A
+	LD	(IPSUPFL),A
+	LD	(MSUPFL),A
+	JP	NCONNL		;...loop until ^c
+;
+;  ^? command
+;
+CRWRTN:
+	CALL	BCONIN		;get input char
+	CP	'C'-'@'
+	JP	Z,ZEXABRT	;=^c
+	CP	CR
+	JR	Z,CRWRTX	;=<cr>
+	CP	' '
+	JR	Z,CRWRTX	;=<sp>
+	LD	C,BELL
+	CALL	BCONOT		;<>cr
+	JR	CRWRTN
+;
+;  ^/ command
+;
+CRBWRTN:
+	LD	HL,DELAY	;set counter
+CRBWR1:
+	PUSH	HL		;save counter
+	CALL	BCONST		;check status
+	POP	HL		;get counter
+	OR	A		;set flags
+	JR	NZ,CRBWR2
+	DEC	HL		;count down
+	LD	A,H		;done?
+	OR	L
+	JR	NZ,CRBWR1
+	LD	C,BELL		;ring bell
+	CALL	BCONOT
+	JR	CRBWRTN
+CRBWR2:
+	CALL	BCONIN		;get char
+	CP	'C'-'@'		;abort?
+	JP	Z,ZEXABRT
+	CP	CR		;cont if <cr>
+	JR	NZ,CRBWRTN
+;
+;  ^| command
+;
+CRWRTX:
+	LD	C,A		;echo cr/lf
+	CALL	NCONOT
+	LD	C,LF
+	CALL	NCONOT
+	JP	GETBUF
+;
+;  ^* COMMAND
+;
+RNGBELL:
+	LD	C,BELL		;ring bell
+	CALL	NCONOT
+	JP	GETBUF
+;
+;  ^. command
+;
+PSUPCK:
+	LD	HL,PSUPFL
+	CP	(HL)
+	JR	NZ,PSUPST	;set flags if not equal
+	XOR	A		;else reset flags
+PSUPST:
+	LD	(HL),A		;set/reset saved flag
+	JP	GETBUF		;and get next character (sets exec flag)
+;
+;  ^& command
+;
+IPSUPCK:
+	LD	HL,IPSUPFL
+	CP	(HL)
+	JR	NZ,PSUPST	;set flags if not equal
+	XOR	A		;else reset flags
+	JR	PSUPST		;set/reset flag in a
+;
+;  ^# command
+;
+MSUPCK:
+	LD	HL,MSUPFL
+	CP	(HL)
+	JR	NZ,MSUPST	;set flags if not equal
+	XOR	A		;else reset flag
+MSUPST:
+	LD	(HL),A		;set/reset flag
+	JP	GETBUF		;and get next character
+;
+;  ^< and ^> commands
+;
+IMFLGS:
+	LD	(IMFLG),A	;set/reset immediate mode flag
+	JP	GETBUF		;get next character
+;
+;	console output intercept routine
+;
+NCONOT:
+	LD	A,(OUTFLG)	;print suppression?
+	OR	A
+	RET	NZ		;yes...ignore echo
+	LD	A,C
+	LD	(PMCHR),A	;set last char output
+	JP	BCONOT
+;
+;  get next char from buffer and terminate zex if end of buffer
+;
+GETCHR:
+	LD	HL,(Z3MSG+09H)	;pt to next char
+	LD	A,(HL)		;get it
+	DEC	HL		;pt to following
+	LD	(Z3MSG+09H),HL	;reset ptr
+	CP	0FFH		;eob?
+	RET	NZ		;no...return
+	LD	HL,(Z3MSG+09H)	;pt to eob
+	INC	HL		;point to eob
+	LD	(Z3MSG+09H),HL
+	CALL	MOVBAK		;move jumps back
+	CALL	BDOSRST		;restore bdos address
+	CALL	PRDONEM
+	XOR	A		;turn off zex
+	LD	(Z3MSG+08H),A
+	LD	SP,(CONSTK)	;get old stack
+	LD	A,CR		;return carriage return
+	RET
+;
+;  print done message with following prompt char
+;
+PRDONEM:
+	LD	HL,DONEM	;print message
+	CALL	PMSG
+	LD	A,(PMCHR)	;print prompt char
+	LD	C,A		;in c for bios
+	JP	BCONOT
+;
+;  restore bdos jmp if necessary
+;
+BDOSRST:
+	LD	HL,(MEMTOP)	;see if bdos+1=memtop
+	EX	DE,HL
+	LD	HL,(BDOS+1)
+	LD	A,E
+	SUB	L
+	LD	A,D
+	SBC	A,H
+	RET	NZ		;don't replace bdos jump
+	INC	DE		;pt to bdos jump
+	LD	A,(DE)		;get low address
+	LD	L,A		;... in l
+	INC	DE
+	LD	A,(DE)		;get high address
+	LD	H,A		;... in h
+	LD	(BDOS+1),HL	;reset bdos jump
+	RET
+;
+;	^c abort exit
+;
+ZEXABRT:
+	LD	SP,MEMTOP	;^c aborts zex
+	LD	HL,ABORTD	;abort
+	CALL	PMSG
+	JR	WARMX1		;don't print done message
+;
+;  abort zex and return to zcpr3
+;
+WARMX:
+	CALL	PRDONEM		;print done message
+;
+;  entry point to abort zex without message
+;
+WARMX1:
+	XOR	A		;say that zex is not running
+	LD	(Z3MSG+08H),A
+	CALL	MOVBAK		;move jumps back
+	CALL	BDOSRST		;restore bdos jumps
+	LD	HL,(EXMBASE)	;multiple command lines enabled?
+	LD	A,H		;any on?
+	OR	L
+	JP	Z,WARM		;none on if address is zero, so just warm boot
+;
+;  this section of code clears the multiple command line buffer
+;
+	LD	D,H		;de pts to multiple command buffer also
+	LD	E,L
+	PUSH	HL		;save ptr
+	LD	HL,4		;pt to first char of line
+	ADD	HL,DE
+	LD	(HL),0		;set first char of line to zero for eol
+	EX	DE,HL		;de pts to first char of line
+	POP	HL		;get ptr
+	LD	(HL),E		;store address of empty command (eol)
+	INC	HL
+	LD	(HL),D
+	JP	WARM
+;
+PMSG:
+	PUSH	HL
+	LD	A,(IPSUPFL)	;combine psupfl and ipsupfl to set print flag
+	OR	A		;0=no suppress
+	JR	Z,PMSG0
+	LD	HL,Z3MSG+1	;pt to if flag
+	LD	A,(HL)		;get if flag
+	OR	A		;no if?
+	JR	Z,PMSG0
+	INC	HL
+	AND	(HL)		;set if state
+	POP	HL		;in case of return
+	RET	Z		;skip message if suppressed
+	PUSH	HL
+PMSG0:
+	POP	HL
+	LD	A,(MSUPFL)	;print message at (hl)
+	CP	MSUP		;messages suppressed?
+	RET	Z		;yes..exit
+PMSGL:
+	LD	A,(HL)		;get next char
+	OR	A		;end of message?
+	RET	Z		;yes..exit
+	INC	HL		;pt to next char
+	PUSH	HL		;save ptr
+	LD	C,A		;output char
+	CALL	BCONOT
+	POP	HL		;restore ptr
+	JR	PMSGL
+;
+;	subroutines
+;
+MOVBAK:
+	LD	HL,(WARMPT)	;move old jump table back to bios
+	EX	DE,HL
+	LD	HL,BSWARM
+	LD	BC,12
+	LDIR
+;
+;  replace zex routine jumps with bios jumps
+;
+F121:
+	LD	HL,BSWARM	;insure only bios
+	LD	DE,NWARM 	;calls from now on
+	LD	BC,3		;for programs
+	LDIR			;that may have
+	LD	HL,BCONIN	;copied our
+	LD	DE,NCONIN	;addresses as
+	LD	BC,3		;if they were
+	LDIR			;in the bios
+	LD	HL,BCONOT	;(mbasic does this)
+	LD	DE,NCONOT
+	LD	BC,3
+	LDIR
+	RET
+;
+;	working storage area
+;
+ABORTD:
+	DB	CR,LF,'[ZEX Aborted]',CR,LF,0
+STARTM:
+	DB	' ZEX: ',0
+DONEM:
+	DB	'Done',0
+
+	DS	30		;stack space
+
+MEMTOP:
+	DW	0
+EXMBASE:
+	DW	0
+WARMPT:
+	DW	0
+;
+;	original bios jmp table
+;
+BSWARM:
+	JP	$
+BCONST:
+	JP	$
+BCONIN:
+	JP	$
+BCONOT:
+	JP	$
+;
+PMCHR:
+	DB	0
+PSUPFL:
+	DB	0
+IPSUPFL:
+	DB	0
+OUTFLG:
+	DB	0
+NUICH:
+	DB	0
+IMFLG:
+	DB	0
+MSUPFL:
+	DB	0
+CONSTK:
+	DW	0
+;
+	.DEPHASE
+;
+REEND	EQU	$
+RELE	EQU	REEND-REST
+;
+	END
+

@@ -149,6 +149,23 @@ unsigned long time_start = 0;
 unsigned long time_now = 0;
 #endif // ifdef PROFILE
 
+void _PatchBIOS(void) {
+	uint16 i;
+
+	// Patches in the BIOS jump destinations
+	for (i = 0; i < 99; i = i + 3) {
+		_RamWrite(BIOSjmppage + i, JP);
+		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
+	}
+
+	// Patches in the BIOS page content
+	for (i = 0; i < 99; i = i + 3) {
+		_RamWrite(BIOSpage + i, OUTa);
+		_RamWrite(BIOSpage + i + 1, 0xFF);
+		_RamWrite(BIOSpage + i + 2, RET);
+	}
+} //_PatchBIOS
+
 void _PatchCPM(void) {
 	uint16 i;
 
@@ -169,6 +186,9 @@ void _PatchCPM(void) {
 	_RamWrite16(0x0006,	BDOSjmppage + 0x06);
 
 	// **********  Patch CP/M Version into the memory so the CCP can see it
+#ifdef ABDOS
+	_RamLoad((char*)"A/0/ABDOS.SYS", BDOSjmppage, 0);
+#else
 	_RamWrite16(BDOSjmppage,		0x1600);
 	_RamWrite16(BDOSjmppage + 2,	0x0000);
 	_RamWrite16(BDOSjmppage + 4,	0x0000);
@@ -182,18 +202,9 @@ void _PatchCPM(void) {
 	_RamWrite(	BDOSpage + 1,	0xFF);
 	_RamWrite(	BDOSpage + 2,	RET);
 
-	// Patches in the BIOS jump destinations
-	for (i = 0; i < 99; i = i + 3) {
-		_RamWrite(  BIOSjmppage + i,	 JP);
-		_RamWrite16(BIOSjmppage + i + 1, BIOSpage + i);
-	}
+	_PatchBIOS();
+#endif
 
-	// Patches in the BIOS page content
-	for (i = 0; i < 99; i = i + 3) {
-		_RamWrite(	BIOSpage + i,		OUTa);
-		_RamWrite(	BIOSpage + i + 1,	0xFF);
-		_RamWrite(	BIOSpage + i + 2,	RET);
-	}
 	// **********  Patch CP/M (fake) Disk Parameter Block after the BDOS call entry  **********
 	i = DPBaddr;
 	_RamWrite(	i++,	64);    // spt - Sectors Per Track
@@ -671,8 +682,7 @@ void _Bios(void) {
 } // _Bios
 
 void _Bdos(void) {
-	uint16 i;
-	uint8 j, chr, ch = LOW_REGISTER(BC);
+	uint8 ch = LOW_REGISTER(BC);
 
 #ifdef DEBUGLOG
 	_logBdosIn(ch);
@@ -682,6 +692,7 @@ void _Bdos(void) {
 	SET_LOW_REGISTER(BC, LOW_REGISTER(DE)); // C ends up equal to E
 
 	switch (ch) {
+#ifndef ABDOS
 		/*
 		   C = 0 : System reset
 		   Doesn't return. Reloads CP/M
@@ -828,6 +839,8 @@ void _Bdos(void) {
 		   DE) = First char
 		 */
 		case C_READSTR: {
+			uint16 i;
+			uint8 j, chr;
             uint16 chrsMaxIdx = WORD16(DE);                 //index to max number of characters
             uint16 chrsCntIdx = (chrsMaxIdx + 1) & 0xFFFF;  //index to number of characters read
             uint16 chrsIdx = (chrsCntIdx + 1) & 0xFFFF;     //index to characters
@@ -1062,6 +1075,7 @@ void _Bdos(void) {
 			HL = _chready();
 			break;
 		}
+#endif // ABDOS
 
 		/*
 		   C = 12 (0Ch) : Get version number
