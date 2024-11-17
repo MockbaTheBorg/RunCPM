@@ -30,6 +30,7 @@ uint8 blen = 0;                 // Actual size of the typed command line (size o
 
 static const char *Commands[] =
 {
+#ifdef Internals
     // Standard CP/M commands
     "DIR",
     "ERA",
@@ -43,6 +44,7 @@ static const char *Commands[] =
     "DEL",
     "EXIT",
     "PAGE",
+#endif
     "VOL",
     "?",
     NULL
@@ -71,8 +73,7 @@ uint8 _ccp_cnum(void) {
     uint8 result = 255;
     uint8 command[9];
     uint8 i = 0;
-    
-#ifdef Internals
+
     if (!_RamRead(CmdFCB)) {    // If a drive was set, then the command is external
         while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
             command[i] = _RamRead(CmdFCB + i + 1);
@@ -89,6 +90,9 @@ uint8 _ccp_cnum(void) {
             ++i;
         }
     }
+#ifndef Internals
+    if (result != 255)
+        result += 10;
 #endif
     return (result);
 } // _ccp_cnum
@@ -369,6 +373,7 @@ uint8 _ccp_page(void) {
     }
     return (error);
 } // _ccp_page
+#endif
 
 // VOL command
 uint8 _ccp_vol(void) {
@@ -417,7 +422,6 @@ uint8 _ccp_hlp(void) {
     _puts("\t    which comes from each volume's INFO.TXT");
     return(FALSE);
 }
-#endif
 
 // External (.COM) command
 uint8 _ccp_ext(void) {
@@ -833,6 +837,7 @@ void _ccp(void) {
                     i = _ccp_page();
                     break;
                 }
+#endif
                     
                 case 10: {          // VOL
                     i = _ccp_vol();
@@ -843,7 +848,6 @@ void _ccp(void) {
                     i = _ccp_hlp();
                     break;
                 }
-#endif
 
                 // External commands
                 case 255: {         // It is an external command
