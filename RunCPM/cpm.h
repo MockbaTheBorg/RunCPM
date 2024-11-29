@@ -187,7 +187,13 @@ void _PatchCPM(void) {
 
 	// **********  Patch CP/M Version into the memory so the CCP can see it
 #ifdef ABDOS
-	_RamLoad((uint8*)"A/0/ABDOS.SYS", BDOSjmppage, 0);
+	// Loads the ABDOS.SYS file into memory or throws an error if it doesn't exist
+	if (_sys_exists((uint8*)"A/0/ABDOS.SYS")) {
+		_RamLoad((uint8*)"A/0/ABDOS.SYS", BDOSjmppage, 0);
+	} else {
+		_puts("\r\nABDOS.SYS not found");
+		exit(1);
+	}
 #else
 	_RamWrite16(BDOSjmppage,		0x1600);
 	_RamWrite16(BDOSjmppage + 2,	0x0000);
