@@ -46,7 +46,8 @@ Also, read **SdFat library change** below.
 ## Experimental Platforms
 
 Atmel SAM4S Xplained Pro.<br>
-Altera/Intel DE1 Cyclone II FPGA (NiosII).
+Altera/Intel DE1 Cyclone II FPGA (NiosII).<br>
+Agon Light 2.
 
 ## Building
 
