@@ -2,10 +2,10 @@
 
 (It is important to read this documentation fully before attempting to build/use RunCPM)
 
-RunCPM is an application which can execute vintage CP/M 8 bits programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
-RunCPM is fully written in C and in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
+RunCPM is an application which can execute vintage CP/M 8-bit programs on many modern platforms, like Windows, Mac OS X, Linux, FreeBSD, Arduino DUE and variants, like the Teensy or ESP32. It can be built both on 32 and 64 bits host environments and should be easily portable to other platforms.<br>
+RunCPM is fully written in C in a modular way, so porting to other platforms should be only a matter of writing an abstraction layer file for it. No modification to the main code modules should be necessary.
 
-If you miss using powerful programs like Wordstar, dBaseII, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
+If you miss using powerful programs like Wordstar, dBase II, mBasic and others, then RunCPM is for you. It is very stable and fun to use.<br>
 RunCPM emulates CP/M from Digital Research as close as possible, the only difference being that it uses regular folders on the host instead of disk images.
 
 RunCPM builds on Visual Studio 2013 or later. Posix builds use GCC/LLVM. It can also be built on the Arduino IDE. It can be built also on Cygwin (posix) and Mingw. Makefiles are provided with the distribution.
@@ -19,24 +19,23 @@ RunCPM then evolved as more and more CP/M applications were added to its compati
 ## Arduino / Teensy / ESP32 / STM32
 
 RunCPM builds on Arduino IDE 1.8.7 or later.<br>
-RunCPM so far runs on the Arduino DUE, on the Teensy 3.5 and up, on the ESP32 and on some STM32, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
-If using the Arduino DUE, RunCPM also needs a SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter. Some ESP32 and STM32 boards may need external SD card adapters.
+RunCPM currently runs on the Arduino DUE, the Teensy 3.5 and up, the ESP32, and some STM32 boards, as it requires a fair amount of RAM to run (64K used to be a lot back in those days).<br>
+If using the Arduino DUE, RunCPM also needs an SD (or microSD) card shield to place the CP/M files in. The Teensy has an on-board microSD adapter. Some ESP32 and STM32 boards may need external SD card adapters.
 
-Arduino digital and analog read/write support was added by Krzysztof Kliś via extra non-standard BDOS calls (see the bottom of cpm.h file for details).
+Arduino digital and analog read/write support was added by Krzysztof Kliś through extra non-standard BDOS calls (see the bottom of cpm.h file for details).
 
 LED blink codes: Arduino/Teensy/ESP32/STM32 user LED will blink fast when RunCPM is waiting for a serial connection and will send two repeating short blinks when RunCPM has exited (CPU halted). Other than that the user LED will indicate disk activity.
 
-RunCPM needs A LOT of RAM and Flash memory by Arduino standards, so it will NOT run on other Arduinos than the DUE (not the Duemilanove) as they will not have enough of those.
+RunCPM needs a lot of RAM and Flash memory by Arduino standards, so it will not run on other Arduinos besides the DUE (not the Duemilanove) as they will not have enough of those.
 It is theoretically possible to run it on an Arduino which has enough Flash (at least 96K) by adding external RAM to it via some shield, but this is untested, probably slow and would require an entirely different port of RunCPM code.
 
-When using Arduino boards, the serial speed as well as other parameters, may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.<br>
+When using Arduino boards, the serial speed as well as other parameters may be set by editing the RunCPM.ino sketch. The default serial speed is 9600 for compatibility with vintage terminals.<br>
 
 If building for the Teensy, ESP32 and STM32, please read the entire document, as there is more information below.
 
-You will also need to set the correct board definition. To do this, look at line 9 in RunCPM.ino: `#include "hardware/due.h"`
+You will also need to set the correct board definition. To do this, look for this line in RunCPM.ino. `#include "hardware/due.h"`
 
-In the Hardware folder, you will find additional board definitions. If your board is not listed, copy the board that's closest to yours
-and update the SDINIT macro with your SD card reader's CS pin. If your reader will not operate at 50MHz (many won't), you can change SDMHZ
+In the Hardware folder, you will find additional board definitions. If your board is not listed, copy the board that's closest to yours and update the SDINIT macro with your SD card reader's CS pin. If your reader will not operate at 50MHz (many won't), you can change SDMHZ
 to the correct speed for your card. 25 has been known to work with SD card readers on the Due, and you may need to set this slower for 
 certain cards or readers.
 
@@ -70,12 +69,12 @@ Anyone having issues building with homebrew 'binutils' on Mac should check this 
 ## Getting Started
 
 **Preparing the RunCPM folder :**<br>
-Create a folder containing both the RunCPM executable and the CCP binaries for the system. CCP Binaries for 64K and 60K are provided.<br>
+Create a folder containing both the RunCPM executable and the CCP binaries for the system. CCP binaries for 64K and 60K are provided.<br>
 If using a SD card, RunCPM and its CCPs need to be on the SD card's root folder.<br>
-The 64K version CCPs will provide the maximum amount of memory possible to CP/M applications, but its addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
+The 64K version CCPs will provide the maximum amount of memory possible to CP/M applications, but their addressing ranges are unrealistic in terms of emulating a real CP/M computer.<br>
 The 60K version CCPs will provide a more realistic addressing space, by keeping the CCP entry point on the same loading address it would be on a physical CP/M computer.<br>
 Other amounts of memory can be used, but this would require rebuilding the CCP binaries (sources available on disk A.ZIP).
-The CCP binaries are named with their file name extensions matching the amount of memory they run on, so for example, DRI's CCP runnin on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly, depending on the amount of memory selected when it is built.<br>
+The CCP binaries are named with their file name extensions matching the amount of memory they run on, so for example, DRI's CCP running on 60K memory would be named CCP-DR.60K. RunCPM looks for the file accordingly, depending on the amount of memory selected when it is built.<br>
 **IMPORTANT NOTE** - Starting on version 3.4, regardless of the amount of memory allocated to the CP/M system, RunCPM will still allocate 64K of RAM on the host so the BIOS is always at the same starting position. This favors the porting of even more different CCP codes to RunCPM. This also requires that, starting on version 3.4, new copies of the master disk A.ZIP, ZCPR2 CCP and ZCPR3 CCP (all provided here) are used.
 
 **Preparing the CP/M virtual drives :**<br>
@@ -102,7 +101,7 @@ The default choice for CCP is the internal one in RunCPM. If you want to use a d
 **1 -** Change the selected CCP in globals.h (in the RunCPM folder). Find the lines that show:
  
 > /* Definition of which CCP to use (must define only one) */<br> 
-> \#define CCP_INTERNAL	// If this is defined, an internal CCP will emulated<br>
+> \#define CCP_INTERNAL	// If this is defined, an internal CCP will be emulated<br>
 > //#define CCP\_DR<br>
 > //#define CCP\_CCPZ<br> 
 > //#define CCP\_ZCPR2<br> 
@@ -119,7 +118,7 @@ Anytime you wish to change the CCP, you must repeat these steps and rebuild.
 
 **Contents of the "master" disk (A.ZIP) :**<br>
 The master disk A.ZIP contains a basic initial CP/M environment, with the source code for the CCPs and also the **EXIT** program, which ends RunCPM execution.<br>
-There is also a **FORMAT** program which creates a drive folder as if it was formatting a disk. It does nothing to pre-existing drive folders, so it is very safe to use.<br>
+There is also a **FORMAT** program which creates a drive folder as if it were formatting a disk. It does nothing to pre-existing drive folders, so it is very safe to use.<br>
 Disks created by **FORMAT** cannot be removed from inside RunCPM itself, if needed, it must be done manually by accessing the RunCPM folder or SD Card on a host machine and removing the disk drive folder.<br>
 The master disk also contains **Z80ASM**, which is a very powerful Z80 assembly that generates .COM files directly.<br>
 Other CP/M applications which were not part of the official DRI's distribution are also provided to improve the RunCPM experience. These applications are listed on the 1STREAD.ME file.
@@ -155,9 +154,7 @@ RunCPM does not support making files read-only or any other CP/M attributes. All
 
 Some applications, like hi-tech C for example, will try to access user areas higher than 15 to verify if they are running on a different CP/M flavor than 2.2. This causes the generation of user areas with letters higher than F. This is an expected behavior and won't be "fixed".
 
-There is a hardware-design-error on some Clones and some Revisions of the original
-Arduino Due which prevents the correct use of the RX0-Pin (serial TTL-Port Receive-Pin)
-while not using the USB-Programming-Port for accessing RunCPM on the Arduino Due.
+There is a hardware design error on some clones and some revisions of the original Arduino Due that prevents the correct use of the RX0 pin (serial TTL-Port receive pin) when not using the USB programming port for accessing RunCPM on the Arduino Due.
 The solution is to use the serial port 1 = RX1 and TX1
 For that you have to replace all occurrences of "Serial." with "Serial1."
 https://github.com/MockbaTheBorg/RunCPM/issues/117 - @Guidol70
@@ -165,7 +162,7 @@ https://github.com/MockbaTheBorg/RunCPM/issues/117 - @Guidol70
 ## CP/M Software
 
 I have shared my entire CP/M software library [here!](https://drive.google.com/drive/folders/1FZAcIP9_Hf0lCL_FDs1qJCrk2GHdirv8?usp=sharing)<br>
-Please, if you have newer/cleaner (closer to the original distribution) versions of the software found here, please consider sending it over so I can update.<br>
+If you have newer/cleaner (closer to the original distribution) versions of the software found here, please consider sending them over so I can update.<br>
 Same goes for user guides and other useful documentation.<br>
 My intent is to keep here clean copies of useful software which has been tested and proven to work fine with RunCPM.
 
@@ -258,7 +255,7 @@ May the computers in heaven be all 8-bit.<br>
 
 ## Donations
 
-Last but not least, if you feel like make a donation to help the project moving forward, feel free to do so by clicking [here!](http://paypal.me/MockbaTheBorg)<br>
+Last but not least, if you feel like making a donation to help the project move forward, feel free to do so by clicking [here!](http://paypal.me/MockbaTheBorg)<br>
 These will help me source more hardware and other things that assist on the RunCPM development.
 <hr>
 ###### The original copy of this readme file was written on WordStar 3.3 under RunCPM
