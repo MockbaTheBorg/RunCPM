@@ -82,8 +82,6 @@ The CCP binaries are named with their file name extensions matching the amount o
 
 RunCPM emulates the CP/M disks and user areas by means of subfolders under the RunCPM executable location, to prepare a folder or SD card for running RunCPM use the following procedures:<br>
 Create subfolders under where the RunCPM executable is located and name them "A", "B", "C" and so on, for each disk drive you intend to use, each one of these folders will be one disk drive, and under folder "A" create a subfolder named "0". This is the user area 0 of disk A:, extract the contents of A.ZIP package into this "0" subfolder. Switching to another user area inside CP/M will automatically create the respective user area subfolders, "1", "2", "3" ... as they are selected. Subfolders for the user areas 10 to 15 are created as letters "A" to "F".
-
-All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems compatibility.
 CP/M only supported 16 disk drives: A: to P:, so creating other letters above P won't work, same goes for user areas above 15 (F).
 
 **Available CCPs :**<br>
@@ -148,6 +146,9 @@ The IN/OUT instructions are used to implement the communication between the soft
 
 The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standard for DOS/Windows/Linux distributions. So CP/M applications which are hardcoded for other terminals won't build their screens correctly.<br>
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
+
+All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems (Linux) compatibility.<br>
+There's a workaround though which can be implemented on Linux if the kernel is new enough. Refer to https://github.com/MockbaTheBorg/RunCPM/issues/204#issuecomment-2648539858 for the solution.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
 
