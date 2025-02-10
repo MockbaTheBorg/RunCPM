@@ -148,7 +148,7 @@ The "video monitor" is assumed to be ANSI/VT100 emulation, as this is the standa
 When using a serial terminal emulator, make sure it sends either CR or LF when you press enter, not both (CR+LF), or else it will break the DIR listing on DR's CCP. This is standard CP/M 2.2 behavior.
 
 All the letters for folders/subfolders and file names should be kept in uppercase, to avoid any issues of case-sensitive filesystems (Linux) compatibility.<br>
-There's a workaround though which can be implemented on Linux if the kernel is new enough. Refer to https://github.com/MockbaTheBorg/RunCPM/issues/204#issuecomment-2648539858 for the solution.
+There's a workaround though which can be implemented on Linux if the kernel is new enough. Refer to [this solution](https://github.com/MockbaTheBorg/RunCPM/issues/204#issuecomment-2648539858) for steps to make a Linux folder case insensitive, if your Linux supports it.
 
 RunCPM does not support making files read-only or any other CP/M attributes. All the files will be visible and R/W all the time, so be careful. It supports making "disks" read-only though, but only from RunCPM's perspective. The R/O attributes of the disk's containing folder are not modified.
 
