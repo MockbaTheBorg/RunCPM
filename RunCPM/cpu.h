@@ -127,7 +127,10 @@ rrdrldTable[i]          0..255  (i << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6)
 cpTable[i]              0..255  (i & 0x80) | (((i & 0xff) == 0) << 6)
 */
 
+#define preTables // Use precomputed tables (increases the size of the binary by about 4k)
+
 /* parityTable[i] = (number of 1's in i is odd) ? 0 : 4, i = 0..255 */
+#ifdef preTables
 static const uint8 parityTable[256] = {
 	4,0,0,4,0,4,4,0,0,4,4,0,4,0,0,4,
 	0,4,4,0,4,0,0,4,4,0,0,4,0,4,4,0,
@@ -890,6 +893,73 @@ static const uint8 cpTable[256] = {
 	128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,
 	128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,
 };
+#endif
+
+#ifndef preTables
+static uint8 parityTable[256];
+static uint8 incTable[257];
+static uint8 decTable[256];
+static uint8 cbitsTable[512];
+static uint16 cbitsDup8Table[512];
+static uint8 cbitsDup16Table[512];
+static uint8 cbits2Table[512];
+static uint16 rrcaTable[256];
+static uint16 rraTable[256];
+static uint16 addTable[512];
+static uint16 subTable[256];
+static uint16 andTable[256];
+static uint16 xororTable[256];
+static uint8 rotateShiftTable[256];
+static uint8 incZ80Table[257];
+static uint8 decZ80Table[256];
+static uint8 cbitsZ80Table[512];
+static uint8 cbitsZ80DupTable[512];
+static uint8 cbits2Z80Table[512];
+static uint8 cbits2Z80DupTable[512];
+static uint8 negTable[256];
+static uint16 rrdrldTable[256];
+static uint8 cpTable[256];
+
+void initTables(void) {
+	// 256 bytes tables
+	for (int i = 0; i < 256; i++) {
+		char c = 0;
+		for (int j = 0; j < 8; j++) {
+			if (i & (1 << j))
+				c++;
+		}
+		parityTable[i] = (c & 1) ? 0 : 4;
+		decTable[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | 2;
+		rrcaTable[i] = ((i & 1) << 15) | ((i >> 1) << 8) | ((i >> 1) & 0x28) | (i & 1);
+		rraTable[i] = ((i >> 1) << 8) | ((i >> 1) & 0x28) | (i & 1);
+		subTable[i] = ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6) | 2;
+		andTable[i] = (i << 8) | (i & 0xa8) | ((i == 0) << 6) | 0x10 | parityTable[i];
+		xororTable[i] = (i << 8) | (i & 0xa8) | ((i == 0) << 6) | parityTable[i];
+		rotateShiftTable[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i & 0xff];
+		decZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2;
+		negTable[i] = (((i & 0x0f) != 0) << 4) | ((i == 0x80) << 2) | 2 | (i != 0);
+		rrdrldTable[i] = (i << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i];
+		cpTable[i] = (i & 0x80) | (((i & 0xff) == 0) << 6);
+	}
+	// 257 bytes tables
+	for (int i = 0; i < 257; i++) {
+		incTable[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4);
+		incZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4) | ((i == 0x80) << 2);
+	}
+	// 512 bytes tables
+	for (int i = 0; i < 512; i++) {
+		cbitsTable[i] = (i & 0x10) | ((i >> 8) & 1);
+		cbitsDup8Table[i] = (i & 0x10) | ((i >> 8) & 1) | ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6);
+		cbitsDup16Table[i] = (i & 0x10) | ((i >> 8) & 1) | (i & 0x28);
+		cbits2Table[i] = (i & 0x10) | ((i >> 8) & 1) | 2;
+		addTable[i] = ((i & 0xff) << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6);
+		cbitsZ80Table[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1);
+		cbitsZ80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | (i & 0xa8);
+		cbits2Z80Table[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2;
+		cbits2Z80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 | (i & 0xa8);
+	}
+}
+#endif
 
 #if defined(DEBUG) || defined(iDEBUG)
 static const char* Mnemonics[256] =
@@ -1181,6 +1251,10 @@ static inline void Z80reset(void) {
 	Debug = 0;
 	Break = -1;
 	Step = -1;
+
+	#ifndef preTables
+		initTables();
+	#endif
 }
 
 #ifdef DEBUG
@@ -2669,7 +2743,7 @@ static inline void Z80run(void) {
 				acu = GET_BYTE(adr);
 				break;
 
-			case 7:
+			default:
 				acu = HIGH_REGISTER(AF);
 				break;
 			}
@@ -2774,7 +2848,7 @@ static inline void Z80run(void) {
 				PUT_BYTE(adr, temp);
 				break;
 
-			case 7:
+			default:
 				SET_HIGH_REGISTER(AF, temp);
 				break;
 			}
@@ -3301,7 +3375,7 @@ static inline void Z80run(void) {
 					acu = GET_BYTE(adr);
 					break;
 
-				case 7:
+				default:
 					acu = HIGH_REGISTER(AF);
 					break;
 				}
@@ -3406,7 +3480,7 @@ static inline void Z80run(void) {
 					PUT_BYTE(adr, temp);
 					break;
 
-				case 7:
+				default:
 					SET_HIGH_REGISTER(AF, temp);
 					break;
 				}
@@ -4519,7 +4593,7 @@ static inline void Z80run(void) {
 					acu = GET_BYTE(adr);
 					break;
 
-				case 7:
+				default:
 					acu = HIGH_REGISTER(AF);
 					break;
 				}
@@ -4624,7 +4698,7 @@ static inline void Z80run(void) {
 					PUT_BYTE(adr, temp);
 					break;
 
-				case 7:
+				default:
 					SET_HIGH_REGISTER(AF, temp);
 					break;
 				}
