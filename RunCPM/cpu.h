@@ -2208,7 +2208,7 @@ static inline void Z80run(void) {
 	#endif
 #endif
 			--PC;
-			goto end_decode;
+			Status = 1;
 			break;
 
 		case 0x77:      /* LD (HL),A */
@@ -4746,8 +4746,6 @@ static inline void Z80run(void) {
 			PC = 0x38;
 		}
 	}
-end_decode:
-	;
 }
 
 
