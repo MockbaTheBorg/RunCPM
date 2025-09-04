@@ -12,6 +12,7 @@
 #include <time.h>
 #include <signal.h>
 #include <wincon.h>
+#include <ctype.h>    // added for isdigit/toupper
 //#endif
 #define millis() clock()
 
@@ -364,8 +365,20 @@ uint8 _findnext(uint8 isdir) {
 		}
 		if (found) {
 			if (isdir) {
-				for (int i = 0; i < 13; i++)
-					findNextDirName[i] = FindFileData.cFileName[i];
+				// copy filename safely and NUL-terminate
+				strncpy(findNextDirName, FindFileData.cFileName, sizeof(findNextDirName) - 1);
+				findNextDirName[sizeof(findNextDirName) - 1] = '\0';
+
+				// set current find user when searching all users using filename[2]
+				if (allUsers) {
+					char u = filename[2];
+					if (isdigit((unsigned char)u)) {
+						currFindUser = u - '0';
+					} else {
+						currFindUser = toupper((unsigned char)u) - 'A' + 10;
+					}
+				}
+
 				// account for host files that aren't multiples of the block size
 				// by rounding their bytes up to the next multiple of blocks
 				bytes = FindFileData.nFileSizeLow;
@@ -381,7 +394,6 @@ uint8 _findnext(uint8 isdir) {
 				fileRecords = 0;
 				fileExtents = 0;
 				fileExtentsUsed = 0;
-				firstFreeAllocBlock = firstBlockAfterDir;
 			}
 			_RamWrite(tmpFCB, filename[0] - '@');						// Set the requested drive onto the tmp FCB
 			_HostnameToFCB(tmpFCB, (uint8*)&FindFileData.cFileName[0]); // Set the file name onto the tmp FCB
