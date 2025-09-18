@@ -46,7 +46,7 @@
 /* Definition of the CCP memory information */
 //
 #ifdef CCP_INTERNAL
-#define CCPname		"INTERNAL v3.1"			// Will use the CCP from ccp.h
+#define CCPname		"CCP-INTERNAL v3.1"			// Will use the CCP from ccp.h
 #define VersionCCP	0x31					// 0x10 and above reserved for Internal CCP
 #define BatchFCB	(tmpFCB + 48)
 #define CCPaddr		BDOSjmppage				// Internal CCP has size 0
@@ -109,7 +109,7 @@
 #else
 	#define ABD
 #endif
-#define CCPHEAD		"\r\nRunCPM Version " VERSION " (CP/M " STR(TPASIZE) "K)" DBG ABD "\r\n"
+#define CCPHEAD		"\r\nRunCPM Version " VERSION " (" CCPname ")" DBG ABD "\r\n"
 
 #define NOSLASH						// Will translate '/' to '_' on filenames to prevent directory errors
 
