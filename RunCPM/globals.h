@@ -28,8 +28,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION	"6.7"
-#define VersionBCD 0x67
+#define VERSION	"6.8"
+#define VersionBCD 0x68
 
 /* Definition of which BDOS to use (not for Internal CCP, set to 60K CCPs by default) */
 //#define ABDOS				// Based on work by Pavel Zampach (https://www.chstercius.cz/runcpm/)

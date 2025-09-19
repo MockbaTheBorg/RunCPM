@@ -20,7 +20,6 @@ int32 IFF; /* Interrupt Flip Flop                          */
 int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
 int32 Status = STATUS_RUNNING; /* Status of the CPU 0=running 1=end request 2=back to CCP */
 int32 Debug = 0;
-int32 Break = -1;
 int32 Step = -1;
 
 #ifdef iDEBUG
@@ -1249,7 +1248,6 @@ static inline void Z80reset(void) {
 	IR = 0;
 	Status = STATUS_RUNNING;
 	Debug = 0;
-	Break = -1;
 	Step = -1;
 
 	#ifndef preTables
@@ -1527,40 +1525,59 @@ static uint8 InstructionLength(uint16 pos) {
 }
 
 uint8 Disasm(uint16 pos) {
-	const char* txt;
-	char jr;
-	uint8 ch = _RamRead(pos);
-	uint8 count = 0;
+	/* New Disasm: print full opcode byte column, then mnemonic. */
+	const char *txt;
 	uint8 Cflag = 0;
+	uint8 len = InstructionLength(pos);
 	uint16 op_pos = pos;
+	uint8 initial = 0;
 
-	/* Save pos for GetMnemonicAt which will advance to operand bytes */
-	txt = GetMnemonicAt(&op_pos, &count, (char *)&Cflag);
+	/* Print opcode bytes (up to len) */
+	for (uint8 i = 0; i < len; ++i) {
+		_puthex8(_RamRead((pos + i) & 0xffff));
+		_putch(' ');
+	}
 
-	/* print opcode (first opcode byte as hex) - mimic previous behavior */
-	_puthex8(ch);
-	_putch(' ');
-	/* count already includes opcode/prefix bytes; ensure printed operand bytes are output below */
+	/* pad bytes area to fixed column (use 3 chars per byte, target 18 chars) */
+	{
+		int bytes_width = (int)len * 3;
+		int target = 18; /* enough for up to 6 bytes */
+		for (int s = bytes_width; s < target; ++s) _putch(' ');
+	}
 
+	/* Get mnemonic template (advances a temporary pos to operand start) */
+	txt = GetMnemonicAt(&op_pos, &initial, (char *)&Cflag);
+
+	/* Now print mnemonic with formatted operands. When we encounter operand markers
+	   we consume bytes from op_pos (which points to first operand byte). */
 	while (*txt != 0) {
 		switch (*txt) {
 		case '*':
-		case '^':
+		case '^': {
+			/* single byte immediate */
 			txt += 2;
-			_puthex8(_RamRead(op_pos++));
+			uint8 v = _RamRead(op_pos++);
+			_puthex8(v);
 			break;
-		case '#':
+		}
+		case '#': {
+			/* word immediate: print as 16-bit hex (little-endian) */
 			txt += 2;
-			_puthex8(_RamRead(op_pos + 1));
-			_putch(' ');
-			_puthex8(_RamRead(op_pos));
+			uint8 lo = _RamRead(op_pos);
+			uint8 hi = _RamRead(op_pos + 1);
+			uint16 w = (uint16)lo | ((uint16)hi << 8);
 			op_pos += 2;
+			_puthex16(w);
 			break;
-		case '@':
+		}
+		case '@': {
+			/* relative displacement - show target address */
+			char jr = (char)_RamRead(op_pos++);
+			uint16 target = (op_pos + jr) & 0xffff;
 			txt += 2;
-			jr = _RamRead(op_pos++);
-			_puthex16(op_pos + jr);
+			_puthex16(target);
 			break;
+		}
 		case '%':
 			_putch((char)Cflag);
 			++txt;
@@ -1571,8 +1588,91 @@ uint8 Disasm(uint16 pos) {
 		}
 	}
 
-	return(count);
+	return(len);
 }
+
+/* --- Simple instruction trace buffer and exec breakpoints ---
+   Implemented inline here to avoid changing platform Makefiles.
+   Trace records last N executed instructions (pc, bytes, len, reg snapshot).
+*/
+#define TRACE_CAPACITY 512
+typedef struct {
+	uint16 pc;
+	uint8 len;
+	uint8 bytes[8];
+	int32 AF, BC, DE, HL, IX, IY, SP;
+} trace_entry_t;
+
+static trace_entry_t trace_buf[TRACE_CAPACITY];
+static uint32 trace_pos = 0;    /* next write index */
+static int trace_enabled = 1;
+
+static void z80_trace_push(uint16 pc) {
+	if (!trace_enabled) return;
+	trace_entry_t *e = &trace_buf[trace_pos++ % TRACE_CAPACITY];
+	uint8 len = InstructionLength(pc);
+	if (len > 8) len = 8;
+	e->pc = pc;
+	e->len = len;
+	for (uint8 i = 0; i < len; ++i) {
+		e->bytes[i] = _RamRead((pc + i) & 0xffff);
+	}
+	e->AF = AF; e->BC = BC; e->DE = DE; e->HL = HL; e->IX = IX; e->IY = IY; e->SP = SP;
+}
+
+static void z80_trace_dump(void) {
+	uint32 start = trace_pos;
+	uint32 i;
+	_puts("\r\n--- Trace dump (most recent last) ---\r\n");
+	for (i = 0; i < TRACE_CAPACITY; ++i) {
+		trace_entry_t *e = &trace_buf[(start + i) % TRACE_CAPACITY];
+		/* skip empty entries (pc==0 and len==0) */
+		if (e->len == 0 && e->pc == 0) continue;
+		_puthex16(e->pc);
+		_puts(": ");
+		/* print disassembly for this address */
+		Disasm(e->pc);
+		_puts("\r\n    regs: ");
+		_puthex16(e->BC); _puts(" "); _puthex16(e->DE); _puts(" "); _puthex16(e->HL); _puts(" "); _puthex16(e->AF); _puts(" SP:"); _puthex16(e->SP);
+		_puts("\r\n");
+	}
+	_puts("--- end trace ---\r\n");
+}
+
+/* Exec breakpoints: small fixed-size list. Only the bp_addrs[] list is used. */
+#define MAX_BREAKPOINTS 32
+static uint16 bp_addrs[MAX_BREAKPOINTS];
+static int bp_count = 0;
+
+static int z80_add_breakpoint(uint16 addr) {
+	/* prevent duplicates */
+	for (int i = 0; i < bp_count; ++i) if (bp_addrs[i] == addr) return -2;
+	if (bp_count >= MAX_BREAKPOINTS) return -1;
+	bp_addrs[bp_count++] = addr;
+	return 0;
+}
+
+static void z80_clear_breakpoints(void) {
+	bp_count = 0;
+}
+
+static int z80_remove_breakpoint(uint16 addr) {
+	for (int i = 0; i < bp_count; ++i) {
+		if (bp_addrs[i] == addr) {
+			/* shift remaining */
+			for (int j = i; j + 1 < bp_count; ++j) bp_addrs[j] = bp_addrs[j+1];
+			--bp_count;
+			return 0;
+		}
+	}
+	return -1; /* not found */
+}
+
+static int z80_check_breakpoints_on_exec(uint16 pc) {
+	for (int i = 0; i < bp_count; ++i) if (bp_addrs[i] == pc) return 1;
+	return 0;
+}
+
 
 void Z80debug(void) {
 	uint8 ch = 0;
@@ -1654,27 +1754,29 @@ void Z80debug(void) {
 			while (I > 0) {
 				_puthex16(l);
 				_puts(" : ");
-				DisHex(l);
 				l += Disasm(l);
 				_puts("\r\n");
 				--I;
 			}
 			break;
 		case 'B':
-			_puts(" Addr: ");
-			res = read_hex16(&bpoint);
-			if (res) {
-				Break = bpoint;
-				_puts("Breakpoint set to ");
-				_puthex16(Break);
-				_puts("\r\n");
+			/* List breakpoints set via 'A' */
+			_puts(" Breakpoints:\r\n");
+			if (bp_count == 0) {
+				_puts("  (none)\r\n");
 			} else {
-				_puts("Invalid address\r\n");
+				for (int i = 0; i < bp_count; ++i) {
+					uint16 a = bp_addrs[i];
+					_puthex16(a); _puts(" : ");
+					Disasm(a);
+					_puts("\r\n");
+				}
 			}
 			break;
 		case 'C':
-			Break = -1;
-			_puts(" Breakpoint cleared\r\n");
+			/* Clear all breakpoints */
+			z80_clear_breakpoints();
+			_puts(" Breakpoints cleared\r\n");
 			break;
 		case 'D':
 			_puts(" Addr: ");
@@ -1693,7 +1795,6 @@ void Z80debug(void) {
 				while (I > 0) {
 					_puthex16(l);
 					_puts(" : ");
-					DisHex(l);
 					l += Disasm(l);
 					_puts("\r\n");
 					--I;
@@ -1702,9 +1803,37 @@ void Z80debug(void) {
 				_puts("Invalid address\r\n");
 			}
 			break;
+		case 'A':
+			_puts(" Addr: ");
+			res = read_hex16(&bpoint);
+			if (res) {
+				if (z80_add_breakpoint(bpoint) == 0) {
+					_puts("Breakpoint added: "); _puthex16(bpoint); _puts("\r\n");
+				} else {
+					_puts("Breakpoint list full\r\n");
+				}
+			} else {
+				_puts("Invalid address\r\n");
+			}
+			break;
+		case 'E':
+			_puts(" Addr: ");
+			res = read_hex16(&bpoint);
+			if (res) {
+				if (z80_remove_breakpoint(bpoint) == 0) {
+					_puts("Breakpoint removed: "); _puthex16(bpoint); _puts("\r\n");
+				} else {
+					_puts("Breakpoint not found\r\n");
+				}
+			} else {
+				_puts("Invalid address\r\n");
+			}
+			break;
+		case 'R':
+			z80_trace_dump();
+			break;
 		case 'T':
 			loop = FALSE;
-			/* compute the real instruction length and step over it */
 			Step = pos + InstructionLength(pos);
 			Debug = 0;
 			break;
@@ -1720,6 +1849,11 @@ void Z80debug(void) {
 				_puts("Invalid address\r\n");
 			}
 			break;
+        case 'U':
+            /* Unwatch - clear any byte/word watch */
+            Watch = -1;
+            _puts("\r\nWatch cleared\r\n");
+            break;
 		case 'X':
 			_puts("\r\nExiting...\r\n");
 			Debug = 0;
@@ -1740,12 +1874,16 @@ void Z80debug(void) {
 			_puts("  a - Dumps memory pointed by dmaAddr\r\n");
 			_puts("  l - Disassembles from current PC\r\n");
 			_puts("Uppercase commands:\r\n");
-			_puts("  B - Sets breakpoint at address\r\n");
-			_puts("  C - Clears breakpoint\r\n");
+			_puts("  A - Add breakpoint at address\r\n");
+			_puts("  E - Erase breakpoint at address\r\n");
+			_puts("  B - List breakpoints\r\n");
+			_puts("  C - Clear all breakpoints\r\n");
 			_puts("  D - Dumps memory at address\r\n");
 			_puts("  L - Disassembles at address\r\n");
+			_puts("  R - Dump recent trace\r\n");
 			_puts("  T - Steps over a call\r\n");
 			_puts("  W - Sets a byte/word watch\r\n");
+	        _puts("  U - Clears the byte/word watch\r\n");
 			_puts("  X - Exit RunCPM\r\n");
 			break;
 		default:
@@ -1753,7 +1891,6 @@ void Z80debug(void) {
 		}
 	}
 }
-// ...existing code...
 #endif
 
 static inline void Z80run(void) {
@@ -1768,10 +1905,7 @@ static inline void Z80run(void) {
 	while (!Status) {	/* loop until Status != 0 */
 
 #ifdef DEBUG
-		if (PC == Break) {
-			_puts(":BREAK at ");
-			_puthex16(Break);
-			_puts(":");
+		if (z80_check_breakpoints_on_exec(PC)) {
 			Debug = 1;
 		}
 		if (PC == Step) {
@@ -1784,8 +1918,13 @@ static inline void Z80run(void) {
 			break;
 #endif
 
-		PCX = PC;
-		INCR(1); /* Add one M1 cycle to refresh counter */
+	PCX = PC;
+	INCR(1); /* Add one M1 cycle to refresh counter */
+
+	/* push instruction into trace (before it is executed) */
+#if defined(DEBUG) || defined(iDEBUG)
+	z80_trace_push(PCX);
+#endif
 
 #ifdef iDEBUG
 		iLogFile = fopen("iDump.log", "a");
@@ -1797,11 +1936,14 @@ static inline void Z80run(void) {
 			if (RAM[PCX & 0xffff] == 0xCB) {
 				iLogTxt = MnemonicsXCB[RAM[(PCX & 0xffff) + 1]]; break;
 			} else {
-				iLogTxt = MnemonicsXX[RAM[(PCX & 0xffff) + 1]]; break;
-			}
-		default: iLogTxt = Mnemonics[RAM[PCX & 0xffff]];
-		}
-		sprintf(iLogBuffer, "0x%04x : 0x%02x = %s\n", PCX, RAM[PCX & 0xffff], iLogTxt);
+				int r = z80_add_breakpoint(bpoint);
+				if (r == 0) {
+					_puts("Breakpoint added: "); _puthex16(bpoint); _puts("\r\n");
+				} else if (r == -2) {
+					_puts("Breakpoint already exists\r\n");
+				} else {
+					_puts("Breakpoint list full\r\n");
+				}
 		fputs(iLogBuffer, iLogFile);
 		fclose(iLogFile);
 #endif
