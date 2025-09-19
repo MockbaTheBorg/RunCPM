@@ -137,6 +137,12 @@
 #define TRUE 1
 #endif
 
+/* Define Status types */
+#define STATUS_RUNNING 0
+#define STATUS_EXIT 1
+#define STATUS_RESTART 2
+#define STATUS_RETURN 3
+
 typedef signed char     int8;
 typedef signed short    int16;
 typedef signed int      int32;

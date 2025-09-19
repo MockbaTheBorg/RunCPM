@@ -174,7 +174,7 @@ void _PatchCPM(void) {
 	/* BIOS entry point */
 	_RamWrite(0x0000,   JP);  /* JP BIOS+3 (warm boot) */
 	_RamWrite16(0x0001, BIOSjmppage + 3);
-	if (Status != 2) {
+	if (Status != STATUS_RESTART) {
 		/* IOBYTE - Points to Console */
 		_RamWrite(	IOByte,		0x3D);
 
@@ -540,11 +540,11 @@ void _Bios(void) {
 
 	switch (ch) {
 		case B_BOOT: {
-			Status = 1;		// 0 - Ends RunCPM
+			Status = STATUS_EXIT;		// 0 - Ends RunCPM
 			break;
 		}
 		case B_WBOOT: {
-			Status = 2;		// 1 - Back to CCP
+			Status = STATUS_RESTART;	// 1 - Back to CCP
 			break;
 		}
 		case B_CONST: {		// 2 - Console status
@@ -665,7 +665,7 @@ void _Bios(void) {
 			break;
 		}
 		case B_USERF: {		// 30 - This allows programs ending in RET return to internal CCP
-			Status = 3;
+			Status = STATUS_RETURN;
 			break;
 		}
 		case B_RESERV1:
@@ -704,7 +704,7 @@ void _Bdos(void) {
 		   Doesn't return. Reloads CP/M
 		 */
 		case P_TERMCPM: {
-			Status = 2; // Same as call to "BOOT"
+			Status = STATUS_RESTART; // Same as call to "BOOT"
 			break;
 		}
 
@@ -891,7 +891,7 @@ void _Bdos(void) {
 
                 if ((chr == 3) && (chrsCnt == 0)) {         // ^C - Abort string input
                     _puts("^C");
-                    Status = 2;
+                    Status = STATUS_RESTART;
                     break;
                 }
 

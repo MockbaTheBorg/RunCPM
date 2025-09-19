@@ -18,7 +18,7 @@ int32 DE1; /* alternate DE register                        */
 int32 HL1; /* alternate HL register                        */
 int32 IFF; /* Interrupt Flip Flop                          */
 int32 IR;  /* Interrupt (upper) / Refresh (lower) register */
-int32 Status = 0; /* Status of the CPU 0=running 1=end request 2=back to CCP */
+int32 Status = STATUS_RUNNING; /* Status of the CPU 0=running 1=end request 2=back to CCP */
 int32 Debug = 0;
 int32 Break = -1;
 int32 Step = -1;
@@ -1247,7 +1247,7 @@ static inline void Z80reset(void) {
 	PC = 0;
 	IFF = 0;
 	IR = 0;
-	Status = 0;
+	Status = STATUS_RUNNING;
 	Debug = 0;
 	Break = -1;
 	Step = -1;
@@ -2208,7 +2208,7 @@ static inline void Z80run(void) {
 	#endif
 #endif
 			--PC;
-			Status = 1;
+			Status = STATUS_EXIT;
 			break;
 
 		case 0x77:      /* LD (HL),A */

@@ -84,7 +84,7 @@ void setup(void) {
       while (true) {
         _puts(CCPHEAD);
         _PatchCPM();
-	Status = 0;
+	Status = STATUS_RUNNING;
 #ifdef CCP_INTERNAL
         _ccp();
 #else
@@ -112,7 +112,7 @@ void setup(void) {
         PC = CCPaddr;
         Z80run();
 #endif
-        if (Status == 1)
+        if (Status == STATUS_EXIT)
 #ifdef DEBUG
 	#ifdef DEBUGONHALT
     			Debug = 1;

@@ -829,7 +829,7 @@ void _ccp(void) {
                 case 8: {           // EXIT
                     _puts(	"Terminating RunCPM.\r\n");
                     _puts(	"CPU Halted.\r\n");
-                    Status = 1;
+                    Status = STATUS_EXIT;
                     break;
                 }
                     
@@ -865,7 +865,7 @@ void _ccp(void) {
                 _ccp_cmdError();
         }
         blen = 0;
-        if ((Status == 1) || (Status == 2))
+        if ((Status == STATUS_EXIT) || (Status == STATUS_RESTART))
             break;
     }
     _puts("\r\n");

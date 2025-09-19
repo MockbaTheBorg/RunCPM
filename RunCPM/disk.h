@@ -38,7 +38,7 @@ void _error(uint8 error) {
 	Status = _getcon();
 	_puts("\r\n");
 	cDrive = oDrive = _RamRead(DSKByte) & 0x0f;
-	Status = 2;
+	Status = STATUS_RESTART;
 }
 
 // Selects the disk to be used by the next disk function
