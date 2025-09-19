@@ -1352,54 +1352,217 @@ void DisHex(uint16 pos) {
 	}
 }
 
+static int read_hex16(uint16 *out) {
+    unsigned int v = 0;
+    int count = 0;
+    int ch;
+
+    /* Read characters until newline/carriage return */
+    while (1) {
+        ch = _getcon();
+        /* End on CR or LF */
+        if (ch == '\r' || ch == '\n') break;
+
+        /* Backspace handling (BS=8, DEL=127) */
+        if (ch == 8 || ch == 127) {
+            if (count > 0) {
+                /* erase last hex digit visually (basic backspace handling) */
+                _putch('\b'); _putch(' '); _putch('\b');
+                v >>= 4;
+                --count;
+            }
+            continue;
+        }
+
+        /* Accept 0-9 */
+        if (ch >= '0' && ch <= '9') {
+            if (count < 4) {
+                v = (v << 4) | (unsigned int)(ch - '0');
+                ++count;
+                _putch((char)ch);
+            }
+            continue;
+        }
+
+        /* Accept a-f */
+        if (ch >= 'a' && ch <= 'f') {
+            if (count < 4) {
+                v = (v << 4) | (unsigned int)(10 + ch - 'a');
+                ++count;
+                _putch((char)ch);
+            }
+            continue;
+        }
+
+        /* Accept A-F */
+        if (ch >= 'A' && ch <= 'F') {
+            if (count < 4) {
+                v = (v << 4) | (unsigned int)(10 + ch - 'A');
+                ++count;
+                _putch((char)ch);
+            }
+            continue;
+        }
+
+        /* Ignore 'x'/'X' to allow typing "0x..." */
+        if (ch == 'x' || ch == 'X') continue;
+
+        /* Ignore any other characters */
+    }
+
+    /* move to next line visually */
+    _putch('\r'); _putch('\n');
+
+    if (count == 0) return 0; /* no digits entered */
+
+    *out = (uint16)(v & 0xFFFFu);
+    return 1;
+}
+
+/* Read opcode prefixes from memory at 'pos', advance pos to the
+   first operand byte and return the mnemonic pointer. It also returns the
+   initial byte-count (prefixes + opcode bytes consumed so far) via *countp
+   and an optional prefix character ('X'/'Y' or 0) via *prefixp.
+
+   Inputs:
+	 posp  - pointer to the position (will be advanced to operand start)
+   Outputs:
+	 returns const char* mnemonic string (one of Mnemonics*, MnemonicsCB, ...)
+	 *countp set to initial consumed bytes (1 or more)
+	 *prefixp set to 'X' or 'Y' or 0 if applicable
+*/
+static const char* GetMnemonicAt(uint16 *posp, uint8 *countp, char *prefixp) {
+	uint16 pos = *posp;
+	uint8 ch = _RamRead(pos);
+	uint8 count = 1;
+	char C = 0;
+	const char *txt;
+
+	switch (ch) {
+	case 0xCB:
+		++pos;
+		txt = MnemonicsCB[_RamRead(pos++)];
+		count++;
+		break;
+	case 0xED:
+		++pos;
+		txt = MnemonicsED[_RamRead(pos++)];
+		count++;
+		break;
+	case 0xDD:
+		++pos;
+		C = 'X';
+		if (_RamRead(pos) != 0xCB) {
+			txt = MnemonicsXX[_RamRead(pos++)];
+			++count;
+		} else {
+			++pos;
+			txt = MnemonicsXCB[_RamRead(pos++)];
+			count += 2;
+		}
+		break;
+	case 0xFD:
+		++pos;
+		C = 'Y';
+		if (_RamRead(pos) != 0xCB) {
+			txt = MnemonicsXX[_RamRead(pos++)];
+			++count;
+		} else {
+			++pos;
+			txt = MnemonicsXCB[_RamRead(pos++)];
+			count += 2;
+		}
+		break;
+	default:
+		/* Normal opcode */
+		txt = Mnemonics[_RamRead(pos++)];
+		break;
+	}
+
+	*posp = pos;          /* advanced to first operand byte (if any) */
+	*countp = count;      /* consumed opcode/prefix bytes so far */
+	if (prefixp) *prefixp = C;
+	return txt;
+}
+
+/* InstructionLength - compute the number of bytes used by the instruction at pos */
+static uint8 InstructionLength(uint16 pos) {
+	uint8 count = 0;
+	uint8 initial;
+	char C = 0;
+	const char *txt;
+
+	/* Get mnemonic and advance pos to the operand area. initial counts prefixes/opcode */
+	txt = GetMnemonicAt(&pos, &initial, &C);
+	count = initial;
+
+	/* Walk the mnemonic-format string to count operand bytes */
+	while (*txt != 0) {
+		switch (*txt) {
+		case '*':    /* one immediate byte */
+		case '^':    /* one immediate byte */
+			txt += 2;
+			++count;
+			++pos;
+			break;
+		case '#':    /* two-byte immediate (word) */
+			txt += 2;
+			count += 2;
+			pos += 2;
+			break;
+		case '@':    /* relative displacement (one byte) */
+			txt += 2;
+			++count;
+			++pos;
+			break;
+		case '%':    /* prefix placeholder in mnemonic text, no operand */
+			++txt;
+			break;
+		default:
+			++txt;
+		}
+	}
+
+	return count;
+}
+
 uint8 Disasm(uint16 pos) {
 	const char* txt;
 	char jr;
 	uint8 ch = _RamRead(pos);
-	uint8 count = 1;
-	uint8 C = 0;
+	uint8 count = 0;
+	uint8 Cflag = 0;
+	uint16 op_pos = pos;
 
-	switch (ch) {
-	case 0xCB: ++pos; txt = MnemonicsCB[_RamRead(pos++)]; count++; break;
-	case 0xED: ++pos; txt = MnemonicsED[_RamRead(pos++)]; count++; break;
-	case 0xDD: ++pos; C = 'X';
-		if (_RamRead(pos) != 0xCB) {
-			txt = MnemonicsXX[_RamRead(pos++)]; ++count;
-		} else {
-			++pos; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
-		}
-		break;
-	case 0xFD: ++pos; C = 'Y';
-		if (_RamRead(pos) != 0xCB) {
-			txt = MnemonicsXX[_RamRead(pos++)]; ++count;
-		} else {
-			++pos; txt = MnemonicsXCB[_RamRead(pos++)]; count += 2;
-		}
-		break;
-	default:   txt = Mnemonics[_RamRead(pos++)];
-	}
+	/* Save pos for GetMnemonicAt which will advance to operand bytes */
+	txt = GetMnemonicAt(&op_pos, &count, (char *)&Cflag);
+
+	/* print opcode (first opcode byte as hex) - mimic previous behavior */
+	_puthex8(ch);
+	_putch(' ');
+	/* count already includes opcode/prefix bytes; ensure printed operand bytes are output below */
+
 	while (*txt != 0) {
 		switch (*txt) {
 		case '*':
 		case '^':
 			txt += 2;
-			++count;
-			_puthex8(_RamRead(pos++));
+			_puthex8(_RamRead(op_pos++));
 			break;
 		case '#':
 			txt += 2;
-			count += 2;
-			_puthex8(_RamRead(pos + 1));
-			_puthex8(_RamRead(pos));
+			_puthex8(_RamRead(op_pos + 1));
+			_putch(' ');
+			_puthex8(_RamRead(op_pos));
+			op_pos += 2;
 			break;
 		case '@':
 			txt += 2;
-			++count;
-			jr = _RamRead(pos++);
-			_puthex16(pos + jr);
+			jr = _RamRead(op_pos++);
+			_puthex16(op_pos + jr);
 			break;
 		case '%':
-			_putch(C);
+			_putch((char)Cflag);
 			++txt;
 			break;
 		default:
@@ -1416,9 +1579,9 @@ void Z80debug(void) {
 	uint16 pos, l;
 	static const char Flags[9] = "SZ5H3PNC";
 	uint8 J, I;
-	unsigned int bpoint;
+	uint16 bpoint;     		/* changed from unsigned int to 16-bit */
 	uint8 loop = TRUE;
-	uint8 res = 0;
+	int res = 0;            /* use a signed int for result checks */
 
 	_puts("\r\nDebug Mode - Press '?' for help");
 
@@ -1499,12 +1662,14 @@ void Z80debug(void) {
 			break;
 		case 'B':
 			_puts(" Addr: ");
-			res=scanf("%04x", &bpoint);
+			res = read_hex16(&bpoint);
 			if (res) {
 				Break = bpoint;
 				_puts("Breakpoint set to ");
 				_puthex16(Break);
 				_puts("\r\n");
+			} else {
+				_puts("Invalid address\r\n");
 			}
 			break;
 		case 'C':
@@ -1513,13 +1678,15 @@ void Z80debug(void) {
 			break;
 		case 'D':
 			_puts(" Addr: ");
-			res=scanf("%04x", &bpoint);
-			if(res)
+			res = read_hex16(&bpoint);
+			if (res)
 				memdump(bpoint);
+			else
+				_puts("Invalid address\r\n");
 			break;
 		case 'L':
 			_puts(" Addr: ");
-			res=scanf("%04x", &bpoint);
+			res = read_hex16(&bpoint);
 			if (res) {
 				I = 16;
 				l = bpoint;
@@ -1531,22 +1698,26 @@ void Z80debug(void) {
 					_puts("\r\n");
 					--I;
 				}
+			} else {
+				_puts("Invalid address\r\n");
 			}
 			break;
 		case 'T':
 			loop = FALSE;
-			Step = pos + 3; // This only works correctly with CALL
-							// If the called function messes with the stack, this will fail as well.
+			/* compute the real instruction length and step over it */
+			Step = pos + InstructionLength(pos);
 			Debug = 0;
 			break;
 		case 'W':
 			_puts(" Addr: ");
-			res=scanf("%04x", &bpoint);
+			res = read_hex16(&bpoint);
 			if (res) {
 				Watch = bpoint;
 				_puts("Watch set to ");
 				_puthex16(Watch);
 				_puts("\r\n");
+			} else {
+				_puts("Invalid address\r\n");
 			}
 			break;
 		case 'X':
@@ -1582,6 +1753,7 @@ void Z80debug(void) {
 		}
 	}
 }
+// ...existing code...
 #endif
 
 static inline void Z80run(void) {
