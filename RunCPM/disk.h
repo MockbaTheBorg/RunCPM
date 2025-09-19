@@ -209,43 +209,57 @@ void _mockupDirEntry(uint8 mode) {
 	}
 	_HostnameToFCB(dmaAddr, (uint8*)shortName);
 
-	if (allUsers) {
-		DirEntry->dr = currFindUser; // set user code for return
-	} else {
-		DirEntry->dr = userCode;
-	}
-	// does file fit in a single directory entry?
-	if (fileExtents <= extentsPerDirEntry) {
-		if (fileExtents) {
-			DirEntry->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
-			DirEntry->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
-			DirEntry->rc = fileRecords - (BlkEX * (fileExtents - 1));
-		}
-		blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
-		fileRecords = 0;
-		fileExtents = 0;
-		fileExtentsUsed = 0;
-	} else { // no, max out the directory entry
-		DirEntry->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
-		DirEntry->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
-		DirEntry->rc = BlkEX;
-		blocks = numAllocBlocks < 256 ? 16 : 8;
-		// update remaining records and extents for next call
-		fileRecords -= BlkEX * extentsPerDirEntry;
-		fileExtents -= extentsPerDirEntry;
-		fileExtentsUsed += extentsPerDirEntry;
-	}
-	// phoney up an appropriate number of allocation blocks
-	if (numAllocBlocks < 256) {
-		for (i = 0; i < blocks; ++i)
-			DirEntry->al[i] = (uint8)firstFreeAllocBlock++;
-	} else {
-		for (i = 0; i < 2 * blocks; i += 2) {
-			DirEntry->al[i] = firstFreeAllocBlock & 0xFF;
-			DirEntry->al[i + 1] = firstFreeAllocBlock >> 8;
-			++firstFreeAllocBlock;
-		}
-	}
+    if (allUsers) {
+        DirEntry->dr = currFindUser; // set user code for return
+    } else {
+        DirEntry->dr = userCode;
+    }
+
+    /* Ensure S1 is deterministic (zero) — we already zeroed the entry above,
+       but make the intent explicit so callers/readers aren't surprised. */
+    DirEntry->s1 = 0;
+
+    // does file fit in a single directory entry?
+    if (fileExtents <= extentsPerDirEntry) {
+        if (fileExtents) {
+            DirEntry->ex = (fileExtents - 1 + fileExtentsUsed) % (MaxEX + 1);
+            DirEntry->s2 = (fileExtents - 1 + fileExtentsUsed) / (MaxEX + 1);
+            DirEntry->rc = fileRecords - (BlkEX * (fileExtents - 1));
+        }
+        blocks = (fileRecords >> blockShift) + ((fileRecords & blockMask) ? 1 : 0);
+        fileRecords = 0;
+        fileExtents = 0;
+        fileExtentsUsed = 0;
+    } else { // no, max out the directory entry
+        DirEntry->ex = (extentsPerDirEntry - 1 + fileExtentsUsed) % (MaxEX + 1);
+        DirEntry->s2 = (extentsPerDirEntry - 1 + fileExtentsUsed) / (MaxEX + 1);
+        DirEntry->rc = BlkEX;
+        blocks = numAllocBlocks < 256 ? 16 : 8;
+        // update remaining records and extents for next call
+        fileRecords -= BlkEX * extentsPerDirEntry;
+        fileExtents -= extentsPerDirEntry;
+        fileExtentsUsed += extentsPerDirEntry;
+    }
+
+    /* SAFETY: clamp blocks so we never overflow DirEntry->al[].
+       On small disks AL is 16 bytes (one byte per block),
+       on large disks AL is 16 bytes but stored as 8 16-bit values (pairs). */
+    {
+        uint8 maxBlocks = (numAllocBlocks < 256) ? 16 : 8;
+        if (blocks > maxBlocks) blocks = maxBlocks;
+    }
+
+    // phoney up an appropriate number of allocation blocks
+    if (numAllocBlocks < 256) {
+        for (i = 0; i < blocks; ++i)
+            DirEntry->al[i] = (uint8)firstFreeAllocBlock++;
+    } else {
+        for (i = 0; i < 2 * blocks; i += 2) {
+            DirEntry->al[i] = firstFreeAllocBlock & 0xFF;
+            DirEntry->al[i + 1] = firstFreeAllocBlock >> 8;
+            ++firstFreeAllocBlock;
+        }
+    }
 }
 
 // Matches a FCB name to a search pattern
@@ -284,31 +298,41 @@ long _FileSize(uint16 fcbaddr) {
 
 // Opens a file
 uint8 _OpenFile(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 result = 0xff;
-	long len;
-	int32 i;
+    CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+    uint8 result = 0xff;
+    long records;
+    int32 i;
 
-	if (!_SelectDisk(F->dr)) {
-		_FCBtoHostname(fcbaddr, &filename[0]);
-		if (!filename[4])
-			return(0xff);	// Invalid filename
-		if (_sys_openfile(&filename[0])) {
+    if (!_SelectDisk(F->dr)) {
+        _FCBtoHostname(fcbaddr, &filename[0]);
+        if (!filename[4])
+            return(result);	// Invalid filename
 
-			len = _FileSize(fcbaddr) / BlkSZ;	// Compute the len on the file in blocks
+        if (_sys_openfile(&filename[0])) {
+            /* Get file size in 128-byte records.
+               _FileSize already rounds up to a multiple of BlkSZ. */
+            records = _FileSize(fcbaddr) / BlkSZ;
+            if (records < 0)	// defensive: filesize failed for some reason
+                return(result);
 
-			F->s1 = 0x00;
-			F->s2 = 0x80;	// set unmodified flag
+            /* Initialize FCB state for an opened file: start at extent 0,
+               first record (cr=0 means first record / offset 0 in this codebase). */
+            F->ex = 0;
+            F->cr = 0;
+            F->s1 = 0x00;
+            F->s2 = 0x80;	// set unmodified flag
 
+            /* rc = number of 128-byte records in the current logical extent.
+               Clamp to the extent size (BlkEX). */
+            F->rc = (records > BlkEX) ? (uint8)BlkEX : (uint8)records;
 
-			F->rc = len > MaxRC ? MaxRC : (uint8)len;
-			for (i = 0; i < 16; ++i)	// Clean up AL
-				F->al[i] = 0x00;
+            for (i = 0; i < 16; ++i)	// Clean up AL
+                F->al[i] = 0x00;
 
-			result = 0x00;
-		}
-	}
-	return(result);
+            result = 0x00;
+        }
+    }
+    return(result);
 }
 
 // Closes a file
@@ -321,7 +345,7 @@ uint8 _CloseFile(uint16 fcbaddr) {
 			if (!RW) {
 				_FCBtoHostname(fcbaddr, &filename[0]);
 				if (!filename[4])
-					return(0xff);	// Invalid filename
+					return(result);	// Invalid filename
 				if (fcbaddr == BatchFCB)
 					_Truncate((char*)filename, F->rc);	// Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
 				result = 0x00;
@@ -345,7 +369,7 @@ uint8 _MakeFile(uint16 fcbaddr) {
 		if (!RW) {
 			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (!filename[4])
-				return(0xff);	// Invalid filename
+				return(result);	// Invalid filename
 			if (_sys_makefile(&filename[0])) {
 				F->ex = 0x00;	// Makefile also initializes the FCB (file becomes "open")
 				F->s1 = 0x00;
@@ -371,7 +395,7 @@ uint8 _SearchFirst(uint16 fcbaddr, uint8 isdir) {
 	if (!_SelectDisk(F->dr)) {
 		_FCBtoHostname(fcbaddr, &filename[0]);
 		if (!filename[4])
-			return(0xff);	// Invalid filename
+			return(result);	// Invalid filename
 		allUsers = F->dr == '?';
 		allExtents = F->ex == '?';
 		if (allUsers) {
@@ -450,9 +474,9 @@ uint8 _RenameFile(uint16 fcbaddr) {
 			_FCBtoHostname(fcbaddr + 16, &newname[0]);
 			_FCBtoHostname(fcbaddr, &filename[0]);
 			if (!newname[4])
-				return(0xff);	// Invalid filename
+				return(result);	// Invalid filename
 			if (!filename[4])
-				return(0xff);	// Invalid filename
+				return(result);	// Invalid filename
 			if (_sys_renamefile(&filename[0], &newname[0]))
 				result = 0x00;
 		} else {
