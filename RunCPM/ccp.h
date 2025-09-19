@@ -685,6 +685,8 @@ void _ccp(void) {
 
             _RamWrite(inBuf, cmdLen);                   // Sets the buffer size to read the command line
             _ccp_readInput();
+            if (Status == STATUS_RETURN)
+                Status = STATUS_RUNNING;
             blen = _RamRead(inBuf + 1);                 // Obtains the number of bytes read
         }
 
