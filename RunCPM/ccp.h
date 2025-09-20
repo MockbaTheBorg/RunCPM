@@ -410,6 +410,126 @@ uint8 _ccp_page(void) {
 } // _ccp_page
 #endif
 
+// VER command
+uint8 _ccp_ver(void) {
+    _puts(CCPHEAD);
+    return(FALSE);
+}
+
+// DUMP command: dump memory or file in hex+ASCII, 128 bytes per screen, stop on ESC
+uint8 _ccp_dump(void) {
+    uint8 param[17];
+    uint8 i = 0, c;
+    uint16 addr = 0;
+    uint8 isHex = 1;
+    uint8 done = 0;
+
+    // Extract parameter from ParFCB (filename or address)
+    for (i = 1; i < 13; ++i) {
+        c = _RamRead(ParFCB + i);
+        if (c == ' ' || c == 0) break;
+        param[i - 1] = c;
+    }
+    param[i - 1] = 0;
+
+    // Check if parameter is exactly 4 hex digits
+    if (i == 5) {
+        for (uint8 j = 0; j < 4; ++j) {
+            c = param[j];
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
+                isHex = 0;
+                break;
+            }
+        }
+    } else {
+        isHex = 0;
+    }
+
+    if (isHex) {
+        // Parse hex address
+        addr = 0;
+        for (uint8 j = 0; j < 4; ++j) {
+            c = param[j];
+            addr <<= 4;
+            if (c >= '0' && c <= '9') addr += c - '0';
+            else if (c >= 'A' && c <= 'F') addr += c - 'A' + 10;
+            else if (c >= 'a' && c <= 'f') addr += c - 'a' + 10;
+        }
+        // Dump memory
+        _puts("\r\n");
+        while (!done) {
+            // Print address
+            char abuf[8];
+            sprintf(abuf, "%04X: ", addr);
+            _puts(abuf);
+
+            // Print hex bytes
+            for (i = 0; i < 16; ++i) {
+                uint8 b = _RamRead(addr + i);
+                char hbuf[4];
+                sprintf(hbuf, "%02X ", b);
+                _puts(hbuf);
+            }
+            _puts(" ");
+            // Print ASCII
+            for (i = 0; i < 16; ++i) {
+                uint8 b = _RamRead(addr + i);
+                _ccp_bdos(C_WRITE, (b >= 32 && b < 127) ? b : '.');
+            }
+            _puts("\r\n");
+            addr += 16;
+            if ((addr & 0x7F) == 0) { // Every 128 bytes, pause
+                _puts("-- Press any key, ^C to quit --");
+                if (_ccp_bdos(C_READ, 0) == 3) // ^C
+                    done = 1;
+                _puts("\r\n");
+            }
+        }
+        return 0;
+    } else {
+        // Assume file, try to open
+        if (_ccp_bdos(F_OPEN, ParFCB)) {
+            _puts("\r\nNo file");
+            return 0;
+        }
+        _puts("\r\n");
+        uint32 faddr = 0;
+        done = 0;
+        while (!done) {
+            // Read 128 bytes
+            if (_ccp_bdos(F_READ, ParFCB)) break;
+            // Print 8 lines of 16 bytes
+            for (uint8 l = 0; l < 8; ++l) {
+                // Print file offset
+                char abuf[12];
+                sprintf(abuf, "%06lX: ", (unsigned long)faddr);
+                _puts(abuf);
+                // Print hex
+                for (i = 0; i < 16; ++i) {
+                    uint8 b = _RamRead(dmaAddr + l * 16 + i);
+                    char hbuf[4];
+                    sprintf(hbuf, "%02X ", b);
+                    _puts(hbuf);
+                }
+                _puts(" ");
+                // Print ASCII
+                for (i = 0; i < 16; ++i) {
+                    uint8 b = _RamRead(dmaAddr + l * 16 + i);
+                    _ccp_bdos(C_WRITE, (b >= 32 && b < 127) ? b : '.');
+                }
+                _puts("\r\n");
+                faddr += 16;
+            }
+            // Pause every 128 bytes
+            _puts("-- Press any key, ^C to quit --");
+            if (_ccp_bdos(C_READ, 0) == 3) // ^C
+                done = 1;
+            _puts("\r\n");
+        }
+        return 0;
+    }
+} // _ccp_dump
+
 // VOL command
 uint8 _ccp_vol(void) {
     uint8 error = FALSE;
@@ -452,6 +572,7 @@ uint8 _ccp_hlp(void) {
     _puts("\tDEL - Alias to ERA\r\n");
     _puts("\tDIR - Lists files in the current directory\r\n");
     _puts("\tLDIR - Lists files with sizes in the current directory\r\n");
+    _puts("\tDUMP <addr|file> - Hex+ASCII dump of memory or file\r\n");
     _puts("\tERA - Erases files\r\n");
     _puts("\tEXIT - Terminates RunCPM\r\n");
     _puts("\tPAGE [<n>] - Sets the page size for TYPE\r\n");
@@ -460,6 +581,7 @@ uint8 _ccp_hlp(void) {
     _puts("\tSAVE - Saves memory to file\r\n");
     _puts("\tTYPE - Displays file contents\r\n");
     _puts("\tUSER - Changes user area\r\n");
+    _puts("\tVER - Displays the current CCP version\r\n");
     _puts("\tVOL [drive] - Shows the volume information\r\n");
     _puts("\t    which comes from each volume's INFO.TXT");
     return(FALSE);
@@ -482,6 +604,8 @@ static const Command Commands[] = {
     {"DEL", _ccp_era},
     {"EXIT", _ccp_exit},
     {"PAGE", _ccp_page},
+    {"VER", _ccp_ver},
+    {"DUMP", _ccp_dump}, // <-- Added here
 #endif
     {"VOL", _ccp_vol},
     {"?", _ccp_hlp},
