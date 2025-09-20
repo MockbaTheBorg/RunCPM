@@ -1956,14 +1956,11 @@ static inline void Z80run(void) {
 			if (RAM[PCX & 0xffff] == 0xCB) {
 				iLogTxt = MnemonicsXCB[RAM[(PCX & 0xffff) + 1]]; break;
 			} else {
-				int r = z80_add_breakpoint(bpoint);
-				if (r == 0) {
-					_puts("Breakpoint added: "); _puthex16(bpoint); _puts("\r\n");
-				} else if (r == -2) {
-					_puts("Breakpoint already exists\r\n");
-				} else {
-					_puts("Breakpoint list full\r\n");
-				}
+				iLogTxt = MnemonicsXX[RAM[(PCX & 0xffff) + 1]]; break;
+			}
+		default: iLogTxt = Mnemonics[RAM[PCX & 0xffff]];
+		}
+		sprintf(iLogBuffer, "0x%04x : 0x%02x = %s\n", PCX, RAM[PCX & 0xffff], iLogTxt);
 		fputs(iLogBuffer, iLogFile);
 		fclose(iLogFile);
 #endif
