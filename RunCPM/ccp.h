@@ -465,6 +465,7 @@ uint8 _ccp_hlp(void) {
     return(FALSE);
 }
 
+// List of CCP commands
 static const Command Commands[] = {
 #ifdef Internals
     // Standard CP/M commands
