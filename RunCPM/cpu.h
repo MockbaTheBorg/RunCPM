@@ -1724,30 +1724,41 @@ void Z80debug(void) {
 			_putch(ch);
 		switch (ch) {
 		case 't':
+			/* Trace to next instruction */
 			loop = FALSE;
 			break;
 		case 'c':
+			/* Continue execution */
 			loop = FALSE;
 			_puts("\r\n");
 			Debug = 0;
 			break;
 		case 'b':
+			/* Dump memory pointed by (BC) */
 			_puts("\r\n"); memdump(BC); break;
 		case 'd':
+			/* Dump memory pointed by (DE) */
 			_puts("\r\n"); memdump(DE); break;
 		case 'h':
+			/* Dump memory pointed by (HL) */
 			_puts("\r\n"); memdump(HL); break;
 		case 'p':
+			/* Dump memory page pointed by (PC) */
 			_puts("\r\n"); memdump(PC & 0xFF00); break;
 		case 's':
+			/* Dump memory page pointed by (SP) */
 			_puts("\r\n"); memdump(SP & 0xFF00); break;
 		case 'x':
+			/* Dump memory page pointed by (IX) */
 			_puts("\r\n"); memdump(IX & 0xFF00); break;
 		case 'y':
+			/* Dump memory page pointed by (IY) */
 			_puts("\r\n"); memdump(IY & 0xFF00); break;
 		case 'a':
+			/* Dump memory pointed by dmaAddr */
 			_puts("\r\n"); memdump(dmaAddr); break;
 		case 'l':
+			/* Disassemble from current PC */
 			_puts("\r\n");
 			I = 16;
 			l = pos;
@@ -1779,6 +1790,7 @@ void Z80debug(void) {
 			_puts(" Breakpoints cleared\r\n");
 			break;
 		case 'D':
+			/* Dump memory at address */
 			_puts(" Addr: ");
 			res = read_hex16(&bpoint);
 			if (res)
@@ -1787,6 +1799,7 @@ void Z80debug(void) {
 				_puts("Invalid address\r\n");
 			break;
 		case 'L':
+			/* Disassemble at address */
 			_puts(" Addr: ");
 			res = read_hex16(&bpoint);
 			if (res) {
@@ -1804,6 +1817,7 @@ void Z80debug(void) {
 			}
 			break;
 		case 'A':
+			/* Add breakpoint at address */
 			_puts(" Addr: ");
 			res = read_hex16(&bpoint);
 			if (res) {
@@ -1817,6 +1831,7 @@ void Z80debug(void) {
 			}
 			break;
 		case 'E':
+			/* Erase breakpoint at address */
 			_puts(" Addr: ");
 			res = read_hex16(&bpoint);
 			if (res) {
@@ -1830,14 +1845,17 @@ void Z80debug(void) {
 			}
 			break;
 		case 'R':
+			/* Dump recent trace */
 			z80_trace_dump();
 			break;
 		case 'T':
+			/* Step over a call */
 			loop = FALSE;
 			Step = pos + InstructionLength(pos);
 			Debug = 0;
 			break;
 		case 'W':
+			/* Watch - set a byte/word watch */
 			_puts(" Addr: ");
 			res = read_hex16(&bpoint);
 			if (res) {
@@ -1855,11 +1873,13 @@ void Z80debug(void) {
             _puts("\r\nWatch cleared\r\n");
             break;
 		case 'X':
+			/* Exit RunCPM */
 			_puts("\r\nExiting...\r\n");
 			Debug = 0;
 			Status = 1;
 			break;
 		case '?':
+			/* Help */
 			_puts("\r\n");
 			_puts("Lowercase commands:\r\n");
 			_puts("  t - traces to the next instruction\r\n");
