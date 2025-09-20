@@ -28,27 +28,10 @@ uint8 prompt[8] = "\r\n  >";
 uint16 pbuf, perr;
 uint8 blen = 0;                 // Actual size of the typed command line (size of the buffer)
 
-static const char *Commands[] =
-{
-#ifdef Internals
-    // Standard CP/M commands
-    "DIR",
-    "ERA",
-    "TYPE",
-    "SAVE",
-    "REN",
-    "USER",
-    
-    // Extra CCP commands
-    "CLS",
-    "DEL",
-    "EXIT",
-    "PAGE",
-#endif
-    "VOL",
-    "?",
-    NULL
-};
+typedef struct {
+    const char* name;
+    uint8 (*handler)(void);
+} Command;
 
 // Used to call BDOS from inside the CCP
 uint16 _ccp_bdos(uint8 function, uint16 de) {
@@ -60,42 +43,13 @@ uint16 _ccp_bdos(uint8 function, uint16 de) {
 } // _ccp_bdos
 
 // Compares two strings (Atmel doesn't like strcmp)
-uint8 _ccp_strcmp(char *stra, char *strb) {
+uint8 _ccp_strcmp(const char *stra, const char *strb) {
     while (*stra && *strb && (*stra == *strb)) {
         ++stra;
         ++strb;
     }
     return (*stra == *strb);
 } // _ccp_strcmp
-
-// Gets the command ID number
-uint8 _ccp_cnum(void) {
-    uint8 result = 255;
-    uint8 command[9];
-    uint8 i = 0;
-
-    if (!_RamRead(CmdFCB)) {    // If a drive was set, then the command is external
-        while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
-            command[i] = _RamRead(CmdFCB + i + 1);
-            ++i;
-        }
-        command[i] = 0;
-        i = 0;
-        while (Commands[i]) {
-            if (_ccp_strcmp((char *)command, (char *)Commands[i])) {
-                result = i;
-                perr = defDMA + 2;
-                break;
-            }
-            ++i;
-        }
-    }
-#ifndef Internals
-    if (result != 255)
-        result += 10;
-#endif
-    return (result);
-} // _ccp_cnum
 
 // Returns true if character is a delimiter
 uint8 _ccp_delim(uint8 ch) {
@@ -218,7 +172,7 @@ uint16 _ccp_fcbtonum() {
 
 #ifdef Internals
 // DIR command
-void _ccp_dir(void) {
+uint8 _ccp_dir(void) {
     uint8 i;
     uint8 dirHead[6] = "A: ";
     uint8 dirSep[6] = "  |  ";
@@ -250,16 +204,81 @@ void _ccp_dir(void) {
     } else {
         _puts("No file");
     }
+    return 0;
 } // _ccp_dir
 
+// LDIR command (Long DIR)
+uint8 _ccp_ldir(void) {
+    if (_RamRead(ParFCB + 1) == ' ')
+        for (uint8 i = 1; i < 12; ++i)
+            _RamWrite(ParFCB + i, '?');
+    
+    _puts("\r\n");
+    if (!_SearchFirst(ParFCB, TRUE)) {
+        do {
+            _ccp_printfcb(tmpFCB, TRUE);
+            // Calculate length of printed filename for alignment
+            uint8 len = 2; // drive:
+            for (uint8 i = 1; i <= 8; ++i) {
+                uint8 ch = _RamRead(tmpFCB + i);
+                if (ch != ' ') len++;
+                else break;
+            }
+            len++; // .
+            for (uint8 i = 9; i <= 11; ++i) {
+                uint8 ch = _RamRead(tmpFCB + i);
+                if (ch != ' ') len++;
+                else break;
+            }
+            // Align to column 20
+            uint8 target = 20;
+            while (len < target) {
+                _ccp_bdos(C_WRITE, ' ');
+                len++;
+            }
+            // Get file size
+            long fsize = _FileSize(tmpFCB);
+            uint32 size = (fsize == -1) ? 0 : (uint32)fsize;
+            // Print size in bytes, padded to 7 digits
+            if (size == 0) {
+                _puts("      0");
+            } else {
+                uint32 temp = size;
+                char buf[12];
+                uint8 idx = 0;
+                while (temp > 0) {
+                    buf[idx++] = '0' + (temp % 10);
+                    temp /= 10;
+                }
+                // Pad with spaces to 7 digits
+                uint8 digits = idx;
+                uint8 padding = 7 - digits;
+                while (padding > 0) {
+                    _ccp_bdos(C_WRITE, ' ');
+                    padding--;
+                }
+                // Print the digits
+                while (idx > 0) {
+                    _ccp_bdos(C_WRITE, buf[--idx]);
+                }
+            }
+            _puts(" bytes\r\n");
+        } while (!_SearchNext(ParFCB, TRUE));
+    } else {
+        _puts("No file");
+    }
+    return 0;
+} // _ccp_ldir
+
 // ERA command
-void _ccp_era(void) {
+uint8 _ccp_era(void) {
     if (_ccp_bdos(F_DELETE, ParFCB))
         _puts("\r\nNo file");
+    return 0;
 } // _ccp_era
 
 // TYPE command
-void _ccp_type(void) {
+uint8 _ccp_type(void) {
     uint8 i, c, l = 0;
     uint16 a, p = 0;
     
@@ -293,6 +312,7 @@ void _ccp_type(void) {
     } else {
         _puts("No file");
     }
+    return 0;
 } // _ccp_type
 
 // SAVE command
@@ -333,7 +353,7 @@ uint8 _ccp_save(void) {
 } // _ccp_save
 
 // REN command
-void _ccp_ren(void) {
+uint8 _ccp_ren(void) {
     uint8 ch, i;
     
     ++pbuf;
@@ -348,6 +368,7 @@ void _ccp_ren(void) {
     }
     if (_ccp_bdos(F_RENAME, ParFCB))
         _puts("\r\nNo file");
+    return 0;
 } // _ccp_ren
 
 // USER command
@@ -361,6 +382,20 @@ uint8 _ccp_user(void) {
     }
     return (error);
 } // _ccp_user
+
+// CLS command
+uint8 _ccp_cls(void) {
+    _clrscr();
+    return (FALSE);
+} // _ccp_cls
+
+// EXIT command
+uint8 _ccp_exit(void) {
+    _puts("\r\nTerminating RunCPM.");
+    _puts("\r\nCPU Halted.");
+    Status = STATUS_EXIT;
+    return (FALSE);
+} // _ccp_exit
 
 // PAGE command
 uint8 _ccp_page(void) {
@@ -415,13 +450,65 @@ uint8 _ccp_hlp(void) {
     _puts("\t? - Shows this list of commands\r\n");
     _puts("\tCLS - Clears the screen\r\n");
     _puts("\tDEL - Alias to ERA\r\n");
+    _puts("\tDIR - Lists files in the current directory\r\n");
+    _puts("\tLDIR - Lists files with sizes in the current directory\r\n");
+    _puts("\tERA - Erases files\r\n");
     _puts("\tEXIT - Terminates RunCPM\r\n");
     _puts("\tPAGE [<n>] - Sets the page size for TYPE\r\n");
     _puts("\t    or disables paging if no parameter passed\r\n");
+    _puts("\tREN - Renames files\r\n");
+    _puts("\tSAVE - Saves memory to file\r\n");
+    _puts("\tTYPE - Displays file contents\r\n");
+    _puts("\tUSER - Changes user area\r\n");
     _puts("\tVOL [drive] - Shows the volume information\r\n");
     _puts("\t    which comes from each volume's INFO.TXT");
     return(FALSE);
 }
+
+static const Command Commands[] = {
+#ifdef Internals
+    // Standard CP/M commands
+    {"DIR", _ccp_dir},
+    {"ERA", _ccp_era},
+    {"TYPE", _ccp_type},
+    {"SAVE", _ccp_save},
+    {"REN", _ccp_ren},
+    {"USER", _ccp_user},
+    
+    // Extra CCP commands
+    {"CLS", _ccp_cls},
+    {"LDIR", _ccp_ldir},
+    {"DEL", _ccp_era},
+    {"EXIT", _ccp_exit},
+    {"PAGE", _ccp_page},
+#endif
+    {"VOL", _ccp_vol},
+    {"?", _ccp_hlp},
+    {NULL, NULL}  // Sentinel
+};
+
+// Gets the command pointer
+const Command* _ccp_cnum(void) {
+    uint8 command[9];
+    uint8 i = 0;
+
+    if (!_RamRead(CmdFCB)) {    // If a drive was set, then the command is external
+        while (i < 8 && _RamRead(CmdFCB + i + 1) != ' ') {
+            command[i] = _RamRead(CmdFCB + i + 1);
+            ++i;
+        }
+        command[i] = 0;
+        i = 0;
+        while (Commands[i].name) {
+            if (_ccp_strcmp((char *)command, Commands[i].name)) {
+                perr = defDMA + 2;
+                return &Commands[i];
+            }
+            ++i;
+        }
+    }
+    return NULL;  // External command
+} // _ccp_cnum
 
 // External (.COM) command
 uint8 _ccp_ext(void) {
@@ -782,89 +869,18 @@ void _ccp(void) {
             }
             _ccp_nameToFCB(SecFCB);                     // Loads the next file parameter onto the secondary FCB
             
-            i = FALSE;                                  // Checks if the command is valid and executes
-            
-            switch (_ccp_cnum()) {
-#ifdef Internals
-                // Standard CP/M commands
-                case 0: {           // DIR
-                    _ccp_dir();
-                    break;
-                }
-                    
-                case 1: {           // ERA
-                    _ccp_era();
-                    break;
-                }
-                    
-                case 2: {           // TYPE
-                    _ccp_type();
-                    break;
-                }
-                    
-                case 3: {           // SAVE
-                    i = _ccp_save();
-                    break;
-                }
-                    
-                case 4: {           // REN
-                    _ccp_ren();
-                    break;
-                }
-                    
-                case 5: {           // USER
-                    i = _ccp_user();
-                    break;
-                }
-                    
-                // Extra CCP commands
-                case 6: {           // CLS
-                    _clrscr();
-                    break;
-                }
-                    
-                case 7: {           // DEL is an alias to ERA
-                    _ccp_era();
-                    break;
-                }
-                    
-                case 8: {           // EXIT
-                    _puts(	"Terminating RunCPM.\r\n");
-                    _puts(	"CPU Halted.\r\n");
-                    Status = STATUS_EXIT;
-                    break;
-                }
-                    
-                case 9: {           // PAGE
-                    i = _ccp_page();
-                    break;
-                }
-#endif
-                    
-                case 10: {          // VOL
-                    i = _ccp_vol();
-                    break;
-                }
+            i = FALSE;  // Checks if the command is valid and executes
 
-                case 11: {          // HELP
-                    i = _ccp_hlp();
-                    break;
-                }
+const Command* cmd = _ccp_cnum();
+if (cmd) {
+    i = cmd->handler();
+} else {
+    i = _ccp_ext();
+}
 
-                // External commands
-                case 255: {         // It is an external command
-                    i = _ccp_ext();
-                    break;
-                }
-                    
-                default: {
-                    i = TRUE;
-                    break;
-                }
-            } // switch
-            cDrive = oDrive = curDrive; // Restore cDrive and oDrive
-            if (i)
-                _ccp_cmdError();
+cDrive = oDrive = curDrive; // Restore cDrive and oDrive
+if (i)
+    _ccp_cmdError();
         }
         blen = 0;
         if ((Status == STATUS_EXIT) || (Status == STATUS_RESTART))
