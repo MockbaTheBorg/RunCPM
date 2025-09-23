@@ -148,7 +148,7 @@ int _sys_select(uint8* disk) {
 	struct stat st;
 	uint8 fullpath[128] = FILEBASE;
 	strcat((char*)fullpath, (char*)disk);
-	return((stat((char*)fullpath, &st) == 0) && ((st.st_mode & S_IFDIR) != 0));
+	return ((stat((char*)fullpath, &st) == 0) && S_ISDIR(st.st_mode));
 }
 
 long _sys_filesize(uint8* filename) {
@@ -399,7 +399,7 @@ uint8 _findnext(uint8 isdir) {
 				_HostnameToFCBname((uint8*)shortName, fcbname);
 				if (match(fcbname, pattern) &&
 					(stat(findNextDirName, &st) == 0) &&
-					((st.st_mode & S_IFREG) != 0) &&
+					S_ISREG(st.st_mode) &&
 					isxdigit((uint8)shortName[2]) &&
 					(isupper((uint8)shortName[2]) || isdigit((uint8)shortName[2]))) {
 					if (allUsers)
