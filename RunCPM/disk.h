@@ -244,10 +244,8 @@ void _mockupDirEntry(uint8 mode) {
     /* SAFETY: clamp blocks so we never overflow DirEntry->al[].
        On small disks AL is 16 bytes (one byte per block),
        on large disks AL is 16 bytes but stored as 8 16-bit values (pairs). */
-    {
-        uint8 maxBlocks = (numAllocBlocks < 256) ? 16 : 8;
-        if (blocks > maxBlocks) blocks = maxBlocks;
-    }
+    uint8 maxBlocks = (numAllocBlocks < 256) ? 16 : 8;
+    if (blocks > maxBlocks) blocks = maxBlocks;
 
     // phoney up an appropriate number of allocation blocks
     if (numAllocBlocks < 256) {
@@ -500,16 +498,19 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 		result = _sys_readseq(&filename[0], fpos);
 		if (!result) {	// Read succeeded, adjust FCB
 			++F->cr;
-			if (F->cr > MaxCR) {
-				F->cr = 1;
-				++F->ex;
-			}
-			if (F->ex > MaxEX) {
-				F->ex = 0;
-				++F->s2;
-			}
-			if ((F->s2 & 0x7F) > MaxS2)
-				result = 0xfe;	// (todo) not sure what to do 
+			/* CR counts 0..(MaxCR-1) logically (0..127). When we reach MaxCR records
+		       we must roll CR to 0 and advance EX. Use >= to catch MaxCR itself. */
+		    if (F->cr >= MaxCR) {
+		        F->cr = 0;
+		        ++F->ex;
+		    }
+		    if (F->ex > MaxEX) {
+		        F->ex = 0;
+		        ++F->s2;
+		    }
+		    /* strip possible high-bit and compare S2 low bits against allowed MaxS2 */
+		    if ((F->s2 & 0x7F) > MaxS2)
+		        result = 0xfe;
 		}
 	}
 	return(result);
@@ -517,86 +518,99 @@ uint8 _ReadSeq(uint16 fcbaddr) {
 
 // Sequential write
 uint8 _WriteSeq(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 result = 0xff;
+    CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+    uint8 result = 0xff;
 
-	long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
-		(F->ex * BlkEX * BlkSZ) +
-		(F->cr * BlkSZ);
+    long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+        (F->ex * BlkEX * BlkSZ) +
+        (F->cr * BlkSZ);
 
-	if (!_SelectDisk(F->dr)) {
-		if (!RW) {
-			_FCBtoHostname(fcbaddr, &filename[0]);
-			result = _sys_writeseq(&filename[0], fpos);
-			if (!result) {	// Write succeeded, adjust FCB
-				F->s2 &= 0x7F;		// reset unmodified flag
-				++F->cr;
-				if (F->cr > MaxCR) {
-					F->cr = 1;
-					++F->ex;
-				}
-				if (F->ex > MaxEX) {
-					F->ex = 0;
-					++F->s2;
-				}
-				++F->rc;
-				if (F->s2 > MaxS2)
-					result = 0xfe;	// (todo) not sure what to do 
-			}
-		} else {
-			_error(errWRITEPROT);
-		}
-	}
-	return(result);
+    if (!_SelectDisk(F->dr)) {
+        if (!RW) {
+            _FCBtoHostname(fcbaddr, &filename[0]);
+            result = _sys_writeseq(&filename[0], fpos);
+            if (!result) {	// Write succeeded, adjust FCB
+                /* clear unmodified flag (bit 7) */
+                F->s2 &= 0x7F;
+
+                /* advance record index; records are 0..(MaxCR-1) */
+                ++F->cr;
+
+                /* if we've rolled past the last record in the extent,
+                   start at record 0 of the next extent */
+                if (F->cr >= MaxCR) {
+                    F->cr = 0;
+                    ++F->ex;
+                    /* first record in the new extent */
+                    F->rc = 1;
+                } else {
+                    /* still in same extent - increment rc */
+                    ++F->rc;
+                }
+
+                /* handle extent overflow -> advance S2/module */
+                if (F->ex > MaxEX) {
+                    F->ex = 0;
+                    ++F->s2;
+                    /* first record in the new module/extents group */
+                    F->rc = 1;
+                }
+
+                /* check S2 numeric overflow (ignore high-bit flag) */
+                if ((F->s2 & 0x7F) > MaxS2)
+                    result = 0xfe;
+            }
+        } else {
+            _error(errWRITEPROT);
+        }
+    }
+    return(result);
 }
 
 // Random read
 uint8 _ReadRand(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 result = 0xff;
+    CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+    uint8 result = 0xff;
 
-	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
-	long fpos = record * BlkSZ;
+    int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
+    long fpos = record * BlkSZ;
 
-	if (!_SelectDisk(F->dr)) {
-		_FCBtoHostname(fcbaddr, &filename[0]);
-		result = _sys_readrand(&filename[0], fpos);
-		if (result == 0 || result == 1 || result == 4) {
-			// adjust FCB unless error #6 (seek past 8MB - max CP/M file & disk size)
-			F->cr = record & 0x7F;
-			F->ex = (record >> 7) & 0x1f;
-			if (F->s2 & 0x80) {
-				F->s2 = ((record >> 12) & MaxS2) | 0x80;
-			} else {
-				F->s2 = (record >> 12) & MaxS2;
-			}
-		}
-	}
-	return(result);
+    if (!_SelectDisk(F->dr)) {
+        _FCBtoHostname(fcbaddr, &filename[0]);
+        result = _sys_readrand(&filename[0], fpos);
+        if (result == 0 || result == 1 || result == 4) {
+            // adjust FCB unless error #6 (seek past 8MB - max CP/M file & disk size)
+            F->cr = record & (MaxCR - 1);
+            F->ex = (record >> 7) & MaxEX;
+            /* preserve 0x80 (unmodified) bit in s2 if previously present */
+            F->s2 = ((record >> 12) & MaxS2) | (F->s2 & 0x80);
+        }
+    }
+    return(result);
 }
 
 // Random write
 uint8 _WriteRand(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 result = 0xff;
+    CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+    uint8 result = 0xff;
 
-	int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
-	long fpos = record * BlkSZ;
+    int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
+    long fpos = record * BlkSZ;
 
-	if (!_SelectDisk(F->dr)) {
-		if (!RW) {
-			_FCBtoHostname(fcbaddr, &filename[0]);
-			result = _sys_writerand(&filename[0], fpos);
-			if (!result) {	// Write succeeded, adjust FCB
-				F->cr = record & 0x7F;
-				F->ex = (record >> 7) & 0x1f;
-				F->s2 = (record >> 12) & MaxS2;	// resets unmodified flag
-			}
-		} else {
-			_error(errWRITEPROT);
-		}
-	}
-	return(result);
+    if (!_SelectDisk(F->dr)) {
+        if (!RW) {
+            _FCBtoHostname(fcbaddr, &filename[0]);
+            result = _sys_writerand(&filename[0], fpos);
+            if (!result) {	// Write succeeded, adjust FCB
+                F->cr = record & (MaxCR - 1);
+                F->ex = (record >> 7) & MaxEX;
+                F->s2 = (record >> 12) & MaxS2;	// resets unmodified flag
+            }
+        } else {
+            _error(errWRITEPROT);
+        }
+    }
+    return(result);
 }
 
 // Returns the size of a CP/M file
@@ -616,18 +630,18 @@ uint8 _GetFileSize(uint16 fcbaddr) {
 
 // Set the next random record
 uint8 _SetRandom(uint16 fcbaddr) {
-	CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
-	uint8 result = 0x00;
+    CPM_FCB* F = (CPM_FCB*)_RamSysAddr(fcbaddr);
+    uint8 result = 0x00;
 
-	int32 count = F->cr & 0x7f;
-	count += (F->ex & 0x1f) << 7;
-	count += (F->s2 & MaxS2) << 12;
+    int32 count = F->cr & (MaxCR - 1);
+    count += (F->ex & MaxEX) << 7;
+    count += (F->s2 & MaxS2) << 12;
 
-	F->r0 = count & 0xff;
-	F->r1 = (count >> 8) & 0xff;
-	F->r2 = (count >> 16) & 0xff;
+    F->r0 = count & 0xff;
+    F->r1 = (count >> 8) & 0xff;
+    F->r2 = (count >> 16) & 0xff;
 
-	return(result);
+    return(result);
 }
 
 // Sets the current user area
