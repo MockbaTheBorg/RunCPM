@@ -313,10 +313,6 @@ uint8 _OpenFile(uint16 fcbaddr) {
             if (records < 0)	// defensive: filesize failed for some reason
                 return(result);
 
-            /* Initialize FCB state for an opened file: start at extent 0,
-               first record (cr=0 means first record / offset 0 in this codebase). */
-            F->ex = 0;
-            F->cr = 0;
             F->s1 = 0x00;
             F->s2 = 0x80;	// set unmodified flag
 
