@@ -293,7 +293,7 @@ uint8 _ccp_ldir(void) {
                     _ccp_bdos(F_CLOSE, tmpFCB);
                 }
                 // Print checksum as 4 hex digits
-                char cbuf[6];
+                char cbuf[8];
                 sprintf(cbuf, "  %04Xh", checksum);
                 _puts(cbuf);
             }
