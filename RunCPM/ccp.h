@@ -209,9 +209,23 @@ uint8 _ccp_dir(void) {
 
 // LDIR command (Long DIR)
 uint8 _ccp_ldir(void) {
-    if (_RamRead(ParFCB + 1) == ' ')
+    uint8 checksumOption = 0;
+    
+    // Check for /C option in ParFCB or SecFCB
+    if ((_RamRead(ParFCB + 1) == '/' && _RamRead(ParFCB + 2) == 'C') ||
+        (_RamRead(SecFCB + 1) == '/' && _RamRead(SecFCB + 2) == 'C')) {
+        checksumOption = 1;
+    }
+    
+    // If ParFCB has /C, set it to list all files
+    if (_RamRead(ParFCB + 1) == '/' && _RamRead(ParFCB + 2) == 'C') {
         for (uint8 i = 1; i < 12; ++i)
             _RamWrite(ParFCB + i, '?');
+    } else if (_RamRead(ParFCB + 1) == ' ') {
+        // If no pattern specified, list all files
+        for (uint8 i = 1; i < 12; ++i)
+            _RamWrite(ParFCB + i, '?');
+    }
     
     _puts("\r\n");
     if (!_SearchFirst(ParFCB, TRUE)) {
@@ -262,7 +276,29 @@ uint8 _ccp_ldir(void) {
                     _ccp_bdos(C_WRITE, buf[--idx]);
                 }
             }
-            _puts(" bytes\r\n");
+            _puts(" bytes");
+            
+            if (checksumOption) {
+                // Compute checksum
+                uint16 checksum = 0;
+                CPM_FCB* F = (CPM_FCB*)_RamSysAddr(tmpFCB);
+                F->ex = 0;
+                F->cr = 0;
+                if (!_ccp_bdos(F_OPEN, tmpFCB)) {
+                    while (!_ccp_bdos(F_READ, tmpFCB)) {
+                        for (uint8 i = 0; i < 128; ++i) {
+                            checksum += _RamRead(dmaAddr + i);
+                        }
+                    }
+                    _ccp_bdos(F_CLOSE, tmpFCB);
+                }
+                // Print checksum as 4 hex digits
+                char cbuf[6];
+                sprintf(cbuf, "  %04Xh", checksum);
+                _puts(cbuf);
+            }
+            
+            _puts("\r\n");
         } while (!_SearchNext(ParFCB, TRUE));
     } else {
         _puts("No file");
@@ -571,7 +607,8 @@ uint8 _ccp_hlp(void) {
     _puts("\tCLS - Clears the screen\r\n");
     _puts("\tDEL - Alias to ERA\r\n");
     _puts("\tDIR - Lists files in the current directory\r\n");
-    _puts("\tLDIR - Lists files with sizes in the current directory\r\n");
+    _puts("\tLDIR [pattern] [/C] - Lists files with sizes in the current directory\r\n");
+    _puts("\t    /C option includes checksum\r\n");
     _puts("\tDUMP <addr|file> - Hex+ASCII dump of memory or file\r\n");
     _puts("\tERA - Erases files\r\n");
     _puts("\tEXIT - Terminates RunCPM\r\n");
