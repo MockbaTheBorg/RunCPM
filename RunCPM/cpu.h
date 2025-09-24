@@ -1472,6 +1472,39 @@ static uint8 InstructionLength(uint16 pos) {
 	return count;
 }
 
+/* TextLength - compute the length of the text representation of the instruction at pos */
+static uint8 TextLength(uint16 pos) {
+	uint8 len = 0;
+	const char *txt = GetMnemonicAt(&pos, &len, NULL);
+	len = 0;
+	while (*txt != 0) {
+		switch (*txt) {
+		case '*':
+		case '^':
+			txt += 2;
+			len += 2;  // 1 byte + 2 hex digits
+			break;
+		case '#':
+			txt += 2;
+			len += 4;  // 2 bytes + 2 hex digits
+			break;
+		case '@':
+			txt += 2;
+			len += 4;  // 1 byte + 2 hex digits
+			break;
+		case '%':
+			++txt;
+			++len;
+			break;
+		default:
+			++txt;
+			++len;
+		}
+	}
+	return len;
+}
+
+/* Disassemble instruction at given address */
 uint8 Disasm(uint16 pos) {
 	/* New Disasm: print full opcode byte column, then mnemonic. */
 	const char *txt;
@@ -1486,12 +1519,10 @@ uint8 Disasm(uint16 pos) {
 		_putch(' ');
 	}
 
-	/* pad bytes area to fixed column (use 3 chars per byte, target 18 chars) */
-	{
-		int bytes_width = (int)len * 3;
-		int target = 18; /* enough for up to 6 bytes */
-		for (int s = bytes_width; s < target; ++s) _putch(' ');
-	}
+	/* pad bytes area to fixed column (use 3 chars per byte, target 12 chars) */
+	int bytes_width = (int)len * 3;
+	int target = 12; /* enough for up to 4 bytes */
+	for (int s = bytes_width; s < target; ++s) _putch(' ');
 
 	/* Get mnemonic template (advances a temporary pos to operand start) */
 	txt = GetMnemonicAt(&op_pos, &initial, (char *)&Cflag);
@@ -1568,9 +1599,18 @@ static void z80_trace_push(uint16 pc) {
 	e->AF = AF; e->BC = BC; e->DE = DE; e->HL = HL; e->IX = IX; e->IY = IY; e->SP = SP;
 }
 
+void z80_print_flags(uint16 AF) {
+	static const char Flags[9] = "SZ5H3PNC";
+	uint8 J, I;
+	_puts(" [");
+	for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
+	_puts("]");
+}
+
 static void z80_trace_dump(void) {
 	uint32 start = trace_pos;
 	uint32 i;
+	uint8 len;
 	_puts("\r\n--- Trace dump (most recent last) ---\r\n");
 	for (i = 0; i < TRACE_CAPACITY; ++i) {
 		trace_entry_t *e = &trace_buf[(start + i) % TRACE_CAPACITY];
@@ -1580,8 +1620,21 @@ static void z80_trace_dump(void) {
 		_puts(": ");
 		/* print disassembly for this address */
 		Disasm(e->pc);
-		_puts("\r\n    regs: ");
-		_puthex16(e->BC); _puts(" "); _puthex16(e->DE); _puts(" "); _puthex16(e->HL); _puts(" "); _puthex16(e->AF); _puts(" SP:"); _puthex16(e->SP);
+		len = TextLength(e->pc);
+		/* pad to fixed column (target 16 chars) */
+		int target = 16;
+		for (int s = len; s < target; ++s) _putch(' ');
+		_puts("BC:");
+		_puthex16(e->BC);
+		_puts(" DE:");
+		_puthex16(e->DE);
+		_puts(" HL:");
+		_puthex16(e->HL);
+		_puts(" AF:");
+		_puthex16(e->AF);
+		z80_print_flags(e->AF);
+		_puts(" SP:");
+		_puthex16(e->SP);
 		_puts("\r\n");
 	}
 	_puts("--- end trace ---\r\n");
@@ -1621,12 +1674,10 @@ static int z80_check_breakpoints_on_exec(uint16 pc) {
 	return 0;
 }
 
-
 void Z80debug(void) {
 	uint8 ch = 0;
 	uint16 pos, l;
-	static const char Flags[9] = "SZ5H3PNC";
-	uint8 J, I;
+	uint8 I;
 	uint16 bpoint;     		/* changed from unsigned int to 16-bit */
 	uint8 loop = TRUE;
 	int res = 0;            /* use a signed int for result checks */
@@ -1640,9 +1691,9 @@ void Z80debug(void) {
 		_puts(" DE:"); _puthex16(DE);
 		_puts(" HL:"); _puthex16(HL);
 		_puts(" AF:"); _puthex16(AF);
-		_puts(" : [");
-		for (J = 0, I = LOW_REGISTER(AF); J < 8; ++J, I <<= 1) _putcon(I & 0x80 ? Flags[J] : '.');
-		_puts("]\r\n");
+		_puts(" :");
+		z80_print_flags(AF);
+		_puts("\r\n");
 		_puts("IX:");  _puthex16(IX);
 		_puts(" IY:"); _puthex16(IY);
 		_puts(" SP:"); _puthex16(SP);
