@@ -489,6 +489,10 @@ uint8 _sys_makedisk(uint8 drive) {
 
 /* Hardware abstraction functions */
 /*===============================================================================*/
+void _HardwareInit(void) {
+
+}
+
 void _HardwareOut(const uint32 Port, const uint32 Value) {
 
 }

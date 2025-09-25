@@ -462,6 +462,10 @@ uint8 _findfirstallusers(uint8 isdir) {
 
 /* Hardware abstraction functions */
 /*===============================================================================*/
+void _HardwareInit(void) {
+
+}
+
 void _HardwareOut(const uint32 Port, const uint32 Value) {
 
 }
