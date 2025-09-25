@@ -216,6 +216,7 @@ uint8 _ccp_dir(void) {
 // LDIR command (Long DIR)
 uint8 _ccp_ldir(void) {
     uint8 checksumOption = 0;
+    uint8 l = 0;
     
     // Check for /C option in ParFCB or SecFCB
     if ((_RamRead(ParFCB + 1) == '/' && _RamRead(ParFCB + 2) == 'C') ||
@@ -305,6 +306,13 @@ uint8 _ccp_ldir(void) {
             }
             
             _puts("\r\n");
+            l++;
+            if (pgSize && (l == pgSize)) {
+                l = 0;
+                _ccp_bios(B_CONIN);
+                if (HIGH_REGISTER(AF) == 3)
+                    break;
+            }
         } while (!_SearchNext(ParFCB, TRUE));
     } else {
         _puts("No file");
@@ -321,8 +329,8 @@ uint8 _ccp_era(void) {
 
 // TYPE command
 uint8 _ccp_type(void) {
-    uint8 i, c, l = 0;
-    uint16 a, p = 0;
+    uint8 i, c, l = 0, p = 0;
+    uint16 a = 0;
     
     _puts("\r\n");
     if (!_ccp_bdos(F_OPEN, ParFCB)) {
@@ -627,8 +635,8 @@ uint8 _ccp_hlp(void) {
     _puts("                      addr = 4 hex digits\r\n");
     _puts(" ERA [<patt>]       - Erases files\r\n");
     _puts(" EXIT               - Terminates RunCPM\r\n");
-    _puts(" PAGE [<n>]         - Sets the paging size [0-255] for TYPE\r\n");
-    _puts("                      0 disables paging\r\n");
+    _puts(" PAGE [<n>]         - Sets the paging size for TYPE and LDIR\r\n");
+    _puts("                      n = 0 to 255, 0 disables paging\r\n");
     _puts(" REN <new>=<old>    - Renames files\r\n");
     _puts(" SAVE <n> <file>    - Saves memory pages (256 bytes) to file\r\n");
     _puts(" TYPE <file>        - Displays file contents\r\n");
