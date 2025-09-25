@@ -33,6 +33,12 @@ typedef struct {
     uint8 (*handler)(void);
 } Command;
 
+// Used to call BIOS from inside the CCP
+void _ccp_bios(uint8 function) {
+    SET_LOW_REGISTER(PCX, function);
+    _Bios();
+} // _ccp_bios
+
 // Used to call BDOS from inside the CCP
 uint16 _ccp_bdos(uint8 function, uint16 de) {
     SET_LOW_REGISTER(BC, function);
@@ -334,7 +340,8 @@ uint8 _ccp_type(void) {
                     ++l;
                     if (pgSize && (l == pgSize)) {
                         l = 0;
-                        p = _ccp_bdos(C_READ, 0x0000);
+                        _ccp_bios(B_CONIN);
+                        p = HIGH_REGISTER(AF);
                         if (p == 3)
                             break;
                     }
@@ -357,7 +364,7 @@ uint8 _ccp_save(void) {
     uint16 pages = _ccp_fcbtonum();
     uint16 i, dma;
     
-    if (pages < 256) {
+    if (pages > 0 && pages < 256) {
         error = FALSE;
         
         while (_RamRead(pbuf) == ' ' && blen) {     // Skips any leading spaces
@@ -376,10 +383,11 @@ uint8 _ccp_save(void) {
                 dma = defLoad;
                 
                 for (i = 0; i < pages; i++) {
-                    _ccp_bdos(	F_DMAOFF,	dma);
-                    _ccp_bdos(	F_WRITE,	SecFCB);
+                    _ccp_bdos(F_DMAOFF,	dma);
+                    _ccp_bdos(F_WRITE, SecFCB);
                     dma += 128;
-                    _ccp_bdos(	C_WRITE,	'.');
+                    if (i % 2)
+                        _ccp_bdos(C_WRITE, '.');
                 }
                 _ccp_bdos(F_CLOSE, SecFCB);
             }
@@ -437,14 +445,20 @@ uint8 _ccp_exit(void) {
 uint8 _ccp_page(void) {
     uint8 error = TRUE;
     uint16 r = _ccp_fcbtonum();
+    char pbuf[6];
     
     if (r < 256) {
         pgSize = (uint8)r;
+        sprintf(pbuf, "%d", pgSize);
+        _puts("\r\nPage size set to ");
+        _puts(pbuf);
+        _puts(" lines");
+        _puts("\r\n");
         error = FALSE;
     }
     return (error);
 } // _ccp_page
-#endif
+#endif // Internals
 
 // VER command
 uint8 _ccp_ver(void) {
@@ -603,24 +617,24 @@ uint8 _ccp_vol(void) {
 // ?/Help command
 uint8 _ccp_hlp(void) {
     _puts("\r\nCCP Commands:\r\n");
-    _puts("\t? - Shows this list of commands\r\n");
-    _puts("\tCLS - Clears the screen\r\n");
-    _puts("\tDEL - Alias to ERA\r\n");
-    _puts("\tDIR - Lists files in the current directory\r\n");
-    _puts("\tLDIR [pattern] [/C] - Lists files with sizes in the current directory\r\n");
-    _puts("\t    /C option includes checksum\r\n");
-    _puts("\tDUMP <addr|file> - Hex+ASCII dump of memory or file\r\n");
-    _puts("\tERA - Erases files\r\n");
-    _puts("\tEXIT - Terminates RunCPM\r\n");
-    _puts("\tPAGE [<n>] - Sets the page size for TYPE\r\n");
-    _puts("\t    or disables paging if no parameter passed\r\n");
-    _puts("\tREN - Renames files\r\n");
-    _puts("\tSAVE - Saves memory to file\r\n");
-    _puts("\tTYPE - Displays file contents\r\n");
-    _puts("\tUSER - Changes user area\r\n");
-    _puts("\tVER - Displays the current CCP version\r\n");
-    _puts("\tVOL [drive] - Shows the volume information\r\n");
-    _puts("\t    which comes from each volume's INFO.TXT");
+    _puts(" ?                  - Shows this list of commands\r\n");
+    _puts(" CLS                - Clears the screen\r\n");
+    _puts(" DEL [<patt>]       - Alias to ERA\r\n");
+    _puts(" DIR [<patt>]       - Lists file directory\r\n");
+    _puts(" LDIR [<patt>] [/C] - Lists file directory with sizes\r\n");
+    _puts("                      /C option includes 16 bit checksum\r\n");
+    _puts(" DUMP <addr|file>   - Hex+ASCII dump of memory or file\r\n");
+    _puts("                      addr = 4 hex digits\r\n");
+    _puts(" ERA [<patt>]       - Erases files\r\n");
+    _puts(" EXIT               - Terminates RunCPM\r\n");
+    _puts(" PAGE [<n>]         - Sets the paging size [0-255] for TYPE\r\n");
+    _puts("                      0 disables paging\r\n");
+    _puts(" REN <new>=<old>    - Renames files\r\n");
+    _puts(" SAVE <n> <file>    - Saves memory pages (256 bytes) to file\r\n");
+    _puts(" TYPE <file>        - Displays file contents\r\n");
+    _puts(" USER <n>           - Changes user area\r\n");
+    _puts(" VER                - Displays the current CCP version\r\n");
+    _puts(" VOL [<drv>]        - Shows the volume INFO.TXT information\r\n");
     return(FALSE);
 }
 
