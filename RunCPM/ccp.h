@@ -629,12 +629,12 @@ uint8 _ccp_hlp(void) {
     _puts(" CLS                - Clears the screen\r\n");
     _puts(" DEL [<patt>]       - Alias to ERA\r\n");
     _puts(" DIR [<patt>]       - Lists file directory\r\n");
-    _puts(" LDIR [<patt>] [/C] - Lists file directory with sizes\r\n");
-    _puts("                      /C option includes 16 bit checksum\r\n");
     _puts(" DUMP <addr|file>   - Hex+ASCII dump of memory or file\r\n");
     _puts("                      addr = 4 hex digits\r\n");
     _puts(" ERA [<patt>]       - Erases files\r\n");
     _puts(" EXIT               - Terminates RunCPM\r\n");
+    _puts(" LDIR [<patt>] [/C] - Lists file directory with sizes\r\n");
+    _puts("                      /C option includes 16 bit checksum\r\n");
     _puts(" PAGE [<n>]         - Sets the paging size for TYPE and LDIR\r\n");
     _puts("                      n = 0 to 255, 0 disables paging\r\n");
     _puts(" REN <new>=<old>    - Renames files\r\n");
