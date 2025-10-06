@@ -855,7 +855,9 @@ uint8 _ccp_ext(void) {
         SP = BDOSjmppage;								// Sets the stack to the top of the TPA
         
         Z80run();										// Starts Z80 simulation
-        
+        PC = 0;											// Resets the PC/SP after command execution
+        SP = 0;
+
         error = FALSE;
     }
 
