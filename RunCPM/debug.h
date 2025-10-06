@@ -581,29 +581,20 @@ void Z80debug(void) {
 				--I;
 			}
 			break;
-        case 'm':
-            /* Modify memory byte at address until Enter is pressed */
-            _puts("\r\n Addr: ");
-            res = read_hex16(&bpoint);
-            if (res) {
-                uint16 addr = bpoint;
-                uint8 val;
-                while (1) {
-                    _puthex16(addr); _puts(" : ");
-                    val = _RamRead(addr);
-                    _puthex8(val); _puts(" -> ");
-                    res = read_hex8(&val);
-                    if (res) {
-                        _RamWrite(addr, val);
-                        addr = (addr + 1) & 0xFFFF;
-                    } else {
-                        break; /* exit on no input */
-                    }
-                }
-            } else {
-                _puts("Invalid address\r\n");
-            }
-            break;
+		case 'A':
+			/* Add breakpoint at address */
+			_puts(" Addr: ");
+			res = read_hex16(&bpoint);
+			if (res) {
+				if (z80_add_breakpoint(bpoint) == 0) {
+					_puts("Breakpoint added: "); _puthex16(bpoint); _puts("\r\n");
+				} else {
+					_puts("Breakpoint list full\r\n");
+				}
+			} else {
+				_puts("Invalid address\r\n");
+			}
+			break;
 		case 'B':
 			/* List breakpoints set via 'A' */
 			_puts(" Breakpoints:\r\n");
@@ -632,6 +623,31 @@ void Z80debug(void) {
 			else
 				_puts("Invalid address\r\n");
 			break;
+		case 'E':
+			/* Erase breakpoint at address */
+			_puts(" Addr: ");
+			res = read_hex16(&bpoint);
+			if (res) {
+				if (z80_remove_breakpoint(bpoint) == 0) {
+					_puts("Breakpoint removed: "); _puthex16(bpoint); _puts("\r\n");
+				} else {
+					_puts("Breakpoint not found\r\n");
+				}
+			} else {
+				_puts("Invalid address\r\n");
+			}
+			break;
+        case 'J':
+            /* Jump - set PC to address */
+            _puts(" Addr: ");
+            res = read_hex16(&bpoint);
+            if (res) {
+                PC = bpoint;
+                _puts("PC set to "); _puthex16(PC); _puts("\r\n");
+            } else {
+                _puts("Invalid address\r\n");
+            }
+            break;
 		case 'L':
 			/* Disassemble at address */
 			_puts(" Addr: ");
@@ -650,34 +666,29 @@ void Z80debug(void) {
 				_puts("Invalid address\r\n");
 			}
 			break;
-		case 'A':
-			/* Add breakpoint at address */
-			_puts(" Addr: ");
-			res = read_hex16(&bpoint);
-			if (res) {
-				if (z80_add_breakpoint(bpoint) == 0) {
-					_puts("Breakpoint added: "); _puthex16(bpoint); _puts("\r\n");
-				} else {
-					_puts("Breakpoint list full\r\n");
-				}
-			} else {
-				_puts("Invalid address\r\n");
-			}
-			break;
-		case 'E':
-			/* Erase breakpoint at address */
-			_puts(" Addr: ");
-			res = read_hex16(&bpoint);
-			if (res) {
-				if (z80_remove_breakpoint(bpoint) == 0) {
-					_puts("Breakpoint removed: "); _puthex16(bpoint); _puts("\r\n");
-				} else {
-					_puts("Breakpoint not found\r\n");
-				}
-			} else {
-				_puts("Invalid address\r\n");
-			}
-			break;
+        case 'M':
+            /* Modify memory byte at address until Enter is pressed */
+            _puts("\r\n Addr: ");
+            res = read_hex16(&bpoint);
+            if (res) {
+                uint16 addr = bpoint;
+                uint8 val;
+                while (1) {
+                    _puthex16(addr); _puts(" : ");
+                    val = _RamRead(addr);
+                    _puthex8(val); _puts(" -> ");
+                    res = read_hex8(&val);
+                    if (res) {
+                        _RamWrite(addr, val);
+                        addr = (addr + 1) & 0xFFFF;
+                    } else {
+                        break; /* exit on no input */
+                    }
+                }
+            } else {
+                _puts("Invalid address\r\n");
+            }
+            break;
 		case 'R':
 			/* Dump recent trace */
 			z80_trace_dump();
@@ -688,6 +699,11 @@ void Z80debug(void) {
 			Step = pos + InstructionLength(pos);
 			Debug = 0;
 			break;
+        case 'U':
+            /* Unwatch - clear any byte/word watch */
+            Watch = -1;
+            _puts("\r\nWatch cleared\r\n");
+            break;
 		case 'W':
 			/* Watch - set a byte/word watch */
 			_puts(" Addr: ");
@@ -701,11 +717,6 @@ void Z80debug(void) {
 				_puts("Invalid address\r\n");
 			}
 			break;
-        case 'U':
-            /* Unwatch - clear any byte/word watch */
-            Watch = -1;
-            _puts("\r\nWatch cleared\r\n");
-            break;
 		case 'X':
 			/* Exit RunCPM */
 			_puts("\r\nExiting...\r\n");
@@ -727,18 +738,19 @@ void Z80debug(void) {
 			_puts("  y - Dumps the page (IY) points to\r\n");
 			_puts("  a - Dumps memory pointed by dmaAddr\r\n");
 			_puts("  l - Disassembles from current PC\r\n");
-            _puts("  m - Modify memory at address\r\n");
 			_puts("Uppercase commands:\r\n");
 			_puts("  A - Add breakpoint at address\r\n");
-			_puts("  E - Erase breakpoint at address\r\n");
 			_puts("  B - List breakpoints\r\n");
 			_puts("  C - Clear all breakpoints\r\n");
 			_puts("  D - Dumps memory at address\r\n");
+			_puts("  E - Erase breakpoint at address\r\n");
+            _puts("  J - Jumps to address (sets PC)\r\n");
 			_puts("  L - Disassembles at address\r\n");
+            _puts("  M - Modify memory at address\r\n");
 			_puts("  R - Dump recent trace\r\n");
 			_puts("  T - Steps over a call\r\n");
-			_puts("  W - Sets a byte/word watch\r\n");
 	        _puts("  U - Clears the byte/word watch\r\n");
+			_puts("  W - Sets a byte/word watch\r\n");
 			_puts("  X - Exit RunCPM\r\n");
 			break;
 		default:
