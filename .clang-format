@@ -1,0 +1,10 @@
+# Use a standard style as a base (e.g., LLVM)
+BasedOnStyle: LLVM
+# Attach open braces to the previous line for all constructs
+BreakBeforeBraces: Attach
+# Put 'else' and 'catch' on the same line as the preceding closing brace
+BraceWrapping:
+  AfterControlStatement: true
+  BeforeElse: true
+# Set the ident size
+IndentWidth: 4
