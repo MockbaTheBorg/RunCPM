@@ -185,7 +185,7 @@ void _ccp_askForKey(void) {
 }
 
 #ifdef Internals
-// DIR command
+// DIR command - standard directory listing
 uint8 _ccp_dir(void) {
     uint8 i;
     uint8 dirHead[6] = "A: ";
@@ -221,7 +221,7 @@ uint8 _ccp_dir(void) {
     return 0;
 } // _ccp_dir
 
-// LDIR command (Long DIR)
+// LDIR command (Long DIR) - directory listing with file sizes and optional checksum
 uint8 _ccp_ldir(void) {
     uint8 checksumOption = 0;
     uint8 l = 0;
@@ -328,14 +328,14 @@ uint8 _ccp_ldir(void) {
     return 0;
 } // _ccp_ldir
 
-// ERA command
+// ERA command - erases files
 uint8 _ccp_era(void) {
     if (_ccp_bdos(F_DELETE, ParFCB))
         _puts("\r\nNo file");
     return 0;
 } // _ccp_era
 
-// TYPE command
+// TYPE command - types a file to the console
 uint8 _ccp_type(void) {
     uint8 i, c, l = 0, p = 0;
     uint16 a = 0;
@@ -374,7 +374,7 @@ uint8 _ccp_type(void) {
     return 0;
 } // _ccp_type
 
-// SAVE command
+// SAVE command - saves memory pages to a file
 uint8 _ccp_save(void) {
     uint8 error = TRUE;
     uint16 pages = _ccp_fcbtonum();
@@ -412,7 +412,7 @@ uint8 _ccp_save(void) {
     return (error);
 } // _ccp_save
 
-// REN command
+// REN command - renames a file
 uint8 _ccp_ren(void) {
     uint8 ch, i;
     
@@ -431,7 +431,7 @@ uint8 _ccp_ren(void) {
     return 0;
 } // _ccp_ren
 
-// USER command
+// USER command - changes user area
 uint8 _ccp_user(void) {
     uint8 error = TRUE;
     
@@ -443,13 +443,13 @@ uint8 _ccp_user(void) {
     return (error);
 } // _ccp_user
 
-// CLS command
+// CLS command - clears the screen
 uint8 _ccp_cls(void) {
     _clrscr();
     return (FALSE);
 } // _ccp_cls
 
-// EXIT command
+// EXIT command - terminates RunCPM
 uint8 _ccp_exit(void) {
     _puts("\r\nTerminating RunCPM.");
     _puts("\r\nCPU Halted.");
@@ -457,7 +457,7 @@ uint8 _ccp_exit(void) {
     return (FALSE);
 } // _ccp_exit
 
-// PAGE command
+// PAGE command - sets the paging size for TYPE and LDIR
 uint8 _ccp_page(void) {
     uint8 error = TRUE;
     uint16 r = _ccp_fcbtonum();
@@ -474,15 +474,14 @@ uint8 _ccp_page(void) {
     }
     return (error);
 } // _ccp_page
-#endif // Internals
 
-// VER command
+// VER command - displays the CCP version
 uint8 _ccp_ver(void) {
     _puts(CCPHEAD);
     return(FALSE);
 }
 
-// DUMP command: dump memory or file in hex+ASCII, 128 bytes per screen, stop on ESC
+// DUMP command - dump memory or file in hex+ASCII, 128 bytes per screen, stop on ESC
 uint8 _ccp_dump(void) {
     uint8 param[17];
     uint8 i = 0, c;
@@ -594,7 +593,7 @@ uint8 _ccp_dump(void) {
     }
 } // _ccp_dump
 
-// VOL command
+// VOL command - shows the volume INFO.TXT information
 uint8 _ccp_vol(void) {
     uint8 error = FALSE;
     uint8 letter = _RamRead(ParFCB) ? '@' + _RamRead(ParFCB) : 'A' + curDrive;
@@ -627,6 +626,7 @@ uint8 _ccp_vol(void) {
     }
     return (error);
 } // _ccp_vol
+#endif // Internals
 
 // ?/Help command
 uint8 _ccp_hlp(void) {
@@ -669,10 +669,11 @@ static const Command Commands[] = {
     {"DEL", _ccp_era},
     {"EXIT", _ccp_exit},
     {"PAGE", _ccp_page},
+    {"PASTE", _ccp_paste},
     {"VER", _ccp_ver},
-    {"DUMP", _ccp_dump}, // <-- Added here
-#endif
+    {"DUMP", _ccp_dump},
     {"VOL", _ccp_vol},
+#endif
     {"?", _ccp_hlp},
     {NULL, NULL}  // Sentinel
 };
