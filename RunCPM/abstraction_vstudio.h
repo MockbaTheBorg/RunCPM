@@ -5,14 +5,14 @@
 
 // #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
-#include <conio.h>
-#include <ctype.h> // added for isdigit/toupper
-#include <signal.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <time.h>
-#include <wincon.h>
 #include <windows.h>
+#include <stdio.h>
+#include <conio.h>
+#include <stdbool.h>
+#include <time.h>
+#include <signal.h>
+#include <wincon.h>
+#include <ctype.h> // added for isdigit/toupper
 // #endif
 #define millis() clock()
 
