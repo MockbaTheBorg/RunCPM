@@ -10,7 +10,7 @@
 #define Trampoline (CmdFCB + 36) // Trampoline for running external commands
 
 #define inBuf (BDOSjmppage - 256) // Input buffer location
-#define cmdLen 125 // Maximum size of a command line (sz+rd+cmd+\0)
+#define cmdLen 125                // Maximum size of a command line (sz+rd+cmd+\0)
 
 #define defDMA 0x0080  // Default DMA address
 #define defLoad 0x0100 // Default load address
@@ -18,16 +18,16 @@
 #define Internals // Define to have internal commands
 
 // CCP global variables
-uint8 pgSize = 22;  // for TYPE
-uint8 curDrive = 0; // 0 -> 15 = A -> P	.. Current drive for the CCP (same as
-                    // RAM[DSKByte])
-uint8 parDrive = 0; // 0 -> 15 = A -> P .. Drive for the first file parameter
-uint8 curUser = 0;  // 0 -> 15			.. Current user area to access
-bool sFlag = FALSE; // Submit Flag
-uint8 sRecs = 0;    // Number of records on the Submit file
+uint8 pgSize = 22;           // for TYPE
+uint8 curDrive = 0;          // 0 -> 15 = A -> P	.. Current drive for the CCP (same as
+                             // RAM[DSKByte])
+uint8 parDrive = 0;          // 0 -> 15 = A -> P .. Drive for the first file parameter
+uint8 curUser = 0;           // 0 -> 15			.. Current user area to access
+bool sFlag = FALSE;          // Submit Flag
+uint8 sRecs = 0;             // Number of records on the Submit file
 uint8 prompt[8] = "\r\n  >"; // Command prompt
-uint16 pbuf, perr; // Pointer to the command buffer, and error position
-uint8 blen = 0;    // Actual size of the typed command line (size of the buffer)
+uint16 pbuf, perr;           // Pointer to the command buffer, and error position
+uint8 blen = 0;              // Actual size of the typed command line (size of the buffer)
 
 typedef struct {
     const char *name;
@@ -613,7 +613,7 @@ uint8 _ccp_vol(void) {
     uint8 letter = _RamRead(ParFCB) ? '@' + _RamRead(ParFCB) : 'A' + curDrive;
     uint8 folder[5] = {letter, FOLDERCHAR, '0', FOLDERCHAR, 0};
     uint8 filename[13] = {letter, FOLDERCHAR, '0', FOLDERCHAR, 'I', 'N', 'F',
-                          'O',    '.',        'T', 'X',        'T', 0};
+                          'O', '.', 'T', 'X', 'T', 0};
     uint8 bytesread;
     uint8 i, j;
 
@@ -734,20 +734,20 @@ uint8 _ccp_ext(void) {
             _RamWrite(CmdFCB + 11, 'M');
         }
 
-        drive = _RamRead(CmdFCB); // Get the drive from the command FCB
+        drive = _RamRead(CmdFCB);           // Get the drive from the command FCB
         found = !_ccp_bdos(F_OPEN, CmdFCB); // Look for the program on the FCB
                                             // drive, current or specified
         if (!found) {                       // If not found
-            if (!drive) { // and the search was on the default drive
-                _RamWrite(CmdFCB, 0x01); // Then look on drive A: user 0
+            if (!drive) {                   // and the search was on the default drive
+                _RamWrite(CmdFCB, 0x01);    // Then look on drive A: user 0
                 if (curUser) {
                     user = curUser;               // Save the current user
                     _ccp_bdos(F_USERNUM, 0x0000); // then set it to 0
                 }
                 found = !_ccp_bdos(F_OPEN, CmdFCB);
-                if (!found) {                    // If still not found then
-                    if (curUser) {               // If current user not = 0
-                        _RamWrite(CmdFCB, 0x00); // look on current drive user 0
+                if (!found) {                               // If still not found then
+                    if (curUser) {                          // If current user not = 0
+                        _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
                         found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
                     }
                 }
@@ -766,20 +766,20 @@ uint8 _ccp_ext(void) {
         _RamWrite(CmdFCB + 10, 'U');
         _RamWrite(CmdFCB + 11, 'B');
 
-        drive = _RamRead(CmdFCB); // Get the drive from the command FCB
+        drive = _RamRead(CmdFCB);           // Get the drive from the command FCB
         found = !_ccp_bdos(F_OPEN, CmdFCB); // Look for the program on the FCB
                                             // drive, current or specified
         if (!found) {                       // If not found
-            if (!drive) { // and the search was on the default drive
-                _RamWrite(CmdFCB, 0x01); // Then look on drive A: user 0
+            if (!drive) {                   // and the search was on the default drive
+                _RamWrite(CmdFCB, 0x01);    // Then look on drive A: user 0
                 if (curUser) {
                     user = curUser;               // Save the current user
                     _ccp_bdos(F_USERNUM, 0x0000); // then set it to 0
                 }
                 found = !_ccp_bdos(F_OPEN, CmdFCB);
-                if (!found) {                    // If still not found then
-                    if (curUser) {               // If current user not = 0
-                        _RamWrite(CmdFCB, 0x00); // look on current drive user 0
+                if (!found) {                               // If still not found then
+                    if (curUser) {                          // If current user not = 0
+                        _RamWrite(CmdFCB, 0x00);            // look on current drive user 0
                         found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
                     }
                 }
@@ -812,10 +812,10 @@ uint8 _ccp_ext(void) {
 
             // now try to find SUBMIT.COM file
             found =
-                !_ccp_bdos(F_OPEN, CmdFCB); // Look for the program on the FCB
-                                            // drive, current or specified
-            if (!found) {                   // If not found
-                if (!drive) { // and the search was on the default drive
+                !_ccp_bdos(F_OPEN, CmdFCB);  // Look for the program on the FCB
+                                             // drive, current or specified
+            if (!found) {                    // If not found
+                if (!drive) {                // and the search was on the default drive
                     _RamWrite(CmdFCB, 0x01); // Then look on drive A: user 0
                     if (curUser) {
                         user = curUser;               // Save the current user
@@ -825,7 +825,7 @@ uint8 _ccp_ext(void) {
                     if (!found) {      // If still not found then
                         if (curUser) { // If current user not = 0
                             _RamWrite(CmdFCB,
-                                      0x00); // look on current drive user 0
+                                      0x00);                    // look on current drive user 0
                             found = !_ccp_bdos(F_OPEN, CmdFCB); // and try again
                         }
                     }
@@ -851,7 +851,7 @@ uint8 _ccp_ext(void) {
 
     if (found) { // Program was found somewhere
         _puts("\r\n");
-        _ccp_bdos(F_DMAOFF, loadAddr); // Sets the DMA address for the loading
+        _ccp_bdos(F_DMAOFF, loadAddr);       // Sets the DMA address for the loading
         while (!_ccp_bdos(F_READ, CmdFCB)) { // Loads the program into memory
             loadAddr += 128;
             if (loadAddr ==
@@ -885,7 +885,7 @@ uint8 _ccp_ext(void) {
         SET_LOW_REGISTER(BC,
                          _RamRead(DSKByte)); // Sets C to the current drive/user
         PC = loadAddr;                       // Sets CP/M application jump point
-        SP = BDOSjmppage; // Sets the stack to the top of the TPA
+        SP = BDOSjmppage;                    // Sets the stack to the top of the TPA
 
         Z80run(); // Starts Z80 simulation
         PC = 0;   // Resets the PC/SP after command execution
@@ -896,7 +896,7 @@ uint8 _ccp_ext(void) {
 
     if (user)                          // If a user was selected
         _ccp_bdos(F_USERNUM, curUser); // Set it back
-    _RamWrite(CmdFCB, drive); // Set the command FCB drive back to what it was
+    _RamWrite(CmdFCB, drive);          // Set the command FCB drive back to what it was
 
     return (error);
 } // _ccp_ext
@@ -1033,7 +1033,7 @@ void _ccp(void) {
                 } else if ((ch >= '0') && (ch <= '9')) {
                     tUser = u = (u * 10) + (ch - '0');
                 } else if (ch == ':') {
-                    if (i == blen - 1) { // if we at the end of the command line
+                    if (i == blen - 1) {   // if we at the end of the command line
                         if (tUser >= 16) { // if invalid user
                             errorFlag = TRUE;
                             break;

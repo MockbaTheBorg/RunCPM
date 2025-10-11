@@ -6,5 +6,11 @@ BreakBeforeBraces: Attach
 BraceWrapping:
   AfterControlStatement: true
   BeforeElse: true
-# Set the ident size
+# Set the ident size to 4
 IndentWidth: 4
+# Set the right margin to none
+ColumnLimit: 0
+# Indent preprocessor directives after the hash (#)
+IndentPPDirectives: BeforeHash
+# Do not reorder #include directives
+SortIncludes: Never
