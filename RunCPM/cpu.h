@@ -126,7 +126,7 @@ rrdrldTable[i]          0..255  (i << 8) | (i & 0xa8) | (((i & 0xff) == 0) << 6)
 cpTable[i]              0..255  (i & 0x80) | (((i & 0xff) == 0) << 6)
 */
 
-#define preTables // Use precomputed tables (increases the size of the binary by about 4k)
+//#define preTables // Use precomputed tables (increases the size of the binary by 4k or more)
 
 /* parityTable[i] = (number of 1's in i is odd) ? 0 : 4, i = 0..255 */
 #ifdef preTables
@@ -892,9 +892,9 @@ static const uint8 cpTable[256] = {
 	128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,
 	128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,
 };
-#endif
 
-#ifndef preTables
+#else
+
 static uint8 parityTable[256];
 static uint8 incTable[257];
 static uint8 decTable[256];
