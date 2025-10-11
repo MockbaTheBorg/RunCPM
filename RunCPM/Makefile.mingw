@@ -5,12 +5,29 @@ PROG = RunCPM
 MFILE = Makefile.mingw
 
 # Compiler command
-CC = gcc
-#CC = gcc -DDEBUG=1 -DDEBUGLOG=1
+		
+# CC = gcc
 
-# Flags to pass to the compiler - add "-g" to include debug information
-CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
-#CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
+# gcc make 32bit
+CC = gcc
+												 
+# Flags to pass to the compiler
+CFLAGS ?= -Wall -O3 -fPIC -Wno-unused-variable
+
+DEBUG_MODE :=
+
+ifeq ($(DEBUG),1)
+DEBUG_MODE := 1
+endif
+
+ifneq ($(findstring -DDEBUG=1,$(CFLAGS)),)
+DEBUG_MODE := 1
+endif
+
+ifeq ($(DEBUG_MODE),1)
+CFLAGS := $(filter-out -O%,$(CFLAGS))
+CFLAGS := -Wall -O0 -fPIC -Wno-unused-variable -g -DDEBUG=1 -DDEBUGLOG=1 $(CFLAGS)
+endif	 
 
 # Flags to pass to the linker
 LDFLAGS =
