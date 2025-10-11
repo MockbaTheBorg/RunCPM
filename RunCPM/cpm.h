@@ -1016,6 +1016,14 @@ void _Bdos(void) {
                     }
                 }
 
+				if (chr == 31) {                        // ^? - help
+					_puts("\n\r^A Left  ^B B/EOL ^C Abort ^E N/Lin ^F Right ^G Del@C ^H/Del BackSp\n\r");
+					_puts("^K DelEOL ^R Retype ^U DelAll ^W Recall ^X DelBOL ^? Help\n\r");
+                    preBS = curCol;             //backspace to BOL
+                    reType = chrsCnt;           //retype everything
+                    postBS = chrsCnt - curCol;  //backspace to cursor column
+				}
+
                 if ((chr >= 0x20) && (chr <= 0x7E)) { //valid character
                     if (curCol < chrsCnt) {
                         //move rest of buffer one character right
