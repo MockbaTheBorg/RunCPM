@@ -176,6 +176,14 @@ uint16 _ccp_fcbtonum() {
     return (n);
 } // _ccp_fcbtonum
 
+// Asks for a key to continue, used by TYPE and LDIR
+void _ccp_askForKey(void) {
+    _puts("-- Press any key, ^C to quit --");
+    _ccp_bios(B_CONIN);
+    _puts("\r");
+    _puts("                               \r");
+}
+
 #ifdef Internals
 // DIR command
 uint8 _ccp_dir(void) {
@@ -309,7 +317,7 @@ uint8 _ccp_ldir(void) {
             l++;
             if (pgSize && (l == pgSize)) {
                 l = 0;
-                _ccp_bios(B_CONIN);
+                _ccp_askForKey();
                 if (HIGH_REGISTER(AF) == 3)
                     break;
             }
@@ -348,7 +356,7 @@ uint8 _ccp_type(void) {
                     ++l;
                     if (pgSize && (l == pgSize)) {
                         l = 0;
-                        _ccp_bios(B_CONIN);
+                        _ccp_askForKey();
                         p = HIGH_REGISTER(AF);
                         if (p == 3)
                             break;
@@ -537,10 +545,9 @@ uint8 _ccp_dump(void) {
             _puts("\r\n");
             addr += 16;
             if ((addr & 0x7F) == 0) { // Every 128 bytes, pause
-                _puts("-- Press any key, ^C to quit --");
-                if (_ccp_bdos(C_READ, 0) == 3) // ^C
+                _ccp_askForKey();
+                if (HIGH_REGISTER(AF) == 3) // ^C
                     done = 1;
-                _puts("\r\n");
             }
         }
         return 0;
@@ -579,11 +586,10 @@ uint8 _ccp_dump(void) {
                 faddr += 16;
             }
             // Pause every 128 bytes
-            _puts("-- Press any key, ^C to quit --");
-            if (_ccp_bdos(C_READ, 0) == 3) // ^C
+            _ccp_askForKey();
+            if (HIGH_REGISTER(AF) == 3) // ^C
                 done = 1;
-            _puts("\r\n");
-        }
+            }
         return 0;
     }
 } // _ccp_dump
