@@ -77,6 +77,11 @@ int main(int argc, char *argv[]) {
     _puts("BDOS at 0x");
     _puthex16(BDOSjmppage);
     _puts("\r\n");
+#ifdef INT_HANDOFF
+    _puts("BIOS/BDOS using interrupt handoff method\r\n");
+#else
+    _puts("BIOS/BDOS using legacy IN/OUT call method\r\n");
+#endif
     _puts("CCP " CCPname " at 0x");
     _puthex16(CCPaddr);
     _puts("\r\n");

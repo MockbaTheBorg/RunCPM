@@ -134,6 +134,11 @@ enum eBDOSFunc {
 #define RET 0xc9
 #define INa 0xdb  // Triggers a BIOS call
 #define OUTa 0xd3 // Triggers a BDOS call
+// Interruption handling
+#define RST_08 0xcf  // RST 08h - BIOS calls
+#define RST_10 0xd7  // RST 10h - BDOS calls  
+#define RST_18 0xdf  // RST 18h - Hardware calls
+#define NOP 0x00     // No operation
 
 /* set up full PUN and LST filenames to be on drive A: user 0 */
 #ifdef USE_PUN
@@ -160,9 +165,15 @@ void _PatchBIOS(void) {
 
     // Patches in the BIOS page content
     for (i = 0; i < 99; i = i + 3) {
+#ifdef INT_HANDOFF
+        _RamWrite(BIOSpage + i, RST_08);
+        _RamWrite(BIOSpage + i + 1, RET);
+        _RamWrite(BIOSpage + i + 2, NOP);
+#else
         _RamWrite(BIOSpage + i, OUTa);
         _RamWrite(BIOSpage + i + 1, 0xFF);
         _RamWrite(BIOSpage + i + 2, RET);
+#endif
     }
 } //_PatchBIOS
 
@@ -204,9 +215,15 @@ void _PatchCPM(void) {
     _RamWrite16(BDOSjmppage + 7, BDOSpage);
 
     // Patches in the BDOS page content
+#ifdef INT_HANDOFF
+    _RamWrite(BDOSpage, RST_10);
+    _RamWrite(BDOSpage + 1, RET);
+    _RamWrite(BDOSpage + 2, NOP);
+#else
     _RamWrite(BDOSpage, INa);
     _RamWrite(BDOSpage + 1, 0xFF);
     _RamWrite(BDOSpage + 2, RET);
+#endif
 
     _PatchBIOS();
 #endif

@@ -28,8 +28,8 @@
 #define LogName "RunCPM.log"
 
 /* RunCPM version for the greeting header */
-#define VERSION "6.8"
-#define VersionBCD 0x68
+#define VERSION "6.9"
+#define VersionBCD 0x69
 
 /* Definition of which BDOS to use (not for Internal CCP, set to 60K CCPs by default) */
 // #define ABDOS				// Based on work by Pavel Zampach (https://www.chstercius.cz/runcpm/)
@@ -205,6 +205,10 @@ static uint8 RAM[MEMSIZE];
         RAM[a] = (v) & 0xff;  \
         RAM[(a) + 1] = (v) >> 8
 #endif
+
+// If this is defined, the emulator will use interrupt-based BIOS/BDOS calls instead of
+// the legacy IN/OUT method for handing control to the emulated BIOS/BDOS routines
+#define INT_HANDOFF
 
 // Size of the allocated pages (Minimum size = 1 page = 256 bytes)
 

@@ -39,21 +39,29 @@ const char* iLogTxt;
 	Functions needed by the soft CPU implementation
 */
 void cpu_out(const uint32 p, const uint32 v) {
+#ifdef INT_HANDOFF
+	_HardwareOut(p, v);
+#else
 	if (p == 0xFF) {
 		_Bios();
 	} else {
 		_HardwareOut(p, v);
 	}
+#endif
 }
 
 uint32 cpu_in(const uint32 p) {
 	uint32 v;
+#ifdef INT_HANDOFF
+	v = _HardwareIn(p);
+#else
 	if (p == 0xFF) {
 		_Bdos();
 		v = HIGH_REGISTER(AF);
 	} else {
 		v = _HardwareIn(p);
 	}
+#endif
 	return(v);
 }
 
@@ -2550,6 +2558,10 @@ static inline void Z80run(void) {
 		case 0xcf:      /* RST 8 */
 			PUSH(PC);
 			PC = 8;
+#ifdef INT_HANDOFF
+			_Bios();
+			POP(PC);
+#endif
 			break;
 
 		case 0xd0:      /* RET NC */
@@ -2588,6 +2600,10 @@ static inline void Z80run(void) {
 		case 0xd7:      /* RST 10H */
 			PUSH(PC);
 			PC = 0x10;
+#ifdef INT_HANDOFF
+			_Bdos();
+			POP(PC);
+#endif
 			break;
 
 		case 0xd8:      /* RET C */
