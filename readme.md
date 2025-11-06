@@ -127,7 +127,7 @@ This command will then be executed every time the CCP is restarted or once when 
 
 ## Printing
 
-Printing to the PUN: and LST: devices is allowed and will generate files called "PUN.TXT" and "LST.TXT" under user area 0 of disk A:. These files can then be tranferred over to a host computer via XMODEM for real physical printing.
+Printing to the PUN: and LST: devices is allowed and will generate files called "PUN.TXT" and "LST.TXT" under user area 0 of disk A:. These files can then be transferred over to a host computer via XMODEM for real physical printing.
 These files are created when the first printing occurs, and will be kept open throughout RunCPM usage. They can be erased inside CP/M to trigger the start of a new printing.
 As of now RunCPM does not support printing to physical devices.
 
