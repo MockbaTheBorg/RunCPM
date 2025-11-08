@@ -230,20 +230,20 @@ void _PatchCPM(void) {
 
     // **********  Patch CP/M (fake) Disk Parameter Block after the BDOS call entry  **********
     i = DPBaddr;
-    _RamWrite(i++, 64); // spt - Sectors Per Track
-    _RamWrite(i++, 0);
-    _RamWrite(i++, 5);    // bsh - Data allocation "Block Shift Factor"
-    _RamWrite(i++, 0x1F); // blm - Data allocation Block Mask
-    _RamWrite(i++, 1);    // exm - Extent Mask
-    _RamWrite(i++, 0xFF); // dsm - Total storage capacity of the disk drive
+    _RamWrite(i++, 0x00); // DEFW spt - Sectors Per Track (256)
+    _RamWrite(i++, 0x01);
+    _RamWrite(i++, 0x05); // DEFB bsh - Data allocation "Block Shift Factor" (for 4096 block size)
+    _RamWrite(i++, 0x1F); // DEFB blm - Data allocation Block Mask (31 for 4096 block size)
+    _RamWrite(i++, 0x01); // DEFB exm - Extent Mask (1 = total blocks > 256)
+    _RamWrite(i++, 0xF7); // DEFW dsm - Total storage capacity of the disk drive
     _RamWrite(i++, 0x07);
-    _RamWrite(i++, 255); // drm - Number of the last directory entry
-    _RamWrite(i++, 3);
-    _RamWrite(i++, 0xFF); // al0
-    _RamWrite(i++, 0x00); // al1
-    _RamWrite(i++, 0);    // cks - Check area Size
-    _RamWrite(i++, 0);
-    _RamWrite(i++, 0x02); // off - Number of system reserved tracks at the beginning of the ( logical ) disk
+    _RamWrite(i++, 0xFF); // DEFW drm - Number of the last directory entry
+    _RamWrite(i++, 0x03);
+    _RamWrite(i++, 0xFF); // DEFB al0
+    _RamWrite(i++, 0x00); // DEFB al1
+    _RamWrite(i++, 0x00); // DEFW cks - Check area Size (0 for fixed disks)
+    _RamWrite(i++, 0x00);
+    _RamWrite(i++, 0x01); // DEFW off - Number of system reserved tracks at the beginning of the ( logical ) disk
     _RamWrite(i++, 0x00);
     blockShift = _RamRead(DPBaddr + 2);
     blockMask = _RamRead(DPBaddr + 3);
