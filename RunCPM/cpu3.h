@@ -240,6 +240,10 @@ static void alu(uint8 op, uint8 val) {
     }
 }
 
+#if defined(DEBUG) || defined(iDEBUG)
+#include "debug.h"
+#endif
+
 static inline void Z80run(void) {
     uint8 opcode;
     uint8 x, y, z, p, q;
@@ -249,7 +253,28 @@ static inline void Z80run(void) {
     uint8 val;
 
     while (!Status) {
-        PCX = PC;
+
+#ifdef DEBUG
+		if (z80_check_breakpoints_on_exec(PC)) {
+			Debug = 1;
+		}
+		if (PC == Step) {
+			Debug = 1;
+			Step = -1;
+		}
+		if (Debug)
+			Z80debug();
+		if (Status)
+			break;
+#endif
+
+	PCX = PC;
+
+	/* push instruction into trace (before it is executed) */
+#if defined(DEBUG) || defined(iDEBUG)
+	z80_trace_push(PCX);
+#endif
+
         opcode = RAM_PP(PC);
         // Increment R
         IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
@@ -500,8 +525,18 @@ static inline void Z80run(void) {
             }
         } else if (x == 1) { // LD r[y], r[z]
             if (y == 6 && z == 6) { // HALT
+#ifdef DEBUG
+			_puts("\r\n::CPU HALTED::\r\n");	// A halt is a good indicator of broken code
+			_puts("Press any key...");
+			_getcon();
+	#ifdef DEBUGONHALT
+			_puts("\r\n");
+			Debug = 1;
+			Z80debug();
+	#endif
+#endif
                 PC--;
-                Status = 1;
+                Status = STATUS_EXIT;
             } else {
                 uint8 v;
                 int use_ix_d = (z == 6 || y == 6); // If (IX+d) is involved, H/L are not remapped
