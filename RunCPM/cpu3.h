@@ -48,9 +48,7 @@ static uint8 rotateShiftTable[256];
 static uint8 incZ80Table[257];
 static uint8 decZ80Table[256];
 static uint8 cbitsZ80Table[512];
-static uint8 cbitsZ80DupTable[512];
 static uint8 cbits2Z80Table[512];
-static uint8 cbits2Z80DupTable[512];
 static uint8 negTable[256];
 static uint8 cpTable[256];
 
@@ -77,9 +75,7 @@ void initTables(void) {
 	// 512 bytes tables
 	for (int i = 0; i < 512; i++) {
 		cbitsZ80Table[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1);
-		cbitsZ80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | (i & 0xa8);
 		cbits2Z80Table[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2;
-		cbits2Z80DupTable[i] = (i & 0x10) | (((i >> 6) ^ (i >> 5)) & 4) | ((i >> 8) & 1) | 2 | (i & 0xa8);
 	}
 }
 
