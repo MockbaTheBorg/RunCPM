@@ -46,7 +46,7 @@ int lst_open = FALSE;
 
     #include "ram.h"     // ram.h - Implements the RAM
     #include "console.h" // console.h - Defines all the console abstraction functions
-    #include "cpu.h"     // cpu.h - Implements the emulated CPU
+    #include CPU         // cpu.h - Implements the emulated CPU
     #include "disk.h"    // disk.h - Defines all the disk access abstraction functions
     #include "host.h"    // host.h - Custom host-specific BDOS call
     #include "cpm.h"     // cpm.h - Defines the CPM structures and calls
@@ -71,6 +71,9 @@ int main(int argc, char *argv[]) {
     _puts("  CP/M Emulator v" VERSION " by Marcelo Dantas\r\n");
     _puts("      Built " __DATE__ " - " __TIME__ "\r\n");
     _puts("----------------------------------------\r\n");
+    _puts("CPU is ");
+    _puts(CPU_IS);
+    _puts("\r\n");
     _puts("BIOS at 0x");
     _puthex16(BIOSjmppage);
     _puts(" - ");

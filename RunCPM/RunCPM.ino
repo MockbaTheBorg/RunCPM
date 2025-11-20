@@ -33,7 +33,7 @@ int lst_open = FALSE;
 
 #include "ram.h"
 #include "console.h"
-#include "cpu.h"
+#include CPU
 #include "disk.h"
 #include "host.h"
 #include "cpm.h"
