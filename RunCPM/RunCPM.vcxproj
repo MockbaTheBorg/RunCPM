@@ -162,7 +162,7 @@
     <ClInclude Include="ccp.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="cpm.h" />
-    <ClInclude Include="cpu.h" />
+    <ClInclude Include="cpu1.h" />
     <ClInclude Include="cpu2.h" />
     <ClInclude Include="cpu3.h" />
     <ClInclude Include="debug.h" />

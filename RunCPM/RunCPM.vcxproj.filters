@@ -29,7 +29,7 @@
     <ClInclude Include="disk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cpu.h">
+    <ClInclude Include="cpu1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cpm.h">
