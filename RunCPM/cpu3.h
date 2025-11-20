@@ -1,5 +1,5 @@
-#ifndef CPU3_H
-#define CPU3_H
+#ifndef CPU_H
+#define CPU_H
 
 /* Model 3 - Algorithmic Decoding, based on http://www.z80.info/decoding.htm */
 
