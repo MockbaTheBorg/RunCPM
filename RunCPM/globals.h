@@ -6,8 +6,8 @@
     #include <ctype.h>
 #endif
 
-/* Definition of which CPU to use: cpu.h, cpu2.h */
-#define CPU "cpu2.h"
+/* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h */
+#define CPU "cpu3.h"
 
 /* Definition for enabling incrementing the R register for each M1 cycle */
 #define DO_INCR // Loses a bit of performance in favor or realistic R register emulation
