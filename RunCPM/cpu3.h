@@ -45,12 +45,8 @@ static uint8 parityTable[256];
 static uint16 rrcaTable[256];
 static uint16 xororTable[256];
 static uint8 rotateShiftTable[256];
-static uint8 incZ80Table[257];
-static uint8 decZ80Table[256];
 static uint8 cbitsZ80Table[512];
 static uint8 cbits2Z80Table[512];
-static uint8 negTable[256];
-static uint8 cpTable[256];
 
 void initTables(void) {
 	// 256 bytes tables
@@ -64,13 +60,6 @@ void initTables(void) {
 		rrcaTable[i] = ((i & 1) << 15) | ((i >> 1) << 8) | ((i >> 1) & 0x28) | (i & 1);
 		xororTable[i] = (i << 8) | (i & 0xa8) | ((i == 0) << 6) | parityTable[i];
 		rotateShiftTable[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i & 0xff];
-		decZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0xf) << 4) | ((i == 0x7f) << 2) | 2;
-		negTable[i] = (((i & 0x0f) != 0) << 4) | ((i == 0x80) << 2) | 2 | (i != 0);
-		cpTable[i] = (i & 0x80) | (((i & 0xff) == 0) << 6);
-	}
-	// 257 bytes tables
-	for (int i = 0; i < 257; i++) {
-		incZ80Table[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | (((i & 0xf) == 0) << 4) | ((i == 0x80) << 2);
 	}
 	// 512 bytes tables
 	for (int i = 0; i < 512; i++) {
@@ -231,7 +220,7 @@ static void alu(uint8 op, uint8 val) {
             break;
         case 7: /* CP val */
             sum = a - val;
-            AF = (AF & ~0xff) | cpTable[sum & 0xff] | (val & 0x28) | cbits2Z80Table[(a ^ val ^ sum) & 0x1ff];
+            AF = (AF & ~0xff) | (sum & 0x80) | ((sum & 0xff) ? 0 : FLAG_Z) | (val & 0x28) | cbits2Z80Table[(a ^ val ^ sum) & 0x1ff];
             break;
     }
 }
@@ -415,7 +404,7 @@ static inline void Z80run(void) {
                         }
                         
                         uint8 res = v + 1;
-                        AF = (AF & ~0xfe) | incZ80Table[res];
+                        AF = (AF & ~0xfe) | (res & 0xa8) | ((res == 0) ? FLAG_Z : 0) | ((res & 0x0f) ? 0 : FLAG_H) | ((res == 0x80) ? FLAG_P : 0);
                         
                         if (y == 6) PUT_BYTE(ea, res);
                         else if (mode != 0 && (y == 4 || y == 5)) {
@@ -439,7 +428,7 @@ static inline void Z80run(void) {
                         }
                         
                         uint8 res = v - 1;
-                        AF = (AF & ~0xfe) | decZ80Table[res];
+                        AF = (AF & ~0xfe) | (res & 0xa8) | ((res == 0) ? FLAG_Z : 0) | ((res & 0x0f) == 0x0f ? FLAG_H : 0) | ((res == 0x7f) ? FLAG_P : 0) | FLAG_N;
                         
                         if (y == 6) PUT_BYTE(ea, res);
                         else if (mode != 0 && (y == 4 || y == 5)) {
@@ -826,7 +815,7 @@ static inline void Z80run(void) {
                                         {
                                             uint8 a = HIGH_REGISTER(AF);
                                             uint8 temp = 0 - a;
-                                            AF = (AF & ~0xff) | negTable[a] | (temp & 0xa8) |
+                                            AF = (AF & ~0xff) | ((a & 0x0f) ? FLAG_H : 0) | ((a == 0x80) ? FLAG_P : 0) | FLAG_N | (a ? FLAG_C : 0) | (temp & 0xa8) |
                                                 ((temp == 0) << 6) | ((a ^ temp) & 0x10);
                                             SET_HIGH_REGISTER(AF, temp);
                                         }
