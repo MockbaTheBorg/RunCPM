@@ -5,6 +5,7 @@
 
 #define CPU_IS "Model 1"
 
+/* Register Definitions */
 int32 PCX; /* external view of PC                          */
 int32 AF;  /* AF register                                  */
 int32 BC;  /* BC register                                  */
