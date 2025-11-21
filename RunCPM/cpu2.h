@@ -3381,5 +3381,8 @@ static inline void Z80run(void) {
 	}
 }
 
+#ifdef __GNUC__
+#include "cpu_mhz.h"
+#endif
 
 #endif
