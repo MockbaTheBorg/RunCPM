@@ -228,7 +228,7 @@ static void alu(uint8 op, uint8 val) {
 #if defined(DEBUG) || defined(iDEBUG)
 #include "debug.h"
 #else
-void Z80debug(void);
+static void Z80debug(void) {}
 #endif
 
 #ifdef DEBUG
