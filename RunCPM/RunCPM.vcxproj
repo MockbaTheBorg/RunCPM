@@ -165,6 +165,7 @@
     <ClInclude Include="cpu1.h" />
     <ClInclude Include="cpu2.h" />
     <ClInclude Include="cpu3.h" />
+    <ClInclude Include="cpu4.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="globals.h" />
