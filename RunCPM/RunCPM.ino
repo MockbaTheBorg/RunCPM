@@ -114,7 +114,7 @@ void setup(void) {
         Z80reset();
         SET_LOW_REGISTER(BC, _RamRead(DSKByte));
         PC = CCPaddr;
-        Z80run();
+        Z80run(CPU_DELAY);
 #endif
         if (Status == STATUS_EXIT)
 #ifdef DEBUG

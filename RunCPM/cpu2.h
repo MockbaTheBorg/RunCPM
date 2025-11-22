@@ -230,7 +230,7 @@ static inline void Z80reset(void) {
 #include "debug.h"
 #endif
 
-static inline void Z80run(void) {
+static inline void Z80run(uint32 delay) {
 	uint32 temp = 0;
 	uint32 acu;
 	uint32 sum;
@@ -238,8 +238,32 @@ static inline void Z80run(void) {
 	uint32 op = 0;
 	uint32 adr;
 
+    static uint32 instr_cnt = 0;
+    static uint32 last_millis = 0;
+
+    if (last_millis == 0) last_millis = millis();
+
 	/* main instruction fetch/decode loop */
 	while (!Status) {	/* loop until Status != 0 */
+
+        /* Throttling to CPU_DELAY instructions */
+		if (delay != 0) {
+	        if (++instr_cnt >= delay) {
+    	        uint32 now = millis();
+        	    if ((now - last_millis) < 10) {
+            	    uint32 delay_ms = 10 - (now - last_millis);
+#ifdef _WIN32
+                	Sleep(delay_ms);
+#elif defined(ARDUINO)
+            	    delay(delay_ms);
+#else
+                	usleep(delay_ms * 1000);
+#endif
+            	}
+            	last_millis = millis();
+            	instr_cnt = 0;
+        	}
+		}
 
 #ifdef DEBUG
 		if (z80_check_breakpoints_on_exec(PC)) {

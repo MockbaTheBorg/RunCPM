@@ -7,7 +7,11 @@
 #endif
 
 /* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h */
-#define CPU "cpu1.h"
+#define CPU "cpu3.h"
+
+/* CPU delay for throttling (0 = disabled, 500 = slow, smaller number = slower) */
+#define CPU_DELAY 0 // Defines the number of instructions to execute before checking the time
+                    // and possibly delaying execution to throttle CPU speed
 
 /* Definition for enabling incrementing the R register for each M1 cycle */
 #define DO_INCR // Loses a bit of performance in favor or realistic R register emulation

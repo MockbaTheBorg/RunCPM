@@ -62,7 +62,7 @@ void Z80estimateClock(void) {
 	
 	// Run until HALT
 	while (Status == STATUS_RUNNING) {
-		Z80run();
+		Z80run(0);
 	}
 	
 	// End timing
