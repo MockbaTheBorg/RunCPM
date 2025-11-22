@@ -2,6 +2,7 @@
 #define CPU_H
 
 /* Model 4 - Algorithmic Decoding, based on http://www.z80.info/decoding.htm, just faster */
+/* 4 MHz on an Arduino Due */
 
 #define CPU_IS "Model 4"
 

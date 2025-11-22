@@ -2,6 +2,7 @@
 #define CPU_H
 
 /* Model 3 - Algorithmic Decoding, based on http://www.z80.info/decoding.htm */
+/* 2 MHz on an Arduino Due */
 
 #define CPU_IS "Model 3"
 

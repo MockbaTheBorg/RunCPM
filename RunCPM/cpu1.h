@@ -2,6 +2,7 @@
 #define CPU_H
 
 /* Model 1 - Larger code, original */
+/* 6 MHz on an Arduino Due */
 
 #define CPU_IS "Model 1"
 
