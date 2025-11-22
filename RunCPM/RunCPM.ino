@@ -61,6 +61,10 @@ void setup(void) {
   _puts("Arduino read/write support by Krzysztof Klis\r\n");
   _puts("      Built " __DATE__ " - " __TIME__ "\r\n");
   _puts("--------------------------------------------\r\n");
+  _puts("CPU is ");
+  _puts(CPU_IS);
+  _puts("\r\n");
+  Z80estimateClock();
 	_puts("BIOS at 0x");
 	_puthex16(BIOSjmppage);
 	_puts(" - ");

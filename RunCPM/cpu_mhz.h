@@ -28,8 +28,13 @@ static const uint8 z80_tstates_main[256] = {
    estimated clock at which the CPU is running */
 void Z80estimateClock(void) {
 	const uint8 testCode[] = {
+#ifdef ARDUINO
+		0x11, 0xF4, 0x01, // LD DE, 500
+		0x01, 0xE8, 0x03, // LD BC, 1000
+#else
 		0x11, 0xE8, 0x03, // LD DE, 1000
 		0x01, 0x10, 0x27, // LD BC, 10000
+#endif
 		0x0B,             // DEC BC
 		0x78,             // LD A, B
 		0xB1,             // OR C
@@ -72,8 +77,13 @@ void Z80estimateClock(void) {
 	uint8 t_jr = z80_tstates_main[0x20];
 	uint8 t_halt = z80_tstates_main[0x76];
 	
-	uint16 inner_iters = 10000;
+#ifdef ARDUINO
+	uint16 outer_iters = 500;
+	uint16 inner_iters = 1000;
+#else
 	uint16 outer_iters = 1000;
+	uint16 inner_iters = 10000;
+#endif
 	
 	uint64 inner_body = t_dec + t_ld_a + t_or + t_jr;
 	uint64 inner_exit = t_dec + t_ld_a + t_or + 7; // JR not taken
