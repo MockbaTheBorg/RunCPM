@@ -682,6 +682,121 @@ uint8 _ccp_vol(void) {
     }
     return (error);
 } // _ccp_vol
+
+// COPY command - copies a file
+// Usage: COPY <src> <dest>
+uint8 _ccp_copy(void) {
+    if (_RamRead(ParFCB + 1) == ' ') {
+        _puts("\r\nNo source");
+        return 0;
+    }
+    if (_RamRead(SecFCB + 1) == ' ') {
+        _puts("\r\nNo dest");
+        return 0;
+    }
+
+    // Move SecFCB to CmdFCB to avoid corruption when opening ParFCB
+    // ParFCB (0x5C) overlaps SecFCB (0x6C) when used as a full FCB
+    for (uint8 i = 0; i < 16; ++i) {
+        _RamWrite(CmdFCB + i, _RamRead(SecFCB + i));
+    }
+    // Initialize the rest of CmdFCB
+    for (uint8 i = 16; i < 36; ++i) {
+        _RamWrite(CmdFCB + i, 0);
+    }
+
+    if (_ccp_bdos(F_OPEN, ParFCB) == 255) {
+        _puts("\r\nSource not found");
+        return 0;
+    }
+    
+    _ccp_bdos(F_DELETE, CmdFCB); // Delete dest if exists
+    
+    if (_ccp_bdos(F_MAKE, CmdFCB) == 255) {
+        _puts("\r\nDir full");
+        return 0;
+    }
+    
+    if (_ccp_bdos(F_OPEN, CmdFCB) == 255) {
+        _puts("\r\nErr open dest");
+        return 0;
+    }
+    
+    _puts("\r\nCopying...");
+    
+    // Use 128 byte buffer at defDMA
+    while(TRUE) {
+        _ccp_bdos(F_DMAOFF, defDMA);
+        if (_ccp_bdos(F_READ, ParFCB) != 0) break; // EOF (or error, assumed EOF for now)
+        if (_ccp_bdos(F_WRITE, CmdFCB) != 0) {
+            _puts("\r\nDisk full");
+            break;
+        }
+    }
+    
+    _ccp_bdos(F_CLOSE, CmdFCB);
+    _puts(" Done.");
+    return 0;
+} // _ccp_copy
+
+// ECHO command - prints text to console
+// Usage: ECHO <text>
+uint8 _ccp_echo(void) {
+    // Find the start of the arguments in the input buffer
+    // inBuf + 2 is the start of the command line
+    uint16 ptr = inBuf + 2;
+    
+    // Skip leading spaces
+    while (_RamRead(ptr) == ' ') ptr++;
+    
+    // Skip the command itself (ECHO)
+    while (_RamRead(ptr) != ' ' && _RamRead(ptr) != 0) ptr++;
+    
+    // Skip spaces after command
+    while (_RamRead(ptr) == ' ') ptr++;
+    
+    _puts("\r\n");
+    
+    // Print the rest
+    while (_RamRead(ptr) != 0) {
+        _ccp_bdos(C_WRITE, _RamRead(ptr++));
+    }
+    
+    return 0;
+} // _ccp_echo
+
+// POKE command - writes a byte to memory
+// Usage: POKE <addr> <val> (hex)
+uint8 _ccp_poke(void) {
+    uint16 addr = 0;
+    uint16 val = 0;
+    uint8 c, i;
+    
+    // Parse Address from ParFCB (first argument)
+    for (i = 1; i <= 4; ++i) {
+        c = _RamRead(ParFCB + i);
+        if (c == ' ') break;
+        addr <<= 4;
+        if (c >= '0' && c <= '9') addr += (c - '0');
+        else if (c >= 'A' && c <= 'F') addr += (c - 'A' + 10);
+        else if (c >= 'a' && c <= 'f') addr += (c - 'a' + 10);
+    }
+    
+    // Parse Value from SecFCB (second argument)
+    for (i = 1; i <= 2; ++i) {
+        c = _RamRead(SecFCB + i);
+        if (c == ' ') break;
+        val <<= 4;
+        if (c >= '0' && c <= '9') val += (c - '0');
+        else if (c >= 'A' && c <= 'F') val += (c - 'A' + 10);
+        else if (c >= 'a' && c <= 'f') val += (c - 'a' + 10);
+    }
+    
+    _RamWrite(addr, (uint8)val);
+    _puts("\r\nOK");
+    return 0;
+} // _ccp_poke
+
 #endif // Internals
 
 // ?/Help command
@@ -689,16 +804,19 @@ uint8 _ccp_hlp(void) {
     _puts("\r\nCCP Commands:\r\n");
     _puts(" ?                  - Shows this list of commands\r\n");
     _puts(" CLS                - Clears the screen\r\n");
+    _puts(" COPY <src> <dst>   - Copies a file\r\n");
     _puts(" DEL [<patt>]       - Alias to ERA\r\n");
     _puts(" DIR [<patt>]       - Lists file directory\r\n");
     _puts(" DUMP <addr|file>   - Hex+ASCII dump of memory or file\r\n");
     _puts("                      addr = 4 hex digits\r\n");
+    _puts(" ECHO <text>        - Prints text to console\r\n");
     _puts(" ERA [<patt>]       - Erases files\r\n");
     _puts(" EXIT               - Terminates RunCPM\r\n");
     _puts(" LDIR [<patt>] [/C] - Lists file directory with sizes\r\n");
     _puts("                      /C option includes 16 bit checksum\r\n");
     _puts(" PAGE [<n>]         - Sets the paging size for TYPE and LDIR\r\n");
     _puts("                      n = 0 to 255, 0 disables paging\r\n");
+    _puts(" POKE <addr> <val>  - Writes a byte to memory (hex)\r\n");
     _puts(" REN <new>=<old>    - Renames files\r\n");
     _puts(" SAVE <n> <file>    - Saves memory pages (256 bytes) to file\r\n");
     _puts(" TYPE <file>        - Displays file contents\r\n");
@@ -721,10 +839,13 @@ static const Command Commands[] = {
 
     // Extra CCP commands
     {"CLS", _ccp_cls},
+    {"COPY", _ccp_copy},
     {"LDIR", _ccp_ldir},
     {"DEL", _ccp_era},
+    {"ECHO", _ccp_echo},
     {"EXIT", _ccp_exit},
     {"PAGE", _ccp_page},
+    {"POKE", _ccp_poke},
     {"VER", _ccp_ver},
     {"DUMP", _ccp_dump},
     {"VOL", _ccp_vol},
