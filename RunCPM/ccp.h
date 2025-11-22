@@ -56,6 +56,39 @@ uint16 _ccp_bdos(uint8 function, uint16 de) {
     return (HL & 0xffff);
 } // _ccp_bdos
 
+// --- New Helper Functions for Printing ---
+
+// Helper to print a byte in Hex
+void _ccp_printHex8(uint8 v) {
+    uint8 nibble = v >> 4;
+    _ccp_bdos(C_WRITE, nibble > 9 ? nibble + 55 : nibble + 48);
+    nibble = v & 0x0F;
+    _ccp_bdos(C_WRITE, nibble > 9 ? nibble + 55 : nibble + 48);
+}
+
+// Helper to print a word in Hex
+void _ccp_printHex16(uint16 v) {
+    _ccp_printHex8(v >> 8);
+    _ccp_printHex8(v & 0xFF);
+}
+
+// Helper to print a number in Decimal
+void _ccp_printDec(uint32 v) {
+    char buf[10];
+    uint8 i = 0;
+    if (v == 0) {
+        _ccp_bdos(C_WRITE, '0');
+        return;
+    }
+    while (v) {
+        buf[i++] = (v % 10) + '0';
+        v /= 10;
+    }
+    while (i) {
+        _ccp_bdos(C_WRITE, buf[--i]);
+    }
+}
+
 // Compares two strings (Atmel doesn't like strcmp)
 uint8 _ccp_strEqual(const char *stra, const char *strb) {
     while (*stra && *strb && (*stra == *strb)) {
@@ -289,29 +322,22 @@ uint8 _ccp_ldir(void) {
             // Get file size
             long fsize = _FileSize(tmpFCB);
             uint32 size = (fsize == -1) ? 0 : (uint32)fsize;
+            
             // Print size in bytes, padded to 7 digits
-            if (size == 0) {
-                _puts("      0");
-            } else {
-                uint32 temp = size;
-                char buf[12];
-                uint8 idx = 0;
-                while (temp > 0) {
-                    buf[idx++] = '0' + (temp % 10);
-                    temp /= 10;
-                }
-                // Pad with spaces to 7 digits
-                uint8 digits = idx;
-                uint8 padding = 7 - digits;
-                while (padding > 0) {
-                    _ccp_bdos(C_WRITE, ' ');
-                    padding--;
-                }
-                // Print the digits
-                while (idx > 0) {
-                    _ccp_bdos(C_WRITE, buf[--idx]);
-                }
+            // Optimized to remove sprintf
+            uint32 temp = size;
+            uint8 digits = 0;
+            if (temp == 0) digits = 1;
+            else {
+                while (temp > 0) { temp /= 10; digits++; }
             }
+            
+            uint8 padding = 7 - digits;
+            while (padding > 0) {
+                _ccp_bdos(C_WRITE, ' ');
+                padding--;
+            }
+            _ccp_printDec(size);
             _puts(" bytes");
 
             if (checksumOption) {
@@ -321,17 +347,19 @@ uint8 _ccp_ldir(void) {
                 F->ex = 0;
                 F->cr = 0;
                 if (!_ccp_bdos(F_OPEN, tmpFCB)) {
+                    // Optimization: Use direct pointer if available for checksum
+                    uint8* dmaPtr = (uint8*)_RamSysAddr(dmaAddr);
                     while (!_ccp_bdos(F_READ, tmpFCB)) {
                         for (uint8 i = 0; i < 128; ++i) {
-                            checksum += _RamRead(dmaAddr + i);
+                            checksum += dmaPtr[i];
                         }
                     }
                     _ccp_bdos(F_CLOSE, tmpFCB);
                 }
-                // Print checksum as 4 hex digits
-                char cbuf[8];
-                sprintf(cbuf, "  %04Xh", checksum);
-                _puts(cbuf);
+                // Print checksum
+                _puts("  ");
+                _ccp_printHex16(checksum);
+                _puts("h");
             }
 
             _puts("\r\n");
@@ -482,13 +510,11 @@ uint8 _ccp_exit(void) {
 uint8 _ccp_page(void) {
     uint8 error = TRUE;
     uint16 r = _ccp_fcbtonum();
-    char pbuf[6];
 
     if (r < 256) {
         pageSize = (uint8)r;
-        sprintf(pbuf, "%d", pageSize);
         _puts("\r\nPage size set to ");
-        _puts(pbuf);
+        _ccp_printDec(pageSize);
         _puts(" lines");
         _puts("\r\n");
         error = FALSE;
@@ -551,21 +577,20 @@ uint8 _ccp_dump(void) {
         _puts("\r\n");
         while (!done) {
             // Print address
-            char abuf[8];
-            sprintf(abuf, "%04X: ", addr);
-            _puts(abuf);
+            _ccp_printHex16(addr);
+            _puts(": ");
 
             // Print hex bytes
+            // Optimization: Use direct pointer if available
+            uint8* ptr = (uint8*)_RamSysAddr(addr);
             for (i = 0; i < 16; ++i) {
-                uint8 b = _RamRead(addr + i);
-                char hbuf[4];
-                sprintf(hbuf, "%02X ", b);
-                _puts(hbuf);
+                _ccp_printHex8(ptr[i]);
+                _ccp_bdos(C_WRITE, ' ');
             }
             _puts(" ");
             // Print ASCII
             for (i = 0; i < 16; ++i) {
-                uint8 b = _RamRead(addr + i);
+                uint8 b = ptr[i];
                 _ccp_bdos(C_WRITE, (b >= 32 && b < 127) ? b : '.');
             }
             _puts("\r\n");
@@ -591,22 +616,23 @@ uint8 _ccp_dump(void) {
             if (_ccp_bdos(F_READ, ParFCB))
                 break;
             // Print 8 lines of 16 bytes
+            // Optimization: Use direct pointer to DMA buffer
+            uint8* dmaPtr = (uint8*)_RamSysAddr(dmaAddr);
             for (uint8 l = 0; l < 8; ++l) {
-                // Print file offset
-                char abuf[12];
-                sprintf(abuf, "%06lX: ", (unsigned long)faddr);
-                _puts(abuf);
+                // Print file offset (24-bit)
+                _ccp_printHex8((faddr >> 16) & 0xFF);
+                _ccp_printHex16(faddr & 0xFFFF);
+                _puts(": ");
+                
                 // Print hex
                 for (i = 0; i < 16; ++i) {
-                    uint8 b = _RamRead(dmaAddr + l * 16 + i);
-                    char hbuf[4];
-                    sprintf(hbuf, "%02X ", b);
-                    _puts(hbuf);
+                    _ccp_printHex8(dmaPtr[l * 16 + i]);
+                    _ccp_bdos(C_WRITE, ' ');
                 }
                 _puts(" ");
                 // Print ASCII
                 for (i = 0; i < 16; ++i) {
-                    uint8 b = _RamRead(dmaAddr + l * 16 + i);
+                    uint8 b = dmaPtr[l * 16 + i];
                     _ccp_bdos(C_WRITE, (b >= 32 && b < 127) ? b : '.');
                 }
                 _puts("\r\n");
@@ -809,11 +835,16 @@ uint8 _ccp_ext(void) {
             int i;
 
             // move FCB's (CmdFCB --> ParFCB --> SecFCB)
+            // Optimization: Use direct pointers for FCB copying
+            uint8* secPtr = (uint8*)_RamSysAddr(SecFCB);
+            uint8* parPtr = (uint8*)_RamSysAddr(ParFCB);
+            uint8* cmdPtr = (uint8*)_RamSysAddr(CmdFCB);
+            
             for (i = 0; i < 16; i++) {
                 // ParFCB to SecFCB
-                _RamWrite(SecFCB + i, _RamRead(ParFCB + i));
+                secPtr[i] = parPtr[i];
                 // CmdFCB to ParFCB
-                _RamWrite(ParFCB + i, _RamRead(CmdFCB + i));
+                parPtr[i] = cmdPtr[i];
             }
             // (Re)Initialize the CmdFCB
             _ccp_initFCB(CmdFCB, 36);
