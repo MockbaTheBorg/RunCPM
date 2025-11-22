@@ -9,8 +9,8 @@
 /* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h */
 #define CPU "cpu3.h"
 
-/* CPU delay for throttling (0 = disabled, 500 = slow, smaller number = slower) */
-#define CPU_DELAY 0 // Defines the number of instructions to execute before checking the time
+/* CPU speed for throttling (0 = disabled/fastest, 500 = slow, smaller number = slower) */
+#define CPU_SPEED 0 // Defines the number of instructions to execute before checking the time
                     // and possibly delaying execution to throttle CPU speed
 
 /* Definition for enabling incrementing the R register for each M1 cycle */
@@ -267,6 +267,7 @@ static uint16 numAllocBlocks;     // # of allocation blocks on disk
 static uint8 extentsPerDirEntry;  // # of logical (16K) extents in a directory entry
 #define logicalExtentBytes (16 * 1024UL)
 static uint16 physicalExtentBytes; // # bytes described by 1 directory entry
+static uint16 cpuDelayInstructions = CPU_SPEED;
 
 #define tohex(x) ((x) < 10 ? (x) + 48 : (x) + 87)
 

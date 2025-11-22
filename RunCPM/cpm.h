@@ -124,7 +124,8 @@ enum eBDOSFunc {
     F_HOSTOS = 250,
     F_VERSION = 251,
     F_CCPVERSION = 252,
-    F_CCPADDR = 253
+    F_CCPADDR = 253,
+    F_SETCPUSPEED = 254
 };
 
 /* see main.c for definition */
@@ -1783,6 +1784,15 @@ void _Bdos(void) {
      */
     case F_CCPADDR: {
         HL = CCPaddr;
+        break;
+    }
+
+    /*
+       C = 254 (FEh) : Set CPU speed
+       DE = Number of instructions to trigger the delay
+    */
+    case F_SETCPUSPEED: {
+        cpuDelayInstructions = DE;
         break;
     }
 

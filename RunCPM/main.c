@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         Z80reset();                              // Resets the Z80 CPU
         SET_LOW_REGISTER(BC, _RamRead(DSKByte)); // Sets C to the current drive/user
         PC = CCPaddr;                            // Sets CP/M application jump point
-        Z80run(CPU_DELAY);                       // Starts simulation
+        Z80run(cpuDelayInstructions);            // Starts simulation
     #endif
         if (Status == 1) // This is set by a call to BIOS 0 - ends CP/M
     #ifdef DEBUG

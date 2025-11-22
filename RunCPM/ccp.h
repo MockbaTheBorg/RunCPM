@@ -887,7 +887,7 @@ uint8 _ccp_ext(void) {
         PC = loadAddr;                       // Sets CP/M application jump point
         SP = BDOSjmppage;                    // Sets the stack to the top of the TPA
 
-        Z80run(CPU_DELAY); // Starts Z80 simulation
+        Z80run(cpuDelayInstructions); // Starts Z80 simulation
         PC = 0;   // Resets the PC/SP after command execution
         SP = 0;
 
@@ -941,7 +941,7 @@ void _ccp_readInput(void) {
     } else {
         _ccp_bdos(C_READSTR, inBuf); // Reads the command line from console
         if (Debug)
-            Z80run(CPU_DELAY);
+            Z80run(cpuDelayInstructions);
     }
 } // _ccp_readInput
 
