@@ -105,8 +105,8 @@ void Z80estimateClock(void) {
 
     // Convert to MHz
     uint32 estimatedMHz = (uint32)(estimatedHz / 1000000);
-    printf("%llu T-states in %llu ms\n", tstates, elapsedTime);
-    printf("Estimated Z80 clock speed: %u MHz\n", estimatedMHz);
+    printf("%llu T-states in %llu ms\r\n", tstates, elapsedTime);
+    printf("Estimated Z80 clock speed: %u MHz\r\n", estimatedMHz);
 }
 
 #endif // CPU_MHZ_H
