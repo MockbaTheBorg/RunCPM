@@ -1,13 +1,7 @@
 #ifndef CPU_MHZ_H
 #define CPU_MHZ_H
 
-/* Helper function to get current time in milliseconds */
-static uint32 get_time_ms(void) {
-	// Return the current time in milliseconds for GCC compiler
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	return (uint32)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
-}
+#include <stdint.h>
 
 /* T-states for main Z80 instructions */
 static const uint8 z80_tstates_main[256] = {
@@ -32,10 +26,10 @@ static const uint8 z80_tstates_main[256] = {
 /* Run a small Z80 code and measure the time to estimate emulated clock.
    This will load a small z80 code into RAM, run it until halt, then compute the 
    estimated clock at which the CPU is running */
-uint32 Z80estimateClock(void) {
+void Z80estimateClock(void) {
 	const uint8 testCode[] = {
-		0x11, 0xF4, 0x01, // LD DE, 500
-		0x01, 0xE8, 0x03, // LD BC, 1000
+		0x11, 0xE8, 0x03, // LD DE, 1000
+		0x01, 0x10, 0x27, // LD BC, 10000
 		0x0B,             // DEC BC
 		0x78,             // LD A, B
 		0xB1,             // OR C
@@ -46,8 +40,9 @@ uint32 Z80estimateClock(void) {
 		0x20, 0xF3,       // JR NZ, -13
 		0x76              // HALT
 	};
-	uint32 startTime, endTime;
-	uint32 tstates = 0;
+
+	uint64 time_start = 0;
+	uint64 time_now = 0;
 	
 	// Load test code into RAM at address 0x0000
 	for (uint16 addr = 0; addr < sizeof(testCode); addr++) {
@@ -58,7 +53,7 @@ uint32 Z80estimateClock(void) {
 	Z80reset();
 	
 	// Start timing
-	startTime = get_time_ms();
+	time_start = millis();
 	
 	// Run until HALT
 	while (Status == STATUS_RUNNING) {
@@ -66,45 +61,42 @@ uint32 Z80estimateClock(void) {
 	}
 	
 	// End timing
-	endTime = get_time_ms();
+	time_now = millis();
 	
 	// Calculate total T-states executed
-	uint32 t_ld_de = z80_tstates_main[0x11];
-	uint32 t_ld_bc = z80_tstates_main[0x01];
-	uint32 t_dec = z80_tstates_main[0x0B];
-	uint32 t_ld_a = z80_tstates_main[0x78];
-	uint32 t_or = z80_tstates_main[0xB1];
-	uint32 t_jr = z80_tstates_main[0x20];
-	uint32 t_halt = z80_tstates_main[0x76];
+	uint8 t_ld_de = z80_tstates_main[0x11];
+	uint8 t_ld_bc = z80_tstates_main[0x01];
+	uint8 t_dec = z80_tstates_main[0x0B];
+	uint8 t_ld_a = z80_tstates_main[0x78];
+	uint8 t_or = z80_tstates_main[0xB1];
+	uint8 t_jr = z80_tstates_main[0x20];
+	uint8 t_halt = z80_tstates_main[0x76];
 	
-	uint32 inner_iters = 1000;
-	uint32 outer_iters = 500;
+	uint16 inner_iters = 10000;
+	uint16 outer_iters = 1000;
 	
-	uint32 inner_body = t_dec + t_ld_a + t_or + t_jr;
-	uint32 inner_exit = t_dec + t_ld_a + t_or + 7; // JR not taken
-	uint32 total_inner = t_ld_bc + (inner_iters - 1) * inner_body + inner_exit;
+	uint64 inner_body = t_dec + t_ld_a + t_or + t_jr;
+	uint64 inner_exit = t_dec + t_ld_a + t_or + 7; // JR not taken
+	uint64 total_inner = t_ld_bc + (inner_iters - 1) * inner_body + inner_exit;
 	
-	uint32 outer_body = total_inner + t_dec + t_ld_a + t_or + t_jr;
-	uint32 outer_exit = total_inner + t_dec + t_ld_a + t_or + 7; // JR not taken
-	
-	tstates = t_ld_de + (outer_iters - 1) * outer_body + outer_exit + t_halt;
+	uint64 outer_body = total_inner + t_dec + t_ld_a + t_or + t_jr;
+	uint64 outer_exit = total_inner + t_dec + t_ld_a + t_or + 7; // JR not taken
+	uint64 total_outer = t_ld_de + (outer_iters - 1) * outer_body + outer_exit;
 
-	// Calculate elapsed time in milliseconds
-	uint32 elapsedTime = endTime - startTime;
-	
-	// Estimate clock speed in Hz
-	if (elapsedTime == 0) elapsedTime = 1; // Prevent division by zero
-	uint32 estimatedHz = (tstates * 1000) / elapsedTime;
-	
-	// Convert to MHz
-	uint32 estimatedMHz = estimatedHz / 1000000;
-	return estimatedMHz;
-}
+	// Final T-states count (full count, not in millions)
+    uint64 tstates = total_outer + t_halt;
 
-/* Using the Z80estimateClock function, print the estimated clock speed */
-void Z80printEstimatedClock(void) {
-	uint32 clock = Z80estimateClock();
-	printf("Estimated Z80 clock speed: %u MHz\n", clock);
+    // Calculate elapsed time in milliseconds
+    uint64 elapsedTime = time_now - time_start;
+
+    // Estimate clock speed in Hz
+    if (elapsedTime == 0) elapsedTime = 1; // Prevent division by zero
+    uint64 estimatedHz = (tstates * 1000) / elapsedTime;
+
+    // Convert to MHz
+    uint32 estimatedMHz = (uint32)(estimatedHz / 1000000);
+    printf("%llu T-states in %llu ms\n", tstates, elapsedTime);
+    printf("Estimated Z80 clock speed: %u MHz\n", estimatedMHz);
 }
 
 #endif // CPU_MHZ_H

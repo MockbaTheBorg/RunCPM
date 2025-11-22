@@ -7,7 +7,7 @@
 #endif
 
 /* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h */
-#define CPU "cpu3.h"
+#define CPU "cpu1.h"
 
 /* Definition for enabling incrementing the R register for each M1 cycle */
 #define DO_INCR // Loses a bit of performance in favor or realistic R register emulation
@@ -149,9 +149,11 @@
 typedef signed char int8;
 typedef signed short int16;
 typedef signed int int32;
+typedef signed long long int64;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
+typedef unsigned long long uint64;
 
 #define LOW_DIGIT(x) ((x) & 0xf)
 #define HIGH_DIGIT(x) (((x) >> 4) & 0xf)

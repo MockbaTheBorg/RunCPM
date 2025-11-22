@@ -1510,8 +1510,6 @@ z80_trace_push(PCX);
     }
 }
 
-#ifdef __GNUC__
 #include "cpu_mhz.h"
-#endif
 
 #endif

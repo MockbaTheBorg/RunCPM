@@ -74,9 +74,7 @@ int main(int argc, char *argv[]) {
     _puts("CPU is ");
     _puts(CPU_IS);
     _puts("\r\n");
-#ifdef __GNUC__
-    Z80printEstimatedClock();
-#endif
+    Z80estimateClock();
     _puts("BIOS at 0x");
     _puthex16(BIOSjmppage);
     _puts(" - ");
