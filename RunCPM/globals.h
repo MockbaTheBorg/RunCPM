@@ -6,8 +6,8 @@
     #include <ctype.h>
 #endif
 
-/* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h */
-#define CPU "cpu3.h"
+/* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h, cpu4.h */
+#define CPU "cpu1.h"
 
 /* CPU speed for throttling (0 = disabled/fastest, 500 = slow, smaller number = slower) */
 #define CPU_SPEED 0 // Defines the number of instructions to execute before checking the time
