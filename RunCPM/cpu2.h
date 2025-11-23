@@ -230,7 +230,7 @@ static inline void Z80reset(void) {
 #include "debug.h"
 #endif
 
-static inline void Z80run(uint32 delay) {
+static inline void Z80run(uint32 cpu_delay) {
 	uint32 temp = 0;
 	uint32 acu;
 	uint32 sum;
@@ -247,8 +247,8 @@ static inline void Z80run(uint32 delay) {
 	while (!Status) {	/* loop until Status != 0 */
 
         /* Throttling to CPU_DELAY instructions */
-		if (delay != 0) {
-	        if (++instr_cnt >= delay) {
+		if (cpu_delay != 0) {
+	        if (++instr_cnt >= cpu_delay) {
     	        uint32 now = millis();
         	    if ((now - last_millis) < 10) {
             	    uint32 delay_ms = 10 - (now - last_millis);
