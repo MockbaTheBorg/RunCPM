@@ -110,6 +110,9 @@ void Z80estimateClock(void) {
     _puts(buffer);
     sprintf(buffer, "Estimated Z80 clock speed: %u MHz\r\n", estimatedMHz);
     _puts(buffer);
+	
+	// Reset CPU
+	Z80reset();
 }
 
 #endif // CPU_MHZ_H
