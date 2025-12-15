@@ -9,20 +9,14 @@
 #define BUFSIZE 128
 
 int main(int argc, char* argv[]) {
-    // Check if the user passed a file as argument
-    if (argc < 2) {
-        printf("Usage: %s <filename> <destination>\n", argv[0]);
-        return 1;
-    }
-
-    // Check if the user passed a destination as argument
+    // Check for correct number of arguments
     if (argc < 3) {
-        printf("Usage: %s <filename> <destination>\n", argv[0]);
+        printf("Usage: %s <source> <destination>\n", argv[0]);
         return 1;
     }
 
-    // Open the input file
-    FILE* file = fopen(argv[1], "r");
+    // Open the input file in binary mode
+    FILE* file = fopen(argv[1], "rb");
     if (file == NULL) {
         printf("Error: Could not open input file %s\n", argv[1]);
         return 1;
@@ -43,50 +37,51 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Allocate 128 bytes for each axisting line
-    char* subfile = (char*)malloc(lines * 128);
+    // Allocate BUFSIZE bytes for each existing line
+    char* subfile = (char*)calloc(lines, BUFSIZE);
     if (subfile == NULL) {
         printf("Error: Could not allocate memory\n");
         fclose(file);
         return 1;
     }
 
-    // Read the file line by line and copy it to the subfile buffer in reverse order of 128 byte blocks
-    int offset = (lines - 1) * 128;
+    // Read the file line by line and copy it to the subfile buffer in reverse order of BUFSIZE-byte blocks
+    int offset = (lines - 1) * BUFSIZE;
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
-        int len = strlen(buffer);
-        if (len > 0) {
-            if (buffer[len - 1] == '\n') {
-                buffer[len - 1] = '\0';
-                len--;
-            }
+        int len = (int)strlen(buffer);
+        // Remove newline and carriage return
+        if (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
+            buffer[--len] = '\0';
         }
-        if (len > 0) {
-            if (buffer[len - 1] == '\r') {
-                buffer[len - 1] = '\0';
-                len--;
-            }
+        if (len > 0 && buffer[len - 1] == '\r') {
+            buffer[--len] = '\0';
         }
-        subfile[offset] = len;
+        if (len >= BUFSIZE - 1) {
+            printf("Warning: Line too long, truncating to %d characters.\n", BUFSIZE - 2);
+            len = BUFSIZE - 2;
+            buffer[len] = '\0';
+        }
+        subfile[offset] = (char)len;
         memcpy(subfile + offset + 1, buffer, len);
-        offset -= 128;
+        // Zero the rest of the block for safety
+        memset(subfile + offset + 1 + len, 0, BUFSIZE - 1 - len);
+        offset -= BUFSIZE;
     }
 
     // Close the input file
     fclose(file);
 
-    // Write the subfile buffer to the destination file
-    FILE* dest = fopen(argv[2], "w");
+    // Write the subfile buffer to the destination file in binary mode
+    FILE* dest = fopen(argv[2], "wb");
     if (dest == NULL) {
         printf("Error: Could not open output file %s\n", argv[2]);
         free(subfile);
         return 1;
     }
 
-    // Write the subfile buffer to the destination file
-    fwrite(subfile, 1, lines * 128, dest);
+    fwrite(subfile, 1, lines * BUFSIZE, dest);
 
-    // Close the destination file
     fclose(dest);
-
+    free(subfile);
+    return 0;
 }
