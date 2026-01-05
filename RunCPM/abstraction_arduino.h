@@ -17,6 +17,9 @@
 #if defined _STM32_DEF_
     #define HostOS 0x06
 #endif
+#if defined ARDUINO_ARCH_RP2040
+    #define HostOS 0x07
+#endif
 
 /* Memory abstraction functions */
 /*===============================================================================*/
