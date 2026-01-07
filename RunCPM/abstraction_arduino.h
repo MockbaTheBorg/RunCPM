@@ -25,7 +25,6 @@
 /*===============================================================================*/
 uint16 _RamLoad(uint8 *filename, uint16 address, uint16 maxsize) {
     File f;
-    bool result = false;
     uint16 bytesread = 0;
 
     if (f = SD.open((char *)filename, FILE_READ)) {
@@ -36,7 +35,6 @@ uint16 _RamLoad(uint8 *filename, uint16 address, uint16 maxsize) {
                 break;
         }
         f.close();
-        result = true;
     }
     return (bytesread);
 }

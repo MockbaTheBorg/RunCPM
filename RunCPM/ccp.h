@@ -1117,7 +1117,6 @@ void _ccp_readInput(void) {
 bool _ccp_parseDriveUser(bool *errorFlag) {
     uint8 i;
     uint8 ch, tDrive = 0, tUser = currentUser, u = 0;
-    bool isDriveUserCmd = FALSE;
 
     *errorFlag = FALSE;
 
