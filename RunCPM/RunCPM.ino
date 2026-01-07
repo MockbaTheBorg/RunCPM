@@ -3,7 +3,10 @@
 #include <SPI.h>
 
 #define SDFAT_FILE_TYPE 1 // Uncomment for Due, Teensy and Pico
+
+#ifndef DISABLE_FS_H_WARNING
 #define DISABLE_FS_H_WARNING
+#endif
 
 #include <SdFat.h>  // One SD library to rule them all - Greinman SdFat from Library Manager
 
