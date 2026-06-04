@@ -7,7 +7,9 @@
 #endif
 
 /* Definition of which CPU to use: cpu.h, cpu2.h, cpu3.h, cpu4.h */
-#define CPU "cpu1.h"
+#ifndef CPU
+    #define CPU "cpu1.h"
+#endif
 
 /* CPU speed for throttling (0 = disabled/fastest, 500 = slow, smaller number = slower) */
 #define CPU_SPEED 0 // Defines the number of instructions to execute before checking the time
@@ -43,7 +45,7 @@
 //  This requires ABDOS.SYS to be present on A: user 0 - see 'abdos' folder under 'tools'
 
 /* Definition of which CCP to use (must define only one) */
-#define CCP_INTERNAL // If this is defined, an internal CCP will emulated
+// #define CCP_INTERNAL // If this is defined, an internal CCP will emulated
 // #define CCP_DR
 // #define CCP_CCPZ
 // #define CCP_ZCPR2
@@ -95,7 +97,7 @@
 #endif
 //
 #ifndef CCPname
-    #error No CCP defined
+    #error No CCP defined, use 'make <platform> CCP=<CCP_NAME> build' to define one of the available CCPs
 #endif
 //
 #ifdef CCP_INTERNAL

@@ -12,6 +12,20 @@ CC = mingw32-gcc
 CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
 #CFLAGS = -Wall -O0 -fPIC -Wno-unused-variable -g
 
+# CCP selection: define one CCP macro when invoking make to select the CCP
+#    The default is INTERNAL
+# Example:
+#   make tdm CCP=DR build
+ifdef CCP
+CFLAGS += -DCCP_$(CCP)
+endif
+
+# CPU selection: define `CPU` to the header filename to include, e.g. cpu1.h
+# Example: `make tdm CPU=cpu2.h build`
+ifdef CPU
+CFLAGS += -DCPU=\"$(CPU).h\"
+endif
+
 # Flags to pass to the linker
 LDFLAGS =
 

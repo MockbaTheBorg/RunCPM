@@ -4,7 +4,19 @@
 #	To build:	make <platform> build
 #	To clean:	make <platform> clean	
 
+# Default CCP selection (used by platform Makefiles). Override on the command line,
+# e.g. `make posix CCP=DR build`
+CCP ?= INTERNAL
+export CCP
+
+# Default CPU selection (used by platform Makefiles). Override on the command line,
+# e.g. `make posix CPU=cpu2.h build`
+CPU ?= cpu1
+export CPU
+
 PLATS = macosx mingw msys2 posix tdm
+CCPS = INTERNAL DR CCPZ ZCPR2 ZCPR3 Z80
+CPUS = cpu1 cpu2 cpu3 cpu4
 
 all:	none
 
@@ -21,10 +33,18 @@ build:
 rebuild:
 	$(MAKE) -f Makefile.$(SYS) rebuild
 
+help:	none
+
 none:
 	@echo "To build RunCPM issue 'make PLATFORM build'."
 	@echo "To clean RunCPM issue 'make PLATFORM clean'."
 	@echo "To clean,then build RunCPM issue 'make PLATFORM rebuild'."
 	@echo "Valid platforms are: $(PLATS)"
+	@echo "----------------------------------------------------------------"
+	@echo "To select a CCP, define CCP when invoking make, e.g. 'make posix CCP=DR build'."
+	@echo "Valid CCPs are: $(CCPS)"
+	@echo "----------------------------------------------------------------"
+	@echo "To select a CPU, define CPU to the header filename when invoking make, e.g. 'make posix CPU=cpu2.h build'."
+	@echo "Valid CPUs are: $(CPUS)"
 
-.PHONY: all $(PLATS) clean build none
+.PHONY: all $(PLATS) clean build rebuild help none
