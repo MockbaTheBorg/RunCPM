@@ -44,13 +44,14 @@
 // #define ABDOS				// Based on work by Pavel Zampach (https://www.chstercius.cz/runcpm/)
 //  This requires ABDOS.SYS to be present on A: user 0 - see 'abdos' folder under 'tools'
 
-/* Definition of which CCP to use (must define only one) */
-// #define CCP_INTERNAL // If this is defined, an internal CCP will emulated
+#ifdef _WIN32   // Windows needs a default CCP defined to compile as there's no Makefile
+    #define CCP_INTERNAL
 // #define CCP_DR
 // #define CCP_CCPZ
 // #define CCP_ZCPR2
 // #define CCP_ZCPR3
 // #define CCP_Z80
+#endif
 
 /* Definition of the CCP memory information */
 //
@@ -186,7 +187,7 @@ typedef unsigned long long uint64;
 #define MaxRC 128  // Maximum value the RC field can take
 
 /* CP/M memory definitions */
-#define TPASIZE 60 // Can be 60 for CP/M 2.2 compatibility or more, up to 64 for extra memory
+#define TPASIZE 60 // Can be 60 for batter CP/M 2.2 compatibility or 64 for extra memory
                    // Values other than 60 or 64 would require rebuilding the CCP
                    // For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
