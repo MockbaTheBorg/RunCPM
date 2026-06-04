@@ -191,7 +191,9 @@ typedef unsigned long long uint64;
                    // Values other than 60 or 64 would require rebuilding the CCP
                    // For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
-#define BANKS 1               // Number of memory banks available
+#ifndef BANKS
+    #define BANKS 1 // Number of memory banks available (defined in Makefile per platform)
+#endif
 static uint8 curBank = 1;     // Number of the current RAM bank in use (1 to x, not 0 to x)
 static uint8 isXmove = FALSE; // Used by BIOS
 static uint8 srcBank = 1;     // Source bank for memory MOVE
@@ -202,8 +204,8 @@ static uint32 srcBankBase = 0;
 static uint32 dstBankBase = 0;
 static uint32 ioBankBase = 0;
 
-#define PAGESIZE 64 * 1024      // RAM(plus ROM) needs to be 64K to avoid compatibility issues
-#define MEMSIZE PAGESIZE *BANKS // Total RAM size
+#define PAGESIZE (64 * 1024)        // RAM(plus ROM) needs to be 64K to avoid compatibility issues
+#define MEMSIZE (PAGESIZE * BANKS)  // Total RAM size
 
 #if BANKS == 1
     #define RAM_FAST // If this is defined, all RAM function calls become direct access (see below)
