@@ -8,7 +8,7 @@ static uint8 RAM[MEMSIZE]; // Definition of the emulated RAM
 
 uint8 *_RamSysAddr(uint16 address) {
     if (address < CCPaddr) {
-        return (&RAM[address * curBank]);
+        return (&RAM[curBankBase + address]);
     } else {
         return (&RAM[address]);
     }
@@ -16,7 +16,7 @@ uint8 *_RamSysAddr(uint16 address) {
 
 uint8 _RamRead(uint16 address) {
     if (address < CCPaddr) {
-        return (RAM[address * curBank]);
+        return (RAM[curBankBase + address]);
     } else {
         return (RAM[address]);
     }
@@ -24,7 +24,9 @@ uint8 _RamRead(uint16 address) {
 
 uint16 _RamRead16(uint16 address) {
     if (address < CCPaddr) {
-        return (RAM[address * curBank] + (RAM[(address * curBank) + 1] << 8));
+        uint32 bankAddress = curBankBase + address;
+
+        return (RAM[bankAddress] + (RAM[bankAddress + 1] << 8));
     } else {
         return (RAM[address] + (RAM[address + 1] << 8));
     }
@@ -32,7 +34,7 @@ uint16 _RamRead16(uint16 address) {
 
 void _RamWrite(uint16 address, uint8 value) {
     if (address < CCPaddr) {
-        RAM[address * curBank] = value;
+        RAM[curBankBase + address] = value;
     } else {
         RAM[address] = value;
     }

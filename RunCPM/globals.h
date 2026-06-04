@@ -197,6 +197,10 @@ static uint8 isXmove = FALSE; // Used by BIOS
 static uint8 srcBank = 1;     // Source bank for memory MOVE
 static uint8 dstBank = 1;     // Destination bank for memory MOVE
 static uint8 ioBank = 1;      // Destination bank for sector IO
+static uint32 curBankBase = 0;
+static uint32 srcBankBase = 0;
+static uint32 dstBankBase = 0;
+static uint32 ioBankBase = 0;
 
 #define PAGESIZE 64 * 1024      // RAM(plus ROM) needs to be 64K to avoid compatibility issues
 #define MEMSIZE PAGESIZE *BANKS // Total RAM size

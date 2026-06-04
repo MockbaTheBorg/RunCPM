@@ -657,10 +657,12 @@ void _Bios(void) {
         break;
     }
     case B_MOVE: { // 25 - Move a block of memory
-        if (!isXmove)
+        if (!isXmove) {
             srcBank = dstBank = curBank;
+            srcBankBase = dstBankBase = curBankBase;
+        }
         while (BC--)
-            RAM[HL++ * dstBank] = RAM[DE++ * srcBank];
+            RAM[dstBankBase + HL++] = RAM[srcBankBase + DE++];
         isXmove = FALSE;
         break;
     }
@@ -669,14 +671,18 @@ void _Bios(void) {
     }
     case B_SELMEM: { // 27 - Select memory bank
         curBank = HIGH_REGISTER(AF);
+        curBankBase = ((uint32)(curBank - 1)) << 16;
         break;
     }
     case B_SETBNK: { // 28 - Set the bank to be used for the next read/write sector operation
         ioBank = HIGH_REGISTER(AF);
+        ioBankBase = ((uint32)(ioBank - 1)) << 16;
     }
     case B_XMOVE: { // 29 - Preload banks for MOVE
         srcBank = LOW_REGISTER(BC);
         dstBank = HIGH_REGISTER(BC);
+        srcBankBase = ((uint32)(srcBank - 1)) << 16;
+        dstBankBase = ((uint32)(dstBank - 1)) << 16;
         isXmove = TRUE;
         break;
     }
@@ -1345,11 +1351,6 @@ void _Bdos(void) {
         roVector = roVector & ~DE;
         break;
     }
-
-    /* ********* Function 38: Not supported by CP/M 2.2 *********
-     ********* Function 39: Not supported by CP/M 2.2 *********
-     ********* (todo) Function 40: Write random with zero fill *********
-     */
 
     /*
       ToDo C = 38 (26h) : Access drives (CPM3)
