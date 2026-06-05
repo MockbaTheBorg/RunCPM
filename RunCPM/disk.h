@@ -25,15 +25,15 @@ void _error(uint8 error) {
     _putcon('A' + cDrive);
     _puts(": ");
     switch (error) {
-    case errWRITEPROT:
-        _puts("R/O");
-        break;
-    case errSELECT:
-        _puts("Select");
-        break;
-    default:
-        _puts("\r\nCP/M ERR");
-        break;
+        case errWRITEPROT:
+            _puts("R/O");
+            break;
+        case errSELECT:
+            _puts("Select");
+            break;
+        default:
+            _puts("\r\nCP/M ERR");
+            break;
     }
     Status = _getcon();
     _puts("\r\n");
@@ -303,23 +303,27 @@ long _FileSize(uint16 fcbaddr) {
 }
 
 // Opens a file
-uint8 _OpenFile(uint16 fcbaddr) {
+// Returns a 16-bit packed value: (hardware_error<<8) | result
+// result (A) = 0-3 for success or 0xFF for error (CP/M3 semantics)
+uint16 _OpenFile(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
-    uint8 result = 0xff;
+    uint8 result = 0xff;   // low byte -> A
+    uint8 hwerr = 0x00;    // high byte -> B/H (hardware error when result==0xFF)
     long records;
     int32 i;
 
     if (!_SelectDisk(F->dr)) {
         _FCBtoHostname(fcbaddr, &filename[0]);
         if (!filename[4])
-            return (result); // Invalid filename
+            return (((uint16)hwerr << 8) | result); // Invalid filename
 
         if (_sys_openfile(&filename[0])) {
-            /* Get file size in 128-byte records.
-               _FileSize already rounds up to a multiple of BlkSZ. */
-            records = _FileSize(fcbaddr) / BlkSZ;
-            if (records < 0) // defensive: filesize failed for some reason
-                return (result);
+            /* Get raw file size and compute record counts (round up). */
+            long rawsize = _sys_filesize(&filename[0]);
+            if (rawsize < 0)
+                return (((uint16)hwerr << 8) | result);
+
+            records = (rawsize + (BlkSZ - 1)) / BlkSZ; // rounded-up records
 
             F->s1 = 0x00;
             F->s2 = 0x80; // set unmodified flag
@@ -331,34 +335,78 @@ uint8 _OpenFile(uint16 fcbaddr) {
             for (i = 0; i < 16; ++i) // Clean up AL
                 F->al[i] = 0x00;
 
+        #ifdef CPM3
+            /* CP/M3 behaviour: if CR was set to 0xFF on entry, return the
+               last-record byte count in CR. */
+            if (F->cr == 0xFF) {
+                if (rawsize <= 0) {
+                    F->cr = 0x00;
+                } else {
+                    uint8 lrbc = rawsize % BlkSZ;
+                    if (lrbc == 0)
+                        lrbc = BlkSZ;
+                    F->cr = lrbc;
+                }
+            }
+        #endif // ifdef CPM3
+
             result = 0x00;
         }
+    } else {
+        /* Disk selection failed; _SelectDisk has already triggered an error.
+           Report a hardware/select error in the high byte. */
+        hwerr = errSELECT;
     }
-    return (result);
+    return (((uint16)hwerr << 8) | result);
 }
 
 // Closes a file
-uint8 _CloseFile(uint16 fcbaddr) {
+// Returns a 16-bit packed value: (hardware_error<<8) | result
+// result (A) = 0-3 for success or 0xFF for error (CP/M3 semantics)
+uint16 _CloseFile(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
     uint8 result = 0xff;
+    uint8 hwerr = 0x00;
 
     if (!_SelectDisk(F->dr)) {
         if (!(F->s2 & 0x80)) { // if file is modified
             if (!RW) {
                 _FCBtoHostname(fcbaddr, &filename[0]);
                 if (!filename[4])
-                    return (result); // Invalid filename
+                    return (((uint16)hwerr << 8) | result); // Invalid filename
                 if (fcbaddr == BatchFCB)
                     _Truncate((char *)filename, F->rc); // Truncate $$$.SUB to F->rc CP/M records so SUBMIT.COM can work
+
+                /* Under CP/M3, if F5' (top bit of fn[4]) is set then the pending
+                   data are written and the file is made consistent but remains open.
+                   In both cases ensure the FCB is marked unmodified on success. */
+#ifdef CPM3
+                if (F->fn[4] & 0x80) {
+                    F->s2 |= 0x80; // mark unmodified (file made consistent)
+                    result = 0x00; // success, file remains open
+                } else {
+                    F->s2 |= 0x80; // mark unmodified (file made consistent)
+                    result = 0x00; // success, file closed
+                }
+#else
                 result = 0x00;
+#endif // ifdef CPM3
             } else {
+#ifdef CPM3
+                /* CP/M3 should return a hardware error instead of invoking the
+                   host error handler. */
+                hwerr = errWRITEPROT;
+#else
                 _error(errWRITEPROT);
+#endif
             }
         } else {
             result = 0x00;
         }
+    } else {
+        hwerr = errSELECT;
     }
-    return (result);
+    return (((uint16)hwerr << 8) | result);
 }
 
 // Creates a file
@@ -489,21 +537,36 @@ uint8 _RenameFile(uint16 fcbaddr) {
 }
 
 // Sequential read
-uint8 _ReadSeq(uint16 fcbaddr) {
+// Returns a 16-bit value: (H = number of records processed, L = BDOS return code)
+uint16 _ReadSeq(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
     uint8 result = 0xff;
+    uint16 processed = 0;
 
-    long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
-                (F->ex * BlkEX * BlkSZ) +
-                (F->cr * BlkSZ);
-
+    // multiRecordCount is always 1 under CP/M 2.2, so this loop runs once and
+    // behaves exactly like a single-record read; CP/M 3 may transfer several.
     if (!_SelectDisk(F->dr)) {
         _FCBtoHostname(fcbaddr, &filename[0]);
-        result = _sys_readseq(&filename[0], fpos);
-        if (!result) { // Read succeeded, adjust FCB
+        long saved_dma = dmaAddr;
+        uint8 toRead = multiRecordCount ? multiRecordCount : 1;
+
+        for (uint8 i = 0; i < toRead; ++i) {
+            long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+                        (F->ex * BlkEX * BlkSZ) +
+                        (F->cr * BlkSZ);
+
+            dmaAddr = saved_dma + (processed * BlkSZ);
+            result = _sys_readseq(&filename[0], fpos);
+
+            if (result != 0x00) {
+                // stop on first non-OK result
+                break;
+            }
+
+            // Read succeeded, adjust FCB as for a single record
             ++F->cr;
             /* CR counts 0..(MaxCR-1) logically (0..127). When we reach MaxCR records
-           we must roll CR to 0 and advance EX. Use >= to catch MaxCR itself. */
+               we must roll CR to 0 and advance EX. Use >= to catch MaxCR itself. */
             if (F->cr >= MaxCR) {
                 F->cr = 0;
                 ++F->ex;
@@ -513,27 +576,54 @@ uint8 _ReadSeq(uint16 fcbaddr) {
                 ++F->s2;
             }
             /* strip possible high-bit and compare S2 low bits against allowed MaxS2 */
-            if ((F->s2 & 0x7F) > MaxS2)
+            if ((F->s2 & 0x7F) > MaxS2) {
                 result = 0xfe;
+                break;
+            }
+
+            ++processed;
         }
+
+        dmaAddr = saved_dma;
     }
-    return (result);
+
+    // 0xFF is a hardware error. On full success (result 0) H must be 0; only on a
+    // mid-transfer error does H carry the count of records read before the error.
+    // Under CP/M 2.2 (single record) H is always 0, so A alone is significant.
+    if (result == 0xFF)
+        return (uint16)0x00FF;
+    if (result == 0x00)
+        return (uint16)0x0000;
+    return (uint16)((processed << 8) | (uint16)result);
 }
 
 // Sequential write
-uint8 _WriteSeq(uint16 fcbaddr) {
+// Returns a 16-bit value: (H = number of records processed, L = BDOS return code)
+uint16 _WriteSeq(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
     uint8 result = 0xff;
+    uint16 processed = 0;
 
-    long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
-                (F->ex * BlkEX * BlkSZ) +
-                (F->cr * BlkSZ);
-
+    // multiRecordCount is always 1 under CP/M 2.2, so this loop runs once and
+    // behaves exactly like a single-record write; CP/M 3 may transfer several.
     if (!_SelectDisk(F->dr)) {
         if (!RW) {
             _FCBtoHostname(fcbaddr, &filename[0]);
-            result = _sys_writeseq(&filename[0], fpos);
-            if (!result) { // Write succeeded, adjust FCB
+            long saved_dma = dmaAddr;
+            uint8 toWrite = multiRecordCount ? multiRecordCount : 1;
+
+            for (uint8 i = 0; i < toWrite; ++i) {
+                long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
+                            (F->ex * BlkEX * BlkSZ) +
+                            (F->cr * BlkSZ);
+
+                dmaAddr = saved_dma + (processed * BlkSZ);
+                result = _sys_writeseq(&filename[0], fpos);
+
+                if (result != 0x00) {
+                    break;
+                }
+
                 /* clear unmodified flag (bit 7) */
                 F->s2 &= 0x7F;
 
@@ -561,60 +651,125 @@ uint8 _WriteSeq(uint16 fcbaddr) {
                 }
 
                 /* check S2 numeric overflow (ignore high-bit flag) */
-                if ((F->s2 & 0x7F) > MaxS2)
+                if ((F->s2 & 0x7F) > MaxS2) {
                     result = 0xfe;
+                    break;
+                }
+
+                ++processed;
             }
+
+            dmaAddr = saved_dma;
         } else {
             _error(errWRITEPROT);
         }
     }
-    return (result);
+
+    // Under CP/M 2.2 (single record) H is always 0, so A alone is significant.
+    if (result == 0xFF)
+        return (uint16)0x00FF;
+    if (result == 0x00)
+        return (uint16)0x0000; // full success: A = 0, H = 0 (no records "before the error")
+    // partial transfer error: H = records written before the error, A = error code
+    return (uint16)((processed << 8) | (uint16)result);
 }
 
 // Random read
-uint8 _ReadRand(uint16 fcbaddr) {
+// Returns a 16-bit value: (H = number of records processed, L = BDOS return code)
+uint16 _ReadRand(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
     uint8 result = 0xff;
+    uint16 processed = 0;
 
-    int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
-    long fpos = record * BlkSZ;
+    int32 startRecord = (F->r2 << 16) | (F->r1 << 8) | F->r0;
 
+    // multiRecordCount is always 1 under CP/M 2.2, so this loop runs once and
+    // behaves exactly like a single-record read; CP/M 3 may transfer several.
     if (!_SelectDisk(F->dr)) {
         _FCBtoHostname(fcbaddr, &filename[0]);
-        result = _sys_readrand(&filename[0], fpos);
-        if (result == 0 || result == 1 || result == 4) {
+        long saved_dma = dmaAddr;
+        uint8 toRead = multiRecordCount ? multiRecordCount : 1;
+
+        for (uint8 i = 0; i < toRead; ++i) {
+            int32 record = startRecord + processed;
+            long fpos = record * BlkSZ;
+            dmaAddr = saved_dma + (processed * BlkSZ);
+            result = _sys_readrand(&filename[0], fpos);
+
             // adjust FCB unless error #6 (seek past 8MB - max CP/M file & disk size)
+            if (!(result == 0 || result == 1 || result == 4)) {
+                break;
+            }
+
+            // adjust FCB to the last record read
             F->cr = record & (MaxCR - 1);
             F->ex = (record >> 7) & MaxEX;
             /* preserve 0x80 (unmodified) bit in s2 if previously present */
             F->s2 = ((record >> 12) & MaxS2) | (F->s2 & 0x80);
+
+            ++processed;
         }
+
+        dmaAddr = saved_dma;
     }
-    return (result);
+
+    if (result == 0xFF)
+        return (uint16)0x00FF;
+    // 0/1/4 are normal outcomes (data read, or reading unwritten data/extent); these
+    // return with H = 0, exactly as CP/M 2.2 does. Only a genuine mid-transfer error
+    // leaves H carrying the count of records read before the error.
+    if (result == 0x00 || result == 0x01 || result == 0x04)
+        return (uint16)(uint8)result;
+    return (uint16)((processed << 8) | (uint16)result);
 }
 
 // Random write
-uint8 _WriteRand(uint16 fcbaddr) {
+// Returns a 16-bit value: (H = number of records processed, L = BDOS return code)
+uint16 _WriteRand(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
     uint8 result = 0xff;
+    uint16 processed = 0;
 
-    int32 record = (F->r2 << 16) | (F->r1 << 8) | F->r0;
-    long fpos = record * BlkSZ;
+    int32 startRecord = (F->r2 << 16) | (F->r1 << 8) | F->r0;
 
+    // multiRecordCount is always 1 under CP/M 2.2, so this loop runs once and
+    // behaves exactly like a single-record write; CP/M 3 may transfer several.
     if (!_SelectDisk(F->dr)) {
         if (!RW) {
             _FCBtoHostname(fcbaddr, &filename[0]);
-            result = _sys_writerand(&filename[0], fpos);
-            if (!result) { // Write succeeded, adjust FCB
+            long saved_dma = dmaAddr;
+            uint8 toWrite = multiRecordCount ? multiRecordCount : 1;
+
+            for (uint8 i = 0; i < toWrite; ++i) {
+                int32 record = startRecord + processed;
+                long fpos = record * BlkSZ;
+                dmaAddr = saved_dma + (processed * BlkSZ);
+                result = _sys_writerand(&filename[0], fpos);
+
+                if (result != 0x00) {
+                    break;
+                }
+
                 F->cr = record & (MaxCR - 1);
                 F->ex = (record >> 7) & MaxEX;
                 F->s2 = (record >> 12) & MaxS2; // resets unmodified flag
+
+                ++processed;
             }
+
+            dmaAddr = saved_dma;
         } else {
             _error(errWRITEPROT);
         }
     }
-    return (result);
+
+    // Under CP/M 2.2 (single record) H is always 0, so A alone is significant.
+    if (result == 0xFF)
+        return (uint16)0x00FF;
+    if (result == 0x00)
+        return (uint16)0x0000; // full success: A = 0, H = 0
+    // partial transfer error: H = records written before the error, A = error code
+    return (uint16)((processed << 8) | (uint16)result);
 }
 
 // Returns the size of a CP/M file

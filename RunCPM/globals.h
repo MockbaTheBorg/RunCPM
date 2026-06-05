@@ -11,6 +11,9 @@
     #define CPU "cpu1.h"
 #endif
 
+/* Definition of CP/M version */
+// #define CPM3 // If defined, CP/M 3.0 will be emulated, otherwise CP/M 2.2 will be emulated
+
 /* CPU speed for throttling (0 = disabled/fastest, 500 = slow, smaller number = slower) */
 #define CPU_SPEED 0 // Defines the number of instructions to execute before checking the time
                     // and possibly delaying execution to throttle CPU speed
@@ -119,7 +122,12 @@
 #else
     #define ABD
 #endif
-#define CCPHEAD "\r\nRunCPM Version " VERSION " (" CCPname ")" DBG ABD "\r\n"
+#ifdef CPM3
+    #define CPM "CP/M 3"
+#else
+    #define CPM "CP/M 2.2"
+#endif
+#define CCPHEAD "\r\nRunCPM Version " VERSION " (" CCPname ") - " CPM DBG ABD "\r\n"
 
 #define NOSLASH // Will translate '/' to '_' on filenames to prevent directory errors
 
@@ -192,13 +200,13 @@ typedef unsigned long long uint64;
                    // For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
 #ifndef BANKS
-    #define BANKS 1 // Number of memory banks available (defined in Makefile per platform)
+    #define BANKS 8 // Number of memory banks available (defined in Makefile per platform)
 #endif
-static uint8 curBank = 1;     // Number of the current RAM bank in use (1 to x, not 0 to x)
+static uint8 curBank = 0;     // Number of the current RAM bank in use (0-based, 0 to BANKS-1, as in CP/M 3)
 static uint8 isXmove = FALSE; // Used by BIOS
-static uint8 srcBank = 1;     // Source bank for memory MOVE
-static uint8 dstBank = 1;     // Destination bank for memory MOVE
-static uint8 ioBank = 1;      // Destination bank for sector IO
+static uint8 srcBank = 0;     // Source bank for memory MOVE
+static uint8 dstBank = 0;     // Destination bank for memory MOVE
+static uint8 ioBank = 0;      // Destination bank for sector IO
 static uint32 curBankBase = 0;
 static uint32 srcBankBase = 0;
 static uint32 dstBankBase = 0;
@@ -277,6 +285,13 @@ static uint8 extentsPerDirEntry;  // # of logical (16K) extents in a directory e
 #define logicalExtentBytes (16 * 1024UL)
 static uint16 physicalExtentBytes; // # bytes described by 1 directory entry
 static uint16 cpuDelayInstructions = CPU_SPEED;
+
+// Output delimiter used by BDOS C_WRITESTR (default '$')
+static uint8 outputDelimiter = 0x24;
+// Number of 128-byte records to transfer at once (set by BDOS F_MULTISEC).
+// Only CP/M 3 ever changes this; under CP/M 2.2 it stays 1, so the shared
+// read/write loops in disk.h behave exactly like single-record transfers.
+static uint8 multiRecordCount = 1; /* default = 1 record */
 
 #define tohex(x) ((x) < 10 ? (x) + 48 : (x) + 87)
 

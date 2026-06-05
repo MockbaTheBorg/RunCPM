@@ -671,18 +671,19 @@ void _Bios(void) {
     }
     case B_SELMEM: { // 27 - Select memory bank
         curBank = HIGH_REGISTER(AF);
-        curBankBase = ((uint32)(curBank - 1)) << 16;
+        curBankBase = ((uint32)curBank) << 16; // banks are 0-based: bank N -> RAM offset N*64K
         break;
     }
     case B_SETBNK: { // 28 - Set the bank to be used for the next read/write sector operation
         ioBank = HIGH_REGISTER(AF);
-        ioBankBase = ((uint32)(ioBank - 1)) << 16;
+        ioBankBase = ((uint32)ioBank) << 16;
+        break; // without this, SETBNK fell through into XMOVE and corrupted srcBank/dstBank/isXmove
     }
     case B_XMOVE: { // 29 - Preload banks for MOVE
         srcBank = LOW_REGISTER(BC);
         dstBank = HIGH_REGISTER(BC);
-        srcBankBase = ((uint32)(srcBank - 1)) << 16;
-        dstBankBase = ((uint32)(dstBank - 1)) << 16;
+        srcBankBase = ((uint32)srcBank) << 16;
+        dstBankBase = ((uint32)dstBank) << 16;
         isXmove = TRUE;
         break;
     }
@@ -797,20 +798,35 @@ void _Bdos(void) {
     /*
        C = 6 : Direct console IO
        E = 0xFF : Checks for char available and returns it, or 0x00 if none (read)
-       ToDo E = 0xFE : Return console input status. Zero if no character is waiting, nonzero otherwise. (CPM3)
-       ToDo E = 0xFD : Wait until a character is ready, return it without echoing. (CPM3)
+       E = 0xFE : Return console input status. Zero if no character is waiting, nonzero otherwise. (CPM3)
+       E = 0xFD : Wait until a character is ready, return it without echoing. (CPM3)
        E = char : Outputs char (write)
        Returns: A=Char or 0x00 (on read)
      */
     case C_RAWIO: {
-        if (LOW_REGISTER(DE) == 0xff) {
+        uint8 e = LOW_REGISTER(DE);
+        if (e == 0xFF) {
+            // Check for char available and return it, or 0x00 if none (non-blocking read)
             HL = _getconNB();
     #ifdef DEBUG
             if (HL == DEBUGKEY)
                 Debug = 1;
     #endif // ifdef DEBUG
+    #ifdef CPM3
+        } else if (e == 0xFE) {
+            // Return console input status. Zero if no character is waiting, nonzero otherwise. (CPM3)
+            HL = _chready() ? 0x00FF : 0x0000;
+        } else if (e == 0xFD) {
+            // Wait until a character is ready, return it without echoing. (CPM3)
+            HL = _getcon();
+    #ifdef DEBUG
+            if (HL == DEBUGKEY)
+                Debug = 1;
+    #endif // ifdef DEBUG
+    #endif // ifdef CPM3
         } else {
-            _putcon(LOW_REGISTER(DE));
+            // E = char : Outputs char (write)
+            _putcon(e);
         }
         break;
     }
@@ -819,13 +835,16 @@ void _Bdos(void) {
        C = 7 : Get IOBYTE (CPM2)
        Gets the system IOBYTE
        Returns: A = IOBYTE (CPM2)
-       ToDo REPLACE with
        C = 7 : Auxiliary Input status (CPM3)
        0FFh is returned if the Auxiliary Input device has a character ready; otherwise 0 is returned.
        Returns: A=0 or 0FFh (CPM3)
      */
     case A_STATIN: {
-        HL = _RamRead(0x0003);
+        #ifdef CPM3
+            HL = _chready() ? 0xFF : 0x00;
+        #else
+            HL = _RamRead(0x0003);
+        #endif
         break;
     }
 
@@ -833,13 +852,16 @@ void _Bdos(void) {
        C = 8 : Set IOBYTE (CPM2)
        E = IOBYTE
        Sets the system IOBYTE to E
-       ToDo REPLACE with
        C = 8 : Auxiliary Output status (CPM3)
        0FFh is returned if the Auxiliary Output device is ready for characters; otherwise 0 is returned.
        Returns: A=0 or 0FFh (CPM3)
      */
     case A_STATOUT: {
-        _RamWrite(0x0003, LOW_REGISTER(DE));
+        #ifdef CPM3
+            HL = 0xFF; // Auxiliary Output device is always ready
+        #else
+            _RamWrite(0x0003, LOW_REGISTER(DE));
+        #endif
         break;
     }
 
@@ -847,29 +869,42 @@ void _Bdos(void) {
        C = 9 : Output string
        DE = Address of string
        Sends the $ terminated string pointed by (DE) to the screen
+       Under CP/M 3 the termination character can be changed by the user via BDOS call 110 (C_DELIMIT).
      */
     case C_WRITESTR: {
-        while ((ch = _RamRead(DE++)) != '$')
+        uint8 delim = outputDelimiter;
+        while ((ch = _RamRead(DE++)) != delim)
             _putcon(ch);
         break;
     }
 
     /*
        C = 10 (0Ah) : Buffered input
-       DE = Address of buffer
-       ToDo DE = 0 Use DMA address (CPM3) AND
-       DE=address:			DE=0:
-            buffer: DEFB    size        buffer: DEFB    size
-                    DEFB    ?                   DEFB    len
-                            bytes           	    bytes
-       Reads (DE) bytes from the console
+       CP/M 2: 
+        DE = Address of buffer
+       CP/M 3:
+        DE = Address of buffer
+        DE = 0 Use DMA address abd the buffer already contains data
+            if DE=address:
+                buffer: DEFB    size
+                        DEFB    ?
+                        DEFB    bytes
+            if DE=0:
+                buffer: DEFB    size
+                        DEFB    len
+                        DEFB    bytes
+
+            Reads (DE) bytes from the console
        Returns: A = Number of chars read
        DE) = First char
      */
     case C_READSTR: {
         uint16 i;
         uint8 j, chr;
-        uint16 chrsMaxIdx = WORD16(DE);                // index to max number of characters
+        // Under CP/M3 DE==0 means use the DMA buffer. Compute a common base address
+        // so the rest of the code can operate on either DE-provided buffer or DMA.
+        uint16 bufBase = (WORD16(DE) == 0) ? dmaAddr : WORD16(DE);
+        uint16 chrsMaxIdx = bufBase;                // index to max number of characters
         uint16 chrsCntIdx = (chrsMaxIdx + 1) & 0xFFFF; // index to number of characters read
         uint16 chrsIdx = (chrsCntIdx + 1) & 0xFFFF;    // index to characters
         // printf("\n\r chrsMaxIdx: %0X, chrsCntIdx: %0X", chrsMaxIdx, chrsCntIdx);
@@ -887,6 +922,18 @@ void _Bdos(void) {
     #endif                                    // ifdef PROFILE
         uint8 chrsMax = _RamRead(chrsMaxIdx); // Gets the max number of characters that can be read
         uint8 chrsCnt = 0;                    // this is the number of characters read
+    #ifdef CPM3
+        // CP/M3 behaviour: if DE==0 the DMA buffer may already contain data
+        // Layout when DE==0: [size][len][bytes...]
+        if (WORD16(DE) == 0) {
+            uint8 existingLen = _RamRead(chrsCntIdx);
+            if (existingLen) { // buffer already contains data, return immediately
+                HL = existingLen;
+                break;
+            }
+            // otherwise fall through and fill the DMA buffer interactively
+        }
+    #endif // ifdef CPM3
         uint8 curCol = 0;                     // this is the cursor column (relative to where it started)
 
         while (chrsMax) {
@@ -1046,7 +1093,7 @@ void _Bdos(void) {
                 postBS = chrsCnt - curCol; // backspace to cursor column
             }
 
-            if ((chr >= 0x20) && (chr <= 0x7E)) { // valid character
+            if (((chr >= 0x20) && (chr <= 0x7E)) || (chr == 0x1A)) { // valid character (allow ^Z)
                 if (curCol < chrsCnt) {
                     // move rest of buffer one character right
                     for (i = chrsCnt, j = i - 1; i > curCol; i--, j--) {
@@ -1092,6 +1139,9 @@ void _Bdos(void) {
         // Save the number of characters read
         _RamWrite(chrsCntIdx, chrsCnt);
 
+        // Return the number of characters read in A (low byte of HL)
+        HL = chrsCnt;
+
         // if there are characters...
         if (chrsCnt) {
             //... then save this as last command
@@ -1118,7 +1168,11 @@ void _Bdos(void) {
        Returns: B=H=system type, A=L=version number
      */
     case S_BDOSVER: {
-        HL = 0x22;
+        #ifdef CPM3
+            HL = 0x31;
+        #else
+            HL = 0x22;
+        #endif
         break;
     }
 
@@ -1129,8 +1183,9 @@ void _Bdos(void) {
         roVector = 0; // Make all drives R/W
         loginVector = 0;
         dmaAddr = 0x0080;
-        cDrive = 0;       // userCode remains unchanged
-        HL = _CheckSUB(); // Checks if there's a $$$.SUB on the boot disk
+        multiRecordCount = 1; // CP/M 3 BDOS resets multi-sector count on system reset
+        cDrive = 0;           // userCode remains unchanged
+        HL = _CheckSUB();     // Checks if there's a $$$.SUB on the boot disk
         break;
     }
 
@@ -1157,7 +1212,11 @@ void _Bdos(void) {
 
     /*
        C = 15 (0Fh) : Open file
-       Returns: A=0x00 or 0xFF
+       Entered with DE = address of FCB.
+       Returns: A = 0xFF on error or 0-3 on success (CP/M3 semantics).
+       On CP/M 3, a hardware error (when A=0xFF) may be returned in B/H.
+       If FCB->cr is 0xFF on entry, on return FCB->cr will contain the
+       last-record byte count (LRBC).
      */
     case F_OPEN: {
         HL = _OpenFile(DE);
@@ -1166,6 +1225,11 @@ void _Bdos(void) {
 
     /*
        C = 16 (10h) : Close file
+       Entered with DE = address of FCB.
+       Returns: A = 0xFF on error or 0-3 on success.
+       On CP/M 3: If F5' (top bit of the 5th filename byte) is set then pending data
+       are written and the file remains open.
+       If A=0xFF, H/B contain hardware error.
      */
     case F_CLOSE: {
         HL = _CloseFile(DE);
@@ -1414,11 +1478,25 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 44 (2Ch) : Set number of records to read/write at once (CPM3)
+       C = 44 (2Ch) : Set number of records to read/write at once (CPM3)
        E = Number of Sectors
        Returns: A = return code (Returns A=0 if E was valid, 0FFh otherwise)
      */
     case F_MULTISEC: {
+#ifdef CPM3
+        {
+            uint8 e = LOW_REGISTER(DE);
+            if ((e >= 1) && (e <= 127)) {
+                multiRecordCount = e;
+                HL = 0x0000; /* A = 0 => OK */
+            } else {
+                HL = 0x00FF; /* A = 0xFF => invalid */
+            }
+        }
+#else
+        /* Not supported under CP/M 2.2 */
+        HL = 0x00FF;
+#endif
         break;
     }
 
@@ -1475,11 +1553,37 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 50 (32h) : Direct BIOS Calls (CPM3)
-       DE = BIOS PB Address
-       Returns:  BIOS Return
+       C = 50 (32h) : Direct BIOS Calls (CPM3)
+       DE = BIOS PB Address. BIOSPB layout (bytes):
+         +0 func (logical BIOS fn 0-32)  +1 A  +2 C  +3 B  +4 E  +5 D  +6 L  +7 H
+       Returns: for SELDSK(9)/SECTRAN(16)/DEVTBL(20)/DRVTBL(22) the BIOS HL result
+       in HL (and A=L, B=H); for every other function the BIOS A result in A and L.
      */
     case S_BIOS: {
+#ifdef CPM3
+        uint16 pb = DE;
+        uint8 fn = _RamRead(pb + 0); // logical BIOS function number
+        uint16 oldPC = PCX;
+
+        // Load the Z80 registers the BIOS will see from the parameter block.
+        // BC/DE/HL are stored low-byte-first, so _RamRead16 reads them directly.
+        SET_HIGH_REGISTER(AF, _RamRead(pb + 1)); // A
+        BC = _RamRead16(pb + 2);                 // C,B
+        DE = _RamRead16(pb + 4);                 // E,D
+        HL = _RamRead16(pb + 6);                 // L,H
+
+        // _Bios() dispatches on the low byte of PC, which equals (function * 3),
+        // i.e. the BIOS jump-table offset (B_WBOOT=3, B_SELMEM=81, ...).
+        SET_LOW_REGISTER(PCX, (uint8)(fn * 3));
+        _Bios();
+        PCX = oldPC; // restore PC so the caller resumes correctly
+
+        // Map the BIOS return onto the BDOS return convention (A=L(HL), B=H(HL)).
+        // SELDSK/SECTRAN/DEVTBL/DRVTBL return in HL (leave HL as the BIOS set it);
+        // all others return in A, so place A into HL so A and L both hold it.
+        if (fn != 9 && fn != 16 && fn != 20 && fn != 22)
+            HL = HIGH_REGISTER(AF);
+#endif // ifdef CPM3
         break;
     }
 
@@ -1494,12 +1598,17 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 60 (3Ch) : Call Resident System Extension (RSX) (CPM3)
+       C = 60 (3Ch) : Call Resident System Extension (RSX) (CPM3)
        DE =  RSX PB Address
        Returns: A = return code
                 H = Physical Error
      */
     case S_RSX: {
+#ifdef CPM3
+        // No RSX modules are loaded, so report the call as not handled
+        // (A = 0FFh).
+        HL = 0x00FF;
+#endif // ifdef CPM3
         break;
     }
 
@@ -1623,6 +1732,11 @@ void _Bdos(void) {
        Returns: A = Output Delimiter or (none)
      */
     case C_DELIMIT: {
+        if (DE == 0xFFFF) {
+            HL = outputDelimiter; // A will receive low byte of HL
+        } else {
+            outputDelimiter = LOW_REGISTER(DE);
+        }
         break;
     }
 

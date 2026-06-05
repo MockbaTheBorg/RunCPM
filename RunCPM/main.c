@@ -74,7 +74,9 @@ int main(int argc, char *argv[]) {
     _puts("CPU is ");
     _puts(CPU_IS);
     _puts("\r\n");
+#ifndef DEBUG
     Z80estimateClock();
+#endif
     _puts("BIOS at 0x");
     _puthex16(BIOSjmppage);
     _puts(" - ");

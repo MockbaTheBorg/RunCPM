@@ -13,11 +13,8 @@ CFLAGS = -Wall -O3 -fPIC -Wno-unused-variable
 #uncomment next line to include debug symbols
 CFLAGS+=-ggdb
 
-#
 # CCP selection: define one CCP macro when invoking make to select the CCP
-#    The default is INTERNAL
-# Example:
-#   make macosx CCP=DR build
+# Example: `make macosx CCP=DR build`
 ifdef CCP
 CFLAGS += -DCCP_$(CCP)
 endif
@@ -26,6 +23,12 @@ endif
 # Example: `make macosx CPU=cpu2.h build`
 ifdef CPU
 CFLAGS += -DCPU=\"$(CPU).h\"
+endif
+
+# Enable CPM3 extension
+# Example: `make macosx CPM3=1`
+ifdef CPM3
+CFLAGS += -DCPM3
 endif
 
 # Flags to pass to the linker

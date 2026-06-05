@@ -26,9 +26,7 @@ CFLAGS := -Wall -O0 -fPIC -Wno-unused-variable -g -DDEBUG=1 -DDEBUGLOG=1 $(CFLAG
 endif
 
 # CCP selection: define one CCP macro when invoking make to select the CCP
-#    The default is INTERNAL
-# Example:
-#   make posix CCP=DR build
+# Example: `make posix CCP=DR build`
 ifdef CCP
 CFLAGS += -DCCP_$(CCP)
 endif
@@ -37,6 +35,12 @@ endif
 # Example: `make posix CPU=cpu2.h build`
 ifdef CPU
 CFLAGS += -DCPU=\"$(CPU).h\"
+endif
+
+# Enable CPM3 extension
+# Example: `make posix CPM3=1`
+ifdef CPM3
+CFLAGS += -DCPM3
 endif
 
 # Flags to pass to the linker

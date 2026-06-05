@@ -46,5 +46,7 @@ none:
 	@echo "----------------------------------------------------------------"
 	@echo "To select a CPU, define CPU to the header filename when invoking make, e.g. 'make posix CPU=cpu2.h build'."
 	@echo "Valid CPUs are: $(CPUS)"
+	@echo "----------------------------------------------------------------"
+	@echo "To enable CP/M 3.0 support, define CPM3=1 when invoking make, e.g. 'make posix CPM3=1 build'.
 
 .PHONY: all $(PLATS) clean build rebuild help none
