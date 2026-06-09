@@ -46,6 +46,8 @@ static uint8 parityTable[256];
 static uint16 rrcaTable[256];
 static uint16 xororTable[256];
 static uint8 rotateShiftTable[256];
+static uint8 incFlagsTable[256];
+static uint8 decFlagsTable[256];
 static uint8 cbitsZ80Table[512];
 static uint8 cbits2Z80Table[512];
 
@@ -61,6 +63,8 @@ void initTables(void) {
 		rrcaTable[i] = ((i & 1) << 15) | ((i >> 1) << 8) | ((i >> 1) & 0x28) | (i & 1);
 		xororTable[i] = (i << 8) | (i & 0xa8) | ((i == 0) << 6) | parityTable[i];
 		rotateShiftTable[i] = (i & 0xa8) | (((i & 0xff) == 0) << 6) | parityTable[i & 0xff];
+        incFlagsTable[i] = (i & 0xa8) | ((i == 0) << 6) | (!(i & 0x0f) ? FLAG_H : 0) | ((i == 0x80) ? FLAG_P : 0);
+        decFlagsTable[i] = (i & 0xa8) | ((i == 0) << 6) | ((i & 0x0f) == 0x0f ? FLAG_H : 0) | ((i == 0x7f) ? FLAG_P : 0) | FLAG_N;
 	}
 	// 512 bytes tables
 	for (int i = 0; i < 512; i++) {
@@ -227,25 +231,20 @@ static void alu(uint8 op, uint8 val) {
 }
 
 #if defined(DEBUG) || defined(iDEBUG)
-#include "debug.h"
+    #include "debug.h"
 #else
-static void Z80debug(void) {}
+    static void Z80debug(void) {}
 #endif
 
 #ifdef DEBUG
-#define DO_DEBUG_HALT 1
+    #define DO_DEBUG_HALT 1
 #else
-#define DO_DEBUG_HALT 0
-#endif
-#ifdef DEBUGONHALT
-#define DO_DEBUG_ON_HALT 1
-#else
-#define DO_DEBUG_ON_HALT 0
+    #define DO_DEBUG_HALT 0
 #endif
 #ifdef INT_HANDOFF
-#define DO_INT_HANDOFF 1
+    #define DO_INT_HANDOFF 1
 #else
-#define DO_INT_HANDOFF 0
+    #define DO_INT_HANDOFF 0
 #endif
 
 #define EXEC_OP(op_val) \
@@ -267,8 +266,8 @@ static void Z80debug(void) {}
         x = (opcode >> 6) & 3; \
         y = (opcode >> 3) & 7; \
         z = opcode & 7; \
-        p = y >> 1; \
-        q = y & 1; \
+        p = (opcode >> 4) & 3; \
+        q = (opcode >> 3) & 1; \
         if (x == 0) { \
             switch (z) { \
                 case 0: \
@@ -384,7 +383,7 @@ static void Z80debug(void) {}
                             } else v = get_reg8(y); \
                         } \
                         uint8 res = v + 1; \
-                        AF = (AF & ~0xfe) | (res & 0xa8) | ((res == 0) ? FLAG_Z : 0) | ((res & 0x0f) ? 0 : FLAG_H) | ((res == 0x80) ? FLAG_P : 0); \
+                        AF = (AF & ~0xfe) | incFlagsTable[res]; \
                         if (y == 6) PUT_BYTE(ea, res); \
                         else if (mode != 0 && (y == 4 || y == 5)) { \
                              int32 *rp_ptr = (mode == 1) ? &IX : &IY; \
@@ -406,7 +405,7 @@ static void Z80debug(void) {}
                             } else v = get_reg8(y); \
                         } \
                         uint8 res = v - 1; \
-                        AF = (AF & ~0xfe) | (res & 0xa8) | ((res == 0) ? FLAG_Z : 0) | ((res & 0x0f) == 0x0f ? FLAG_H : 0) | ((res == 0x7f) ? FLAG_P : 0) | FLAG_N; \
+                        AF = (AF & ~0xfe) | decFlagsTable[res]; \
                         if (y == 6) PUT_BYTE(ea, res); \
                         else if (mode != 0 && (y == 4 || y == 5)) { \
                              int32 *rp_ptr = (mode == 1) ? &IX : &IY; \
@@ -491,11 +490,9 @@ if (DO_DEBUG_HALT) { \
 			_puts("\r\n::CPU HALTED::\r\n"); \
 			_puts("Press any key..."); \
 			_getcon(); \
-if (DO_DEBUG_HALT) { \
 			_puts("\r\n"); \
 			Debug = 1; \
 			Z80debug(); \
-} \
 } \
                 PC--; \
                 Status = STATUS_EXIT; \
@@ -708,8 +705,8 @@ if (DO_DEBUG_HALT) { \
                             int ed_x = (opcode >> 6) & 3; \
                             int ed_y = (opcode >> 3) & 7; \
                             int ed_z = opcode & 7; \
-                            int ed_p = ed_y >> 1; \
-                            int ed_q = ed_y & 1; \
+                            int ed_p = (opcode >> 4) & 3; \
+                            int ed_q = (opcode >> 3) & 1; \
                             if (ed_x == 1) { \
                                 switch (ed_z) { \
                                     case 0: \
@@ -1000,12 +997,11 @@ static inline void Z80run(uint32 cpu_delay) {
         if (Status)
             break;
 #endif
-    PCX = PC;
+        PCX = PC;
 #if defined(DEBUG) || defined(iDEBUG)
-    z80_trace_push(PCX);
+        z80_trace_push(PCX);
 #endif
-
-    mode = 0;
+        mode = 0;
     DISPATCH:
         opcode = RAM_PP(PC);
         IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
@@ -1272,13 +1268,6 @@ static inline void Z80run(uint32 cpu_delay) {
         }
 #endif
 
-    OP_DD:
-        mode = 1;
-        goto DISPATCH;
-    OP_FD:
-        mode = 2;
-        goto DISPATCH;
-
     OP_00: { EXEC_OP(0x00); continue; }
     OP_01: { EXEC_OP(0x01); continue; }
     OP_02: { EXEC_OP(0x02); continue; }
@@ -1499,6 +1488,7 @@ static inline void Z80run(uint32 cpu_delay) {
     OP_D9: { EXEC_OP(0xD9); continue; }
     OP_DA: { EXEC_OP(0xDA); continue; }
     OP_DB: { EXEC_OP(0xDB); continue; }
+    OP_DD: { mode = 1; goto DISPATCH; }
     OP_DC: { EXEC_OP(0xDC); continue; }
     OP_DE: { EXEC_OP(0xDE); continue; }
     OP_DF: { EXEC_OP(0xDF); continue; }
@@ -1531,6 +1521,7 @@ static inline void Z80run(uint32 cpu_delay) {
     OP_FA: { EXEC_OP(0xFA); continue; }
     OP_FB: { EXEC_OP(0xFB); continue; }
     OP_FC: { EXEC_OP(0xFC); continue; }
+    OP_FD: { mode = 2; goto DISPATCH; }
     OP_FE: { EXEC_OP(0xFE); continue; }
     OP_FF: { EXEC_OP(0xFF); continue; }
     }
