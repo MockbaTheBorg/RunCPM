@@ -62,6 +62,7 @@ RunCPM/lua/*.exe
 RunCPM/lua/*.a
 RunCPM/lua/lua
 RunCPM/lua/luac
+*.json
 
 # IntelliJ
 .idea
