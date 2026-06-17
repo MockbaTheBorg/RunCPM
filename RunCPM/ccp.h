@@ -89,6 +89,58 @@ void _ccp_printDec(uint32 v) {
     }
 }
 
+#ifdef CPM3
+// Helper to print a 2-digit zero-padded decimal value
+void _ccp_print2(uint8 v) {
+    _ccp_bdos(C_WRITE, '0' + (v / 10) % 10);
+    _ccp_bdos(C_WRITE, '0' + v % 10);
+}
+
+// Prints a CP/M 3 date stamp (4 bytes at 'stamp': day word, hour BCD,
+// minute BCD) as MM/DD/YYYY HH:MM. Day 1 = 1978-01-01.
+void _ccp_printFileDate(uint16 stamp) {
+    uint16 days = _RamRead(stamp) | (_RamRead(stamp + 1) << 8);
+    uint8 bh = _RamRead(stamp + 2);
+    uint8 bm = _RamRead(stamp + 3);
+    uint16 year = 1978;
+    uint8 month;
+    static const uint8 mlen[12] = {31, 28, 31, 30, 31, 30,
+                                   31, 31, 30, 31, 30, 31};
+
+    if (days == 0) { // no stamp recorded
+        _puts("       --       ");
+        return;
+    }
+    days -= 1; // days since 1978-01-01
+    for (;;) {
+        uint16 ylen =
+            (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ? 366 : 365;
+        if (days < ylen)
+            break;
+        days -= ylen;
+        ++year;
+    }
+    for (month = 0; month < 12; ++month) {
+        uint8 dm = mlen[month];
+        if (month == 1 &&
+            (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)))
+            dm = 29;
+        if (days < dm)
+            break;
+        days -= dm;
+    }
+    _ccp_print2(month + 1);
+    _ccp_bdos(C_WRITE, '/');
+    _ccp_print2((uint8)days + 1);
+    _ccp_bdos(C_WRITE, '/');
+    _ccp_printDec(year);
+    _ccp_bdos(C_WRITE, ' ');
+    _ccp_print2(((bh >> 4) & 0x0F) * 10 + (bh & 0x0F));
+    _ccp_bdos(C_WRITE, ':');
+    _ccp_print2(((bm >> 4) & 0x0F) * 10 + (bm & 0x0F));
+}
+#endif
+
 // Compares two strings (Atmel doesn't like strcmp)
 uint8 _ccp_strEqual(const char *stra, const char *strb) {
     while (*stra && *strb && (*stra == *strb)) {
@@ -320,9 +372,19 @@ uint8 _ccp_ldir(void) {
                 len++;
             }
             // Get file size
+#ifdef CPM3
+            // CP/M 3: obtain the size strictly through BDOS. F_SIZE (function
+            // 35) sets the random-record field to the number of 128-byte
+            // records, which is the file size CP/M actually tracks.
+            _ccp_bdos(F_SIZE, tmpFCB);
+            uint32 size = ((uint32)_RamRead(tmpFCB + 33) |
+                           ((uint32)_RamRead(tmpFCB + 34) << 8) |
+                           ((uint32)_RamRead(tmpFCB + 35) << 16)) * 128;
+#else
             long fsize = _FileSize(tmpFCB);
             uint32 size = (fsize == -1) ? 0 : (uint32)fsize;
-            
+#endif
+
             // Print size in bytes, padded to 7 digits
             // Optimized to remove sprintf
             uint32 temp = size;
@@ -339,6 +401,18 @@ uint8 _ccp_ldir(void) {
             }
             _ccp_printDec(size);
             _puts(" bytes");
+
+#ifdef CPM3
+            // CP/M 3: append the read/write status and date stamp, obtained
+            // strictly through BDOS function 102 (Read File Date Stamps).
+            if (!_ccp_bdos(F_TIMEDATE, tmpFCB)) {
+                _puts((_RamRead(tmpFCB + 9) & 0x80) ? "  R/O  " : "  R/W  ");
+                _ccp_printFileDate(tmpFCB + 28); // update stamp at FCB+28
+            } else {
+                _puts("  R/W  ");
+                _puts("       --       ");
+            }
+#endif
 
             if (checksumOption) {
                 // Compute checksum
@@ -797,6 +871,235 @@ uint8 _ccp_poke(void) {
     return 0;
 } // _ccp_poke
 
+#ifdef CPM3
+// --- DATE command (CP/M 3 only) ------------------------------------------
+// Displays and sets the system date and time. All date/time access goes
+// strictly through BDOS T_GET (105) and T_SET (104).
+
+static const char *_ccp_wday[7] = {"Sun", "Mon", "Tue", "Wed",
+                                   "Thu", "Fri", "Sat"};
+static const uint8 _ccp_dmlen[12] = {31, 28, 31, 30, 31, 30,
+                                     31, 31, 30, 31, 30, 31};
+
+static uint8 _ccp_isleap(uint16 y) {
+    return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+}
+
+// Converts a day count (1 = 1978-01-01) into year/month/day
+static void _ccp_dayToYMD(uint16 days, uint16 *year, uint8 *month, uint8 *day) {
+    uint16 y = 1978;
+    uint8 m;
+    days -= 1;
+    for (;;) {
+        uint16 yl = _ccp_isleap(y) ? 366 : 365;
+        if (days < yl)
+            break;
+        days -= yl;
+        ++y;
+    }
+    for (m = 0; m < 12; ++m) {
+        uint8 dm = _ccp_dmlen[m];
+        if (m == 1 && _ccp_isleap(y))
+            dm = 29;
+        if (days < dm)
+            break;
+        days -= dm;
+    }
+    *year = y;
+    *month = m + 1;
+    *day = (uint8)days + 1;
+}
+
+// Converts year/month/day into a day count (1 = 1978-01-01)
+static uint16 _ccp_ymdToDay(uint16 year, uint8 month, uint8 day) {
+    uint32 days = 0;
+    uint16 yy;
+    uint8 mm;
+    for (yy = 1978; yy < year; ++yy)
+        days += _ccp_isleap(yy) ? 366 : 365;
+    for (mm = 1; mm < month; ++mm) {
+        days += _ccp_dmlen[mm - 1];
+        if (mm == 2 && _ccp_isleap(year))
+            days += 1;
+    }
+    days += day - 1;
+    return ((uint16)(days + 1));
+}
+
+// Prints a packed-BCD byte as two decimal digits
+static void _ccp_printBCD(uint8 b) {
+    _ccp_bdos(C_WRITE, '0' + ((b >> 4) & 0x0F));
+    _ccp_bdos(C_WRITE, '0' + (b & 0x0F));
+}
+
+// Reads the current date/time via BDOS and prints "Ddd MM/DD/YY HH:MM:SS"
+static void _ccp_dateShow(void) {
+    uint16 dat = defDMA; // scratch DAT buffer in the DMA page
+    uint16 days, year;
+    uint8 month, day;
+
+    _ccp_bdos(T_GET, dat);
+    days = _RamRead(dat) | (_RamRead(dat + 1) << 8);
+    _ccp_dayToYMD(days, &year, &month, &day);
+    _puts((char *)_ccp_wday[(days - 1) % 7]); // 1978-01-01 was a Sunday
+    _ccp_bdos(C_WRITE, ' ');
+    _ccp_print2(month);
+    _ccp_bdos(C_WRITE, '/');
+    _ccp_print2(day);
+    _ccp_bdos(C_WRITE, '/');
+    _ccp_print2(year % 100);
+    _ccp_bdos(C_WRITE, ' ');
+    _ccp_printBCD(_RamRead(dat + 2)); // hour
+    _ccp_bdos(C_WRITE, ':');
+    _ccp_printBCD(_RamRead(dat + 3)); // minute
+    _ccp_bdos(C_WRITE, ':');
+    _ccp_printBCD(_RamRead(dat + 4)); // second
+}
+
+// Extracts up to 'max' decimal numbers from string s into out[]
+static uint8 _ccp_parseNums(const char *s, uint8 *out, uint8 max) {
+    uint8 n = 0;
+    while (*s && n < max) {
+        if (*s >= '0' && *s <= '9') {
+            uint16 v = 0;
+            while (*s >= '0' && *s <= '9') {
+                v = v * 10 + (*s - '0');
+                ++s;
+            }
+            out[n++] = (uint8)v;
+        } else {
+            ++s;
+        }
+    }
+    return (n);
+}
+
+// Validates and sets the date/time via BDOS T_SET. Returns 0 on success.
+static uint8 _ccp_dateSet(uint8 mo, uint8 dy, uint8 yr, uint8 hh, uint8 mi,
+                          uint8 ss) {
+    uint16 dat = defDMA;
+    uint16 year, days;
+
+    if (mo < 1 || mo > 12 || dy < 1 || dy > 31 || hh > 23 || mi > 59 ||
+        ss > 59)
+        return (1);
+    year = (yr >= 78) ? (1900 + yr) : (2000 + yr);
+    days = _ccp_ymdToDay(year, mo, dy);
+    _RamWrite(dat, days & 0xFF);
+    _RamWrite(dat + 1, (days >> 8) & 0xFF);
+    _RamWrite(dat + 2, ((hh / 10) << 4) | (hh % 10));
+    _RamWrite(dat + 3, ((mi / 10) << 4) | (mi % 10));
+    _RamWrite(dat + 4, ((ss / 10) << 4) | (ss % 10));
+    // Per the manual, wait for a keystroke so the time can be set precisely
+    _puts("\r\nPress any key to set time");
+    _ccp_bios(B_CONIN);
+    _ccp_bdos(T_SET, dat);
+    return (0);
+}
+
+// Reads a line from the console into buf (NUL-terminated)
+static void _ccp_readLine(char *buf, uint8 maxlen) {
+    uint8 n, k;
+    _RamWrite(inBuf, maxlen);
+    _ccp_bdos(C_READSTR, inBuf);
+    n = _RamRead(inBuf + 1);
+    for (k = 0; k < n && k < maxlen; ++k)
+        buf[k] = _RamRead(inBuf + 2 + k);
+    buf[k] = 0;
+}
+
+// DATE command
+uint8 _ccp_date(void) {
+    char arg[64];
+    uint8 len = _RamRead(defDMA);
+    uint8 i = 0, j = 0;
+    uint8 nums[6];
+
+    // defDMA holds the command tail (the command word is already stripped),
+    // uppercased. Skip the leading spaces and copy the remaining argument.
+    while (i < len && _RamRead(defDMA + 1 + i) == ' ')
+        ++i;
+    while (i < len && j < (uint8)(sizeof(arg) - 1))
+        arg[j++] = _RamRead(defDMA + 1 + i++);
+    arg[j] = 0;
+
+    _puts("\r\n");
+
+    if (j == 0) { // DATE -> display once
+        _ccp_dateShow();
+        return (0);
+    }
+
+    if (arg[0] == 'C') { // DATE C / CONTINUOUS -> display until a key is pressed
+        uint8 lastSec = 0xFF;
+        while (!_ccp_bdos(C_STAT, 0)) {
+            _ccp_bdos(T_GET, defDMA);
+            uint8 sec = _RamRead(defDMA + 4);
+            if (sec != lastSec) {
+                lastSec = sec;
+                _ccp_bdos(C_WRITE, '\r');
+                _ccp_dateShow();
+            }
+        }
+        _ccp_bios(B_CONIN); // consume the key
+        return (0);
+    }
+
+    if (arg[0] == 'S' && arg[1] == 'E' && arg[2] == 'T') { // DATE SET
+        uint16 year;
+        uint8 mo, dy;
+        uint8 cd[3], ct[3];
+        // Preload the current values so empty entries keep them
+        _ccp_bdos(T_GET, defDMA);
+        _ccp_dayToYMD(_RamRead(defDMA) | (_RamRead(defDMA + 1) << 8), &year,
+                      &mo, &dy);
+        cd[0] = mo;
+        cd[1] = dy;
+        cd[2] = (uint8)(year % 100);
+        ct[0] = ((_RamRead(defDMA + 2) >> 4) & 0x0F) * 10 +
+                (_RamRead(defDMA + 2) & 0x0F);
+        ct[1] = ((_RamRead(defDMA + 3) >> 4) & 0x0F) * 10 +
+                (_RamRead(defDMA + 3) & 0x0F);
+        ct[2] = ((_RamRead(defDMA + 4) >> 4) & 0x0F) * 10 +
+                (_RamRead(defDMA + 4) & 0x0F);
+        _puts("Enter today's date (MM/DD/YY): ");
+        _ccp_readLine(arg, 20);
+        if (_ccp_parseNums(arg, nums, 3) >= 3) {
+            cd[0] = nums[0];
+            cd[1] = nums[1];
+            cd[2] = nums[2];
+        }
+        _puts("\r\nEnter the time (HH:MM:SS): ");
+        _ccp_readLine(arg, 20);
+        if (_ccp_parseNums(arg, nums, 3) >= 3) {
+            ct[0] = nums[0];
+            ct[1] = nums[1];
+            ct[2] = nums[2];
+        }
+        if (_ccp_dateSet(cd[0], cd[1], cd[2], ct[0], ct[1], ct[2])) {
+            _puts("\r\nInvalid date or time");
+            return (0);
+        }
+        _puts("\r\n");
+        _ccp_dateShow();
+        return (0);
+    }
+
+    // Otherwise treat the tail as a time-specification MM/DD/YY HH:MM:SS
+    if (_ccp_parseNums(arg, nums, 6) < 6) {
+        _puts("Invalid date or time");
+        return (0);
+    }
+    if (_ccp_dateSet(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5])) {
+        _puts("\r\nInvalid date or time");
+        return (0);
+    }
+    _puts("\r\n");
+    _ccp_dateShow();
+    return (0);
+} // _ccp_date
+#endif // CPM3
+
 #endif // Internals
 
 // ?/Help command
@@ -805,6 +1108,9 @@ uint8 _ccp_hlp(void) {
     _puts(" ?                  - Shows this list of commands\r\n");
     _puts(" CLS                - Clears the screen\r\n");
     _puts(" COPY <src> <dst>   - Copies a file\r\n");
+#ifdef CPM3
+    _puts(" DATE [spec|C|SET]  - Shows or sets date/time (MM/DD/YY HH:MM:SS)\r\n");
+#endif
     _puts(" DEL [<patt>]       - Alias to ERA\r\n");
     _puts(" DIR [<patt>]       - Lists file directory\r\n");
     _puts(" DUMP <addr|file>   - Hex+ASCII dump of memory or file\r\n");
@@ -849,6 +1155,9 @@ static const Command Commands[] = {
     {"VER", _ccp_ver},
     {"DUMP", _ccp_dump},
     {"VOL", _ccp_vol},
+#ifdef CPM3
+    {"DATE", _ccp_date},
+#endif
 #endif
     {"?", _ccp_hlp},
     {NULL, NULL} // Sentinel
@@ -1172,6 +1481,22 @@ void _ccp(void) {
     // Loads an autoexec file if it exists and this is the first boot
     // The file contents are loaded at ccpAddr+8 up to 126 bytes then the size
     // loaded is stored at ccpAddr+7
+#ifdef CPM3
+    if (chainLoad) {
+        // A program chained to a command via BDOS 47 (Chain To Program).
+        // Run that command before anything else.
+        uint16 cmd = inBuf + 2;
+        bufferLen = 0;
+        while (chainCmd[bufferLen] && bufferLen < 125) {
+            _RamWrite(cmd + bufferLen, chainCmd[bufferLen]);
+            ++bufferLen;
+        }
+        _RamWrite(cmd + bufferLen, 0x00);
+        _RamWrite(inBuf, cmdLen);
+        _RamWrite(inBuf + 1, bufferLen);
+        chainLoad = 0;
+    } else
+#endif
     if (firstBoot && !submitFlag) {
         if (_sys_exists((uint8 *)AUTOEXEC)) {
             uint16 cmd = inBuf + 2;

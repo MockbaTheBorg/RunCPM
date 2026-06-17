@@ -169,6 +169,32 @@ int _sys_openfile(uint8 *filename) {
     return (file != NULL);
 }
 
+#ifdef CPM3
+// Returns the host file modification time (seconds since the Unix epoch), or 0 if not found
+unsigned long _sys_filemtime(uint8 *filename) {
+    struct stat st;
+    uint8 fullpath[128] = FILEBASE;
+    strcat((char *)fullpath, (char *)filename);
+    if (stat((char *)fullpath, &st) == 0)
+        return ((unsigned long)st.st_mtime);
+    return (0);
+}
+
+// Returns 1 if the host file is read-only (no write permission), 0 otherwise
+uint8 _sys_isreadonly(uint8 *filename) {
+    uint8 fullpath[128] = FILEBASE;
+    strcat((char *)fullpath, (char *)filename);
+    return (access((char *)fullpath, W_OK) != 0 ? 1 : 0);
+}
+
+// Truncates the host file to 'length' bytes. Returns 0 on success.
+int _sys_truncate(uint8 *filename, long length) {
+    uint8 fullpath[128] = FILEBASE;
+    strcat((char *)fullpath, (char *)filename);
+    return (truncate((char *)fullpath, length));
+}
+#endif
+
 int _sys_makefile(uint8 *filename) {
     FILE *file = _sys_fopen_a(filename);
     if (file != NULL)

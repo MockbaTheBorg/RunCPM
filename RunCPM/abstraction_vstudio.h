@@ -167,6 +167,53 @@ int _sys_openfile(uint8 *filename) {
     return (file != NULL);
 }
 
+#ifdef CPM3
+// Returns the host file modification time (seconds since the Unix epoch), or 0 if not found
+unsigned long _sys_filemtime(uint8 *filename) {
+    char fullpath[128] = FILEBASE;
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    strcat(fullpath, (char *)filename);
+    if (GetFileAttributesExA(fullpath, GetFileExInfoStandard, &fad)) {
+        // Convert FILETIME (100ns ticks since 1601-01-01) to Unix epoch seconds
+        ULARGE_INTEGER ull;
+        ull.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+        ull.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+        return ((unsigned long)((ull.QuadPart / 10000000ULL) - 11644473600ULL));
+    }
+    return (0);
+}
+
+// Returns 1 if the host file is read-only, 0 otherwise
+uint8 _sys_isreadonly(uint8 *filename) {
+    char fullpath[128] = FILEBASE;
+    DWORD attr;
+    strcat(fullpath, (char *)filename);
+    attr = GetFileAttributesA(fullpath);
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return (0);
+    return ((attr & FILE_ATTRIBUTE_READONLY) ? 1 : 0);
+}
+
+// Truncates the host file to 'length' bytes. Returns 0 on success.
+int _sys_truncate(uint8 *filename, long length) {
+    char fullpath[128] = FILEBASE;
+    HANDLE h;
+    LARGE_INTEGER li;
+    strcat(fullpath, (char *)filename);
+    h = CreateFileA(fullpath, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE)
+        return (-1);
+    li.QuadPart = length;
+    if (!SetFilePointerEx(h, li, NULL, FILE_BEGIN) || !SetEndOfFile(h)) {
+        CloseHandle(h);
+        return (-1);
+    }
+    CloseHandle(h);
+    return (0);
+}
+#endif
+
 int _sys_makefile(uint8 *filename) {
     FILE *file = _sys_fopen_a(filename);
     if (file != NULL)

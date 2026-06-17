@@ -787,6 +787,25 @@ uint8 _GetFileSize(uint16 fcbaddr) {
     return (result);
 }
 
+#ifdef CPM3
+// Truncates a file to the random record count held in the FCB (record * 128
+// bytes). Returns 0 on success, 0xFF on error.
+uint8 _TruncateFile(uint16 fcbaddr) {
+    CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);
+    uint8 result = 0xff;
+
+    if (!_SelectDisk(F->dr)) {
+        if (!RW) {
+            _FCBtoHostname(fcbaddr, &filename[0]);
+            long records = F->r0 | (F->r1 << 8) | ((long)F->r2 << 16);
+            if (!_sys_truncate(&filename[0], records * 128))
+                result = 0x00;
+        }
+    }
+    return (result);
+}
+#endif
+
 // Set the next random record
 uint8 _SetRandom(uint16 fcbaddr) {
     CPM_FCB *F = (CPM_FCB *)_RamSysAddr(fcbaddr);

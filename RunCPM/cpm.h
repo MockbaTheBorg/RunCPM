@@ -1,4 +1,4 @@
-#ifndef CPM_H
+ #ifndef CPM_H
 #define CPM_H
 
 enum eBIOSFunc {
@@ -710,6 +710,23 @@ void _Bios(void) {
 #endif
 } // _Bios
 
+/* Packed BCD helpers for the CP/M 3 clock (BDOS 104/105) */
+#define BCD2DEC(b) ((((b) >> 4) & 0x0F) * 10 + ((b) & 0x0F))
+#define DEC2BCD(d) ((uint8)((((d) / 10) << 4) | ((d) % 10)))
+
+/* Difference (in seconds) between the host clock and the clock set via
+   BDOS 104 (T_SET). Lets a set time round-trip through BDOS 105 (T_GET). */
+static long clockOffset = 0;
+
+/* Program return code, get/set via BDOS 108 (P_CODE). */
+static uint16 programRetCode = 0;
+
+/* Console mode word, get/set via BDOS 109 (C_MODE). RunCPM's console layer is
+   already raw (no ^S pause, no tab expansion, no ^C termination, no ^P echo),
+   so most "disable" bits are effectively always on. Bits 8-9 are honored by
+   function 11 (Get console status). */
+static uint16 consoleMode = 0;
+
 void _Bdos(void) {
     uint8 ch = LOW_REGISTER(BC);
 
@@ -1156,8 +1173,21 @@ void _Bdos(void) {
     /*
        C = 11 (0Bh) : Get console status
        Returns: A=0x00 or 0xFF
+       Under CP/M3 the console mode (BDOS 109) bits 8-9 override the result:
+       1 = always ready, 2 = never ready, 0/3 = normal hardware status.
      */
     case C_STAT: {
+#ifdef CPM3
+        uint8 sub = (consoleMode >> 8) & 0x03;
+        if (sub == 1) {
+            HL = 0xFF; // always returns true
+            break;
+        }
+        if (sub == 2) {
+            HL = 0x00; // always returns false
+            break;
+        }
+#endif
         HL = _chready();
         break;
     }
@@ -1524,31 +1554,77 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 47 (2Fh) : Chain to program (CPM3)
-       E = Chain flag
-       Returns: None
+       C = 47 (2Fh) : Chain to program (CPM3)
+       E = Chain flag (0xFF = pass current drive/user to the chained program,
+           otherwise the chained program starts at drive A: user 0)
+       The command line to run is stored null-terminated in the default DMA
+       buffer (0x0080). The call does not return to the caller: it warm boots
+       and the CCP runs the chained command.
      */
     case P_CHAIN: {
+#ifdef CPM3
+        uint16 src = 0x0080;
+        uint8 n = 0;
+        uint8 c;
+        while (n < (uint8)(sizeof(chainCmd) - 1) && (c = _RamRead(src + n)) != 0) {
+            chainCmd[n] = c;
+            ++n;
+        }
+        chainCmd[n] = 0;
+        chainLoad = 1;
+        if (LOW_REGISTER(DE) != 0xFF) { // do not inherit drive/user
+            userCode = 0;
+            cDrive = oDrive = 0;
+            _RamWrite(DSKByte, 0x00);
+        }
+        Status = STATUS_RESTART; // warm boot into the CCP
+#endif
         break;
     }
 
     /*
-       ToDo: C = 48 (30h) : Flush Buffers (CPM3)
+       C = 48 (30h) : Flush Buffers (CPM3)
        E = Purge flag
-       Returns: A = return code
+       Returns: A = return code (0 = OK)
                 H = Physical Error
+       RunCPM opens, writes and closes each file record individually, so regular
+       file data is already on disk. The only host buffers held open across calls
+       are the LST: and PUN: device streams - flush those.
      */
     case DRV_FLUSH: {
+#ifdef USE_LST
+        if (lst_open)
+            _sys_fflush(lst_dev);
+#endif
+#ifdef USE_PUN
+        if (pun_open)
+            _sys_fflush(pun_dev);
+#endif
+        HL = 0x0000; // A = 0 (OK), H = 0 (no physical error)
         break;
     }
 
     /*
-       ToDo: C = 49 (31h) : Get/Set System Control (CPM3)
-       DE = SCB PB Address
-       Returns: A = Returned Byte
-                HL = Returned Word
+       C = 49 (31h) : Get/Set System Control (CPM3)
+       DE = SCB PB Address. SCBPB layout (bytes):
+         +0 offset (0-99 into the SCB)
+         +1 set    (0xFF = set byte, 0xFE = set word, anything else = get)
+         +2 value  (byte or word to store when setting)
+       Returns: A = byte at offset, HL = word at offset (on get).
+                The BDOS forces A = low byte of HL on return, so the byte
+                value naturally falls out of HL's low half.
      */
     case S_SCB: {
+        uint16 pb = DE;
+        uint8 offset = _RamRead(pb + 0);
+        uint8 set = _RamRead(pb + 1);
+        if (set == 0xFF) {                  // set byte
+            _RamWrite(SCBaddr + offset, _RamRead(pb + 2));
+        } else if (set == 0xFE) {           // set word
+            _RamWrite16(SCBaddr + offset, _RamRead16(pb + 2));
+        } else {                            // get byte/word
+            HL = _RamRead16(SCBaddr + offset);
+        }
         break;
     }
 
@@ -1622,12 +1698,16 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 99 (63h) : Truncate File (CPM3)
-       DE = address of FCB
-       Returns: A = Directory code
+       C = 99 (63h) : Truncate File (CPM3)
+       DE = address of FCB. The random record field (r0/r1/r2) holds the new
+            size in 128-byte records; the file is truncated to record * 128.
+       Returns: A = Directory code (0 = OK, 0xFF = error)
                 H = Extended or Physical Error
      */
     case F_TRUNCATE: {
+#ifdef CPM3
+        HL = _TruncateFile(DE);
+#endif
         break;
     }
 
@@ -1652,12 +1732,67 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 102 (66h) : Read File Date Stamps and Password Mode (CPM3)
+       C = 102 (66h) : Read File Date Stamps and Password Mode (CPM3)
        DE = address of FCB
-       Returns: A = Directory code
+       Returns: A = Directory code (0xFF if the file was not found)
                 H = Physical Error
+       On success the FCB is filled in:
+                FCB+9 bit7 (t1') = set if the file is read-only
+                FCB+24..27      = create/access date stamp
+                FCB+28..31      = update date stamp
+                FCB+12 (ex)     = password mode (0, no password support here)
+       Each date stamp is: day count (word, day 1 = 1978-01-01), hour (BCD),
+       minute (BCD). The stamps are derived from the host file via BDOS only.
      */
     case F_TIMEDATE: {
+#ifdef CPM3
+        uint8 result = 0xff;
+        _FCBtoHostname(DE, &filename[0]);
+        unsigned long mt = _sys_filemtime(&filename[0]);
+        if (mt) {
+            time_t ft = (time_t)mt;
+            struct tm lt = *localtime(&ft);
+            struct tm base, fday;
+            time_t baseNoon, fNoon;
+            uint16 days;
+            uint8 bh = DEC2BCD(lt.tm_hour);
+            uint8 bm = DEC2BCD(lt.tm_min);
+            // Whole days between the file day (noon) and 1978-01-01 (noon)
+            memset(&base, 0, sizeof(base));
+            base.tm_year = 78;
+            base.tm_mon = 0;
+            base.tm_mday = 1;
+            base.tm_hour = 12;
+            base.tm_isdst = -1;
+            baseNoon = mktime(&base);
+            fday = lt;
+            fday.tm_hour = 12;
+            fday.tm_min = 0;
+            fday.tm_sec = 0;
+            fday.tm_isdst = -1;
+            fNoon = mktime(&fday);
+            days = (uint16)((fNoon - baseNoon) / 86400 + 1);
+            // Create/access stamp (host only exposes one timestamp, reuse it)
+            _RamWrite(DE + 24, days & 0xff);
+            _RamWrite(DE + 25, (days >> 8) & 0xff);
+            _RamWrite(DE + 26, bh);
+            _RamWrite(DE + 27, bm);
+            // Update stamp
+            _RamWrite(DE + 28, days & 0xff);
+            _RamWrite(DE + 29, (days >> 8) & 0xff);
+            _RamWrite(DE + 30, bh);
+            _RamWrite(DE + 31, bm);
+            // Password mode (none supported)
+            _RamWrite(DE + 12, 0x00);
+            // Read-only attribute lives in t1' (high bit of the first type byte)
+            if (_sys_isreadonly(&filename[0]))
+                _RamWrite(DE + 9, _RamRead(DE + 9) | 0x80);
+            else
+                _RamWrite(DE + 9, _RamRead(DE + 9) & 0x7f);
+            result = 0x00;
+        }
+        HL = result;
+#endif
         break;
     }
 
@@ -1672,21 +1807,71 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 104 (68h) : Set Date and Time (CPM3)
+       C = 104 (68h) : Set Date and Time (CPM3)
        DE = Date and Time (DAT) Address
+            DAT+0/1 = Day count (little-endian, day 1 = 1978-01-01)
+            DAT+2   = Hour   (packed BCD)
+            DAT+3   = Minute (packed BCD)
+            DAT+4   = Second (packed BCD)
        Returns: None
      */
     case T_SET: {
+        uint16 days = _RamRead(DE) | (_RamRead(DE + 1) << 8);
+        uint8 hour = BCD2DEC(_RamRead(DE + 2));
+        uint8 mins = BCD2DEC(_RamRead(DE + 3));
+        uint8 secs = BCD2DEC(_RamRead(DE + 4));
+        struct tm base;
+        time_t baseT, target;
+        memset(&base, 0, sizeof(base));
+        base.tm_year = 78;          // 1978
+        base.tm_mon = 0;            // January
+        base.tm_mday = 1;           // 1st
+        base.tm_hour = 12;          // noon, to avoid DST midnight ambiguity
+        base.tm_isdst = -1;
+        baseT = mktime(&base);
+        // baseT is noon on day 1; rewind to midnight, then add the DAT fields
+        target = baseT - 12 * 3600 + (time_t)(days - 1) * 86400
+                 + (time_t)hour * 3600 + (time_t)mins * 60 + secs;
+        clockOffset = (long)(target - time(NULL));
         break;
     }
 
     /*
-       ToDo: C = 105 (69h) : Get Date and Time (CPM3)
-       DE = Date and Time (DAT) Address
+       C = 105 (69h) : Get Date and Time (CPM3)
+       DE = Date and Time (DAT) Address (filled in, same layout as T_SET)
        Returns: Date and Time (DAT) set
                 A = Seconds (in packed BCD format)
      */
     case T_GET: {
+        time_t now = time(NULL) + clockOffset;
+        struct tm cur, base;
+        time_t curNoon, baseNoon;
+        uint16 days;
+        uint8 hour, mins, secs;
+        cur = *localtime(&now);
+        hour = DEC2BCD(cur.tm_hour);
+        mins = DEC2BCD(cur.tm_min);
+        secs = DEC2BCD(cur.tm_sec);
+        // Day count = whole days between today (noon) and 1978-01-01 (noon)
+        cur.tm_hour = 12;
+        cur.tm_min = 0;
+        cur.tm_sec = 0;
+        cur.tm_isdst = -1;
+        curNoon = mktime(&cur);
+        memset(&base, 0, sizeof(base));
+        base.tm_year = 78;
+        base.tm_mon = 0;
+        base.tm_mday = 1;
+        base.tm_hour = 12;
+        base.tm_isdst = -1;
+        baseNoon = mktime(&base);
+        days = (uint16)((curNoon - baseNoon) / 86400 + 1);
+        _RamWrite(DE, days & 0xFF);
+        _RamWrite(DE + 1, (days >> 8) & 0xFF);
+        _RamWrite(DE + 2, hour);
+        _RamWrite(DE + 3, mins);
+        _RamWrite(DE + 4, secs);
+        HL = secs;          // A (low byte of HL) = seconds in packed BCD
         break;
     }
 
@@ -1700,36 +1885,55 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 107 (6Bh) : Return Serial Number (CPM3)
-       DE = Serial Number Field
-       Returns: Serial number field set
+       C = 107 (6Bh) : Return Serial Number (CPM3)
+       DE = Serial Number Field (6 bytes)
+       Returns: Serial number field set (printable ASCII)
      */
     case S_SERIAL: {
+        static const uint8 serial[6] = {'R', 'u', 'n', 'C', 'P', 'M'};
+        uint8 i;
+        for (i = 0; i < 6; ++i)
+            _RamWrite(DE + i, serial[i]);
         break;
     }
 
     /*
-       ToDo: C = 108 (6Ch) : Get/Set Program Return Code (CPM3)
+       C = 108 (6Ch) : Get/Set Program Return Code (CPM3)
        DE =  0xFFFF (Get) or Program Return Code (Set)
-       Returns: HL = Program Return Code or (none)
+       Returns: HL = Program Return Code (on Get)
      */
     case P_CODE: {
+        if (WORD16(DE) == 0xFFFF) {
+            HL = programRetCode;
+        } else {
+            programRetCode = WORD16(DE);
+        }
         break;
     }
 
     /*
-       ToDo: C = 109 (6Dh) : Get/Set Console Mode (CPM3)
+       C = 109 (6Dh) : Get/Set Console Mode (CPM3)
        DE =  0xFFFF (Get) or Console Mode (Set)
-       Returns: HL = Console Mode or (none)
+       Returns: HL = Console Mode (on Get)
+       Console mode bits (CP/M3): 0 = fn 11 detects only ^C, 1 = ^S no pause,
+       2 = no tab expand / no ^P echo, 3 = ^C does not terminate. RunCPM's
+       console is already raw, so those behaviours are intrinsic; bits 8-9 are
+       acted on by function 11 (Get console status).
      */
     case C_MODE: {
+        if (WORD16(DE) == 0xFFFF) {
+            HL = consoleMode;
+        } else {
+            consoleMode = WORD16(DE);
+        }
         break;
     }
 
     /*
-       ToDo: C = 110 (6Eh) : Get/Set Output Delimiter (CPM3)
+       C = 110 (6Eh) : Get/Set Output Delimiter (CPM3)
        DE =  0xFFFF (Get) or E = Delimiter (Set)
-       Returns: A = Output Delimiter or (none)
+       Returns: A = Output Delimiter (on Get)
+       The delimiter terminates strings printed by function 9 (default '$').
      */
     case C_DELIMIT: {
         if (DE == 0xFFFF) {
@@ -1741,11 +1945,18 @@ void _Bdos(void) {
     }
 
     /*
-       ToDo: C = 111 (6Fh) : Print Block (CPM3)
-       DE =  address of CCB
+       C = 111 (6Fh) : Print Block (CPM3)
+       DE =  address of a Character Control Block (CCB):
+             CCB+0 = buffer address (word)
+             CCB+2 = length in bytes (word)
+       Sends the block to the console using an explicit length (no delimiter).
        Returns: None
      */
     case C_WRITEBLK: {
+        uint16 addr = _RamRead16(DE);
+        uint16 len = _RamRead16(DE + 2);
+        while (len--)
+            _putcon(_RamRead(addr++));
         break;
     }
 

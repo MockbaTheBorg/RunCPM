@@ -111,6 +111,23 @@ long _sys_filesize(uint8 *filename) {
     return (l);
 }
 
+#ifdef CPM3
+// Host file date stamps / attributes are not tracked on the Arduino SD backend.
+// Returning 0 makes F_TIMEDATE report "no stamp" and files appear read/write.
+unsigned long _sys_filemtime(uint8 *filename) {
+    return (0);
+}
+
+uint8 _sys_isreadonly(uint8 *filename) {
+    return (0);
+}
+
+// Truncate is not supported by the stock Arduino SD backend.
+int _sys_truncate(uint8 *filename, long length) {
+    return (-1);
+}
+#endif
+
 int _sys_openfile(uint8 *filename) {
     File f;
     int result = 0;

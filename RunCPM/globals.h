@@ -300,6 +300,13 @@ static uint8 firstBoot = TRUE;  // True if this is the first boot
 #define AUTOEXEC "AUTOEXEC.TXT" // Name of the autoexec file
 #define BOOTONLY FALSE          // If TRUE, the autoexec file will only be loaded on the first boot
 
+#ifdef CPM3
+/* BDOS function 47 (Chain To Program) state: the command line a program
+   chained to, to be run by the CCP after the next warm boot */
+static uint8 chainCmd[128];
+static uint8 chainLoad = 0;
+#endif
+
 static uint32 timer;
 
 #ifdef STREAMIO
