@@ -27,7 +27,7 @@ should be kept the same.
 */
 
     #ifdef _WIN32
-        #include "abstraction_vstudio.h"
+        #include "abstraction_windows.h"
     #else
         #include "abstraction_posix.h"
     #endif

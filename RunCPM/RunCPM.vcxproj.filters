@@ -41,7 +41,7 @@
     <ClInclude Include="globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstraction_vstudio.h">
+    <ClInclude Include="abstraction_windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="abstraction_arduino.h">

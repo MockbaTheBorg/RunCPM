@@ -26,7 +26,7 @@
 #define USE_LST
 
 /* Definitions for file/console based debugging */
-// #define DEBUG			// Enables the internal debugger (enabled by default on vstudio debug builds)
+// #define DEBUG			// Enables the internal debugger (enabled by default on visual studio debug builds)
 // #define DEBUGONHALT		// Enables the internal debugger when the CPU halts
 // #define iDEBUG			// Enables instruction logging onto iDebug.log (for development debug only)
 // #define DEBUGLOG			// Writes extensive call trace information to RunCPM.log
