@@ -200,7 +200,7 @@ typedef unsigned long long uint64;
                    // For TPASIZE<60 CCP ORG = (SIZEK * 1024) - 0x0C00
 
 #ifndef BANKS
-    #define BANKS 8 // Number of memory banks available (defined in Makefile per platform)
+    #define BANKS 1 // Number of memory banks available (defined in Makefile per platform)
 #endif
 static uint8 curBank = 0;     // Number of the current RAM bank in use (0-based, 0 to BANKS-1, as in CP/M 3)
 static uint8 isXmove = FALSE; // Used by BIOS
