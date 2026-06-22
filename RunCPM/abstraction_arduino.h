@@ -21,6 +21,11 @@
     #define HostOS 0x07
 #endif
 
+// SdFat v2.x dropped File typedef; alias File32 (used with SdFat class)
+#if defined(SD_FAT_VERSION) && SD_FAT_VERSION >= 20000
+typedef File32 File;
+#endif
+
 /* Memory abstraction functions */
 /*===============================================================================*/
 uint16 _RamLoad(uint8 *filename, uint16 address, uint16 maxsize) {
