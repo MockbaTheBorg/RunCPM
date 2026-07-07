@@ -241,6 +241,11 @@ static void alu(uint8 op, uint8 val) {
 #else
     #define DO_DEBUG_HALT 0
 #endif
+#ifdef DEBUGONHALT
+    #define DO_DEBUG_ON_HALT 1
+#else
+    #define DO_DEBUG_ON_HALT 0
+#endif
 #ifdef INT_HANDOFF
     #define DO_INT_HANDOFF 1
 #else
@@ -496,8 +501,10 @@ if (DO_DEBUG_HALT) { \
 			_puts("Press any key..."); \
 			_getcon(); \
 			_puts("\r\n"); \
-			Debug = 1; \
-			Z80debug(); \
+			if (DO_DEBUG_ON_HALT) { \
+				Debug = 1; \
+				Z80debug(); \
+			} \
 } \
                 PC--; \
                 Status = STATUS_EXIT; \
