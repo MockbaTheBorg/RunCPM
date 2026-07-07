@@ -246,6 +246,11 @@ static void alu(uint8 op, uint8 val) {
 #else
     #define DO_INT_HANDOFF 0
 #endif
+#ifdef DO_INCR
+    #define DO_INCR_R 1
+#else
+    #define DO_INCR_R 0
+#endif
 
 #define EXEC_OP(op_val) \
     { \
@@ -257,11 +262,11 @@ static void alu(uint8 op, uint8 val) {
         if (opcode == 0xDD) { \
             mode = 1; \
             opcode = RAM_PP(PC); \
-            IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80); \
+            if (DO_INCR_R) IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80); \
         } else if (opcode == 0xFD) { \
             mode = 2; \
             opcode = RAM_PP(PC); \
-            IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80); \
+            if (DO_INCR_R) IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80); \
         } \
         x = (opcode >> 6) & 3; \
         y = (opcode >> 3) & 7; \
@@ -1004,7 +1009,9 @@ static inline void Z80run(uint32 cpu_delay) {
         mode = 0;
     DISPATCH:
         opcode = RAM_PP(PC);
+#ifdef DO_INCR
         IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
+#endif
 #ifdef __GNUC__
         goto *jumptable[opcode];
 #else

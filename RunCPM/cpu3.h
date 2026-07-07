@@ -287,19 +287,25 @@ static inline void Z80run(uint32 cpu_delay) {
 
         opcode = RAM_PP(PC);
         // Increment R
+#ifdef DO_INCR
         IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
-        
+#endif
+
         mode = 0;
-        
+
         // Handle Prefixes
         if (opcode == 0xDD) {
             mode = 1;
             opcode = RAM_PP(PC);
+#ifdef DO_INCR
             IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
+#endif
         } else if (opcode == 0xFD) {
             mode = 2;
             opcode = RAM_PP(PC);
+#ifdef DO_INCR
             IR = (IR & 0xff00) | ((IR + 1) & 0x7f) | (IR & 0x80);
+#endif
         }
         
         x = (opcode >> 6) & 3;
