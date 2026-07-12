@@ -41,22 +41,15 @@ void _puthex16(uint16 w) // puts a HHHH hex string
 }
 
 #ifdef STREAMIO
-int _nextStreamInChar;
-
-void _getNextStreamInChar(void) {
-    _nextStreamInChar = streamInputFile ? fgetc(streamInputFile) : EOF;
-    if (EOF == _nextStreamInChar) {
-        streamInputActive = FALSE;
-    }
-}
-
 uint8 _getStreamInChar(void) {
-    uint8 result = _nextStreamInChar;
-    _getNextStreamInChar();
-    // TODO: delegate to abstrction_posix.h
+    int result = streamInputFile ? fgetc(streamInputFile) : EOF;
+    if (EOF == result) {
+        streamInputActive = FALSE;
+        return 0;
+    }
     if (0x0a == result)
         result = 0x0d;
-    return result;
+    return (uint8)result;
 }
 
 uint8 _getStreamInCharEcho() {
@@ -66,7 +59,6 @@ uint8 _getStreamInCharEcho() {
 }
 
 void _streamioInit(void) {
-    _getNextStreamInChar();
 }
 
 void _streamioReset(void) {
