@@ -47,7 +47,7 @@
 // #define ABDOS				// Based on work by Pavel Zampach (https://www.chstercius.cz/runcpm/)
 //  This requires ABDOS.SYS to be present on A: user 0 - see 'abdos' folder under 'tools'
 
-#if defined(_WIN32) || defined(ARDUINO)  // Windows needs a default CCP defined to compile as there's no Makefile
+#if defined(_MSC_VER) || defined(ARDUINO)  // Visual Studio/Arduino IDE need a default CCP defined to compile as there's no Makefile
     #define CCP_INTERNAL
 // #define CCP_DR
 // #define CCP_CCPZ

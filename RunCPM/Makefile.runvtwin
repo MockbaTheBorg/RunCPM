@@ -1,0 +1,96 @@
+# RunVT-embedded Windows cross-build for RunCPM - same idea as
+# Makefile.runvt (RunVT linked in directly as the console, no PTY/pipe/
+# ConPTY at all), but cross-compiled from Linux via mingw-w64 into a
+# native RunCPM.exe, statically linked against SDL2 the same way RunVT's
+# own `make windows` target does.
+#
+# Needs SDL2's mingw-w64 devel package in the mingw sysroot (see RunVT's
+# README) - regular apt SDL2 packages are Linux-only and won't show up
+# here.
+#
+# Usage: clone RunVT into this folder (or point RUNVT_DIR elsewhere),
+# then `make runvtwin build`.
+
+PROG = RunCPM.exe
+
+MFILE = Makefile.runvtwin
+
+CC = x86_64-w64-mingw32-gcc
+
+RUNVT_DIR ?= RunVT
+
+SYSROOT     = /usr/x86_64-w64-mingw32
+PKGENV      = PKG_CONFIG_LIBDIR=$(SYSROOT)/lib/pkgconfig PKG_CONFIG_PATH=
+
+# Flags to pass to the compiler
+CFLAGS ?= -Wall -O3 -fPIC -Wno-unused-variable
+CFLAGS += -DRUNVT_EMBED -I$(RUNVT_DIR)/src $(shell $(PKGENV) pkg-config --cflags sdl2)
+
+DEBUG_MODE :=
+
+ifeq ($(DEBUG),1)
+DEBUG_MODE := 1
+endif
+
+ifneq ($(findstring -DDEBUG=1,$(CFLAGS)),)
+DEBUG_MODE := 1
+endif
+
+ifeq ($(DEBUG_MODE),1)
+CFLAGS := $(filter-out -O%,$(CFLAGS))
+CFLAGS := -Wall -O0 -fPIC -Wno-unused-variable -g -DDEBUG=1 -DDEBUGLOG=1 $(CFLAGS)
+endif
+
+# CCP selection: define one CCP macro when invoking make to select the CCP
+# Example: `make runvtwin CCP=DR build`
+ifdef CCP
+CFLAGS += -DCCP_$(CCP)
+endif
+
+# CPU selection: define `CPU` to the header filename to include, e.g. cpu1.h
+# Example: `make runvtwin CPU=cpu2 build`
+ifdef CPU
+CFLAGS += -DCPU=\"$(CPU).h\"
+endif
+
+# Enable CPM3 extension
+# Example: `make runvtwin CPM3=1`
+ifdef CPM3
+CFLAGS += -DCPM3
+endif
+
+# Statically linked: libSDL2.a by path (not -lSDL2, which would pull the
+# dynamic import lib instead), plus sdl2.pc's Libs.private - the Windows
+# system libs SDL2's own DLL build normally hides internally, needed
+# explicitly once SDL2 is static. Result only depends on DLLs every
+# Windows install already has (kernel32, user32, gdi32, etc).
+SDL2LIB    = $(SYSROOT)/lib/libSDL2.a
+SYSLIBS    = -lm -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm \
+             -limm32 -lole32 -loleaut32 -lshell32 -lsetupapi -lversion -luuid
+
+# Flags to pass to the linker
+LDFLAGS = -L$(SYSROOT)/lib -static -static-libgcc -lmingw32 -lSDL2main \
+          $(SDL2LIB) -mwindows $(SYSLIBS)
+
+# Objects to build
+OBJS = main.o
+
+# Clean up program
+RM = rm -f
+
+#------------------------------------------------------------------------
+
+all: $(PROG)
+
+$(PROG): main.o
+	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
+
+main.o: main.c $(wildcard *.h) $(wildcard $(RUNVT_DIR)/src/*.h) $(MFILE)
+	$(CC) $(CFLAGS) -c main.c
+
+rebuild: clean all
+
+.PHONY: clean
+clean:
+	$(RM) *.o
+	$(RM) $(PROG)
