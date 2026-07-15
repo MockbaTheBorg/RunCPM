@@ -54,7 +54,10 @@ For building on other systems run `make yyy build`, where "yyy" is:
 * **macosx** - Mac OS X,
 * **mingw** - when building with MinGW under Windows,
 * **posix** - when building under Linux, FreeBSD etc,
-* **tdm** - when building with TDM-GCC under Windows.
+* **tdm** - when building with TDM-GCC under Windows,
+* **win** - cross-compiling a plain Windows RunCPM.exe from Linux via MinGW-w64,
+* **runvt** - links [RunVT](https://github.com/MockbaTheBorg/RunVT) in directly as the console, no OS console or pty involved (see RunVT's own readme for the setup this needs),
+* **runvtwin** - same as runvt, but cross-compiled into a Windows RunCPM.exe from Linux.
 
 All makefile options:
 * `make yyy build`: Compiles RunCPM.  Only recompiles changed files.
