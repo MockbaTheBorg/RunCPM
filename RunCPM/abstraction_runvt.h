@@ -93,7 +93,11 @@ static void _runvt_pump(void) {
     static Uint32 last_render = 0;
     Uint32 now;
 
-    if (rt_core_pump(&g_runvt)) Status = STATUS_EXIT; // window closed
+    // Setting Status alone isn't reliable here - CCP's idle console-poll loop can spin for ages without ever rechecking it. Just exit now.
+    if (rt_core_pump(&g_runvt)) {
+        rt_core_shutdown(&g_runvt);
+        exit(EXIT_SUCCESS);
+    }
 
     now = SDL_GetTicks();
     if (now - last_render < RUNVT_RENDER_INTERVAL_MS) return;
