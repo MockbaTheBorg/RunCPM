@@ -135,6 +135,10 @@
 //  console input from file and to log console output to file
 //  Should be passed externally per-platform with -DSTREAMIO
 
+// #define RUNVT_EMBED				// Uses RunVT (linked in directly, in-process) as the console
+//  instead of the OS console - no PTY, pipe, or ConPTY of any kind sits in between.
+//  See abstraction_runvt.h. Should be passed externally with -DRUNVT_EMBED.
+
 // #define PROFILE					// For measuring time taken to run a CP/M command
 //  This should be enabled only for debugging purposes when trying to improve emulation speed
 

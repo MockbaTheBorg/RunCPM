@@ -638,6 +638,7 @@ void _host_init(int argc, char *argv[]) {
 
 /* Console abstraction functions */
 /*===============================================================================*/
+#ifndef RUNVT_EMBED
 DWORD cOutMode;         // Stores initial console mode for the std output
 DWORD cInMode;          // Stores initial console mode for the std input
 TCHAR cTitle[MAX_PATH]; // Stores the initial console title
@@ -713,5 +714,6 @@ void _putch(uint8 byte)
 void _clrscr(void) {
     system("cls");
 }
+#endif // RUNVT_EMBED
 
 #endif

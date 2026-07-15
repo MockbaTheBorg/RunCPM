@@ -1,0 +1,84 @@
+# RunVT-embedded Makefile for RunCPM - builds RunCPM with RunVT linked
+# in directly as its console, instead of the OS console/pty. No PTY,
+# pipe, or ConPTY of any kind sits between them, so this works the same
+# way on Linux and Windows (MSYS2/mingw).
+#
+# Usage: clone RunVT into this folder (or point RUNVT_DIR elsewhere),
+# then `make runvt build`.
+
+PROG = RunCPM
+
+MFILE = Makefile.runvt
+
+CC ?= gcc
+
+RUNVT_DIR ?= RunVT
+
+# Flags to pass to the compiler
+CFLAGS ?= -Wall -O3 -fPIC -Wno-unused-variable
+CFLAGS += -DRUNVT_EMBED -I$(RUNVT_DIR)/src $(shell pkg-config --cflags sdl2)
+
+DEBUG_MODE :=
+
+ifeq ($(DEBUG),1)
+DEBUG_MODE := 1
+endif
+
+ifneq ($(findstring -DDEBUG=1,$(CFLAGS)),)
+DEBUG_MODE := 1
+endif
+
+ifeq ($(DEBUG_MODE),1)
+CFLAGS := $(filter-out -O%,$(CFLAGS))
+CFLAGS := -Wall -O0 -fPIC -Wno-unused-variable -g -DDEBUG=1 -DDEBUGLOG=1 $(CFLAGS)
+endif
+
+# CCP selection: define one CCP macro when invoking make to select the CCP
+# Example: `make runvt CCP=DR build`
+ifdef CCP
+CFLAGS += -DCCP_$(CCP)
+endif
+
+# CPU selection: define `CPU` to the header filename to include, e.g. cpu1.h
+# Example: `make runvt CPU=cpu2 build`
+ifdef CPU
+CFLAGS += -DCPU=\"$(CPU).h\"
+endif
+
+# Enable CPM3 extension
+# Example: `make runvt CPM3=1`
+ifdef CPM3
+CFLAGS += -DCPM3
+endif
+
+# Flags to pass to the linker
+LDFLAGS = $(shell pkg-config --libs sdl2)
+
+# SDL2's SDL_main.h needs -lSDL2main ahead of the rest on Windows to
+# supply the real WinMain entry stub; harmless/unneeded elsewhere.
+ifeq ($(OS),Windows_NT)
+LDFLAGS := -lmingw32 -lSDL2main $(LDFLAGS)
+endif
+
+# Objects to build
+OBJS = main.o
+
+# Clean up program
+RM = rm -f
+
+#------------------------------------------------------------------------
+
+all: $(PROG)
+
+$(PROG): main.o
+	$(CC) $(OBJS) -o $(PROG) $(LDFLAGS)
+
+main.o: main.c $(wildcard *.h) $(wildcard $(RUNVT_DIR)/src/*.h) $(MFILE)
+	$(CC) $(CFLAGS) -c main.c
+
+rebuild: clean all
+
+.PHONY: clean
+clean:
+	$(RM) *.o
+	$(RM) $(PROG)

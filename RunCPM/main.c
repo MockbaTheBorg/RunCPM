@@ -26,7 +26,9 @@ This should be the only file modified for portability. Any other file
 should be kept the same.
 */
 
-    #ifdef _WIN32
+    #ifdef RUNVT_EMBED
+        #include "abstraction_runvt.h"
+    #elif defined(_WIN32)
         #include "abstraction_windows.h"
     #else
         #include "abstraction_posix.h"

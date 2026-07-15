@@ -14,13 +14,13 @@ export CCP
 CPU ?= cpu1
 export CPU
 
-PLATS = macosx mingw msys2 posix tdm
+PLATS = macosx mingw msys2 posix tdm runvt
 CCPS = INTERNAL DR CCPZ ZCPR2 ZCPR3 Z80
 CPUS = cpu1 cpu2 cpu3 cpu4
 
 all:	none
 
-dos macosx mingw msys2 posix tdm:
+dos macosx mingw msys2 posix tdm runvt:
 	$(eval SYS=$@)
 	@echo "Platform = $@ (type 'make all' for help)"
 

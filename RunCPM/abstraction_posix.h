@@ -601,6 +601,7 @@ void _host_init(int argc, char *argv[]) {
 /* Console abstraction functions */
 /*===============================================================================*/
 
+#ifndef RUNVT_EMBED
 static struct termios _old_term, _new_term;
 
 void _console_init(void) {
@@ -670,5 +671,6 @@ uint8 _getche(void) {
 void _clrscr(void) {
     uint8 ch = system("clear");
 }
+#endif // RUNVT_EMBED
 
 #endif
