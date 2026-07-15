@@ -16,7 +16,14 @@ RUNVT_DIR ?= RunVT
 
 # Flags to pass to the compiler
 CFLAGS ?= -Wall -O3 -fPIC -Wno-unused-variable
-CFLAGS += -DRUNVT_EMBED -I$(RUNVT_DIR)/src $(shell pkg-config --cflags sdl2)
+CFLAGS += -DRUNVT_EMBED -I$(RUNVT_DIR)/src
+
+# No pkg-config on bare Windows mingw? Set SDL2DIR to your sysroot instead: SDL2DIR=C:/mingw64/x86_64-w64-mingw32
+ifdef SDL2DIR
+CFLAGS += -I$(SDL2DIR)/include -I$(SDL2DIR)/include/SDL2 -Dmain=SDL_main
+else
+CFLAGS += $(shell pkg-config --cflags sdl2)
+endif
 
 DEBUG_MODE :=
 
@@ -52,7 +59,11 @@ CFLAGS += -DCPM3
 endif
 
 # Flags to pass to the linker
+ifdef SDL2DIR
+LDFLAGS = -L$(SDL2DIR)/lib -lSDL2
+else
 LDFLAGS = $(shell pkg-config --libs sdl2)
+endif
 
 # SDL2's SDL_main.h needs -lSDL2main ahead of the rest on Windows to
 # supply the real WinMain entry stub; harmless/unneeded elsewhere.

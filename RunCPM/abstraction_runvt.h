@@ -27,7 +27,22 @@ RunVT was cloned into this folder) - see Makefile.runvt.
 */
 
 #if defined(_WIN32)
+    // mingw's conio.h declares _kbhit/_getch/_getche/_putch with libc
+    // signatures (int-based) that don't match the uint8-based ones this
+    // file defines below - conflicting types, not just a redeclaration.
+    // They're only ever used from the console block abstraction_windows.h
+    // itself skips under RUNVT_EMBED, so renaming them out of the way for
+    // the duration of this include is safe and keeps the real conio.h
+    // prototypes from colliding with ours.
+    #define _kbhit  _runvt_disabled_kbhit
+    #define _getch  _runvt_disabled_getch
+    #define _getche _runvt_disabled_getche
+    #define _putch  _runvt_disabled_putch
     #include "abstraction_windows.h"
+    #undef _kbhit
+    #undef _getch
+    #undef _getche
+    #undef _putch
 #else
     #include "abstraction_posix.h"
 #endif
