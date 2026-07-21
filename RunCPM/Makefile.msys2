@@ -30,6 +30,12 @@ ifdef CPM3
 CFLAGS += -DCPM3
 endif
 
+# Number of memory banks
+# Example: `make msys2 BANKS=2`
+ifdef BANKS
+CFLAGS += -DBANKS=$(BANKS)
+endif
+
 # Flags to pass to the linker
 LDFLAGS =
 

@@ -58,6 +58,12 @@ ifdef CPM3
 CFLAGS += -DCPM3
 endif
 
+# Number of memory banks
+# Example: `make runvt BANKS=2`
+ifdef BANKS
+CFLAGS += -DBANKS=$(BANKS)
+endif
+
 # Flags to pass to the linker
 ifdef SDL2DIR
 LDFLAGS = -L$(SDL2DIR)/lib -lSDL2

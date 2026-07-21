@@ -48,5 +48,7 @@ none:
 	@echo "Valid CPUs are: $(CPUS)"
 	@echo "----------------------------------------------------------------"
 	@echo "To enable CP/M 3.0 support, define CPM3=1 when invoking make, e.g. 'make posix CPM3=1 build'."
+	@echo "----------------------------------------------------------------"
+	@echo "To set number of memory banks, define BANKS when invoking make, e.g. 'make posix BANKS=2 build'."
 
 .PHONY: all $(PLATS) clean build rebuild help none

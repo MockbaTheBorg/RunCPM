@@ -59,6 +59,12 @@ ifdef CPM3
 CFLAGS += -DCPM3
 endif
 
+# Number of memory banks
+# Example: `make runvtwin BANKS=2`
+ifdef BANKS
+CFLAGS += -DBANKS=$(BANKS)
+endif
+
 # Statically linked: libSDL2.a by path (not -lSDL2, which would pull the
 # dynamic import lib instead), plus sdl2.pc's Libs.private - the Windows
 # system libs SDL2's own DLL build normally hides internally, needed
