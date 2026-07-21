@@ -671,17 +671,25 @@ void _Bios(void) {
     }
     case B_SELMEM: { // 27 - Select memory bank
         curBank = HIGH_REGISTER(AF);
+        if (curBank >= BANKS) // guard against RAM[] overrun on an out-of-range bank
+            curBank = BANKS - 1;
         curBankBase = ((uint32)curBank) << 16; // banks are 0-based: bank N -> RAM offset N*64K
         break;
     }
     case B_SETBNK: { // 28 - Set the bank to be used for the next read/write sector operation
         ioBank = HIGH_REGISTER(AF);
+        if (ioBank >= BANKS)
+            ioBank = BANKS - 1;
         ioBankBase = ((uint32)ioBank) << 16;
         break; // without this, SETBNK fell through into XMOVE and corrupted srcBank/dstBank/isXmove
     }
     case B_XMOVE: { // 29 - Preload banks for MOVE
         srcBank = LOW_REGISTER(BC);
         dstBank = HIGH_REGISTER(BC);
+        if (srcBank >= BANKS)
+            srcBank = BANKS - 1;
+        if (dstBank >= BANKS)
+            dstBank = BANKS - 1;
         srcBankBase = ((uint32)srcBank) << 16;
         dstBankBase = ((uint32)dstBank) << 16;
         isXmove = TRUE;

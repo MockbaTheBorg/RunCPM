@@ -548,7 +548,14 @@ uint16 _ReadSeq(uint16 fcbaddr) {
     if (!_SelectDisk(F->dr)) {
         _FCBtoHostname(fcbaddr, &filename[0]);
         long saved_dma = dmaAddr;
+        uint8 savedBank = curBank;
+        uint32 savedBankBase = curBankBase;
         uint8 toRead = multiRecordCount ? multiRecordCount : 1;
+
+        // Sector I/O targets the bank set via BIOS SETBNK, not the CPU's
+        // current bank (they differ when BDOS transfers into another bank's TPA).
+        curBank = ioBank;
+        curBankBase = ioBankBase;
 
         for (uint8 i = 0; i < toRead; ++i) {
             long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
@@ -584,6 +591,8 @@ uint16 _ReadSeq(uint16 fcbaddr) {
             ++processed;
         }
 
+        curBank = savedBank;
+        curBankBase = savedBankBase;
         dmaAddr = saved_dma;
     }
 
@@ -610,7 +619,14 @@ uint16 _WriteSeq(uint16 fcbaddr) {
         if (!RW) {
             _FCBtoHostname(fcbaddr, &filename[0]);
             long saved_dma = dmaAddr;
+            uint8 savedBank = curBank;
+            uint32 savedBankBase = curBankBase;
             uint8 toWrite = multiRecordCount ? multiRecordCount : 1;
+
+            // Sector I/O targets the bank set via BIOS SETBNK, not the CPU's
+            // current bank (they differ when BDOS transfers into another bank's TPA).
+            curBank = ioBank;
+            curBankBase = ioBankBase;
 
             for (uint8 i = 0; i < toWrite; ++i) {
                 long fpos = ((F->s2 & MaxS2) * BlkS2 * BlkSZ) +
@@ -659,6 +675,8 @@ uint16 _WriteSeq(uint16 fcbaddr) {
                 ++processed;
             }
 
+            curBank = savedBank;
+            curBankBase = savedBankBase;
             dmaAddr = saved_dma;
         } else {
             _error(errWRITEPROT);
@@ -688,7 +706,14 @@ uint16 _ReadRand(uint16 fcbaddr) {
     if (!_SelectDisk(F->dr)) {
         _FCBtoHostname(fcbaddr, &filename[0]);
         long saved_dma = dmaAddr;
+        uint8 savedBank = curBank;
+        uint32 savedBankBase = curBankBase;
         uint8 toRead = multiRecordCount ? multiRecordCount : 1;
+
+        // Sector I/O targets the bank set via BIOS SETBNK, not the CPU's
+        // current bank (they differ when BDOS transfers into another bank's TPA).
+        curBank = ioBank;
+        curBankBase = ioBankBase;
 
         for (uint8 i = 0; i < toRead; ++i) {
             int32 record = startRecord + processed;
@@ -710,6 +735,8 @@ uint16 _ReadRand(uint16 fcbaddr) {
             ++processed;
         }
 
+        curBank = savedBank;
+        curBankBase = savedBankBase;
         dmaAddr = saved_dma;
     }
 
@@ -738,7 +765,14 @@ uint16 _WriteRand(uint16 fcbaddr) {
         if (!RW) {
             _FCBtoHostname(fcbaddr, &filename[0]);
             long saved_dma = dmaAddr;
+            uint8 savedBank = curBank;
+            uint32 savedBankBase = curBankBase;
             uint8 toWrite = multiRecordCount ? multiRecordCount : 1;
+
+            // Sector I/O targets the bank set via BIOS SETBNK, not the CPU's
+            // current bank (they differ when BDOS transfers into another bank's TPA).
+            curBank = ioBank;
+            curBankBase = ioBankBase;
 
             for (uint8 i = 0; i < toWrite; ++i) {
                 int32 record = startRecord + processed;
@@ -757,6 +791,8 @@ uint16 _WriteRand(uint16 fcbaddr) {
                 ++processed;
             }
 
+            curBank = savedBank;
+            curBankBase = savedBankBase;
             dmaAddr = saved_dma;
         } else {
             _error(errWRITEPROT);
