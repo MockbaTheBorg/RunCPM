@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     #endif
     #if BANKS > 1
     _puts("Banked Memory: ");
-    _puthex8(BANKS);
+    _putdec(BANKS);
     _puts(" banks\r\n");
     #endif
 

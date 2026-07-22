@@ -40,6 +40,25 @@ void _puthex16(uint16 w) // puts a HHHH hex string
     _puthex8(w & 0x00ff);
 }
 
+void _putdec(uint16 n) // Puts a decimal string
+{
+    char buf[6];
+    int i = 0;
+
+    if (n == 0) {
+        _putcon('0');
+        return;
+    }
+
+    while (n > 0) {
+        buf[i++] = (char)('0' + (n % 10));
+        n /= 10;
+    }
+
+    while (i > 0)
+        _putcon((uint8)buf[--i]);
+}
+
 #ifdef STREAMIO
 uint8 _getStreamInChar(void) {
     int result = streamInputFile ? fgetc(streamInputFile) : EOF;
