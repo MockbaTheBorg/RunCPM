@@ -26,7 +26,7 @@ static const uint8 z80_tstates_main[256] = {
 /* Run a small Z80 code and measure the time to estimate emulated clock.
    This will load a small z80 code into RAM, run it until halt, then compute the 
    estimated clock at which the CPU is running */
-void Z80estimateClock(void) {
+static void Z80estimateClock(void) {
 	const uint8 testCode[] = {
 #ifdef ARDUINO
 		0x11, 0xF4, 0x01, // LD DE, 500
