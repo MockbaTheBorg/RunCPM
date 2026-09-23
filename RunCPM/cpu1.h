@@ -42,7 +42,7 @@ const char* iLogTxt;
 /*
 	Functions needed by the soft CPU implementation
 */
-void cpu_out(const uint32 p, const uint32 v) {
+static void cpu_out(const uint32 p, const uint32 v) {
 #ifdef INT_HANDOFF
 	_HardwareOut(p, v);
 #else
@@ -54,7 +54,7 @@ void cpu_out(const uint32 p, const uint32 v) {
 #endif
 }
 
-uint32 cpu_in(const uint32 p) {
+static uint32 cpu_in(const uint32 p) {
 	uint32 v;
 #ifdef INT_HANDOFF
 	v = _HardwareIn(p);
@@ -931,7 +931,7 @@ static uint8 negTable[256];
 static uint16 rrdrldTable[256];
 static uint8 cpTable[256];
 
-void initTables(void) {
+static void initTables(void) {
 	// 256 bytes tables
 	for (int i = 0; i < 256; i++) {
 		char c = 0;
@@ -2748,7 +2748,8 @@ static inline void Z80run(uint32 cpu_delay) {
 				break;
 
 			case 0x94:      /* SUB IXH */
-				SETFLAG(C, 0);/* fall through, a bit less efficient but smaller code */
+				SETFLAG(C, 0);
+				__attribute__((fallthrough));/* a bit less efficient but smaller code */
 
 			case 0x9c:      /* SBC A,IXH */
 				temp = HIGH_REGISTER(IX);
@@ -2758,7 +2759,8 @@ static inline void Z80run(uint32 cpu_delay) {
 				break;
 
 			case 0x95:      /* SUB IXL */
-				SETFLAG(C, 0);/* fall through, a bit less efficient but smaller code */
+				SETFLAG(C, 0);
+				__attribute__((fallthrough));/* a bit less efficient but smaller code */
 
 			case 0x9d:      /* SBC A,IXL */
 				temp = LOW_REGISTER(IX);
@@ -3966,7 +3968,8 @@ static inline void Z80run(uint32 cpu_delay) {
 				break;
 
 			case 0x94:      /* SUB IYH */
-				SETFLAG(C, 0);/* fall through, a bit less efficient but smaller code */
+				SETFLAG(C, 0);
+				__attribute__((fallthrough));/* a bit less efficient but smaller code */
 
 			case 0x9c:      /* SBC A,IYH */
 				temp = HIGH_REGISTER(IY);
@@ -3976,7 +3979,8 @@ static inline void Z80run(uint32 cpu_delay) {
 				break;
 
 			case 0x95:      /* SUB IYL */
-				SETFLAG(C, 0);/* fall through, a bit less efficient but smaller code */
+				SETFLAG(C, 0);
+				__attribute__((fallthrough));/* a bit less efficient but smaller code */
 
 			case 0x9d:      /* SBC A,IYL */
 				temp = LOW_REGISTER(IY);
