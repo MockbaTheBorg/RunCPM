@@ -23,7 +23,7 @@
 #define HostOS 0x02
 
 /* Externals for abstracted functions need to go here */
-FILE *_sys_fopen_r(uint8 *filename);
+static FILE *_sys_fopen_r(uint8 *fname);
 int _sys_fseek(FILE *file, long delta, int origin);
 long _sys_ftell(FILE *file);
 long _sys_fread(void *buffer, long size, long count, FILE *file);
@@ -32,9 +32,9 @@ int _sys_fclose(FILE *file);
 
 /* Memory abstraction functions */
 /*===============================================================================*/
-uint16 _RamLoad(uint8 *filename, uint16 address, uint16 maxsize) {
+static uint16 _RamLoad(uint8 *fname, uint16 address, uint16 maxsize) {
     long l;
-    FILE *file = _sys_fopen_r(filename);
+    FILE *file = _sys_fopen_r(fname);
     _sys_fseek(file, 0, SEEK_END);
     l = _sys_ftell(file);
     if (maxsize && l > maxsize)
@@ -68,33 +68,33 @@ typedef struct {
     uint8 al[16];
 } CPM_DIRENTRY;
 
-uint8 _sys_exists(uint8 *filename) {
+static uint8 _sys_exists(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (!access((const char *)fullpath, F_OK));
 }
 
-FILE *_sys_fopen_r(uint8 *filename) {
+static FILE *_sys_fopen_r(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (fopen((const char *)fullpath, "rb"));
 }
 
-FILE *_sys_fopen_w(uint8 *filename) {
+static FILE *_sys_fopen_w(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (fopen((const char *)fullpath, "wb"));
 }
 
-FILE *_sys_fopen_rw(uint8 *filename) {
+static FILE *_sys_fopen_rw(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (fopen((const char *)fullpath, "r+b"));
 }
 
-FILE *_sys_fopen_a(uint8 *filename) {
+static FILE *_sys_fopen_a(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (fopen((const char *)fullpath, "a"));
 }
 
@@ -110,15 +110,15 @@ long _sys_fread(void *buffer, long size, long count, FILE *file) {
     return (fread(buffer, size, count, file));
 }
 
-long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
+static long _sys_fwrite(const void *buffer, long size, long count, FILE *file) {
     return (fwrite(buffer, size, count, file));
 }
 
-int _sys_fputc(int ch, FILE *file) {
+static int _sys_fputc(int ch, FILE *file) {
     return (fputc(ch, file));
 }
 
-int _sys_feof(FILE *file) {
+__attribute__((unused)) static int _sys_feof(FILE *file) {
     return (feof(file));
 }
 
@@ -130,13 +130,13 @@ int _sys_fclose(FILE *file) {
     return (fclose(file));
 }
 
-int _sys_remove(uint8 *filename) {
+static int _sys_remove(uint8 *fname) {
     uint8 fullpath[128] = FILEBASE;
-    strcat((char *)fullpath, (char *)filename);
+    strcat((char *)fullpath, (char *)fname);
     return (remove((const char *)fullpath));
 }
 
-int _sys_rename(uint8 *name1, uint8 *name2) {
+static int _sys_rename(uint8 *name1, uint8 *name2) {
     uint8 fullpath1[128] = FILEBASE;
     strcat((char *)fullpath1, (char *)name1);
     uint8 fullpath2[128] = FILEBASE;
@@ -144,16 +144,16 @@ int _sys_rename(uint8 *name1, uint8 *name2) {
     return (rename((const char *)fullpath1, (const char *)fullpath2));
 }
 
-int _sys_select(uint8 *disk) {
+static int _sys_select(uint8 *disk) {
     struct stat st;
     uint8 fullpath[128] = FILEBASE;
     strcat((char *)fullpath, (char *)disk);
     return ((stat((char *)fullpath, &st) == 0) && S_ISDIR(st.st_mode));
 }
 
-long _sys_filesize(uint8 *filename) {
+static long _sys_filesize(uint8 *fname) {
     long l = -1;
-    FILE *file = _sys_fopen_r(filename);
+    FILE *file = _sys_fopen_r(fname);
     if (file != NULL) {
         _sys_fseek(file, 0, SEEK_END);
         l = _sys_ftell(file);
@@ -162,8 +162,8 @@ long _sys_filesize(uint8 *filename) {
     return (l);
 }
 
-int _sys_openfile(uint8 *filename) {
-    FILE *file = _sys_fopen_r(filename);
+static int _sys_openfile(uint8 *fname) {
+    FILE *file = _sys_fopen_r(fname);
     if (file != NULL)
         _sys_fclose(file);
     return (file != NULL);
@@ -195,19 +195,19 @@ int _sys_truncate(uint8 *filename, long length) {
 }
 #endif
 
-int _sys_makefile(uint8 *filename) {
-    FILE *file = _sys_fopen_a(filename);
+static int _sys_makefile(uint8 *fname) {
+    FILE *file = _sys_fopen_a(fname);
     if (file != NULL)
         _sys_fclose(file);
     return (file != NULL);
 }
 
-int _sys_deletefile(uint8 *filename) {
-    return (!_sys_remove(filename));
+static int _sys_deletefile(uint8 *fname) {
+    return (!_sys_remove(fname));
 }
 
-int _sys_renamefile(uint8 *filename, uint8 *newname) {
-    return (!_sys_rename(&filename[0], &newname[0]));
+static int _sys_renamefile(uint8 *fname, uint8 *nname) {
+    return (!_sys_rename(&fname[0], &nname[0]));
 }
 
 #ifdef DEBUGLOG
@@ -226,13 +226,13 @@ void _sys_logbuffer(uint8 *buffer) {
 }
 #endif
 
-uint8 _sys_readseq(uint8 *filename, long fpos) {
+static uint8 _sys_readseq(uint8 *fname, long fpos) {
     uint8 result = 0xff;
     uint8 bytesread;
     uint8 dmabuf[128];
     uint8 i;
 
-    FILE *file = _sys_fopen_r(&filename[0]);
+    FILE *file = _sys_fopen_r(&fname[0]);
     if (file != NULL) {
         if (!_sys_fseek(file, fpos, 0)) {
             for (i = 0; i < 128; ++i)
@@ -254,10 +254,10 @@ uint8 _sys_readseq(uint8 *filename, long fpos) {
     return (result);
 }
 
-uint8 _sys_writeseq(uint8 *filename, long fpos) {
+static uint8 _sys_writeseq(uint8 *fname, long fpos) {
     uint8 result = 0xff;
 
-    FILE *file = _sys_fopen_rw(&filename[0]);
+    FILE *file = _sys_fopen_rw(&fname[0]);
     if (file != NULL) {
         if (!_sys_fseek(file, fpos, 0)) {
             if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
@@ -273,14 +273,14 @@ uint8 _sys_writeseq(uint8 *filename, long fpos) {
     return (result);
 }
 
-uint8 _sys_readrand(uint8 *filename, long fpos) {
+static uint8 _sys_readrand(uint8 *fname, long fpos) {
     uint8 result = 0xff;
     uint8 bytesread;
     uint8 dmabuf[128];
     uint8 i;
     long extSize;
 
-    FILE *file = _sys_fopen_r(&filename[0]);
+    FILE *file = _sys_fopen_r(&fname[0]);
     if (file != NULL) {
         if (!_sys_fseek(file, fpos, 0)) {
             for (i = 0; i < 128; ++i)
@@ -313,10 +313,10 @@ uint8 _sys_readrand(uint8 *filename, long fpos) {
     return (result);
 }
 
-uint8 _sys_writerand(uint8 *filename, long fpos) {
+static uint8 _sys_writerand(uint8 *fname, long fpos) {
     uint8 result = 0xff;
 
-    FILE *file = _sys_fopen_rw(&filename[0]);
+    FILE *file = _sys_fopen_rw(&fname[0]);
     if (file != NULL) {
         if (!_sys_fseek(file, fpos, 0)) {
             if (_sys_fwrite(_RamSysAddr(dmaAddr), 1, 128, file))
@@ -332,7 +332,7 @@ uint8 _sys_writerand(uint8 *filename, long fpos) {
     return (result);
 }
 
-uint8 _Truncate(char *fn, uint8 rc) {
+static uint8 _Truncate(char *fn, uint8 rc) {
     uint8 result = 0x00;
     uint8 fullpath[128] = FILEBASE;
     strcat((char *)fullpath, (char *)fn);
@@ -341,7 +341,7 @@ uint8 _Truncate(char *fn, uint8 rc) {
     return (result);
 }
 
-void _MakeUserDir() {
+static void _MakeUserDir(void) {
     uint8 dFolder = cDrive + 'A';
     uint8 uFolder = toupper(tohex(userCode));
 
@@ -352,7 +352,7 @@ void _MakeUserDir() {
     mkdir((char *)fullpath, S_IRUSR | S_IWUSR | S_IXUSR);
 }
 
-uint8 _sys_makedisk(uint8 drive) {
+static uint8 _sys_makedisk(uint8 drive) {
     uint8 result = 0;
     if (drive < 1 || drive > 16) {
         result = 0xff;
@@ -390,7 +390,7 @@ static uint16 fileExtents = 0;
 static uint16 fileExtentsUsed = 0;
 static uint16 firstFreeAllocBlock;
 
-uint8 _findnext(uint8 isdir) {
+static uint8 _findnext(uint8 isdir) {
     uint8 result = 0xff;
     char dir[6] = {'?', FOLDERCHAR, 0, FOLDERCHAR, '*', 0};
     int i;
@@ -417,7 +417,7 @@ uint8 _findnext(uint8 isdir) {
         uint8 fullpath[128] = FILEBASE;
         strcat((char *)fullpath, (char *)dir);
         if (!glob((char *)fullpath, 0, NULL, &pglob)) {
-            for (i = dirPos; i < pglob.gl_pathc; ++i) {
+            for (i = dirPos; (unsigned)i < pglob.gl_pathc; ++i) {
                 ++dirPos;
                 strncpy(findNextDirName, pglob.gl_pathv[i], sizeof(findNextDirName) - 1);
                 findNextDirName[sizeof(findNextDirName) - 1] = 0;
@@ -464,7 +464,7 @@ uint8 _findnext(uint8 isdir) {
     return (result);
 }
 
-uint8 _findfirst(uint8 isdir) {
+static uint8 _findfirst(uint8 isdir) {
     dirPos = 0; // Set directory search to start from the first position
     _HostnameToFCBname(filename, pattern);
     fileRecords = 0;
@@ -473,11 +473,11 @@ uint8 _findfirst(uint8 isdir) {
     return (_findnext(isdir));
 }
 
-uint8 _findnextallusers(uint8 isdir) {
+static uint8 _findnextallusers(uint8 isdir) {
     return _findnext(isdir);
 }
 
-uint8 _findfirstallusers(uint8 isdir) {
+static uint8 _findfirstallusers(uint8 isdir) {
     dirPos = 0;
     strcpy((char *)pattern, "???????????");
     fileRecords = 0;
@@ -488,13 +488,16 @@ uint8 _findfirstallusers(uint8 isdir) {
 
 /* Hardware abstraction functions */
 /*===============================================================================*/
-void _HardwareInit(void) {
+static void _HardwareInit(void) {
 }
 
-void _HardwareOut(const uint32 Port, const uint32 Value) {
+static void _HardwareOut(const uint32 Port, const uint32 Value) {
+    (void)Port;
+    (void)Value;
 }
 
-uint32 _HardwareIn(const uint32 Port) {
+static uint32 _HardwareIn(const uint32 Port) {
+    (void)Port;
     return 0;
 }
 
@@ -604,7 +607,7 @@ void _host_init(int argc, char *argv[]) {
 #ifndef RUNVT_EMBED
 static struct termios _old_term, _new_term;
 
-void _console_init(void) {
+static void _console_init(void) {
     tcgetattr(0, &_old_term);
 
     _new_term = _old_term;
@@ -620,7 +623,7 @@ void _console_init(void) {
     setvbuf(stdout, (char *)NULL, _IONBF, 0);  /* Disable stdout buffering */
 }
 
-void _console_reset(void) {
+static void _console_reset(void) {
     tcsetattr(0, TCSANOW, &_old_term);
 }
 
@@ -643,7 +646,7 @@ static void _abort_if_kbd_eof() {
 }
 #endif
 
-int _kbhit(void) {
+static int _kbhit(void) {
     struct pollfd pfds[1];
 
     pfds[0].fd = STDIN_FILENO;
@@ -652,15 +655,15 @@ int _kbhit(void) {
     return (poll(pfds, 1, 0) == 1) && (pfds[0].revents & (POLLIN | POLLPRI | POLLRDBAND | POLLRDNORM));
 }
 
-uint8 _getch(void) {
+static uint8 _getch(void) {
     return getchar();
 }
 
-void _putch(uint8 ch) {
+static void _putch(uint8 ch) {
     putchar(ch);
 }
 
-uint8 _getche(void) {
+static uint8 _getche(void) {
     uint8 ch = _getch();
 
     _putch(ch);
@@ -668,8 +671,9 @@ uint8 _getche(void) {
     return ch;
 }
 
-void _clrscr(void) {
-    uint8 ch = system("clear");
+static void _clrscr(void) {
+    if (system("clear")) {
+    }
 }
 #endif // RUNVT_EMBED
 
