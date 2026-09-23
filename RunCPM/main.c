@@ -57,6 +57,8 @@ int lst_open = FALSE;
     #endif
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
 
     #ifdef DEBUGLOG
     _sys_deletefile((uint8 *)LogName);
