@@ -155,7 +155,7 @@ unsigned long time_start = 0;
 unsigned long time_now = 0;
 #endif // ifdef PROFILE
 
-void _PatchBIOS(void) {
+static void _PatchBIOS(void) {
     uint16 i;
 
     // Patches in the BIOS jump destinations
@@ -178,7 +178,7 @@ void _PatchBIOS(void) {
     }
 } //_PatchBIOS
 
-void _PatchCPM(void) {
+static void _PatchCPM(void) {
     uint16 i;
 
     // **********  Patch CP/M page zero into the memory  **********
