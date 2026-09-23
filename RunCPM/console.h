@@ -10,7 +10,7 @@ uint8 mask8bit = 0x7f; // TO be used for masking 8 bit characters (XMODEM relate
                        // required for XMODEM to work.
                        // Use the CONSOLE7 and CONSOLE8 programs to change this on the fly.
 
-void _putcon(uint8 ch) // Puts a character
+static void _putcon(uint8 ch) // Puts a character
 {
 #ifdef STREAMIO
     if (consoleOutputActive)
@@ -28,19 +28,19 @@ void _puts(const char *str) // Puts a \0 terminated string
         _putcon(*(str++));
 }
 
-void _puthex8(uint8 c) // Puts a HH hex string
+static void _puthex8(uint8 c) // Puts a HH hex string
 {
     _putcon(tohex(c >> 4));
     _putcon(tohex(c & 0x0f));
 }
 
-void _puthex16(uint16 w) // puts a HHHH hex string
+static void _puthex16(uint16 w) // puts a HHHH hex string
 {
     _puthex8(w >> 8);
     _puthex8(w & 0x00ff);
 }
 
-void _putdec(uint16 n) // Puts a decimal string
+__attribute__((unused)) static void _putdec(uint16 n) // Puts a decimal string
 {
     char buf[6];
     int i = 0;
@@ -86,7 +86,7 @@ void _streamioReset(void) {
 }
 #endif
 
-uint8 _chready(void) // Checks if there's a character ready for input
+static uint8 _chready(void) // Checks if there's a character ready for input
 {
 #ifdef STREAMIO
     if (streamInputActive)
@@ -97,7 +97,7 @@ uint8 _chready(void) // Checks if there's a character ready for input
     return (_kbhit() ? 0xff : 0x00);
 }
 
-uint8 _getconNB(void) // Gets a character, non-blocking, no echo
+static uint8 _getconNB(void) // Gets a character, non-blocking, no echo
 {
 #ifdef STREAMIO
     if (streamInputActive)
@@ -108,7 +108,7 @@ uint8 _getconNB(void) // Gets a character, non-blocking, no echo
     return (_kbhit() ? _getch() : 0x00);
 }
 
-uint8 _getcon(void) // Gets a character, blocking, no echo
+static uint8 _getcon(void) // Gets a character, blocking, no echo
 {
 #ifdef STREAMIO
     if (streamInputActive)
@@ -119,7 +119,7 @@ uint8 _getcon(void) // Gets a character, blocking, no echo
     return _getch();
 }
 
-uint8 _getconE(void) // Gets a character, blocking, with echo
+static uint8 _getconE(void) // Gets a character, blocking, with echo
 {
 #ifdef STREAMIO
     if (streamInputActive)
