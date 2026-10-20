@@ -1395,10 +1395,12 @@ void _ccp_readInput(void) {
     uint8 chars;
 
     if (submitFlag) {                             // Are we running a submit?
-        if (!submitRecords) {                        // Are we already counting?
-            _ccp_bdos(F_OPEN, BatchFCB);     // Open the batch file
-            submitRecords = _RamRead(BatchFCB + 15); // Gets its record count
-        }
+        // The record count has to be re-read from the directory on every line and
+        // the shortened file has to be closed back, exactly like DRI's CCP does it.
+        // XSUB reads $$$.SUB on its own, so keeping the position in a variable here
+        // would make both of them read the same record forever.
+        _ccp_bdos(F_OPEN, BatchFCB);             // Open the batch file
+        submitRecords = _RamRead(BatchFCB + 15); // Gets its record count
         --submitRecords;                         // Counts one less
         _RamWrite(BatchFCB + 32, submitRecords); // And sets to be the next read
         _ccp_bdos(F_DMAOFF, defDMA);     // Reset current DMA
@@ -1409,7 +1411,11 @@ void _ccp_readInput(void) {
             _RamWrite(inBuf + i + 1, _RamRead(defDMA + i));
         _RamWrite(inBuf + i + 1, 0);
         _puts((char *)_RamSysAddr(inBuf + 2));
-        if (!submitRecords) {
+        if (submitRecords) {
+            _RamWrite(BatchFCB + 15, submitRecords); // Drops the record just consumed
+            _RamWrite(BatchFCB + 14, 0x00);          // Clears the unmodified flag set by F_OPEN
+            _ccp_bdos(F_CLOSE, BatchFCB);            // Closing truncates $$$.SUB to its new size
+        } else {
             _ccp_bdos(F_DELETE, BatchFCB); // Deletes the submit file
             submitFlag = FALSE;                 // and clears the submit flag
         }
