@@ -83,13 +83,29 @@ static uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *fullname) {
     *(fullname++) = FOLDERCHAR;
 
     if (F->dr != '?') {
+        // Blanks are FCB padding, so they are normally dropped. With SPACEINNAME
+        // only the trailing ones are padding - a blank followed by a non-blank is
+        // part of the name and is kept. lastFN/lastTP are one past the last
+        // non-blank, and stay at 0 when the option is off, which drops every blank.
+        uint8 lastFN = 0, lastTP = 0;
+#ifdef SPACEINNAME
+        for (i = 0; i < 8; ++i) {
+            if ((F->fn[i] & 0x7F) > 32)
+                lastFN = i + 1;
+        }
+        for (i = 0; i < 3; ++i) {
+            if ((F->tp[i] & 0x7F) > 32)
+                lastTP = i + 1;
+        }
+#endif
+        i = 0;
         while (i < 8) {
             c = F->fn[i] & 0x7F;
 #ifdef NOSLASH
             if (c == '/')
                 c = '_';
 #endif
-            if (c > 32)
+            if (c > 32 || i < lastFN)
                 *(fullname++) = toupper(c);
             if (c == '?')
                 unique = FALSE;
@@ -98,7 +114,7 @@ static uint8 _FCBtoHostname(uint16 fcbaddr, uint8 *fullname) {
         i = 0;
         while (i < 3) {
             c = F->tp[i] & 0x7F;
-            if (c > 32) {
+            if (c > 32 || i < lastTP) {
                 if (addDot) {
                     addDot = FALSE;
                     *(fullname++) = '.'; // Only add the dot if there's an extension

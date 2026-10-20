@@ -131,6 +131,10 @@
 
 #define NOSLASH // Will translate '/' to '_' on filenames to prevent directory errors
 
+#define SPACEINNAME // Will keep blanks which are embedded in a CP/M filename instead of
+                    // dropping them, so SAVE "MY FILE" creates 'MY FILE.BAS' on the host.
+                    // Trailing blanks are still treated as FCB padding and dropped.
+
 // #define STREAMIO					// Will enable command line flags to read
 //  console input from file and to log console output to file
 //  Should be passed externally per-platform with -DSTREAMIO
